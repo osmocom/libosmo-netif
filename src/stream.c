@@ -9,6 +9,7 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 
+#include <osmocom/core/timer.h>
 #include <osmocom/core/select.h>
 #include <osmocom/gsm/tlv.h>
 #include <osmocom/core/msgb.h>

@@ -1,11 +1,6 @@
 #ifndef _OSMO_STREAM_H_
 #define _OSMO_STREAM_H_
 
-#include <stdint.h>
-#include <osmocom/core/linuxlist.h>
-#include <osmocom/core/timer.h>
-#include <osmocom/core/select.h>
-
 struct stream_server_link;
 
 struct stream_server_link *stream_server_link_create(void *ctx);
