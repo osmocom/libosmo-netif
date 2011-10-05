@@ -43,18 +43,6 @@ struct stream_client_conn {
 	void				*data;
 };
 
-static int stream_msg_recv(int fd, struct msgb *msg)
-{
-	int ret;
-
-	ret = recv(fd, msg->data, msg->data_len, 0);
-	if (ret <= 0)
-		return ret;
-
-	msgb_put(msg, ret);
-	return ret;
-}
-
 void stream_client_conn_close(struct stream_client_conn *link);
 
 static void stream_client_retry(struct stream_client_conn *link)
@@ -84,7 +72,7 @@ static void stream_client_read(struct stream_client_conn *link)
 		LOGP(DLINP, LOGL_ERROR, "cannot allocate room for message\n");
 		return;
 	}
-	ret = stream_msg_recv(link->ofd.fd, msg);
+	ret = recv(link->ofd.fd, msg->data, msg->data_len, 0);
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ECONNRESET) {
 			LOGP(DLINP, LOGL_ERROR, "lost connection with server\n");
@@ -382,7 +370,7 @@ static void stream_server_conn_read(struct stream_server_conn *conn)
 		LOGP(DLINP, LOGL_ERROR, "cannot allocate room for message\n");
 		return;
 	}
-	ret = stream_msg_recv(conn->ofd.fd, msg);
+	ret = recv(conn->ofd.fd, msg->data, msg->data_len, 0);
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ECONNRESET) {
 			LOGP(DLINP, LOGL_ERROR, "lost connection with server\n");
