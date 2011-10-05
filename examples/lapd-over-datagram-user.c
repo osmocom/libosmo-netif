@@ -1,4 +1,4 @@
-/* LAPD over stream (user-mode/client) example. */
+/* LAPD over datagram user-mode example. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,10 +8,11 @@
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
 #include <osmocom/core/application.h>
+#include <osmocom/core/select.h>
 
 #include <osmocom/abis/lapd.h>
 
-#include <osmocom/netif/stream.h>
+#include <osmocom/netif/datagram.h>
 
 #define DLAPDTEST 0
 
@@ -30,7 +31,7 @@ const struct log_info lapd_test_log_info = {
 	.num_cat = ARRAY_SIZE(lapd_test_cat),
 };
 
-static struct stream_client_conn *conn;
+static struct datagram_conn *conn;
 static struct lapd_instance *lapd;
 static int sapi = 63, tei = 0;
 
@@ -42,21 +43,11 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-static int connect_cb(struct stream_client_conn *conn)
-{
-	LOGP(DLINP, LOGL_NOTICE, "connected\n");
-	if (lapd_sap_start(lapd, tei, sapi) < 0) {
-		LOGP(DLINP, LOGL_ERROR, "cannot start user-side LAPD\n");
-		exit(EXIT_FAILURE);
-	}
-	return 0;
-}
-
-static int read_cb(struct stream_client_conn *conn, struct msgb *msg)
+static int read_cb(struct datagram_server_conn *conn, struct msgb *msg)
 {
 	int error;
 
-	LOGP(DLINP, LOGL_NOTICE, "received message from stream\n");
+	LOGP(DLINP, LOGL_NOTICE, "received message from datagram\n");
 
 	if (lapd_receive(lapd, msg, &error) < 0) {
 		LOGP(DLINP, LOGL_ERROR, "lapd_receive returned error!\n");
@@ -69,8 +60,8 @@ static void *tall_test;
 
 void lapd_tx_cb(struct msgb *msg, void *cbdata)
 {
-	LOGP(DLINP, LOGL_NOTICE, "sending message over stream\n");
-	stream_client_conn_send(conn, msg);
+	LOGP(DLINP, LOGL_NOTICE, "sending message over datagram\n");
+	datagram_conn_send(conn, msg);
 }
 
 void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
@@ -150,21 +141,27 @@ int main(void)
 	}
 
 	/*
-	 * initialize stream client.
+	 * initialize datagram socket.
 	 */
 
-	conn = stream_client_conn_create(tall_test);
+	conn = datagram_conn_create(tall_test);
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create client\n");
 		exit(EXIT_FAILURE);
 	}
-	stream_client_conn_set_addr(conn, "127.0.0.1");
-	stream_client_conn_set_port(conn, 10000);
-	stream_client_conn_set_connect_cb(conn, connect_cb);
-	stream_client_conn_set_read_cb(conn, read_cb);
+	datagram_conn_set_local_addr(conn, "127.0.0.1");
+	datagram_conn_set_local_port(conn, 10000);
+	datagram_conn_set_remote_addr(conn, "127.0.0.1");
+	datagram_conn_set_remote_port(conn, 10001);
+	datagram_conn_set_read_cb(conn, read_cb);
 
-	if (stream_client_conn_open(conn) < 0) {
+	if (datagram_conn_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (lapd_sap_start(lapd, tei, sapi) < 0) {
+		LOGP(DLINP, LOGL_ERROR, "cannot start user-side LAPD\n");
 		exit(EXIT_FAILURE);
 	}
 

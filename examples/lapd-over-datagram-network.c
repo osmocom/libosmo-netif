@@ -1,4 +1,4 @@
-/* LAPD over stream (network-mode/server) example. */
+/* LAPD over datagram network-mode example. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,10 +8,11 @@
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
 #include <osmocom/core/application.h>
+#include <osmocom/core/select.h>
 
 #include <osmocom/abis/lapd.h>
 
-#include <osmocom/netif/stream.h>
+#include <osmocom/netif/datagram.h>
 
 static void *tall_test;
 
@@ -32,7 +33,7 @@ const struct log_info lapd_test_log_info = {
 	.num_cat = ARRAY_SIZE(lapd_test_cat),
 };
 
-static struct stream_server_link *server;
+static struct datagram_conn *conn;
 static struct lapd_instance *lapd;
 static int sapi = 63, tei = 0;
 
@@ -43,11 +44,11 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-int read_cb(struct stream_server_conn *conn, struct msgb *msg)
+int read_cb(struct datagram_server_conn *conn, struct msgb *msg)
 {
 	int error;
 
-	LOGP(DLINP, LOGL_NOTICE, "received message from stream\n");
+	LOGP(DLINP, LOGL_NOTICE, "received message from datagram\n");
 
 	if (lapd_receive(lapd, msg, &error) < 0) {
 		LOGP(DLINP, LOGL_ERROR, "lapd_receive returned error!\n");
@@ -58,10 +59,10 @@ int read_cb(struct stream_server_conn *conn, struct msgb *msg)
 
 void lapd_tx_cb(struct msgb *msg, void *cbdata)
 {
-	struct stream_server_conn *conn = cbdata;
+	struct datagram_conn *conn = cbdata;
 
-	LOGP(DLINP, LOGL_NOTICE, "sending message over stream\n");
-	stream_server_conn_send(conn, msg);
+	LOGP(DLINP, LOGL_NOTICE, "sending message over datagram\n");
+	datagram_conn_send(conn, msg);
 }
 
 void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
@@ -95,37 +96,6 @@ void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
 	}
 }
 
-static int accept_cb(struct stream_server_link *server, int fd)
-{
-	struct stream_server_conn *conn;
-	int teip;
-
-	conn = stream_server_conn_create(tall_test, server, fd, read_cb,
-					 NULL, NULL);
-	if (conn == NULL) {
-		LOGP(DLINP, LOGL_ERROR, "error in lapd_receive\n");
-		return -1;
-	}
-
-	/*
-	 * initialize LAPD stuff.
-	 */
-
-	lapd = lapd_instance_alloc(1, lapd_tx_cb, conn, lapd_rx_cb, conn,
-				   &lapd_profile_sat);
-	if (lapd == NULL) {
-		LOGP(DLINP, LOGL_ERROR, "cannot allocate instance\n");
-		exit(EXIT_FAILURE);
-	}
-
-	teip = lapd_tei_alloc(lapd, tei);
-	if (teip == 0) {
-		LOGP(DLINP, LOGL_ERROR, "cannot assign TEI\n");
-		exit(EXIT_FAILURE);
-	}
-	return 0;
-}
-
 static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 {
 	char buf[1024];
@@ -154,6 +124,7 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 int main(void)
 {
 	struct osmo_fd *kbd_ofd;
+	int teip;
 
 	tall_test = talloc_named_const(NULL, 1, "lapd_test");
 
@@ -161,19 +132,34 @@ int main(void)
 	log_set_log_level(osmo_stderr_target, 1);
 
 	/*
-	 * initialize stream server.
+	 * initialize datagram server.
 	 */
 
-	server = stream_server_link_create(tall_test);
-	if (server == NULL) {
+	conn = datagram_conn_create(tall_test);
+	if (conn == NULL) {
 		fprintf(stderr, "cannot create client\n");
 		exit(EXIT_FAILURE);
 	}
-	stream_server_link_set_addr(server, "127.0.0.1");
-	stream_server_link_set_port(server, 10000);
-	stream_server_link_set_accept_cb(server, accept_cb);
+	datagram_conn_set_local_addr(conn, "127.0.0.1");
+	datagram_conn_set_local_port(conn, 10001);
+	datagram_conn_set_remote_addr(conn, "127.0.0.1");
+	datagram_conn_set_remote_port(conn, 10000);
+	datagram_conn_set_read_cb(conn, read_cb);
 
-	if (stream_server_link_open(server) < 0) {
+	lapd = lapd_instance_alloc(1, lapd_tx_cb, conn, lapd_rx_cb, conn,
+				   &lapd_profile_sat);
+	if (lapd == NULL) {
+		LOGP(DLINP, LOGL_ERROR, "cannot allocate instance\n");
+		exit(EXIT_FAILURE);
+	}
+
+	teip = lapd_tei_alloc(lapd, tei);
+	if (teip == 0) {
+		LOGP(DLINP, LOGL_ERROR, "cannot assign TEI\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (datagram_conn_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
 		exit(EXIT_FAILURE);
 	}
@@ -185,7 +171,7 @@ int main(void)
 	}
 	kbd_ofd->fd = STDIN_FILENO;
 	kbd_ofd->when = BSC_FD_READ;
-	kbd_ofd->data = server;
+	kbd_ofd->data = conn;
 	kbd_ofd->cb = kbd_cb;
 	osmo_fd_register(kbd_ofd);
 

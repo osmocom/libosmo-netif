@@ -1,3 +1,4 @@
-osmonetif_HEADERS = stream.h
+osmonetif_HEADERS = datagram.h		\
+		    stream.h
 
 osmonetifdir = $(includedir)/osmocom/netif
