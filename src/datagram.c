@@ -23,6 +23,8 @@
  * Client side.
  */
 
+#define OSMO_DGRAM_CLIENT_F_RECONFIG	(1 << 0)
+
 struct osmo_dgram_client_conn {
 	struct osmo_fd			ofd;
 	struct llist_head		tx_queue;
@@ -30,6 +32,7 @@ struct osmo_dgram_client_conn {
 	uint16_t			port;
 	int (*write_cb)(struct osmo_dgram_client_conn *conn);
 	void				*data;
+	unsigned int			flags;
 };
 
 void osmo_dgram_client_conn_close(struct osmo_dgram_client_conn *conn)
@@ -82,6 +85,7 @@ struct osmo_dgram_client_conn *osmo_dgram_client_conn_create(void *ctx)
 	if (!conn)
 		return NULL;
 
+	conn->ofd.fd = -1;
 	conn->ofd.when |= BSC_FD_READ;
 	conn->ofd.priv_nr = 0;	/* XXX */
 	conn->ofd.cb = osmo_dgram_client_fd_cb;
@@ -95,7 +99,11 @@ void
 osmo_dgram_client_conn_set_addr(struct osmo_dgram_client_conn *conn,
 				const char *addr)
 {
+	if (conn->addr != NULL)
+		talloc_free((void *)conn->addr);
+
 	conn->addr = talloc_strdup(conn, addr);
+	conn->flags |= OSMO_DGRAM_CLIENT_F_RECONFIG;
 }
 
 void
@@ -103,12 +111,14 @@ osmo_dgram_client_conn_set_port(struct osmo_dgram_client_conn *conn,
 				uint16_t port)
 {
 	conn->port = port;
+	conn->flags |= OSMO_DGRAM_CLIENT_F_RECONFIG;
 }
 
 void
 osmo_dgram_client_conn_set_data(struct osmo_dgram_client_conn *conn, void *data)
 {
 	conn->data = data;
+	conn->flags |= OSMO_DGRAM_CLIENT_F_RECONFIG;
 }
 
 void osmo_dgram_client_conn_destroy(struct osmo_dgram_client_conn *conn)
@@ -119,6 +129,12 @@ void osmo_dgram_client_conn_destroy(struct osmo_dgram_client_conn *conn)
 int osmo_dgram_client_conn_open(struct osmo_dgram_client_conn *conn)
 {
 	int ret;
+
+	/* we are reconfiguring this socket, close existing first. */
+	if ((conn->flags & OSMO_DGRAM_CLIENT_F_RECONFIG) && conn->ofd.fd >= 0)
+		osmo_dgram_client_conn_close(conn);
+
+	conn->flags &= ~OSMO_DGRAM_CLIENT_F_RECONFIG;
 
 	ret = osmo_sock_init(AF_INET, SOCK_DGRAM, IPPROTO_UDP,
 			     conn->addr, conn->port,
@@ -146,12 +162,15 @@ void osmo_dgram_client_conn_send(struct osmo_dgram_client_conn *conn,
  * Server side.
  */
 
+#define OSMO_DGRAM_SERVER_F_RECONFIG	(1 << 0)
+
 struct osmo_dgram_server_conn {
         struct osmo_fd                  ofd;
         const char                      *addr;
         uint16_t                        port;
 	int (*cb)(struct osmo_dgram_server_conn *conn, struct msgb *msg);
         void                            *data;
+	unsigned int			flags;
 };
 
 static void osmo_dgram_server_conn_read(struct osmo_dgram_server_conn *conn)
@@ -205,6 +224,7 @@ struct osmo_dgram_server_conn *osmo_dgram_server_conn_create(void *ctx)
 	if (!conn)
 		return NULL;
 
+	conn->ofd.fd = -1;
 	conn->ofd.when |= BSC_FD_READ;
 	conn->ofd.cb = osmo_dgram_server_conn_cb;
 	conn->ofd.data = conn;
@@ -215,19 +235,25 @@ struct osmo_dgram_server_conn *osmo_dgram_server_conn_create(void *ctx)
 void osmo_dgram_server_conn_set_addr(struct osmo_dgram_server_conn *conn,
 				     const char *addr)
 {
+	if (conn->addr != NULL)
+		talloc_free((void *)conn->addr);
+
 	conn->addr = talloc_strdup(conn, addr);
+	conn->flags |= OSMO_DGRAM_SERVER_F_RECONFIG;
 }
 
 void osmo_dgram_server_conn_set_port(struct osmo_dgram_server_conn *conn,
 				     uint16_t port)
 {
 	conn->port = port;
+	conn->flags |= OSMO_DGRAM_SERVER_F_RECONFIG;
 }
 
 void osmo_dgram_server_conn_set_read_cb(struct osmo_dgram_server_conn *conn,
 	int (*read_cb)(struct osmo_dgram_server_conn *conn, struct msgb *msg))
 {
 	conn->cb = read_cb;
+	conn->flags |= OSMO_DGRAM_SERVER_F_RECONFIG;
 }
 
 void osmo_dgram_server_conn_destroy(struct osmo_dgram_server_conn *conn)
@@ -238,6 +264,12 @@ void osmo_dgram_server_conn_destroy(struct osmo_dgram_server_conn *conn)
 int osmo_dgram_server_conn_open(struct osmo_dgram_server_conn *conn)
 {
 	int ret;
+
+	/* we are reconfiguring this socket, close existing first. */
+	if ((conn->flags & OSMO_DGRAM_SERVER_F_RECONFIG) && conn->ofd.fd >= 0)
+		osmo_dgram_server_conn_close(conn);
+
+	conn->flags &= ~OSMO_DGRAM_SERVER_F_RECONFIG;
 
 	ret = osmo_sock_init(AF_INET, SOCK_DGRAM, IPPROTO_UDP,
 			     conn->addr, conn->port, OSMO_SOCK_F_BIND);
