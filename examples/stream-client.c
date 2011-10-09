@@ -14,7 +14,7 @@
 
 #define DSTREAMTEST 0
 
-struct log_info_cat stream_client_test_cat[] = {
+struct log_info_cat osmo_stream_client_test_cat[] = {
 	[DSTREAMTEST] = {
 		.name = "DSTREAMTEST",
 		.description = "STREAMCLIENT-mode test",
@@ -23,13 +23,13 @@ struct log_info_cat stream_client_test_cat[] = {
 	},
 };
 
-const struct log_info stream_client_test_log_info = {
+const struct log_info osmo_stream_client_test_log_info = {
 	.filter_fn = NULL,
-	.cat = stream_client_test_cat,
-	.num_cat = ARRAY_SIZE(stream_client_test_cat),
+	.cat = osmo_stream_client_test_cat,
+	.num_cat = ARRAY_SIZE(osmo_stream_client_test_cat),
 };
 
-static struct stream_client_conn *conn;
+static struct osmo_stream_client_conn *conn;
 
 void sighandler(int foo)
 {
@@ -37,13 +37,13 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-static int connect_cb(struct stream_client_conn *conn)
+static int connect_cb(struct osmo_stream_client_conn *conn)
 {
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "connected\n");
 	return 0;
 }
 
-static int read_cb(struct stream_client_conn *conn, struct msgb *msg)
+static int read_cb(struct osmo_stream_client_conn *conn, struct msgb *msg)
 {
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "received message from stream\n");
 	return 0;
@@ -64,13 +64,13 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 
 	msg = msgb_alloc(1024, "STREAMCLIENT/test");
 	if (msg == NULL) {
-		LOGP(DSTREAMTEST, LOGL_ERROR, "stream_client: cannot allocate message\n");
+		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
 		return 0;
 	}
 	ptr = msgb_put(msg, strlen(buf));
 	memcpy(ptr, buf, ret);
 
-	stream_client_conn_send(conn, msg);
+	osmo_stream_client_conn_send(conn, msg);
 
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "message of %d bytes sent\n", msg->len);
 
@@ -81,26 +81,26 @@ int main(void)
 {
 	struct osmo_fd *kbd_ofd;
 
-	tall_test = talloc_named_const(NULL, 1, "stream_client_test");
+	tall_test = talloc_named_const(NULL, 1, "osmo_stream_client_test");
 
-	osmo_init_logging(&stream_client_test_log_info);
+	osmo_init_logging(&osmo_stream_client_test_log_info);
 	log_set_log_level(osmo_stderr_target, 1);
 
 	/*
 	 * initialize stream client.
 	 */
 
-	conn = stream_client_conn_create(tall_test);
+	conn = osmo_stream_client_conn_create(tall_test);
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create client\n");
 		exit(EXIT_FAILURE);
 	}
-	stream_client_conn_set_addr(conn, "127.0.0.1");
-	stream_client_conn_set_port(conn, 10000);
-	stream_client_conn_set_connect_cb(conn, connect_cb);
-	stream_client_conn_set_read_cb(conn, read_cb);
+	osmo_stream_client_conn_set_addr(conn, "127.0.0.1");
+	osmo_stream_client_conn_set_port(conn, 10000);
+	osmo_stream_client_conn_set_connect_cb(conn, connect_cb);
+	osmo_stream_client_conn_set_read_cb(conn, read_cb);
 
-	if (stream_client_conn_open(conn) < 0) {
+	if (osmo_stream_client_conn_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
 		exit(EXIT_FAILURE);
 	}
