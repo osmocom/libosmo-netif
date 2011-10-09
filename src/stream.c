@@ -30,6 +30,8 @@ enum osmo_stream_client_conn_state {
         STREAM_CLIENT_LINK_STATE_MAX
 };
 
+#define OSMO_STREAM_CLIENT_F_RECONFIG	(1 << 0)
+
 struct osmo_stream_client_conn {
 	struct osmo_fd			ofd;
 	struct llist_head		tx_queue;
@@ -41,6 +43,7 @@ struct osmo_stream_client_conn {
 	int (*read_cb)(struct osmo_stream_client_conn *link, struct msgb *msg);
 	int (*write_cb)(struct osmo_stream_client_conn *link);
 	void				*data;
+	int				flags;
 };
 
 void osmo_stream_client_conn_close(struct osmo_stream_client_conn *link);
@@ -166,6 +169,7 @@ struct osmo_stream_client_conn *osmo_stream_client_conn_create(void *ctx)
 	if (!link)
 		return NULL;
 
+	link->ofd.fd = -1;
 	link->ofd.when |= BSC_FD_READ | BSC_FD_WRITE;
 	link->ofd.priv_nr = 0;	/* XXX */
 	link->ofd.cb = osmo_stream_client_fd_cb;
@@ -183,6 +187,7 @@ osmo_stream_client_conn_set_addr(struct osmo_stream_client_conn *link,
 				 const char *addr)
 {
 	link->addr = talloc_strdup(link, addr);
+	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
 }
 
 void
@@ -190,6 +195,7 @@ osmo_stream_client_conn_set_port(struct osmo_stream_client_conn *link,
 				 uint16_t port)
 {
 	link->port = port;
+	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
 }
 
 void
@@ -197,6 +203,7 @@ osmo_stream_client_conn_set_data(struct osmo_stream_client_conn *link,
 				 void *data)
 {
 	link->data = data;
+	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
 }
 
 void
@@ -204,6 +211,7 @@ osmo_stream_client_conn_set_connect_cb(struct osmo_stream_client_conn *link,
 	int (*connect_cb)(struct osmo_stream_client_conn *link))
 {
 	link->connect_cb = connect_cb;
+	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
 }
 
 void
@@ -211,6 +219,7 @@ osmo_stream_client_conn_set_read_cb(struct osmo_stream_client_conn *link,
 	int (*read_cb)(struct osmo_stream_client_conn *link, struct msgb *msgb))
 {
 	link->read_cb = read_cb;
+	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
 }
 
 void osmo_stream_client_conn_destroy(struct osmo_stream_client_conn *link)
@@ -221,6 +230,12 @@ void osmo_stream_client_conn_destroy(struct osmo_stream_client_conn *link)
 int osmo_stream_client_conn_open(struct osmo_stream_client_conn *link)
 {
 	int ret;
+
+	/* we are reconfiguring this socket, close existing first. */
+	if ((link->flags & OSMO_STREAM_CLIENT_F_RECONFIG) && link->ofd.fd >= 0)
+		osmo_stream_client_conn_close(link);
+
+	link->flags &= ~OSMO_STREAM_CLIENT_F_RECONFIG;
 
 	ret = osmo_sock_init(AF_INET, SOCK_STREAM, IPPROTO_TCP,
 			     link->addr, link->port,
@@ -263,12 +278,15 @@ void osmo_stream_client_conn_send(struct osmo_stream_client_conn *link,
  * Server side.
  */
 
+#define OSMO_STREAM_SERVER_F_RECONFIG	(1 << 0)
+
 struct osmo_stream_server_link {
         struct osmo_fd                  ofd;
         const char                      *addr;
         uint16_t                        port;
         int (*accept_cb)(struct osmo_stream_server_link *link, int fd);
         void                            *data;
+	int				flags;
 };
 
 static int osmo_stream_server_fd_cb(struct osmo_fd *ofd, unsigned int what)
@@ -301,6 +319,7 @@ struct osmo_stream_server_link *osmo_stream_server_link_create(void *ctx)
 	if (!link)
 		return NULL;
 
+	link->ofd.fd = -1;
 	link->ofd.when |= BSC_FD_READ | BSC_FD_WRITE;
 	link->ofd.cb = osmo_stream_server_fd_cb;
 	link->ofd.data = link;
@@ -312,12 +331,14 @@ void osmo_stream_server_link_set_addr(struct osmo_stream_server_link *link,
 				      const char *addr)
 {
 	link->addr = talloc_strdup(link, addr);
+	link->flags |= OSMO_STREAM_SERVER_F_RECONFIG;
 }
 
 void osmo_stream_server_link_set_port(struct osmo_stream_server_link *link,
 				      uint16_t port)
 {
 	link->port = port;
+	link->flags |= OSMO_STREAM_SERVER_F_RECONFIG;
 }
 
 void osmo_stream_server_link_set_accept_cb(struct osmo_stream_server_link *link,
@@ -325,6 +346,7 @@ void osmo_stream_server_link_set_accept_cb(struct osmo_stream_server_link *link,
 
 {
 	link->accept_cb = accept_cb;
+	link->flags |= OSMO_STREAM_SERVER_F_RECONFIG;
 }
 
 void osmo_stream_server_link_destroy(struct osmo_stream_server_link *link)
@@ -335,6 +357,12 @@ void osmo_stream_server_link_destroy(struct osmo_stream_server_link *link)
 int osmo_stream_server_link_open(struct osmo_stream_server_link *link)
 {
 	int ret;
+
+	/* we are reconfiguring this socket, close existing first. */
+	if ((link->flags & OSMO_STREAM_SERVER_F_RECONFIG) && link->ofd.fd >= 0)
+		osmo_stream_server_link_close(link);
+
+	link->flags &= ~OSMO_STREAM_SERVER_F_RECONFIG;
 
 	ret = osmo_sock_init(AF_INET, SOCK_STREAM, IPPROTO_TCP,
 			     link->addr, link->port, OSMO_SOCK_F_BIND);
