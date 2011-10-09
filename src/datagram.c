@@ -23,22 +23,22 @@
  * Client side.
  */
 
-struct datagram_client_conn {
+struct osmo_dgram_client_conn {
 	struct osmo_fd			ofd;
 	struct llist_head		tx_queue;
 	const char			*addr;
 	uint16_t			port;
-	int (*write_cb)(struct datagram_client_conn *conn);
+	int (*write_cb)(struct osmo_dgram_client_conn *conn);
 	void				*data;
 };
 
-void datagram_client_conn_close(struct datagram_client_conn *conn)
+void osmo_dgram_client_conn_close(struct osmo_dgram_client_conn *conn)
 {
 	osmo_fd_unregister(&conn->ofd);
 	close(conn->ofd.fd);
 }
 
-static int datagram_client_write(struct datagram_client_conn *conn)
+static int osmo_dgram_client_write(struct osmo_dgram_client_conn *conn)
 {
 	struct msgb *msg;
 	struct llist_head *lh;
@@ -63,28 +63,28 @@ static int datagram_client_write(struct datagram_client_conn *conn)
 	return 0;
 }
 
-static int datagram_client_fd_cb(struct osmo_fd *ofd, unsigned int what)
+static int osmo_dgram_client_fd_cb(struct osmo_fd *ofd, unsigned int what)
 {
-	struct datagram_client_conn *conn = ofd->data;
+	struct osmo_dgram_client_conn *conn = ofd->data;
 
 	if (what & BSC_FD_WRITE) {
 		LOGP(DLINP, LOGL_DEBUG, "connected write\n");
-		datagram_client_write(conn);
+		osmo_dgram_client_write(conn);
 	}
         return 0;
 }
 
-struct datagram_client_conn *datagram_client_conn_create(void *ctx)
+struct osmo_dgram_client_conn *osmo_dgram_client_conn_create(void *ctx)
 {
-	struct datagram_client_conn *conn;
+	struct osmo_dgram_client_conn *conn;
 
-	conn = talloc_zero(ctx, struct datagram_client_conn);
+	conn = talloc_zero(ctx, struct osmo_dgram_client_conn);
 	if (!conn)
 		return NULL;
 
 	conn->ofd.when |= BSC_FD_READ;
 	conn->ofd.priv_nr = 0;	/* XXX */
-	conn->ofd.cb = datagram_client_fd_cb;
+	conn->ofd.cb = osmo_dgram_client_fd_cb;
 	conn->ofd.data = conn;
 	INIT_LLIST_HEAD(&conn->tx_queue);
 
@@ -92,29 +92,31 @@ struct datagram_client_conn *datagram_client_conn_create(void *ctx)
 }
 
 void
-datagram_client_conn_set_addr(struct datagram_client_conn *conn, const char *addr)
+osmo_dgram_client_conn_set_addr(struct osmo_dgram_client_conn *conn,
+				const char *addr)
 {
 	conn->addr = talloc_strdup(conn, addr);
 }
 
 void
-datagram_client_conn_set_port(struct datagram_client_conn *conn, uint16_t port)
+osmo_dgram_client_conn_set_port(struct osmo_dgram_client_conn *conn,
+				uint16_t port)
 {
 	conn->port = port;
 }
 
 void
-datagram_client_conn_set_data(struct datagram_client_conn *conn, void *data)
+osmo_dgram_client_conn_set_data(struct osmo_dgram_client_conn *conn, void *data)
 {
 	conn->data = data;
 }
 
-void datagram_client_conn_destroy(struct datagram_client_conn *conn)
+void osmo_dgram_client_conn_destroy(struct osmo_dgram_client_conn *conn)
 {
 	talloc_free(conn);
 }
 
-int datagram_client_conn_open(struct datagram_client_conn *conn)
+int osmo_dgram_client_conn_open(struct osmo_dgram_client_conn *conn)
 {
 	int ret;
 
@@ -133,7 +135,8 @@ int datagram_client_conn_open(struct datagram_client_conn *conn)
 	return 0;
 }
 
-void datagram_client_conn_send(struct datagram_client_conn *conn, struct msgb *msg)
+void osmo_dgram_client_conn_send(struct osmo_dgram_client_conn *conn,
+				 struct msgb *msg)
 {
 	msgb_enqueue(&conn->tx_queue, msg);
 	conn->ofd.when |= BSC_FD_WRITE;
@@ -143,15 +146,15 @@ void datagram_client_conn_send(struct datagram_client_conn *conn, struct msgb *m
  * Server side.
  */
 
-struct datagram_server_conn {
+struct osmo_dgram_server_conn {
         struct osmo_fd                  ofd;
         const char                      *addr;
         uint16_t                        port;
-	int (*cb)(struct datagram_server_conn *conn, struct msgb *msg);
+	int (*cb)(struct osmo_dgram_server_conn *conn, struct msgb *msg);
         void                            *data;
 };
 
-static void datagram_server_conn_read(struct datagram_server_conn *conn)
+static void osmo_dgram_server_conn_read(struct osmo_dgram_server_conn *conn)
 {
 	struct msgb *msg;
 	int ret;
@@ -168,11 +171,11 @@ static void datagram_server_conn_read(struct datagram_server_conn *conn)
 		if (errno == EPIPE || errno == ECONNRESET) {
 			LOGP(DLINP, LOGL_ERROR, "lost connection with server\n");
 		}
-		datagram_server_conn_destroy(conn);
+		osmo_dgram_server_conn_destroy(conn);
 		return;
 	} else if (ret == 0) {
 		LOGP(DLINP, LOGL_ERROR, "connection closed with server\n");
-		datagram_server_conn_destroy(conn);
+		osmo_dgram_server_conn_destroy(conn);
 		return;
 	}
 	msgb_put(msg, ret);
@@ -183,54 +186,56 @@ static void datagram_server_conn_read(struct datagram_server_conn *conn)
 	return;
 }
 
-static int datagram_server_conn_cb(struct osmo_fd *ofd, unsigned int what)
+static int osmo_dgram_server_conn_cb(struct osmo_fd *ofd, unsigned int what)
 {
-	struct datagram_server_conn *conn = ofd->data;
+	struct osmo_dgram_server_conn *conn = ofd->data;
 
 	LOGP(DLINP, LOGL_DEBUG, "connected read/write\n");
 	if (what & BSC_FD_READ)
-		datagram_server_conn_read(conn);
+		osmo_dgram_server_conn_read(conn);
 
 	return 0;
 }
 
-struct datagram_server_conn *datagram_server_conn_create(void *ctx)
+struct osmo_dgram_server_conn *osmo_dgram_server_conn_create(void *ctx)
 {
-	struct datagram_server_conn *conn;
+	struct osmo_dgram_server_conn *conn;
 
-	conn = talloc_zero(ctx, struct datagram_server_conn);
+	conn = talloc_zero(ctx, struct osmo_dgram_server_conn);
 	if (!conn)
 		return NULL;
 
 	conn->ofd.when |= BSC_FD_READ;
-	conn->ofd.cb = datagram_server_conn_cb;
+	conn->ofd.cb = osmo_dgram_server_conn_cb;
 	conn->ofd.data = conn;
 
 	return conn;
 }
 
-void datagram_server_conn_set_addr(struct datagram_server_conn *conn, const char *addr)
+void osmo_dgram_server_conn_set_addr(struct osmo_dgram_server_conn *conn,
+				     const char *addr)
 {
 	conn->addr = talloc_strdup(conn, addr);
 }
 
-void datagram_server_conn_set_port(struct datagram_server_conn *conn, uint16_t port)
+void osmo_dgram_server_conn_set_port(struct osmo_dgram_server_conn *conn,
+				     uint16_t port)
 {
 	conn->port = port;
 }
 
-void datagram_server_conn_set_read_cb(struct datagram_server_conn *conn,
-	int (*read_cb)(struct datagram_server_conn *conn, struct msgb *msg))
+void osmo_dgram_server_conn_set_read_cb(struct osmo_dgram_server_conn *conn,
+	int (*read_cb)(struct osmo_dgram_server_conn *conn, struct msgb *msg))
 {
 	conn->cb = read_cb;
 }
 
-void datagram_server_conn_destroy(struct datagram_server_conn *conn)
+void osmo_dgram_server_conn_destroy(struct osmo_dgram_server_conn *conn)
 {
 	talloc_free(conn);
 }
 
-int datagram_server_conn_open(struct datagram_server_conn *conn)
+int osmo_dgram_server_conn_open(struct osmo_dgram_server_conn *conn)
 {
 	int ret;
 
@@ -247,7 +252,7 @@ int datagram_server_conn_open(struct datagram_server_conn *conn)
 	return 0;
 }
 
-void datagram_server_conn_close(struct datagram_server_conn *conn)
+void osmo_dgram_server_conn_close(struct osmo_dgram_server_conn *conn)
 {
 	osmo_fd_unregister(&conn->ofd);
 	close(conn->ofd.fd);
@@ -257,98 +262,98 @@ void datagram_server_conn_close(struct datagram_server_conn *conn)
  * Client+Server (bidirectional communications).
  */
 
-struct datagram_conn {
-	struct datagram_server_conn	*server;
-	struct datagram_client_conn	*client;
+struct osmo_dgram_conn {
+	struct osmo_dgram_server_conn	*server;
+	struct osmo_dgram_client_conn	*client;
 	void				*data;
 };
 
-struct datagram_conn *datagram_conn_create(void *ctx)
+struct osmo_dgram_conn *osmo_dgram_conn_create(void *ctx)
 {
-	struct datagram_conn *conn;
+	struct osmo_dgram_conn *conn;
 
-	conn = talloc_zero(ctx, struct datagram_conn);
+	conn = talloc_zero(ctx, struct osmo_dgram_conn);
 	if (!conn)
 		return NULL;
 
-	conn->server = datagram_server_conn_create(ctx);
+	conn->server = osmo_dgram_server_conn_create(ctx);
 	if (conn->server == NULL)
 		return NULL;
 
-	conn->client = datagram_client_conn_create(ctx);
+	conn->client = osmo_dgram_client_conn_create(ctx);
 	if (conn->client == NULL) {
-		datagram_server_conn_destroy(conn->server);
+		osmo_dgram_server_conn_destroy(conn->server);
 		return NULL;
 	}
 
 	return conn;
 }
 
-void datagram_conn_destroy(struct datagram_conn *conn)
+void osmo_dgram_conn_destroy(struct osmo_dgram_conn *conn)
 {
-	datagram_server_conn_destroy(conn->server);
-	datagram_client_conn_destroy(conn->client);
+	osmo_dgram_server_conn_destroy(conn->server);
+	osmo_dgram_client_conn_destroy(conn->client);
 }
 
 void
-datagram_conn_set_local_addr(struct datagram_conn *conn, const char *addr)
+osmo_dgram_conn_set_local_addr(struct osmo_dgram_conn *conn, const char *addr)
 {
-	datagram_server_conn_set_addr(conn->server, addr);
+	osmo_dgram_server_conn_set_addr(conn->server, addr);
 }
 
 void
-datagram_conn_set_remote_addr(struct datagram_conn *conn, const char *addr)
+osmo_dgram_conn_set_remote_addr(struct osmo_dgram_conn *conn, const char *addr)
 {
-	datagram_client_conn_set_addr(conn->client, addr);
+	osmo_dgram_client_conn_set_addr(conn->client, addr);
 }
 
 void
-datagram_conn_set_local_port(struct datagram_conn *conn, uint16_t port)
+osmo_dgram_conn_set_local_port(struct osmo_dgram_conn *conn, uint16_t port)
 {
-	datagram_server_conn_set_port(conn->server, port);
+	osmo_dgram_server_conn_set_port(conn->server, port);
 }
 
 void
-datagram_conn_set_remote_port(struct datagram_conn *conn, uint16_t port)
+osmo_dgram_conn_set_remote_port(struct osmo_dgram_conn *conn, uint16_t port)
 {
-	datagram_client_conn_set_port(conn->client, port);
+	osmo_dgram_client_conn_set_port(conn->client, port);
 }
 
-void datagram_conn_set_read_cb(struct datagram_conn *conn,
-	int (*read_cb)(struct datagram_server_conn *conn, struct msgb *msg))
+void osmo_dgram_conn_set_read_cb(struct osmo_dgram_conn *conn,
+	int (*read_cb)(struct osmo_dgram_server_conn *conn, struct msgb *msg))
 {
 	conn->server->cb = read_cb;
 }
 
 void
-datagram_conn_set_data(struct datagram_client_conn *conn, void *data)
+osmo_dgram_conn_set_data(struct osmo_dgram_client_conn *conn, void *data)
 {
 	conn->data = data;
 }
 
-int datagram_conn_open(struct datagram_conn *conn)
+int osmo_dgram_conn_open(struct osmo_dgram_conn *conn)
 {
 	int ret;
 
-	ret = datagram_server_conn_open(conn->server);
+	ret = osmo_dgram_server_conn_open(conn->server);
 	if (ret < 0)
 		return ret;
 
-	ret = datagram_client_conn_open(conn->client);
+	ret = osmo_dgram_client_conn_open(conn->client);
 	if (ret < 0) {
-		datagram_server_conn_close(conn->server);
+		osmo_dgram_server_conn_close(conn->server);
 		return ret;
 	}
 	return ret;
 }
 
-void datagram_conn_close(struct datagram_conn *conn)
+void osmo_dgram_conn_close(struct osmo_dgram_conn *conn)
 {
-	datagram_server_conn_close(conn->server);
-	datagram_client_conn_close(conn->client);
+	osmo_dgram_server_conn_close(conn->server);
+	osmo_dgram_client_conn_close(conn->client);
 }
 
-void datagram_conn_send(struct datagram_conn *conn, struct msgb *msg)
+void osmo_dgram_conn_send(struct osmo_dgram_conn *conn, struct msgb *msg)
 {
-	datagram_client_conn_send(conn->client, msg);
+	osmo_dgram_client_conn_send(conn->client, msg);
 }

@@ -33,7 +33,7 @@ const struct log_info lapd_test_log_info = {
 	.num_cat = ARRAY_SIZE(lapd_test_cat),
 };
 
-static struct datagram_conn *conn;
+static struct osmo_dgram_conn *conn;
 static struct lapd_instance *lapd;
 static int sapi = 63, tei = 0;
 
@@ -44,7 +44,7 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-int read_cb(struct datagram_server_conn *conn, struct msgb *msg)
+int read_cb(struct osmo_dgram_server_conn *conn, struct msgb *msg)
 {
 	int error;
 
@@ -59,10 +59,10 @@ int read_cb(struct datagram_server_conn *conn, struct msgb *msg)
 
 void lapd_tx_cb(struct msgb *msg, void *cbdata)
 {
-	struct datagram_conn *conn = cbdata;
+	struct osmo_dgram_conn *conn = cbdata;
 
 	LOGP(DLINP, LOGL_NOTICE, "sending message over datagram\n");
-	datagram_conn_send(conn, msg);
+	osmo_dgram_conn_send(conn, msg);
 }
 
 void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
@@ -135,16 +135,16 @@ int main(void)
 	 * initialize datagram server.
 	 */
 
-	conn = datagram_conn_create(tall_test);
+	conn = osmo_dgram_conn_create(tall_test);
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create client\n");
 		exit(EXIT_FAILURE);
 	}
-	datagram_conn_set_local_addr(conn, "127.0.0.1");
-	datagram_conn_set_local_port(conn, 10001);
-	datagram_conn_set_remote_addr(conn, "127.0.0.1");
-	datagram_conn_set_remote_port(conn, 10000);
-	datagram_conn_set_read_cb(conn, read_cb);
+	osmo_dgram_conn_set_local_addr(conn, "127.0.0.1");
+	osmo_dgram_conn_set_local_port(conn, 10001);
+	osmo_dgram_conn_set_remote_addr(conn, "127.0.0.1");
+	osmo_dgram_conn_set_remote_port(conn, 10000);
+	osmo_dgram_conn_set_read_cb(conn, read_cb);
 
 	lapd = lapd_instance_alloc(1, lapd_tx_cb, conn, lapd_rx_cb, conn,
 				   &lapd_profile_sat);
@@ -159,7 +159,7 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	if (datagram_conn_open(conn) < 0) {
+	if (osmo_dgram_conn_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
 		exit(EXIT_FAILURE);
 	}
