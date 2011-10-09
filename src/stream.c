@@ -206,6 +206,11 @@ osmo_stream_client_conn_set_data(struct osmo_stream_client_conn *link,
 	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
 }
 
+void *osmo_stream_client_conn_get_data(struct osmo_stream_client_conn *link)
+{
+	return link->data;
+}
+
 void
 osmo_stream_client_conn_set_connect_cb(struct osmo_stream_client_conn *link,
 	int (*connect_cb)(struct osmo_stream_client_conn *link))
@@ -339,6 +344,19 @@ void osmo_stream_server_link_set_port(struct osmo_stream_server_link *link,
 {
 	link->port = port;
 	link->flags |= OSMO_STREAM_SERVER_F_RECONFIG;
+}
+
+void
+osmo_stream_server_link_set_data(struct osmo_stream_server_link *link,
+				 void *data)
+{
+	link->data = data;
+	link->flags |= OSMO_STREAM_SERVER_F_RECONFIG;
+}
+
+void *osmo_stream_server_link_get_data(struct osmo_stream_server_link *link)
+{
+	return link->data;
 }
 
 void osmo_stream_server_link_set_accept_cb(struct osmo_stream_server_link *link,
@@ -490,6 +508,11 @@ osmo_stream_server_conn_create(void *ctx, struct osmo_stream_server_link *link,
 		return NULL;
 	}
 	return conn;
+}
+
+void *osmo_stream_server_conn_get_data(struct osmo_stream_server_conn *link)
+{
+	return link->data;
 }
 
 void osmo_stream_server_conn_destroy(struct osmo_stream_server_conn *conn)
