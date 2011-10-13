@@ -43,7 +43,7 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-static int read_cb(struct osmo_dgram_server_conn *conn, struct msgb *msg)
+static int read_cb(struct osmo_dgram_conn *conn, struct msgb *msg)
 {
 	int error;
 

@@ -39,7 +39,7 @@ void osmo_dgram_conn_set_local_addr(struct osmo_dgram_conn *conn, const char *ad
 void osmo_dgram_conn_set_remote_addr(struct osmo_dgram_conn *conn, const char *addr);
 void osmo_dgram_conn_set_local_port(struct osmo_dgram_conn *conn, uint16_t port);
 void osmo_dgram_conn_set_remote_port(struct osmo_dgram_conn *conn, uint16_t port);
-void osmo_dgram_conn_set_read_cb(struct osmo_dgram_conn *conn, int (*read_cb)(struct osmo_dgram_server_conn *conn, struct msgb *msg));
+void osmo_dgram_conn_set_read_cb(struct osmo_dgram_conn *conn, int (*read_cb)(struct osmo_dgram_conn *conn, struct msgb *msg));
 void osmo_dgram_conn_set_data(struct osmo_dgram_client_conn *conn, void *data);
 
 void osmo_dgram_conn_send(struct osmo_dgram_conn *conn, struct msgb *msg);

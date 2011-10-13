@@ -297,8 +297,20 @@ void osmo_dgram_server_conn_close(struct osmo_dgram_server_conn *conn)
 struct osmo_dgram_conn {
 	struct osmo_dgram_server_conn	*server;
 	struct osmo_dgram_client_conn	*client;
+	int (*read_cb)(struct osmo_dgram_conn *conn, struct msgb *msg);
 	void				*data;
 };
+
+static int
+dgram_server_conn_cb(struct osmo_dgram_server_conn *server, struct msgb *msg)
+{
+	struct osmo_dgram_conn *conn = server->data;
+
+	if (conn->read_cb)
+		return conn->read_cb(conn, msg);
+
+	return 0;
+}
 
 struct osmo_dgram_conn *osmo_dgram_conn_create(void *ctx)
 {
@@ -311,6 +323,9 @@ struct osmo_dgram_conn *osmo_dgram_conn_create(void *ctx)
 	conn->server = osmo_dgram_server_conn_create(ctx);
 	if (conn->server == NULL)
 		return NULL;
+
+	osmo_dgram_server_conn_set_read_cb(conn->server, dgram_server_conn_cb);
+	conn->server->data = conn;
 
 	conn->client = osmo_dgram_client_conn_create(ctx);
 	if (conn->client == NULL) {
@@ -352,9 +367,9 @@ osmo_dgram_conn_set_remote_port(struct osmo_dgram_conn *conn, uint16_t port)
 }
 
 void osmo_dgram_conn_set_read_cb(struct osmo_dgram_conn *conn,
-	int (*read_cb)(struct osmo_dgram_server_conn *conn, struct msgb *msg))
+	int (*read_cb)(struct osmo_dgram_conn *conn, struct msgb *msg))
 {
-	conn->server->cb = read_cb;
+	conn->read_cb = read_cb;
 }
 
 void
