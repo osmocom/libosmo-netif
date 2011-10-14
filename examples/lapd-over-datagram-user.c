@@ -2,8 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
+#include <osmocom/core/linuxlist.h>
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
@@ -13,6 +16,15 @@
 #include <osmocom/abis/lapd.h>
 
 #include <osmocom/netif/datagram.h>
+
+static LLIST_HEAD(msg_sent_list);
+
+struct msg_sent {
+	struct llist_head	head;
+	struct msgb		*msg;
+	int			num;
+	struct timeval		tv;
+};
 
 #define DLAPDTEST 0
 
@@ -47,8 +59,6 @@ static int read_cb(struct osmo_dgram_conn *conn, struct msgb *msg)
 {
 	int error;
 
-	LOGP(DLINP, LOGL_NOTICE, "received message from datagram\n");
-
 	if (lapd_receive(lapd, msg, &error) < 0) {
 		LOGP(DLINP, LOGL_ERROR, "lapd_receive returned error!\n");
 		return -1;
@@ -60,7 +70,7 @@ static void *tall_test;
 
 void lapd_tx_cb(struct msgb *msg, void *cbdata)
 {
-	LOGP(DLINP, LOGL_NOTICE, "sending message over datagram\n");
+	LOGP(DLINP, LOGL_DEBUG, "sending message over datagram\n");
 	osmo_dgram_conn_send(conn, msg);
 }
 
@@ -68,10 +78,45 @@ void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
 		void *rx_cbdata)
 {
 	struct msgb *msg = dp->oph.msg;
+	int *__msgs = rx_cbdata;
+	int num_msgs = *__msgs;
 
 	switch (dp->oph.primitive) {
 	case PRIM_DL_EST:
 		DEBUGP(DLAPDTEST, "DL_EST: sapi(%d) tei(%d)\n", sapi, tei);
+
+		int i;
+		for (i=0; i<num_msgs; i++) {
+			struct msgb *msg;
+			struct msg_sent *msg_sent;
+			char *ptr;
+			int x;
+
+			msg = msgb_alloc(1024, "LAPD/test");
+			if (msg == NULL) {
+				LOGP(DLINP, LOGL_ERROR, "cannot alloc msg\n");
+				return;
+			}
+		        ptr = (char *)msgb_put(msg, sizeof(int));
+
+			x = htonl(i);
+		        memcpy(ptr, &x, sizeof(int));
+
+			msg_sent = talloc_zero(NULL, struct msg_sent);
+			if (msg_sent == NULL) {
+				LOGP(DLINP, LOGL_ERROR, "can't alloc struct\n");
+				return;
+			}
+			msg_sent->msg = msg;
+			gettimeofday(&msg_sent->tv, NULL);
+			msg_sent->num = i;
+			llist_add(&msg_sent->head, &msg_sent_list);
+
+		        lapd_transmit(lapd, tei, sapi, msg);
+
+		        LOGP(DLAPDTEST, LOGL_DEBUG, "enqueueing msg %d of "
+				"%d bytes to be sent over LAPD\n", i, msg->len);
+		}
 		break;
 	case PRIM_DL_REL:
 		DEBUGP(DLAPDTEST, "DL_REL: sapi(%d) tei(%d)\n", sapi, tei);
@@ -83,7 +128,36 @@ void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
 			DEBUGP(DLAPDTEST, "RX: %s sapi=%d tei=%d\n",
 				osmo_hexdump(msgb_l2(msg), msgb_l2len(msg)),
 				sapi, tei);
-			return;
+
+			int num;
+			struct msg_sent *cur, *tmp, *found = NULL;
+
+			num = ntohl(*((int *)msg->data));
+			LOGP(DLINP, LOGL_DEBUG,
+				"received msg number %d\n", num);
+
+			llist_for_each_entry_safe(cur, tmp,
+						&msg_sent_list, head) {
+				if (cur->num == num) {
+					llist_del(&cur->head);
+					found = cur;
+					break;
+				}
+			}
+			if (found) {
+				struct timeval tv, diff;
+
+				gettimeofday(&tv, NULL);
+				timersub(&tv, &found->tv, &diff);
+
+				LOGP(DLINP, LOGL_NOTICE, "message %d replied "
+					"in %lu.%.6lu\n",
+					num, diff.tv_sec, diff.tv_usec);
+				talloc_free(found);
+			} else {
+				LOGP(DLINP, LOGL_ERROR,
+					"message %d not found!\n", num);
+			}
 		}
 		break;
 	case PRIM_MDL_ERROR:
@@ -95,45 +169,27 @@ void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
 	}
 }
 
-static int kbd_cb(struct osmo_fd *fd, unsigned int what)
+int main(int argc, char *argv[])
 {
-	char buf[1024];
-	struct msgb *msg;
-	uint8_t *ptr;
-	int ret;
+	int num_msgs;
 
-	ret = read(STDIN_FILENO, buf, sizeof(buf));
+	signal(SIGINT, sighandler);
 
-	LOGP(DLAPDTEST, LOGL_NOTICE, "read %d byte from keyboard\n", ret);
-
-	msg = msgb_alloc(1024, "LAPD/test");
-	if (msg == NULL) {
-		LOGP(DLINP, LOGL_ERROR, "lapd: cannot allocate message\n");
-		return 0;
+	if (argc != 2) {
+		printf("Usage: %s [num_msgs]\n", argv[0]);
+		exit(EXIT_FAILURE);
 	}
-	ptr = msgb_put(msg, strlen(buf));
-	memcpy(ptr, buf, ret);
-
-	lapd_transmit(lapd, tei, sapi, msg);
-
-	LOGP(DLAPDTEST, LOGL_NOTICE, "message of %d bytes sent\n", msg->len);
-
-	return 0;
-}
-
-int main(void)
-{
-	struct osmo_fd *kbd_ofd;
+	num_msgs = atoi(argv[1]);
 
 	tall_test = talloc_named_const(NULL, 1, "lapd_test");
 
 	osmo_init_logging(&lapd_test_log_info);
-	log_set_log_level(osmo_stderr_target, 1);
+	log_set_log_level(osmo_stderr_target, LOGL_NOTICE);
 	/*
 	 * initialize LAPD stuff.
 	 */
 
-	lapd = lapd_instance_alloc(0, lapd_tx_cb, NULL, lapd_rx_cb, NULL,
+	lapd = lapd_instance_alloc(0, lapd_tx_cb, NULL, lapd_rx_cb, &num_msgs,
 				   &lapd_profile_sat);
 	if (lapd == NULL) {
 		LOGP(DLINP, LOGL_ERROR, "cannot allocate instance\n");
@@ -164,17 +220,6 @@ int main(void)
 		LOGP(DLINP, LOGL_ERROR, "cannot start user-side LAPD\n");
 		exit(EXIT_FAILURE);
 	}
-
-	kbd_ofd = talloc_zero(tall_test, struct osmo_fd);
-	if (!kbd_ofd) {
-		LOGP(DLAPDTEST, LOGL_ERROR, "OOM\n");
-		exit(EXIT_FAILURE);
-	}
-	kbd_ofd->fd = STDIN_FILENO;
-	kbd_ofd->when = BSC_FD_READ;
-	kbd_ofd->data = conn;
-	kbd_ofd->cb = kbd_cb;
-	osmo_fd_register(kbd_ofd);
 
 	LOGP(DLINP, LOGL_NOTICE, "Entering main loop\n");
 

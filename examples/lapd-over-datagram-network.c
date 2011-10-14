@@ -40,7 +40,7 @@ static int sapi = 63, tei = 0;
 void sighandler(int foo)
 {
 	lapd_instance_free(lapd);
-	LOGP(DLINP, LOGL_NOTICE, "closing LAPD.\n");
+	LOGP(DLAPDTEST, LOGL_NOTICE, "closing LAPD.\n");
 	exit(EXIT_SUCCESS);
 }
 
@@ -48,12 +48,13 @@ int read_cb(struct osmo_dgram_conn *conn, struct msgb *msg)
 {
 	int error;
 
-	LOGP(DLINP, LOGL_NOTICE, "received message from datagram\n");
+	LOGP(DLAPDTEST, LOGL_DEBUG, "received message from datagram\n");
 
 	if (lapd_receive(lapd, msg, &error) < 0) {
-		LOGP(DLINP, LOGL_ERROR, "lapd_receive returned error!\n");
+		LOGP(DLAPDTEST, LOGL_ERROR, "lapd_receive returned error!\n");
 		return -1;
 	}
+
 	return 0;
 }
 
@@ -61,7 +62,7 @@ void lapd_tx_cb(struct msgb *msg, void *cbdata)
 {
 	struct osmo_dgram_conn *conn = cbdata;
 
-	LOGP(DLINP, LOGL_NOTICE, "sending message over datagram\n");
+	LOGP(DLAPDTEST, LOGL_DEBUG, "sending message over datagram\n");
 	osmo_dgram_conn_send(conn, msg);
 }
 
@@ -80,10 +81,30 @@ void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
 	case PRIM_DL_DATA:
 	case PRIM_DL_UNIT_DATA:
 		if (dp->oph.operation == PRIM_OP_INDICATION) {
+			struct msgb *nmsg;
+			char *ptr;
+			int x;
+
 			msg->l2h = msg->l3h;
+
 			DEBUGP(DLAPDTEST, "RX: %s sapi=%d tei=%d\n",
 				osmo_hexdump(msgb_l2(msg), msgb_l2len(msg)),
 				sapi, tei);
+
+			LOGP(DLAPDTEST, LOGL_DEBUG, "forwarding message\n");
+
+                        nmsg = msgb_alloc(1024, "LAPD/test");
+                        if (nmsg == NULL) {
+                                LOGP(DLAPDTEST, LOGL_ERROR, "cannot alloc msg\n");
+                                return;
+                        }
+                        ptr = (char *)msgb_put(nmsg, sizeof(int));
+
+                        x = *((int *)msg->data);
+                        memcpy(ptr, &x, sizeof(int));
+
+			/* send the message back to client over LAPD */
+			lapd_transmit(lapd, tei, sapi, msg);
 			return;
 		}
 		break;
@@ -96,40 +117,14 @@ void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
 	}
 }
 
-static int kbd_cb(struct osmo_fd *fd, unsigned int what)
+int main(int argc, char *argv[])
 {
-	char buf[1024];
-	struct msgb *msg;
-	uint8_t *ptr;
-	int ret;
-
-	ret = read(STDIN_FILENO, buf, sizeof(buf));
-
-	LOGP(DLAPDTEST, LOGL_NOTICE, "read %d byte from keyboard\n", ret);
-
-	msg = msgb_alloc_headroom(1024, 128, "lapd_test");
-	if (msg == NULL) {
-		LOGP(DLINP, LOGL_ERROR, "lapd: cannot allocate message\n");
-		return 0;
-	}
-	ptr = msgb_put(msg, strlen(buf));
-	memcpy(ptr, buf, strlen(buf));
-	lapd_transmit(lapd, tei, sapi, msg);
-
-	LOGP(DLAPDTEST, LOGL_NOTICE, "message of %d bytes sent\n", msg->len);
-
-	return 0;
-}
-
-int main(void)
-{
-	struct osmo_fd *kbd_ofd;
 	int teip;
 
 	tall_test = talloc_named_const(NULL, 1, "lapd_test");
 
 	osmo_init_logging(&lapd_test_log_info);
-	log_set_log_level(osmo_stderr_target, 1);
+	log_set_log_level(osmo_stderr_target, LOGL_NOTICE);
 
 	/*
 	 * initialize datagram server.
@@ -149,13 +144,13 @@ int main(void)
 	lapd = lapd_instance_alloc(1, lapd_tx_cb, conn, lapd_rx_cb, conn,
 				   &lapd_profile_sat);
 	if (lapd == NULL) {
-		LOGP(DLINP, LOGL_ERROR, "cannot allocate instance\n");
+		LOGP(DLAPDTEST, LOGL_ERROR, "cannot allocate instance\n");
 		exit(EXIT_FAILURE);
 	}
 
 	teip = lapd_tei_alloc(lapd, tei);
 	if (teip == 0) {
-		LOGP(DLINP, LOGL_ERROR, "cannot assign TEI\n");
+		LOGP(DLAPDTEST, LOGL_ERROR, "cannot assign TEI\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -164,18 +159,7 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	kbd_ofd = talloc_zero(tall_test, struct osmo_fd);
-	if (!kbd_ofd) {
-		LOGP(DLAPDTEST, LOGL_ERROR, "OOM\n");
-		exit(EXIT_FAILURE);
-	}
-	kbd_ofd->fd = STDIN_FILENO;
-	kbd_ofd->when = BSC_FD_READ;
-	kbd_ofd->data = conn;
-	kbd_ofd->cb = kbd_cb;
-	osmo_fd_register(kbd_ofd);
-
-	LOGP(DLINP, LOGL_NOTICE, "Entering main loop\n");
+	LOGP(DLAPDTEST, LOGL_NOTICE, "Entering main loop\n");
 
 	while(1) {
 		osmo_select_main(0);
