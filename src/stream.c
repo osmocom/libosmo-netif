@@ -182,7 +182,6 @@ osmo_stream_client_conn_set_data(struct osmo_stream_client_conn *link,
 				 void *data)
 {
 	link->data = data;
-	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
 }
 
 void *osmo_stream_client_conn_get_data(struct osmo_stream_client_conn *link)
@@ -195,7 +194,6 @@ osmo_stream_client_conn_set_connect_cb(struct osmo_stream_client_conn *link,
 	int (*connect_cb)(struct osmo_stream_client_conn *link))
 {
 	link->connect_cb = connect_cb;
-	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
 }
 
 void
@@ -203,7 +201,6 @@ osmo_stream_client_conn_set_read_cb(struct osmo_stream_client_conn *link,
 	int (*read_cb)(struct osmo_stream_client_conn *link))
 {
 	link->read_cb = read_cb;
-	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
 }
 
 void osmo_stream_client_conn_destroy(struct osmo_stream_client_conn *link)
@@ -353,7 +350,6 @@ osmo_stream_server_link_set_data(struct osmo_stream_server_link *link,
 				 void *data)
 {
 	link->data = data;
-	link->flags |= OSMO_STREAM_SERVER_F_RECONFIG;
 }
 
 void *osmo_stream_server_link_get_data(struct osmo_stream_server_link *link)
@@ -366,7 +362,6 @@ void osmo_stream_server_link_set_accept_cb(struct osmo_stream_server_link *link,
 
 {
 	link->accept_cb = accept_cb;
-	link->flags |= OSMO_STREAM_SERVER_F_RECONFIG;
 }
 
 void osmo_stream_server_link_destroy(struct osmo_stream_server_link *link)
