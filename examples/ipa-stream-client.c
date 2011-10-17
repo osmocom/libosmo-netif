@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 
 #include <osmocom/core/select.h>
 #include <osmocom/core/talloc.h>
@@ -174,6 +175,15 @@ int main(int argc, char *argv[])
 
 	if (osmo_stream_client_conn_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
+		exit(EXIT_FAILURE);
+	}
+
+	int on = 1, ret;
+	struct osmo_fd *ofd = osmo_stream_client_conn_get_ofd(conn);
+
+	ret = setsockopt(ofd->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+	if (ret < 0) {
+		LOGP(DIPATEST, LOGL_ERROR, "cannot disable Nagle\n");
 		exit(EXIT_FAILURE);
 	}
 

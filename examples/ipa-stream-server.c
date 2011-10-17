@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/tcp.h>
 
 #include <osmocom/core/select.h>
 #include <osmocom/core/talloc.h>
@@ -108,8 +110,17 @@ int main(void)
 	osmo_stream_server_link_set_port(server, 10000);
 	osmo_stream_server_link_set_accept_cb(server, accept_cb);
 
+	int on = 1, ret;
+	struct osmo_fd *ofd = osmo_stream_server_link_get_ofd(server);
+
 	if (osmo_stream_server_link_open(server) < 0) {
 		fprintf(stderr, "cannot open client\n");
+		exit(EXIT_FAILURE);
+	}
+
+	ret = setsockopt(ofd->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+	if (ret < 0) {
+		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot disable Nagle\n");
 		exit(EXIT_FAILURE);
 	}
 
