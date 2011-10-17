@@ -118,7 +118,6 @@ void
 osmo_dgram_client_conn_set_data(struct osmo_dgram_client_conn *conn, void *data)
 {
 	conn->data = data;
-	conn->flags |= OSMO_DGRAM_CLIENT_F_RECONFIG;
 }
 
 void osmo_dgram_client_conn_destroy(struct osmo_dgram_client_conn *conn)
@@ -253,7 +252,6 @@ void osmo_dgram_server_conn_set_read_cb(struct osmo_dgram_server_conn *conn,
 	int (*read_cb)(struct osmo_dgram_server_conn *conn, struct msgb *msg))
 {
 	conn->cb = read_cb;
-	conn->flags |= OSMO_DGRAM_SERVER_F_RECONFIG;
 }
 
 void osmo_dgram_server_conn_destroy(struct osmo_dgram_server_conn *conn)
