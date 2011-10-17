@@ -40,7 +40,7 @@ struct osmo_stream_client_conn {
 	const char			*addr;
 	uint16_t			port;
 	int (*connect_cb)(struct osmo_stream_client_conn *link);
-	int (*read_cb)(struct osmo_stream_client_conn *link, struct msgb *msg);
+	int (*read_cb)(struct osmo_stream_client_conn *link);
 	int (*write_cb)(struct osmo_stream_client_conn *link);
 	void				*data;
 	int				flags;
@@ -65,31 +65,10 @@ void osmo_stream_client_conn_close(struct osmo_stream_client_conn *link)
 
 static void osmo_stream_client_read(struct osmo_stream_client_conn *link)
 {
-	struct msgb *msg;
-	int ret;
-
 	LOGP(DLINP, LOGL_DEBUG, "message received\n");
 
-	msg = msgb_alloc(1200, "LAPD/client");
-	if (!msg) {
-		LOGP(DLINP, LOGL_ERROR, "cannot allocate room for message\n");
-		return;
-	}
-	ret = recv(link->ofd.fd, msg->data, msg->data_len, 0);
-	if (ret < 0) {
-		if (errno == EPIPE || errno == ECONNRESET) {
-			LOGP(DLINP, LOGL_ERROR, "lost connection with server\n");
-		}
-		osmo_stream_client_retry(link);
-		return;
-	} else if (ret == 0) {
-		LOGP(DLINP, LOGL_ERROR, "connection closed with server\n");
-		osmo_stream_client_retry(link);
-		return;
-	}
-	msgb_put(msg, ret);
 	if (link->read_cb)
-		link->read_cb(link, msg);
+		link->read_cb(link);
 }
 
 static int osmo_stream_client_write(struct osmo_stream_client_conn *link)
@@ -221,7 +200,7 @@ osmo_stream_client_conn_set_connect_cb(struct osmo_stream_client_conn *link,
 
 void
 osmo_stream_client_conn_set_read_cb(struct osmo_stream_client_conn *link,
-	int (*read_cb)(struct osmo_stream_client_conn *link, struct msgb *msgb))
+	int (*read_cb)(struct osmo_stream_client_conn *link))
 {
 	link->read_cb = read_cb;
 	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
@@ -277,6 +256,29 @@ void osmo_stream_client_conn_send(struct osmo_stream_client_conn *link,
 {
 	msgb_enqueue(&link->tx_queue, msg);
 	link->ofd.when |= BSC_FD_WRITE;
+}
+
+int osmo_stream_client_conn_recv(struct osmo_stream_client_conn *link,
+				 struct msgb *msg)
+{
+	int ret;
+
+	ret = recv(link->ofd.fd, msg->data, msg->data_len, 0);
+	if (ret < 0) {
+		if (errno == EPIPE || errno == ECONNRESET) {
+			LOGP(DLINP, LOGL_ERROR,
+				"lost connection with server\n");
+		}
+		osmo_stream_client_retry(link);
+		return ret;
+	} else if (ret == 0) {
+		LOGP(DLINP, LOGL_ERROR, "connection closed with server\n");
+		osmo_stream_client_retry(link);
+		return ret;
+	}
+	msgb_put(msg, ret);
+	LOGP(DLINP, LOGL_DEBUG, "received %d bytes from server\n", ret);
+	return ret;
 }
 
 /*
@@ -406,38 +408,16 @@ struct osmo_stream_server_conn {
         struct osmo_fd                  ofd;
         struct llist_head               tx_queue;
         int (*closed_cb)(struct osmo_stream_server_conn *peer);
-        int (*cb)(struct osmo_stream_server_conn *peer, struct msgb *msg);
+        int (*cb)(struct osmo_stream_server_conn *peer);
         void                            *data;
 };
 
 static void osmo_stream_server_conn_read(struct osmo_stream_server_conn *conn)
 {
-	struct msgb *msg;
-	int ret;
-
 	LOGP(DLINP, LOGL_DEBUG, "message received\n");
 
-	msg = msgb_alloc(1200, "LAPD/client");
-	if (!msg) {
-		LOGP(DLINP, LOGL_ERROR, "cannot allocate room for message\n");
-		return;
-	}
-	ret = recv(conn->ofd.fd, msg->data, msg->data_len, 0);
-	if (ret < 0) {
-		if (errno == EPIPE || errno == ECONNRESET) {
-			LOGP(DLINP, LOGL_ERROR, "lost connection with server\n");
-		}
-		osmo_stream_server_conn_destroy(conn);
-		return;
-	} else if (ret == 0) {
-		LOGP(DLINP, LOGL_ERROR, "connection closed with server\n");
-		osmo_stream_server_conn_destroy(conn);
-		return;
-	}
-	msgb_put(msg, ret);
-	LOGP(DLINP, LOGL_DEBUG, "received %d bytes from client\n", ret);
 	if (conn->cb)
-		conn->cb(conn, msg);
+		conn->cb(conn);
 
 	return;
 }
@@ -481,7 +461,7 @@ static int osmo_stream_server_conn_cb(struct osmo_fd *ofd, unsigned int what)
 struct osmo_stream_server_conn *
 osmo_stream_server_conn_create(void *ctx, struct osmo_stream_server_link *link,
 	int fd,
-	int (*cb)(struct osmo_stream_server_conn *conn, struct msgb *msg),
+	int (*cb)(struct osmo_stream_server_conn *conn),
 	int (*closed_cb)(struct osmo_stream_server_conn *conn), void *data)
 {
 	struct osmo_stream_server_conn *conn;
@@ -529,4 +509,27 @@ void osmo_stream_server_conn_send(struct osmo_stream_server_conn *conn,
 {
 	msgb_enqueue(&conn->tx_queue, msg);
 	conn->ofd.when |= BSC_FD_WRITE;
+}
+
+int osmo_stream_server_conn_recv(struct osmo_stream_server_conn *conn,
+				 struct msgb *msg)
+{
+	int ret;
+
+	ret = recv(conn->ofd.fd, msg->data, msg->data_len, 0);
+	if (ret < 0) {
+		if (errno == EPIPE || errno == ECONNRESET) {
+			LOGP(DLINP, LOGL_ERROR,
+				"lost connection with server\n");
+		}
+		osmo_stream_server_conn_destroy(conn);
+		return ret;
+	} else if (ret == 0) {
+		LOGP(DLINP, LOGL_ERROR, "connection closed with server\n");
+		osmo_stream_server_conn_destroy(conn);
+		return ret;
+	}
+	msgb_put(msg, ret);
+	LOGP(DLINP, LOGL_DEBUG, "received %d bytes from client\n", ret);
+	return ret;
 }

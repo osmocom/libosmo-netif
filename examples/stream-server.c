@@ -41,9 +41,22 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-int read_cb(struct osmo_stream_server_conn *conn, struct msgb *msg)
+int read_cb(struct osmo_stream_server_conn *conn)
 {
+	struct msgb *msg;
+
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "received message from stream\n");
+
+	msg = msgb_alloc(1024, "STREAMSERVER/test");
+	if (msg == NULL) {
+		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
+		return 0;
+	}
+	if (osmo_stream_server_conn_recv(conn, msg) < 0) {
+		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot receive message\n");
+		return 0;
+	}
+	msgb_free(msg);
 	return 0;
 }
 
