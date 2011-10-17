@@ -9,4 +9,5 @@ AM_LDFLAGS = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS) $(COVERAG
 lib_LTLIBRARIES = libosmonetif.la
 
 libosmonetif_la_SOURCES = datagram.c		\
+			  ipa.c			\
 			  stream.c
