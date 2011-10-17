@@ -55,11 +55,23 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-static int read_cb(struct osmo_dgram_conn *conn, struct msgb *msg)
+static int read_cb(struct osmo_dgram_conn *conn)
 {
 	int error;
+	struct msgb *msg;
 
+	msg = msgb_alloc(1200, "LAPD/test");
+	if (msg == NULL) {
+		LOGP(DLAPDTEST, LOGL_ERROR, "cannot allocate message\n");
+		return -1;
+	}
+	if (osmo_dgram_conn_recv(conn, msg) < 0) {
+		msgb_free(msg);
+		LOGP(DLAPDTEST, LOGL_ERROR, "cannot receive message\n");
+		return -1;
+	}
 	if (lapd_receive(lapd, msg, &error) < 0) {
+		msgb_free(msg);
 		LOGP(DLINP, LOGL_ERROR, "lapd_receive returned error!\n");
 		return -1;
 	}
