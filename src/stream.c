@@ -189,6 +189,12 @@ void *osmo_stream_client_conn_get_data(struct osmo_stream_client_conn *link)
 	return link->data;
 }
 
+struct osmo_fd *
+osmo_stream_client_conn_get_ofd(struct osmo_stream_client_conn *link)
+{
+	return &link->ofd;
+}
+
 void
 osmo_stream_client_conn_set_connect_cb(struct osmo_stream_client_conn *link,
 	int (*connect_cb)(struct osmo_stream_client_conn *link))
@@ -357,6 +363,12 @@ void *osmo_stream_server_link_get_data(struct osmo_stream_server_link *link)
 	return link->data;
 }
 
+struct osmo_fd *
+osmo_stream_server_link_get_ofd(struct osmo_stream_server_link *link)
+{
+	return &link->ofd;
+}
+
 void osmo_stream_server_link_set_accept_cb(struct osmo_stream_server_link *link,
 	int (*accept_cb)(struct osmo_stream_server_link *link, int fd))
 
@@ -488,6 +500,12 @@ osmo_stream_server_conn_create(void *ctx, struct osmo_stream_server_link *link,
 void *osmo_stream_server_conn_get_data(struct osmo_stream_server_conn *link)
 {
 	return link->data;
+}
+
+struct osmo_fd *
+osmo_stream_server_conn_get_ofd(struct osmo_stream_server_conn *link)
+{
+	return &link->ofd;
 }
 
 void osmo_stream_server_conn_destroy(struct osmo_stream_server_conn *conn)
