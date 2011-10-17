@@ -435,7 +435,7 @@ static void osmo_stream_server_conn_read(struct osmo_stream_server_conn *conn)
 		return;
 	}
 	msgb_put(msg, ret);
-	LOGP(DLINP, LOGL_NOTICE, "received %d bytes from client\n", ret);
+	LOGP(DLINP, LOGL_DEBUG, "received %d bytes from client\n", ret);
 	if (conn->cb)
 		conn->cb(conn, msg);
 
