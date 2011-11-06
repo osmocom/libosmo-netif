@@ -1,4 +1,7 @@
-osmonetif_HEADERS = datagram.h		\
+SUBDIRS = channel
+
+osmonetif_HEADERS = channel.h		\
+		    datagram.h		\
 		    ipa.h		\
 		    stream.h
 

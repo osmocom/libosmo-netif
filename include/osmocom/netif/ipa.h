@@ -34,19 +34,43 @@ struct ipa_head_ext {
 #define IPAC_MSGT_SCCP_OLD	0xff	/* OpenBSC extension */
 
 enum ipaccess_id_tags {
-        IPAC_IDTAG_SERNR                = 0x00,
-        IPAC_IDTAG_UNITNAME             = 0x01,
-        IPAC_IDTAG_LOCATION1            = 0x02,
-        IPAC_IDTAG_LOCATION2            = 0x03,
-        IPAC_IDTAG_EQUIPVERS            = 0x04,
-        IPAC_IDTAG_SWVERSION            = 0x05,
-        IPAC_IDTAG_IPADDR               = 0x06,
-        IPAC_IDTAG_MACADDR              = 0x07,
-        IPAC_IDTAG_UNIT                 = 0x08,
+	IPAC_IDTAG_SERNR		= 0x00,
+	IPAC_IDTAG_UNITNAME		= 0x01,
+	IPAC_IDTAG_LOCATION1		= 0x02,
+	IPAC_IDTAG_LOCATION2		= 0x03,
+	IPAC_IDTAG_EQUIPVERS		= 0x04,
+	IPAC_IDTAG_SWVERSION		= 0x05,
+	IPAC_IDTAG_IPADDR		= 0x06,
+	IPAC_IDTAG_MACADDR		= 0x07,
+	IPAC_IDTAG_UNIT			= 0x08,
 };
 
 struct msgb *osmo_ipa_msg_alloc(int headroom);
 void osmo_ipa_msg_push_header(struct msgb *msg, uint8_t proto);
 int osmo_ipa_msg_recv(int fd, struct msgb *msg);
+
+struct ipaccess_unit {
+	uint16_t site_id;
+	uint16_t bts_id;
+	uint16_t trx_id;
+	char *unit_name;
+	char *equipvers;
+	char *swversion;
+	uint8_t mac_addr[6];
+	char *location1;
+	char *location2;
+	char *serno;
+};
+
+struct osmo_fd;
+struct tlv_parsed;
+
+int osmo_ipa_rcvmsg_base(struct msgb *msg, struct osmo_fd *bfd);
+int osmo_ipa_idtag_parse(struct tlv_parsed *dec, unsigned char *buf, int len);
+int osmo_ipa_parse_unitid(const char *str, struct ipaccess_unit *unit_data);
+
+int ipaccess_send_pong(int fd);
+int ipaccess_send_id_ack(int fd);
+int ipaccess_send_id_req(int fd);
 
 #endif

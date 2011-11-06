@@ -23,6 +23,8 @@ void *osmo_stream_server_conn_get_data(struct osmo_stream_server_conn *conn);
 struct osmo_fd *osmo_stream_server_conn_get_ofd(struct osmo_stream_server_conn *link);
 void osmo_stream_server_conn_destroy(struct osmo_stream_server_conn *conn);
 
+void osmo_stream_server_conn_set_data(struct osmo_stream_server_conn *conn, void *data);
+
 void osmo_stream_server_conn_send(struct osmo_stream_server_conn *conn, struct msgb *msg);
 int osmo_stream_server_conn_recv(struct osmo_stream_server_conn *conn, struct msgb *msg);
 

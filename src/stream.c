@@ -510,6 +510,13 @@ osmo_stream_server_conn_create(void *ctx, struct osmo_stream_server_link *link,
 	return conn;
 }
 
+void
+osmo_stream_server_conn_set_data(struct osmo_stream_server_conn *conn,
+				 void *data)
+{
+	conn->data = data;
+}
+
 void *osmo_stream_server_conn_get_data(struct osmo_stream_server_conn *link)
 {
 	return link->data;
