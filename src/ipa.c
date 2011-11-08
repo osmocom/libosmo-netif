@@ -55,17 +55,14 @@ int osmo_ipa_msg_recv(int fd, struct msgb *msg)
 	if (len < 0 || IPA_ALLOC_SIZE < len + sizeof(*hh)) {
 		LOGP(DLINP, LOGL_ERROR, "bad message length of %d bytes, "
 					"received %d bytes\n", len, ret);
-		msgb_free(msg);
 		return -EIO;
 	}
 
 	ret = recv(fd, msg->l2h, len, 0);
 	if (ret <= 0) {
-		msgb_free(msg);
 		return ret;
 	} else if (ret < len) {
 		LOGP(DLINP, LOGL_ERROR, "trunked message received\n");
-		msgb_free(msg);
 		return -EIO;
 	}
 	msgb_put(msg, ret);
