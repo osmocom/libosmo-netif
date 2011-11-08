@@ -44,16 +44,22 @@ struct osmo_stream_client_conn {
 	int (*write_cb)(struct osmo_stream_client_conn *link);
 	void				*data;
 	int				flags;
+	int				reconnect_timeout;
 };
 
 void osmo_stream_client_conn_close(struct osmo_stream_client_conn *link);
 
-static void osmo_stream_client_retry(struct osmo_stream_client_conn *link)
+static void osmo_stream_client_reconnect(struct osmo_stream_client_conn *link)
 {
+	if (link->reconnect_timeout < 0) {
+		LOGP(DLINP, LOGL_DEBUG, "not reconnecting, disabled.\n");
+		return;
+	}
 	LOGP(DLINP, LOGL_DEBUG, "connection closed\n");
 	osmo_stream_client_conn_close(link);
-	LOGP(DLINP, LOGL_DEBUG, "retrying in 5 seconds...\n");
-	osmo_timer_schedule(&link->timer, 5, 0);
+	LOGP(DLINP, LOGL_DEBUG, "retrying in %d seconds...\n",
+		link->reconnect_timeout);
+	osmo_timer_schedule(&link->timer, link->reconnect_timeout, 0);
 	link->state = STREAM_CLIENT_LINK_STATE_CONNECTING;
 }
 
@@ -95,7 +101,7 @@ static int osmo_stream_client_write(struct osmo_stream_client_conn *link)
 	ret = send(link->ofd.fd, msg->data, msg->len, 0);
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ENOTCONN) {
-			osmo_stream_client_retry(link);
+			osmo_stream_client_reconnect(link);
 		}
 		LOGP(DLINP, LOGL_ERROR, "error to send\n");
 	}
@@ -113,7 +119,7 @@ static int osmo_stream_client_fd_cb(struct osmo_fd *ofd, unsigned int what)
 	case STREAM_CLIENT_LINK_STATE_CONNECTING:
 		ret = getsockopt(ofd->fd, SOL_SOCKET, SO_ERROR, &error, &len);
 		if (ret >= 0 && error > 0) {
-			osmo_stream_client_retry(link);
+			osmo_stream_client_reconnect(link);
 			return 0;
 		}
 		ofd->when &= ~BSC_FD_WRITE;
@@ -156,6 +162,7 @@ struct osmo_stream_client_conn *osmo_stream_client_conn_create(void *ctx)
 	link->state = STREAM_CLIENT_LINK_STATE_CONNECTING;
 	link->timer.cb = link_timer_cb;
 	link->timer.data = link;
+	link->reconnect_timeout = 5;	/* default is 5 seconds. */
 	INIT_LLIST_HEAD(&link->tx_queue);
 
 	return link;
@@ -175,6 +182,12 @@ osmo_stream_client_conn_set_port(struct osmo_stream_client_conn *link,
 {
 	link->port = port;
 	link->flags |= OSMO_STREAM_CLIENT_F_RECONFIG;
+}
+
+void osmo_stream_client_conn_set_reconnect_timeout(
+	struct osmo_stream_client_conn *link, int timeout)
+{
+	link->reconnect_timeout = timeout;
 }
 
 void
@@ -272,11 +285,11 @@ int osmo_stream_client_conn_recv(struct osmo_stream_client_conn *link,
 			LOGP(DLINP, LOGL_ERROR,
 				"lost connection with server\n");
 		}
-		osmo_stream_client_retry(link);
+		osmo_stream_client_reconnect(link);
 		return ret;
 	} else if (ret == 0) {
 		LOGP(DLINP, LOGL_ERROR, "connection closed with server\n");
-		osmo_stream_client_retry(link);
+		osmo_stream_client_reconnect(link);
 		return ret;
 	}
 	msgb_put(msg, ret);

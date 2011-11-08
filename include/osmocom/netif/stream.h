@@ -31,6 +31,7 @@ struct osmo_stream_client_conn;
 void osmo_stream_client_conn_set_addr(struct osmo_stream_client_conn *link, const char *addr);
 void osmo_stream_client_conn_set_port(struct osmo_stream_client_conn *link, uint16_t port);
 void osmo_stream_client_conn_set_data(struct osmo_stream_client_conn *link, void *data);
+void osmo_stream_client_conn_set_reconnect_timeout(struct osmo_stream_client_conn *link, int timeout);
 void *osmo_stream_client_conn_get_data(struct osmo_stream_client_conn *link);
 struct osmo_fd *osmo_stream_client_conn_get_ofd(struct osmo_stream_client_conn *link);
 void osmo_stream_client_conn_set_connect_cb(struct osmo_stream_client_conn *link, int (*connect_cb)(struct osmo_stream_client_conn *link));
