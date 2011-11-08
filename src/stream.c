@@ -548,11 +548,9 @@ int osmo_stream_server_conn_recv(struct osmo_stream_server_conn *conn,
 			LOGP(DLINP, LOGL_ERROR,
 				"lost connection with server\n");
 		}
-		osmo_stream_server_conn_destroy(conn);
 		return ret;
 	} else if (ret == 0) {
 		LOGP(DLINP, LOGL_ERROR, "connection closed with server\n");
-		osmo_stream_server_conn_destroy(conn);
 		return ret;
 	}
 	msgb_put(msg, ret);
