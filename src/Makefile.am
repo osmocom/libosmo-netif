@@ -15,4 +15,5 @@ libosmonetif_la_LIBADD = channel/libosmonetif-channel.la
 libosmonetif_la_SOURCES = channel.c		\
 			  datagram.c		\
 			  ipa.c			\
+			  rtp.c			\
 			  stream.c

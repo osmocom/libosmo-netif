@@ -9,7 +9,9 @@ noinst_PROGRAMS = ipa-stream-client		\
 		  lapd-over-datagram-user	\
 		  lapd-over-datagram-network	\
 		  stream-client			\
-		  stream-server
+		  stream-server			\
+		  rtp-udp-test-client		\
+		  rtp-udp-test-server
 
 ipa_stream_client_SOURCES = ipa-stream-client.c
 ipa_stream_client_LDADD = $(top_builddir)/src/libosmonetif.la \
@@ -36,3 +38,11 @@ stream_client_LDADD = $(top_builddir)/src/libosmonetif.la \
 stream_server_SOURCES = stream-server.c
 stream_server_LDADD = $(top_builddir)/src/libosmonetif.la \
 		      $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS)
+
+rtp_udp_test_client_SOURCES = rtp-udp-test-client.c
+rtp_udp_test_client_LDADD = $(top_builddir)/src/libosmonetif.la \
+			    $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS)
+
+rtp_udp_test_server_SOURCES = rtp-udp-test-server.c
+rtp_udp_test_server_LDADD = $(top_builddir)/src/libosmonetif.la \
+			    $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS)
