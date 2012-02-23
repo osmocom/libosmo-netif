@@ -6,5 +6,5 @@ includedir=@includedir@
 Name: Osmocom network interface library
 Description: C Utility Library
 Version: @VERSION@
-Libs: -L${libdir} -losmoabis
+Libs: -L${libdir} -losmonetif
 Cflags: -I${includedir}/
