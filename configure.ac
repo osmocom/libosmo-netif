@@ -46,7 +46,7 @@ PKG_CHECK_MODULES(ORTP, ortp >= 0.15.0)
 AC_CHECK_HEADERS(dahdi/user.h,,AC_MSG_WARN(DAHDI input driver will not be built))
 
 AC_OUTPUT(
-	libosmonetif.pc
+	libosmo-netif.pc
 	include/Makefile
 	include/osmocom/Makefile
 	include/osmocom/netif/Makefile

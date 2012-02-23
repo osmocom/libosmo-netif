@@ -5,7 +5,7 @@ INCLUDES = $(all_includes) -I$(top_srcdir)/include
 SUBDIRS = include src examples
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libosmonetif.pc
+pkgconfig_DATA = libosmo-netif.pc
 
 BUILT_SOURCES = $(top_srcdir)/.version
 $(top_srcdir)/.version:
