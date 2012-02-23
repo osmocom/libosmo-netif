@@ -71,7 +71,7 @@ static int osmo_dgram_client_fd_cb(struct osmo_fd *ofd, unsigned int what)
 	struct osmo_dgram_client_conn *conn = ofd->data;
 
 	if (what & BSC_FD_WRITE) {
-		LOGP(DLINP, LOGL_DEBUG, "connected write\n");
+		LOGP(DLINP, LOGL_DEBUG, "write\n");
 		osmo_dgram_client_write(conn);
 	}
         return 0;
@@ -138,10 +138,9 @@ int osmo_dgram_client_conn_open(struct osmo_dgram_client_conn *conn)
 	ret = osmo_sock_init(AF_INET, SOCK_DGRAM, IPPROTO_UDP,
 			     conn->addr, conn->port,
 			     OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_NONBLOCK);
-	if (ret < 0) {
-		if (errno != EINPROGRESS)
-			return ret;
-	}
+	if (ret < 0)
+		return ret;
+
 	conn->ofd.fd = ret;
 	if (osmo_fd_register(&conn->ofd) < 0) {
 		close(ret);
@@ -199,7 +198,7 @@ static int osmo_dgram_server_conn_cb(struct osmo_fd *ofd, unsigned int what)
 {
 	struct osmo_dgram_server_conn *conn = ofd->data;
 
-	LOGP(DLINP, LOGL_DEBUG, "connected read/write\n");
+	LOGP(DLINP, LOGL_DEBUG, "read\n");
 	if (what & BSC_FD_READ)
 		osmo_dgram_server_conn_read(conn);
 
