@@ -60,8 +60,8 @@ static int read_cb(struct osmo_dgram_conn *conn)
 		return -1;
 	}
 
-	LOGP(DLINP, LOGL_DEBUG, "received message with RTP payload type: %d\n",
-		payload_type);
+	LOGP(DLINP, LOGL_DEBUG, "received message with payload type: %d "
+		"and size: %d (%s)\n", payload_type, msg->len, msg->data);
 
 	msgb_free(msg);
 	return 0;
@@ -81,7 +81,7 @@ static void *tall_test;
 int main(int argc, char *argv[])
 {
 	int i;
-	char dummy_data[RTP_PT_GSM_FULL_PAYLOAD_LEN] = {};
+	char dummy_data[RTP_PT_GSM_FULL_PAYLOAD_LEN] = "payload test";
 
 	signal(SIGINT, sighandler);
 

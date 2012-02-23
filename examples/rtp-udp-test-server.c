@@ -37,7 +37,7 @@ static struct osmo_rtp_handle *rtp;
 int read_cb(struct osmo_dgram_conn *conn)
 {
 	struct msgb *msg;
-	char dummy_data[RTP_PT_GSM_FULL_PAYLOAD_LEN] = {};
+	char dummy_data[RTP_PT_GSM_FULL_PAYLOAD_LEN] = "payload test";
 	int payload_type;
 
 	LOGP(DRTP_TEST, LOGL_DEBUG, "received message from datagram\n");
@@ -57,8 +57,8 @@ int read_cb(struct osmo_dgram_conn *conn)
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot parse RTP message\n");
 		return -1;
 	}
-	LOGP(DLINP, LOGL_DEBUG, "received message with payload type: %d\n",
-		payload_type);
+	LOGP(DLINP, LOGL_DEBUG, "received message with RTP payload type: %d "
+		"and size: %d (%s)\n", payload_type, msg->len, msg->data);
 
 	/*
 	 * ... now build gsm_data_frame, set callref and msg_type based
