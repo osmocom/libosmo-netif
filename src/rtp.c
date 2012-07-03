@@ -71,7 +71,7 @@ int osmo_rtp_handle_tx_set_timestamp(struct osmo_rtp_handle *h, uint32_t timesta
 /* decode and pull RTP header out and return payload_type. The msg->data
    points to data payload after this is called. This function returns the
    RTP payload type on success. */
-int osmo_rtp_parse(struct osmo_rtp_handle *h, struct msgb *msg)
+int osmo_rtp_parse(struct msgb *msg)
 {
 	struct rtp_hdr *rtph = (struct rtp_hdr *)msg->data;
 	struct rtp_x_hdr *rtpxh;

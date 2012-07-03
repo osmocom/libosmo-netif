@@ -51,7 +51,7 @@ int read_cb(struct osmo_dgram_conn *conn)
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot receive message\n");
 		return -1;
 	}
-	payload_type = osmo_rtp_parse(rtp, msg);
+	payload_type = osmo_rtp_parse(msg);
 	if (payload_type < 0) {
 		msgb_free(msg);
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot parse RTP message\n");
