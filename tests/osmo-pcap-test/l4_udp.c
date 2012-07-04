@@ -15,9 +15,7 @@
 
 static int l4_udp_pkt_hdr_len(const uint8_t *pkt)
 {
-	const struct udphdr *udph = (const struct udphdr *)pkt;
-
-	return ntohs(udph->len);
+	return sizeof(struct udphdr);
 }
 
 static int l4_udp_pkt_no_data(const uint8_t *pkt)
