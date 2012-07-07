@@ -68,41 +68,45 @@ int osmo_rtp_handle_tx_set_timestamp(struct osmo_rtp_handle *h, uint32_t timesta
 	return 0;
 }
 
-/* decode and pull RTP header out and return payload_type. The msg->data
-   points to data payload after this is called. This function returns the
-   RTP payload type on success. */
-int osmo_rtp_parse(struct msgb *msg)
+struct rtp_hdr *osmo_rtp_get_hdr(struct msgb *msg)
 {
 	struct rtp_hdr *rtph = (struct rtp_hdr *)msg->data;
+
+	if (msg->len < sizeof(struct rtp_hdr)) {
+		DEBUGPC(DLMUX, "received RTP frame too short (len = %d)\n",
+			msg->len);
+		return NULL;
+	}
+	if (rtph->version != RTP_VERSION) {
+		DEBUGPC(DLMUX, "received RTP version %d not supported.\n",
+			rtph->version);
+		return NULL;
+	}
+
+	return rtph;
+}
+
+void *osmo_rtp_get_payload(struct rtp_hdr *rtph, struct msgb *msg)
+{
 	struct rtp_x_hdr *rtpxh;
 	uint8_t *payload;
 	int payload_len;
 	int x_len;
 	int csrc_len;
 
-	if (msg->len < sizeof(struct rtp_hdr)) {
-		DEBUGPC(DLMUX, "received RTP frame too short (len = %d)\n",
-			msg->len);
-		return -EINVAL;
-	}
-	if (rtph->version != RTP_VERSION) {
-		DEBUGPC(DLMUX, "received RTP version %d not supported.\n",
-			rtph->version);
-		return -EINVAL;
-	}
 	csrc_len = rtph->csrc_count << 2;
 	payload = msg->data + sizeof(struct rtp_hdr) + csrc_len;
 	payload_len = msg->len - sizeof(struct rtp_hdr) - csrc_len;
 	if (payload_len < 0) {
 		DEBUGPC(DLMUX, "received RTP frame too short (len = %d, "
 			"csrc count = %d)\n", msg->len, rtph->csrc_count);
-		return -EINVAL;
+		return NULL;
 	}
 	if (rtph->extension) {
 		if (payload_len < sizeof(struct rtp_x_hdr)) {
 			DEBUGPC(DLMUX, "received RTP frame too short for "
 				"extension header\n");
-			return -EINVAL;
+			return NULL;
 		}
 		rtpxh = (struct rtp_x_hdr *)payload;
 		x_len = ntohs(rtpxh->length) * 4 + sizeof(struct rtp_x_hdr);
@@ -111,26 +115,24 @@ int osmo_rtp_parse(struct msgb *msg)
 		if (payload_len < 0) {
 			DEBUGPC(DLMUX, "received RTP frame too short, "
 				"extension header exceeds frame length\n");
-			return -EINVAL;
+			return NULL;
 		}
 	}
 	if (rtph->padding) {
 		if (payload_len < 0) {
 			DEBUGPC(DLMUX, "received RTP frame too short for "
 				"padding length\n");
-			return -EINVAL;
+			return NULL;
 		}
 		payload_len -= payload[payload_len - 1];
 		if (payload_len < 0) {
 			DEBUGPC(DLMUX, "received RTP frame with padding "
 				"greater than payload\n");
-			return -EINVAL;
+			return NULL;
 		}
 	}
 
-	msgb_pull(msg, msg->len - payload_len);
-
-	return rtph->payload_type;
+	return (uint8_t *)msg->data + msg->len - payload_len;
 }
 
 struct msgb *

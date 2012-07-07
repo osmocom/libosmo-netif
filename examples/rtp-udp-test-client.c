@@ -39,7 +39,7 @@ static struct osmo_rtp_handle *rtp;
 static int read_cb(struct osmo_dgram_conn *conn)
 {
 	struct msgb *msg;
-	int payload_type;
+	struct rtp_hdr *rtph;
 
 	LOGP(DLINP, LOGL_DEBUG, "received message\n");
 
@@ -53,15 +53,16 @@ static int read_cb(struct osmo_dgram_conn *conn)
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot receive message\n");
 		return -1;
 	}
-	payload_type = osmo_rtp_parse(msg);
-	if (payload_type < 0) {
+
+	rtph = osmo_rtp_get_hdr(msg);
+	if (rtph == NULL) {
 		msgb_free(msg);
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot parse RTP message\n");
 		return -1;
 	}
 
-	LOGP(DLINP, LOGL_DEBUG, "received message with payload type: %d "
-		"and size: %d (%s)\n", payload_type, msg->len, msg->data);
+	LOGP(DLINP, LOGL_DEBUG, "received message with payload type: %d\n",
+		rtph->payload_type);
 
 	msgb_free(msg);
 	return 0;
