@@ -1,6 +1,7 @@
 SUBDIRS = channel
 
-osmonetif_HEADERS = channel.h		\
+osmonetif_HEADERS = amr.h		\
+		    channel.h		\
 		    datagram.h		\
 		    ipa.h		\
 		    rtp.h		\
