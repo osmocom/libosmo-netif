@@ -67,8 +67,12 @@ struct msgb *osmo_rtp_build(struct osmo_rtp_handle *h, uint8_t payload_type, uin
 #define RTP_PT_GSM_FULL_PAYLOAD_LEN	33
 #define RTP_PT_GSM_FULL_DURATION	160	/* in samples. */
 
+#define RTP_PT_GSM_HALF			96
+
 #define RTP_PT_GSM_EFR			97
 #define RTP_PT_GSM_EFR_PAYLOAD_LEN	31
 #define RTP_PT_GSM_EFR_DURATION		160	/* in samples. */
+
+#define RTP_PT_AMR			98
 
 #endif
