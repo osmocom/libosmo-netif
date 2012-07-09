@@ -58,7 +58,7 @@ int osmo_rtp_handle_tx_set_ssrc(struct osmo_rtp_handle *h, uint32_t ssrc);
 int osmo_rtp_handle_tx_set_timestamp(struct osmo_rtp_handle *h, uint32_t timestamp);
 
 struct rtp_hdr *osmo_rtp_get_hdr(struct msgb *msg);
-void *osmo_rtp_get_payload(struct rtp_hdr *rtph, struct msgb *msg);
+void *osmo_rtp_get_payload(struct rtp_hdr *rtph, struct msgb *msg, uint32_t *plen);
 
 struct msgb *osmo_rtp_build(struct osmo_rtp_handle *h, uint8_t payload_type, uint32_t payload_len, const void *data, uint32_t duration);
 
