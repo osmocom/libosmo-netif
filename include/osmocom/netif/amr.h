@@ -62,4 +62,9 @@ struct amr_hdr {
 #endif
 };
 
+static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
+{
+	return (uint8_t *)amrh + sizeof(struct amr_hdr);
+}
+
 #endif
