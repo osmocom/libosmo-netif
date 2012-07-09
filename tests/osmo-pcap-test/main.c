@@ -5,7 +5,7 @@
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later vers
+ * (at your option) any later version.
  */
 
 #include <stdio.h>
@@ -26,6 +26,8 @@
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/timer.h>
 #include <osmocom/core/select.h>
+
+#include <osmocom/netif/osmux.h>
 
 struct osmo_pcap_test_stats {
 	uint32_t pkts;
@@ -158,15 +160,52 @@ retry:
 	return 0;
 }
 
-static int osmo_osmux_xfrm_encode(struct msgb *msgb)
+static struct osmux_out_handle h = {
+        .rtp_seq        = 1000,
+        .rtp_timestamp  = 10,
+};
+
+static void deliver(struct msgb *batch_msg)
 {
+        struct osmux_hdr *osmuxh;
+        struct msgb *msg;
+        int i = 0;
+
+        printf("sending batch (len=%d) [emulated]\n", batch_msg->len);
+        while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL) {
+                msg = osmux_xfrm_output(osmuxh, &h);
+                printf("extract message %d\n", ++i);
+                /* XXX just to avoid leaking */
+                msgb_free(msg);
+        }
+}
+
+struct osmux_in_handle h_input = {
+	.osmux_seq	= 0, /* sequence number to start OSmux message from */
+	.deliver	= deliver,
+};
+
+static int run(struct msgb *msg)
+{
+	int ret;
+retry:
+	ret = osmux_xfrm_input(msg);
+	switch(ret) {
+		case -1:
+			printf("something is wrong\n");
+			break;
+		case 0:
+			break;
+		case 1:
+			osmux_xfrm_input_deliver(&h_input);
+			goto retry;
+	}
 	return 0;
 }
 
 static void osmo_pcap_pkt_timer_cb(void *data)
 {
-	if (osmo_pcap_test_run(osmo_pcap.h, IPPROTO_UDP,
-				osmo_osmux_xfrm_encode) < 0) {
+	if (osmo_pcap_test_run(osmo_pcap.h, IPPROTO_UDP, run) < 0) {
 		printf("pkts=%d processed=%d skip=%d "
 			"unsupported_l3=%d unsupported_l4=%d\n",
 			osmo_pcap_test_stats.pkts,
@@ -206,6 +245,8 @@ int main(int argc, char *argv[])
 
 	/* first run */
 	osmo_pcap_pkt_timer_cb(NULL);
+
+	osmux_xfrm_input_init(&h_input);
 
 	while(1) {
 		osmo_select_main(0);
