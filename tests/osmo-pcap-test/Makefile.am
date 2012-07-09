@@ -9,4 +9,5 @@ osmo_pcap_test_SOURCES = proto.c		\
 			 main.c
 
 osmo_pcap_test_LDFLAGS = -lpcap			\
-			 -losmocore
+			 -losmocore		\
+			 -losmonetif
