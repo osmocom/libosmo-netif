@@ -67,4 +67,16 @@ static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
 	return (uint8_t *)amrh + sizeof(struct amr_hdr);
 }
 
+#define AMR_CMR_0	0	/* 4.75 */
+#define AMR_CMR_1	1	/* 5.15 */
+#define AMR_CMR_2	2	/* 5.90 */
+#define AMR_CMR_3	3	/* 6.70 */
+#define AMR_CMR_4	4	/* 7.40 */
+#define AMR_CMR_5	5	/* 7.95 */
+#define AMR_CMR_6	6	/* 10.2 */
+#define AMR_CMR_7	7	/* 12.2 */
+#define AMR_CMR_MAX	8
+
+size_t osmo_amr_bytes(uint8_t amr_cmr);
+
 #endif
