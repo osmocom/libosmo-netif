@@ -30,9 +30,8 @@ struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 	if (msg->len > sizeof(struct osmux_hdr)) {
 		osmuxh = (struct osmux_hdr *)msg->data;
 
-		/* XXX: 15 bytes because AMR-CMR is 2, fix this. */
-		msgb_pull(msg, sizeof(struct osmux_hdr) + 15);
-
+		msgb_pull(msg, sizeof(struct osmux_hdr) +
+				osmo_amr_bytes(osmuxh->amr_cmr));
 	} else if (msg->len > 0) {
 		printf("remaining %d bytes, broken osmuxhdr?\n", msg->len);
 	}
@@ -49,13 +48,15 @@ osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h)
 
 	out_msg = msgb_alloc(sizeof(struct rtp_hdr) +
 			     sizeof(struct amr_hdr) +
-			     15, "OSMUX test");
+			     osmo_amr_bytes(osmuxh->amr_cmr),
+			     "OSMUX test");
 	if (out_msg == NULL)
 		return NULL;
 
 	/* Reconstruct RTP header */
 	rtph = (struct rtp_hdr *)out_msg->data;
-	rtph->csrc_count = (sizeof(struct amr_hdr) + 15) >> 2;
+	rtph->csrc_count = (sizeof(struct amr_hdr) +
+				osmo_amr_bytes(osmuxh->amr_cmr)) >> 2;
 	rtph->extension = 0;
 	rtph->version = RTP_VERSION;
 	rtph->payload_type = 98;
@@ -77,8 +78,9 @@ osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h)
 	msgb_put(out_msg, sizeof(struct amr_hdr));
 
 	/* add AMR speech data */
-	memcpy(out_msg->tail, osmux_get_payload(osmuxh), 15);
-	msgb_put(out_msg, 15);
+	memcpy(out_msg->tail, osmux_get_payload(osmuxh),
+		osmo_amr_bytes(osmuxh->amr_cmr));
+	msgb_put(out_msg, osmo_amr_bytes(osmuxh->amr_cmr));
 
 	/* bump last RTP sequence number and timestamp that has been used */
 	h->rtp_seq++;
