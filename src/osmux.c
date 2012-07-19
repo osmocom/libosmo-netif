@@ -15,6 +15,7 @@
 #include <osmocom/core/timer.h>
 #include <osmocom/core/select.h>
 #include <osmocom/core/talloc.h>
+#include <osmocom/core/logging.h>
 
 #include <osmocom/netif/amr.h>
 #include <osmocom/netif/rtp.h>
@@ -23,6 +24,9 @@
 #include <arpa/inet.h>
 
 #define DEBUG_TIMING		1
+
+/* XXX: this needs to be defined in libosmocore */
+#define DOSMUX 0
 
 #define OSMUX_BATCH_MAX		1480	/* XXX: MTU - iphdr (20 bytes) */
 
@@ -36,7 +40,8 @@ struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 		msgb_pull(msg, sizeof(struct osmux_hdr) +
 				osmo_amr_bytes(osmuxh->amr_cmr));
 	} else if (msg->len > 0) {
-		printf("remaining %d bytes, broken osmuxhdr?\n", msg->len);
+		LOGP(DOSMUX, LOGL_ERROR,
+			"remaining %d bytes, broken osmuxhdr?\n", msg->len);
 	}
 
 	return osmuxh;
@@ -105,7 +110,7 @@ static int osmux_batch_has_room(int msg_len)
 
 void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 {
-	printf("invoking delivery function\n");
+	LOGP(DOSMUX, LOGL_DEBUG, "invoking delivery function\n");
 	h->deliver(batch.msg);
 	msgb_free(batch.msg);
 	batch.msg = NULL;
@@ -116,7 +121,7 @@ static void osmux_batch_timer_expired(void *data)
 {
 	struct osmux_in_handle *h = data;
 
-	printf("batch timeout!\n");
+	LOGP(DOSMUX, LOGL_DEBUG, "received message from stream\n");
 	osmux_xfrm_input_deliver(h);
 }
 
@@ -125,7 +130,7 @@ static struct msgb *osmux_batch_get(void)
 	if (batch.msg == NULL) {
 		batch.msg = msgb_alloc(OSMUX_BATCH_MAX, "OSMUX");
 		if (batch.msg == NULL) {
-			fprintf(stderr, "Not enough memory\n");
+			LOGP(DOSMUX, LOGL_ERROR, "Not enough memory\n");
 			return NULL;
 		}
 
@@ -240,7 +245,8 @@ static void osmux_tx_cb(void *data)
 
 	gettimeofday(&now, NULL);
 	timersub(&now, &h->start, &diff);
-	printf("difference %lu.%.6lu\n", diff.tv_sec, diff.tv_usec);
+	LOGP(DOSMUX, LOGL_DEBUG, "difference %lu.%.6lu\n",
+		diff.tv_sec, diff.tv_usec);
 #endif
 
 	h->tx_cb(h->msg, h->data);
