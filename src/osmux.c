@@ -14,6 +14,7 @@
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/timer.h>
 #include <osmocom/core/select.h>
+#include <osmocom/core/talloc.h>
 
 #include <osmocom/netif/amr.h>
 #include <osmocom/netif/rtp.h>
@@ -217,4 +218,45 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 {
 	batch.timer.cb = osmux_batch_timer_expired;
 	batch.timer.data = h;
+}
+
+struct osmux_tx_handle {
+        struct osmo_timer_list  timer;
+        struct msgb             *msg;
+        void                    (*tx_cb)(struct msgb *msg, void *data);
+        void                    *data;
+};
+
+static void osmux_tx_cb(void *data)
+{
+	struct osmux_tx_handle *h = data;
+
+	h->tx_cb(h->msg, h->data);
+
+	talloc_free(h);
+}
+
+void osmux_tx_sched(struct msgb *msg, struct timeval *when,
+		    void (*tx_cb)(struct msgb *msg, void *data), void *data)
+{
+	struct osmux_tx_handle *h;
+
+	/* send it now */
+	if (when->tv_sec == 0 && when->tv_usec == 0) {
+		tx_cb(msg, data);
+		return;
+	}
+
+	/* ... otherwise schedule transmission */
+	h = talloc_zero(NULL, struct osmux_tx_handle);
+	if (h == NULL)
+		return;
+
+	h->msg = msg;
+	h->tx_cb = tx_cb;
+	h->data = data;
+	h->timer.cb = osmux_tx_cb;
+	h->timer.data = h;
+
+	osmo_timer_schedule(&h->timer, when->tv_sec, when->tv_usec);
 }

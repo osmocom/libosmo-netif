@@ -65,4 +65,6 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h);
 struct msgb *osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h);
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg);
 
+void osmux_tx_sched(struct msgb *msg, struct timeval *when, void (*tx_cb)(struct msgb *msg, void *data), void *data);
+
 #endif
