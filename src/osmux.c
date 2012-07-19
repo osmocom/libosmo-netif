@@ -241,13 +241,6 @@ void osmux_tx_sched(struct msgb *msg, struct timeval *when,
 {
 	struct osmux_tx_handle *h;
 
-	/* send it now */
-	if (when->tv_sec == 0 && when->tv_usec == 0) {
-		tx_cb(msg, data);
-		return;
-	}
-
-	/* ... otherwise schedule transmission */
 	h = talloc_zero(NULL, struct osmux_tx_handle);
 	if (h == NULL)
 		return;
@@ -258,5 +251,10 @@ void osmux_tx_sched(struct msgb *msg, struct timeval *when,
 	h->timer.cb = osmux_tx_cb;
 	h->timer.data = h;
 
+	/* send it now */
+	if (when->tv_sec == 0 && when->tv_usec == 0) {
+		osmux_tx_cb(h);
+		return;
+	}
 	osmo_timer_schedule(&h->timer, when->tv_sec, when->tv_usec);
 }
