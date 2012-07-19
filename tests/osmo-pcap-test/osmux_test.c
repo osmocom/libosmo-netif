@@ -22,6 +22,9 @@
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/timer.h>
 #include <osmocom/core/select.h>
+#include <osmocom/core/logging.h>
+#include <osmocom/core/application.h>
+#include <osmocom/core/talloc.h>
 
 #include <osmocom/netif/osmux.h>
 
@@ -108,6 +111,25 @@ static void osmo_pcap_pkt_timer_cb(void *data)
 	}
 }
 
+#define DOSMUXTEST 0
+
+struct log_info_cat osmux_test_cat[] = {
+	[DOSMUXTEST] = {
+		.name = "DOSMUXTEST",
+		.description = "osmux test",
+		.color = "\033[1;35m",
+		.enabled = 1, .loglevel = LOGL_NOTICE,
+	},
+};
+
+const struct log_info osmux_log_info = {
+	.filter_fn = NULL,
+	.cat = osmux_test_cat,
+	.num_cat = ARRAY_SIZE(osmux_test_cat),
+};
+
+static void *tall_test;
+
 int main(int argc, char *argv[])
 {
 	int ret;
@@ -118,6 +140,10 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "example: %s file.pcap\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
+
+	tall_test = talloc_named_const(NULL, 1, "osmux_pcap_test");
+	osmo_init_logging(&osmux_log_info);
+	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	osmo_pcap_init();
 
