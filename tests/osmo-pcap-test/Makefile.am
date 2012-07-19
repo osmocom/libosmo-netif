@@ -6,7 +6,8 @@ osmo_pcap_test_SOURCES = proto.c		\
 			 l3_ipv4.c		\
 			 l4_tcp.c		\
 			 l4_udp.c		\
-			 main.c
+			 osmux_test.c		\
+			 pcap.c
 
 osmo_pcap_test_LDFLAGS = -lpcap			\
 			 -losmocore		\
