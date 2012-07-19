@@ -165,18 +165,34 @@ static struct osmux_out_handle h = {
         .rtp_timestamp  = 10,
 };
 
+static void tx_cb(struct msgb *msg, void *data)
+{
+	printf("now sending message scheduled [emulated], msg=%p\n", msg);
+	/*
+	 * Here we should call the real function that sends the message
+	 * instead of releasing it.
+	 */
+	msgb_free(msg);
+}
+
 static void deliver(struct msgb *batch_msg)
 {
         struct osmux_hdr *osmuxh;
         struct msgb *msg;
         int i = 0;
+	struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };
+	struct timeval delta = { .tv_sec = 0, .tv_usec = 160000 };
+
+	timerclear(&tv);
 
         printf("sending batch (len=%d) [emulated]\n", batch_msg->len);
         while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL) {
                 msg = osmux_xfrm_output(osmuxh, &h);
-                printf("extract message %d\n", ++i);
-                /* XXX just to avoid leaking */
-                msgb_free(msg);
+		printf("schedule transmision for %lu.%6lu seconds, "
+		       "msg=%p (%d in batch)\n",
+			tv.tv_sec, tv.tv_usec, msg, ++i);
+		osmux_tx_sched(msg, &tv, tx_cb, NULL);
+		timeradd(&tv, &delta, &tv);
         }
 }
 
