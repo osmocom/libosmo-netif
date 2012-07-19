@@ -22,6 +22,8 @@
 
 #include <arpa/inet.h>
 
+#define DEBUG_TIMING		1
+
 #define OSMUX_BATCH_MAX		1480	/* XXX: MTU - iphdr (20 bytes) */
 
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
@@ -225,11 +227,21 @@ struct osmux_tx_handle {
         struct msgb             *msg;
         void                    (*tx_cb)(struct msgb *msg, void *data);
         void                    *data;
+#ifdef DEBUG_TIMING
+	struct timeval		start;
+#endif
 };
 
 static void osmux_tx_cb(void *data)
 {
 	struct osmux_tx_handle *h = data;
+#ifdef DEBUG_TIMING
+	struct timeval now, diff;
+
+	gettimeofday(&now, NULL);
+	timersub(&now, &h->start, &diff);
+	printf("difference %lu.%.6lu\n", diff.tv_sec, diff.tv_usec);
+#endif
 
 	h->tx_cb(h->msg, h->data);
 
@@ -251,6 +263,9 @@ void osmux_tx_sched(struct msgb *msg, struct timeval *when,
 	h->timer.cb = osmux_tx_cb;
 	h->timer.data = h;
 
+#ifdef DEBUG_TIMING
+	gettimeofday(&h->start, NULL);
+#endif
 	/* send it now */
 	if (when->tv_sec == 0 && when->tv_usec == 0) {
 		osmux_tx_cb(h);
