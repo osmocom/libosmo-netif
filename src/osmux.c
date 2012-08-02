@@ -28,7 +28,8 @@
 /* XXX: this needs to be defined in libosmocore */
 #define DOSMUX 0
 
-#define OSMUX_BATCH_MAX		1480	/* XXX: MTU - iphdr (20 bytes) */
+/* XXX: MTU - iphdr (20 bytes) - udphdr (8 bytes) */
+#define OSMUX_BATCH_MAX		1472
 
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 {
