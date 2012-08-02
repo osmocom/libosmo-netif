@@ -151,10 +151,10 @@ int main(int argc, char *argv[])
 
 	osmo_pcap.timer.cb = osmo_pcap_pkt_timer_cb;
 
+	osmux_xfrm_input_init(&h_input);
+
 	/* first run */
 	osmo_pcap_pkt_timer_cb(NULL);
-
-	osmux_xfrm_input_init(&h_input);
 
 	while(1) {
 		osmo_select_main(0);
