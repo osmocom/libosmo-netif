@@ -18,26 +18,24 @@
 
 struct osmux_hdr {
 #if __BYTE_ORDER == __BIG_ENDIAN
-	uint8_t ft:4,
+	uint8_t ft:3,
+		ctr:3,
+		amr_f:1,
+		amr_q:1;
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
+	uint8_t amr_q:1,
+		amr_f:1,
+		ctr:3,
+		ft:3;
+#endif
+	uint8_t seq;
+	uint8_t circuit_id;
+#if __BYTE_ORDER == __BIG_ENDIAN
+	uint8_t amr_ft:4,
 		amr_cmr:4;
 #elif __BYTE_ORDER == __LITTLE_ENDIAN
 	uint8_t amr_cmr:4,
-		ft:4;
-#endif
-	uint8_t circuit_id;
-	uint8_t seq;
-#if __BYTE_ORDER == __BIG_ENDIAN
-	uint8_t amr_f:1,
-		amr_ft:4,
-		amr_q:1,
-		rtp_marker:1,
-		pad:1;
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
-	uint8_t pad:1,
-		rtp_marker:1,
-		amr_q:1,
-		amr_ft:4,
-		amr_f:1;
+		amr_ft:4;
 #endif
 } __attribute__((packed));
 

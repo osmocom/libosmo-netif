@@ -63,12 +63,22 @@ static void deliver(struct msgb *batch_msg)
 
 	/* This code below belongs to the osmux receiver */
 	while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL) {
+		struct msgb *next;
+
 		msg = osmux_xfrm_output(osmuxh, &h_output);
 		printf("scheduled transmision in %lu.%6lu seconds, "
 		       "msg=%p (%d in batch)\n",
 			tv.tv_sec, tv.tv_usec, msg, ++i);
 		osmux_tx_sched(msg, &tv, tx_cb, NULL);
 		timeradd(&tv, &delta, &tv);
+
+		llist_for_each_entry(next, &msg->list, list) {
+			printf("scheduled transmision in %lu.%6lu seconds, "
+			       "msg=%p (%d in batch)\n",
+				tv.tv_sec, tv.tv_usec, next, ++i);
+			osmux_tx_sched(next, &tv, tx_cb, NULL);
+			timeradd(&tv, &delta, &tv);
+		}
 	}
 }
 
