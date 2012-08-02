@@ -74,8 +74,6 @@ osmo_pcap_process_packet(const uint8_t *pkt, uint32_t pktlen,
 
 	ret = cb(msgb);
 
-	msgb_free(msgb);
-
 	osmo_pcap_test_stats.processed++;
 
 	return ret;
