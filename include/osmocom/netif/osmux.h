@@ -53,7 +53,7 @@ struct osmux_out_handle {
 	uint32_t rtp_timestamp;
 };
 
-static inline void *osmux_get_payload(struct osmux_hdr *osmuxh)
+static inline uint8_t *osmux_get_payload(struct osmux_hdr *osmuxh)
 {
 	return (uint8_t *)osmuxh + sizeof(struct osmux_hdr);
 }
