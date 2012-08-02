@@ -84,18 +84,14 @@ struct osmux_in_handle h_input = {
 static int pcap_test_run(struct msgb *msg)
 {
 	int ret;
-retry:
-	ret = osmux_xfrm_input(msg);
-	switch(ret) {
-		case -1:
-			printf("something is wrong\n");
-			break;
-		case 0:
-			break;
-		case 1:
-			osmux_xfrm_input_deliver(&h_input);
-			goto retry;
+
+	while ((ret = osmux_xfrm_input(msg)) > 1) {
+		/* batch full, deliver it */
+		osmux_xfrm_input_deliver(&h_input);
 	}
+	if (ret == -1)
+		printf("something is wrong\n");
+
 	return 0;
 }
 
