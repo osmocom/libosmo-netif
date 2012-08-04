@@ -212,15 +212,19 @@ static struct msgb *osmux_build_batch(void)
 	llist_for_each_entry_safe(cur, tmp, &batch.msgb_list, list) {
 		struct rtp_hdr *rtph;
 
-		LOGP(DOSMUX, LOGL_DEBUG,
-			"building message (%p) into batch (%d)\n", cur, ++i);
-
 		rtph = osmo_rtp_get_hdr(cur);
 		if (rtph == NULL)
 			return NULL;
 
-		if (last_rtp_ssrc_set)
-			add_osmux_hdr = (last_rtp_ssrc == rtph->ssrc);
+		if (last_rtp_ssrc_set) {
+			add_osmux_hdr = (last_rtp_ssrc != rtph->ssrc);
+			if (add_osmux_hdr)
+				LOGP(DOSMUX, LOGL_DEBUG, "add osmux header\n");
+		}
+
+		LOGP(DOSMUX, LOGL_DEBUG,
+			"building message (%p) into batch (%d) ssrc=%u\n",
+			cur, ++i, rtph->ssrc);
 
 		osmux_xfrm_encode_amr(batch_msg, rtph, cur, add_osmux_hdr);
 
