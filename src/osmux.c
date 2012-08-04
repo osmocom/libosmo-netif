@@ -376,6 +376,7 @@ struct osmux_tx_handle {
 	void			*data;
 #ifdef DEBUG_TIMING
 	struct timeval		start;
+	struct timeval		when;
 #endif
 };
 
@@ -387,8 +388,9 @@ static void osmux_tx_cb(void *data)
 
 	gettimeofday(&now, NULL);
 	timersub(&now, &h->start, &diff);
-	LOGP(DOSMUX, LOGL_DEBUG, "difference %lu.%.6lu\n",
-		diff.tv_sec, diff.tv_usec);
+	timersub(&diff,&h->when, &diff);
+	LOGP(DOSMUX, LOGL_DEBUG, "we are lagging %lu.%.6lu in scheduled "
+		"transmissions\n", diff.tv_sec, diff.tv_usec);
 #endif
 
 	h->tx_cb(h->msg, h->data);
@@ -414,6 +416,8 @@ osmux_tx(struct msgb *msg, struct timeval *when,
 
 #ifdef DEBUG_TIMING
 	gettimeofday(&h->start, NULL);
+	h->when.tv_sec = when->tv_sec;
+	h->when.tv_usec = when->tv_usec;
 #endif
 	/* send it now */
 	if (when->tv_sec == 0 && when->tv_usec == 0) {
