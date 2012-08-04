@@ -270,6 +270,7 @@ static int osmux_msgb_batch_queue_add(struct msgb *msg)
 	struct rtp_hdr *rtph;
 	struct msgb *cur;
 	int found = 0, bytes = 0;
+	struct llist_head *list;
 
 	rtph = osmo_rtp_get_hdr(msg);
 	if (rtph == NULL)
@@ -278,35 +279,21 @@ static int osmux_msgb_batch_queue_add(struct msgb *msg)
 	llist_for_each_entry(cur, &batch.msgb_list, list) {
 		struct rtp_hdr *rtph2;
 
-		rtph2 = osmo_rtp_get_hdr(msg);
+		rtph2 = osmo_rtp_get_hdr(cur);
 		if (rtph2 == NULL)
 			return -1;
 
-		/* inset messages in order based on the RTP SSRC */
-		if (rtph->ssrc < rtph2->ssrc)
-			continue;
-		if (rtph->ssrc == rtph2->ssrc) {
-			found = 1;
-			continue;
-		}
-
-		bytes += osmux_rtp_amr_payload_len(msg, rtph);
-		if (!found)
-			bytes += sizeof(struct osmux_hdr);
-
-		/* Still room in this batch for this message? if there is not
-		 * then deliver current batch.
+		/* We insert messages in order based on the RTP SSRC. This is
+		 * useful to build the batch.
 		 */
-		if (bytes > batch.remaining_bytes)
-			return 1;
-
-		batch.remaining_bytes -= bytes;
-		llist_add(&msg->list, &cur->list);
-
-		LOGP(DOSMUX, LOGL_DEBUG, "adding to batch (%p)\n", msg);
-
-		return 0;
+		if (rtph->ssrc > rtph2->ssrc)
+			break;
 	}
+	if (cur->list.next == batch.msgb_list.next)
+		list = cur->list.next;
+	else
+		list = cur->list.prev;
+
 	/*
 	 * ... adding to the tail or empty list case.
 	 */
@@ -321,7 +308,7 @@ static int osmux_msgb_batch_queue_add(struct msgb *msg)
 		return 1;
 
 	batch.remaining_bytes -= bytes;
-	llist_add_tail(&msg->list, &batch.msgb_list);
+	llist_add_tail(&msg->list, list);
 
 	LOGP(DOSMUX, LOGL_DEBUG, "adding to batch (%p)\n", msg);
 
