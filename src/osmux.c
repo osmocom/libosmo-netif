@@ -156,8 +156,15 @@ osmux_batch_add(struct msgb *out_msg, struct msgb *msg, struct rtp_hdr *rtph,
 
 		/* annotate current osmux header */
 		batch.osmuxh = osmuxh;
-	} else
+	} else {
+		if (batch.osmuxh->ctr == 0x7) {
+			LOGP(DOSMUX, LOGL_ERROR, "cannot add msg=%p, "
+				"too many messages for this RTP ssrc=%u\n",
+				msg, rtph->ssrc);
+			return 0;
+		}
 		batch.osmuxh->ctr++;
+	}
 
 	memcpy(out_msg->tail, osmo_amr_get_payload(amrh), amr_payload_len);
 	msgb_put(out_msg, amr_payload_len);
