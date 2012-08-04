@@ -55,7 +55,7 @@ static void deliver(struct msgb *batch_msg)
 	struct msgb *msg;
 	int i = 0;
 	struct timeval tv = { .tv_sec = 0, .tv_usec = 0 };
-	struct timeval delta = { .tv_sec = 0, .tv_usec = 160000 };
+	struct timeval delta = { .tv_sec = 0, .tv_usec = 20000 };
 
 	timerclear(&tv);
 
