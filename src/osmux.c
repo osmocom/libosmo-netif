@@ -424,19 +424,22 @@ osmux_tx(struct msgb *msg, struct timeval *when,
 }
 
 void
-osmux_tx_sched(struct llist_head *list, struct timeval *when,
+osmux_tx_sched(struct llist_head *list,
 	       void (*tx_cb)(struct msgb *msg, void *data), void *data)
 {
 	struct msgb *cur, *tmp;
 	struct timeval delta = { .tv_sec = 0, .tv_usec = DELTA_RTP_MSG };
+	struct timeval when;
+
+	timerclear(&when);
 
 	llist_for_each_entry_safe(cur, tmp, list, list) {
 
 		LOGP(DOSMUX, LOGL_DEBUG, "scheduled transmision in %lu.%6lu "
-			"seconds, msg=%p\n", when->tv_sec, when->tv_usec, cur);
+			"seconds, msg=%p\n", when.tv_sec, when.tv_usec, cur);
 
-		osmux_tx(cur, when, tx_cb, NULL);
-		timeradd(when, &delta, when);
+		osmux_tx(cur, &when, tx_cb, NULL);
+		timeradd(&when, &delta, &when);
 		llist_del(&cur->list);
 	}
 }

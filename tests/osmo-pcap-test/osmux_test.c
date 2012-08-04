@@ -52,10 +52,7 @@ static void tx_cb(struct msgb *msg, void *data)
 static void deliver(struct msgb *batch_msg)
 {
 	struct osmux_hdr *osmuxh;
-	struct timeval tv;
 	struct llist_head list;
-
-	timerclear(&tv);
 
 	printf("sending batch (len=%d) [emulated]\n", batch_msg->len);
 
@@ -63,7 +60,7 @@ static void deliver(struct msgb *batch_msg)
 	while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL) {
 
 		osmux_xfrm_output(osmuxh, &h_output, &list);
-		osmux_tx_sched(&list, &tv, tx_cb, NULL);
+		osmux_tx_sched(&list, tx_cb, NULL);
 	}
 }
 
