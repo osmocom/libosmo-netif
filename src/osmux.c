@@ -34,6 +34,9 @@
 /* XXX: make this configurable */
 #define OSMUX_BATCH_FACTOR	4
 
+/* delta time between two RTP messages */
+#define DELTA_RTP_MSG		20000
+
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 {
 	struct osmux_hdr *osmuxh = NULL;
@@ -100,25 +103,28 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	return out_msg;
 }
 
-struct msgb *
-osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h)
+int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
+		      struct llist_head *list)
 {
-	struct msgb *first, *next;
+	struct msgb *msg;
 	int i;
 
-	first = osmux_rebuild_rtp(h, osmuxh,
-				  osmux_get_payload(osmuxh),
-				  osmo_amr_bytes(osmuxh->amr_cmr));
-	INIT_LLIST_HEAD(&first->list);
+	INIT_LLIST_HEAD(list);
 
-	for (i=0; i<osmuxh->ctr; i++) {
-		next = osmux_rebuild_rtp(h, osmuxh,
-					 osmux_get_payload(osmuxh) +
-					 ((i+1) * osmo_amr_bytes(osmuxh->amr_cmr)),
-					 osmo_amr_bytes(osmuxh->amr_cmr));
-		llist_add_tail(&next->list, &first->list);
+	for (i=0; i<osmuxh->ctr+1; i++) {
+		msg = osmux_rebuild_rtp(h, osmuxh,
+					osmux_get_payload(osmuxh) +
+					i * osmo_amr_bytes(osmuxh->amr_cmr),
+					osmo_amr_bytes(osmuxh->amr_cmr));
+		if (msg == NULL)
+			break;
+
+		LOGP(DOSMUX, LOGL_DEBUG, "extracted RTP message from batch "
+					 "msg=%p\n", msg);
+
+		llist_add_tail(&msg->list, list);
 	}
-	return first;
+	return i;
 }
 
 static struct osmux_batch {
@@ -344,7 +350,7 @@ int osmux_xfrm_input(struct msgb *msg)
 					"osmux start timer batch\n");
 
 				osmo_timer_schedule(&batch.timer, 0,
-					OSMUX_BATCH_FACTOR * 20000);
+					OSMUX_BATCH_FACTOR * DELTA_RTP_MSG);
 			}
 			ret = osmux_msgb_batch_queue_add(msg);
 			break;
@@ -366,10 +372,10 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 }
 
 struct osmux_tx_handle {
-        struct osmo_timer_list  timer;
-        struct msgb             *msg;
-        void                    (*tx_cb)(struct msgb *msg, void *data);
-        void                    *data;
+	struct osmo_timer_list	timer;
+	struct msgb		*msg;
+	void			(*tx_cb)(struct msgb *msg, void *data);
+	void			*data;
 #ifdef DEBUG_TIMING
 	struct timeval		start;
 #endif
@@ -392,8 +398,9 @@ static void osmux_tx_cb(void *data)
 	talloc_free(h);
 }
 
-void osmux_tx_sched(struct msgb *msg, struct timeval *when,
-		    void (*tx_cb)(struct msgb *msg, void *data), void *data)
+static void
+osmux_tx(struct msgb *msg, struct timeval *when,
+	 void (*tx_cb)(struct msgb *msg, void *data), void *data)
 {
 	struct osmux_tx_handle *h;
 
@@ -416,4 +423,22 @@ void osmux_tx_sched(struct msgb *msg, struct timeval *when,
 		return;
 	}
 	osmo_timer_schedule(&h->timer, when->tv_sec, when->tv_usec);
+}
+
+void
+osmux_tx_sched(struct llist_head *list, struct timeval *when,
+	       void (*tx_cb)(struct msgb *msg, void *data), void *data)
+{
+	struct msgb *cur, *tmp;
+	struct timeval delta = { .tv_sec = 0, .tv_usec = DELTA_RTP_MSG };
+
+	llist_for_each_entry_safe(cur, tmp, list, list) {
+
+		LOGP(DOSMUX, LOGL_DEBUG, "scheduled transmision in %lu.%6lu "
+			"seconds, msg=%p\n", when->tv_sec, when->tv_usec, cur);
+
+		osmux_tx(cur, when, tx_cb, NULL);
+		timeradd(when, &delta, when);
+		llist_del(&cur->list);
+	}
 }
