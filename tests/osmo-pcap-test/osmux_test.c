@@ -26,6 +26,7 @@
 #include <osmocom/core/application.h>
 #include <osmocom/core/talloc.h>
 
+#include <osmocom/netif/rtp.h>
 #include <osmocom/netif/osmux.h>
 
 #include "osmo_pcap.h"
@@ -77,6 +78,14 @@ struct osmux_in_handle h_input = {
 static int pcap_test_run(struct msgb *msg)
 {
 	int ret;
+	struct rtp_hdr *rtph;
+
+	rtph = osmo_rtp_get_hdr(msg);
+	if (rtph == NULL)
+		return 0;
+
+	if (osmux_xfrm_input_get_ccid(&h_input, rtph->ssrc) < 0)
+		osmux_xfrm_input_register_ccid(&h_input, rtph->ssrc);
 
 	while ((ret = osmux_xfrm_input(&h_input, msg)) > 1) {
 		/* batch full, deliver it */
