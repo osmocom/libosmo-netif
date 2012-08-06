@@ -69,8 +69,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 
 	/* Reconstruct RTP header */
 	rtph = (struct rtp_hdr *)out_msg->data;
-	rtph->csrc_count = (sizeof(struct amr_hdr) +
-				osmo_amr_bytes(osmuxh->amr_cmr)) >> 2;
+	rtph->csrc_count = 0;
 	rtph->extension = 0;
 	rtph->version = RTP_VERSION;
 	rtph->payload_type = 98;
