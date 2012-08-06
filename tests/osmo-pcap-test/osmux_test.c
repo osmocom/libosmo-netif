@@ -35,10 +35,7 @@
  * This is the output handle for osmux, it stores last RTP sequence and
  * timestamp that has been used. There should be one per circuit ID.
  */
-static struct osmux_out_handle h_output = {
-	.rtp_seq	= 1000,
-	.rtp_timestamp	= 10,
-};
+static struct osmux_out_handle h_output;
 
 static void tx_cb(struct msgb *msg, void *data)
 {
@@ -154,6 +151,7 @@ int main(int argc, char *argv[])
 	osmo_pcap.timer.cb = osmo_pcap_pkt_timer_cb;
 
 	osmux_xfrm_input_init(&h_input);
+	osmux_xfrm_output_init(&h_output);
 
 	/* first run */
 	osmo_pcap_pkt_timer_cb(NULL);
