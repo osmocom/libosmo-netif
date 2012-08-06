@@ -62,6 +62,8 @@ void *osmo_rtp_get_payload(struct rtp_hdr *rtph, struct msgb *msg, uint32_t *ple
 
 struct msgb *osmo_rtp_build(struct osmo_rtp_handle *h, uint8_t payload_type, uint32_t payload_len, const void *data, uint32_t duration);
 
+int osmo_rtp_snprintf(char *buf, size_t size, struct msgb *msg);
+
 /* supported RTP payload types. */
 #define RTP_PT_RTCP			72	/* RFC 3551: 72-76 for RTCP */
 
