@@ -31,9 +31,6 @@
 /* XXX: MTU - iphdr (20 bytes) - udphdr (8 bytes) */
 #define OSMUX_BATCH_MAX		1472
 
-/* XXX: make this configurable */
-#define OSMUX_BATCH_FACTOR	4
-
 /* delta time between two RTP messages */
 #define DELTA_RTP_MSG		20000
 
@@ -359,7 +356,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg)
 					"osmux start timer batch\n");
 
 				osmo_timer_schedule(&batch->timer, 0,
-					OSMUX_BATCH_FACTOR * DELTA_RTP_MSG);
+					h->batch_factor * DELTA_RTP_MSG);
 			}
 			ret = osmux_msgb_batch_queue_add(batch, msg);
 			break;

@@ -70,6 +70,7 @@ static void deliver(struct msgb *batch_msg)
  */
 struct osmux_in_handle h_input = {
 	.osmux_seq	= 0, /* sequence number to start OSmux message from */
+	.batch_factor = 4, /* batch up to 4 RTP messages */
 	.deliver	= deliver,
 };
 

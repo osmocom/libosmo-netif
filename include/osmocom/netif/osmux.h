@@ -42,6 +42,7 @@ struct osmux_hdr {
 /* one to handle all existing RTP flows */
 struct osmux_in_handle {
 	uint8_t osmux_seq;
+	uint8_t batch_factor;
 	void (*deliver)(struct msgb *msg);
 	char *data;				/* internal data */
 };
