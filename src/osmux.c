@@ -385,7 +385,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	batch->timer.cb = osmux_batch_timer_expired;
 	batch->timer.data = h;
 
-	for (i=0; i<8; i++)
+	for (i=0; i<OSMUX_MAX_CONCURRENT_CALLS; i++)
 		batch->ccid[i] = -1;
 
 	h->data = (void *)batch;
@@ -475,7 +475,7 @@ void osmux_xfrm_input_register_ccid(struct osmux_in_handle *h, uint32_t ssrc)
 	struct osmux_batch *batch = (struct osmux_batch *)h->data;;
 	int i, found = 0;
 
-	for (i=0; i<8; i++) {
+	for (i=0; i<OSMUX_MAX_CONCURRENT_CALLS; i++) {
 		if (batch->ccid[i] == ssrc)
 			continue;
 		if (batch->ccid[i] < 0) {
@@ -498,7 +498,7 @@ int osmux_xfrm_input_get_ccid(struct osmux_in_handle *h, uint32_t ssrc)
 	struct osmux_batch *batch = (struct osmux_batch *)h->data;;
 	int i, found = 0;
 
-	for (i=0; i<8; i++) {
+	for (i=0; i<OSMUX_MAX_CONCURRENT_CALLS; i++) {
 		if (batch->ccid[i] == ssrc) {
 			found = 1;
 			break;
@@ -512,7 +512,7 @@ void osmux_xfrm_output_init(struct osmux_out_handle *h)
 {
 	int i;
 
-	for (i=0; i<8; i++) {
+	for (i=0; i<OSMUX_MAX_CONCURRENT_CALLS; i++) {
 		h->rtp_seq[i] = (uint16_t)random();
 		h->rtp_timestamp[i] = (uint32_t)random();
 	}
