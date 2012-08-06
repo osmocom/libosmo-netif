@@ -43,6 +43,7 @@ struct osmux_hdr {
 struct osmux_in_handle {
 	uint8_t osmux_seq;
 	void (*deliver)(struct msgb *msg);
+	char *data;				/* internal data */
 };
 
 /* one per OSmux circuit_id, ie. one per RTP flow. */
@@ -57,7 +58,8 @@ static inline uint8_t *osmux_get_payload(struct osmux_hdr *osmuxh)
 }
 
 void osmux_xfrm_input_init(struct osmux_in_handle *h);
-int osmux_xfrm_input(struct msgb *msg);
+
+int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg);
 void osmux_xfrm_input_deliver(struct osmux_in_handle *h);
 
 int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h, struct llist_head *list);

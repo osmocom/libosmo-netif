@@ -77,7 +77,7 @@ static int pcap_test_run(struct msgb *msg)
 {
 	int ret;
 
-	while ((ret = osmux_xfrm_input(msg)) > 1) {
+	while ((ret = osmux_xfrm_input(&h_input, msg)) > 1) {
 		/* batch full, deliver it */
 		osmux_xfrm_input_deliver(&h_input);
 	}
