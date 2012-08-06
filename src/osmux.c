@@ -61,6 +61,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	struct msgb *out_msg;
 	struct rtp_hdr *rtph;
 	struct amr_hdr *amrh;
+	char buf[4096];
 
 	out_msg = msgb_alloc(sizeof(struct rtp_hdr) +
 			     sizeof(struct amr_hdr) +
@@ -99,6 +100,9 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	/* bump last RTP sequence number and timestamp that has been used */
 	h->rtp_seq++;
 	h->rtp_timestamp++;
+
+	osmo_rtp_snprintf(buf, sizeof(buf), out_msg);
+	LOGP(DOSMUX, LOGL_DEBUG, "%s\n", buf);
 
 	return out_msg;
 }
@@ -199,7 +203,6 @@ static struct msgb *osmux_build_batch(void)
 	struct msgb *cur, *tmp, *batch_msg;
 	uint32_t last_rtp_ssrc;
 	int last_rtp_ssrc_set = 0, add_osmux_hdr = 1;
-	int i=0;
 
 	batch_msg = msgb_alloc(OSMUX_BATCH_MAX, "OSMUX");
 	if (batch_msg == NULL) {
@@ -211,6 +214,7 @@ static struct msgb *osmux_build_batch(void)
 
 	llist_for_each_entry_safe(cur, tmp, &batch.msgb_list, list) {
 		struct rtp_hdr *rtph;
+		char buf[4096];
 
 		rtph = osmo_rtp_get_hdr(cur);
 		if (rtph == NULL)
@@ -222,9 +226,9 @@ static struct msgb *osmux_build_batch(void)
 				LOGP(DOSMUX, LOGL_DEBUG, "add osmux header\n");
 		}
 
-		LOGP(DOSMUX, LOGL_DEBUG,
-			"building message (%p) into batch (%d) ssrc=%u\n",
-			cur, ++i, rtph->ssrc);
+		osmo_rtp_snprintf(buf, sizeof(buf), cur);
+
+		LOGP(DOSMUX, LOGL_DEBUG, "%s\n", buf);
 
 		osmux_xfrm_encode_amr(batch_msg, rtph, cur, add_osmux_hdr);
 
