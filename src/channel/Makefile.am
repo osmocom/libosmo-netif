@@ -4,4 +4,5 @@ AM_LDFLAGS = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS) $(COVERAG
 
 noinst_LTLIBRARIES = libosmonetif-channel.la
 
-libosmonetif_channel_la_SOURCES = abis_ipa_server.c
+libosmonetif_channel_la_SOURCES = abis_ipa_server.c	\
+				  abis_ipa_client.c

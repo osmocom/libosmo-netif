@@ -4,9 +4,11 @@
 #include <osmocom/netif/channel.h>
 
 extern struct osmo_chan_type chan_abis_ipa_srv;
+extern struct osmo_chan_type chan_abis_ipa_cli;
 
 static struct osmo_chan_type *chan_type[CHAN_MAX] = {
 	[CHAN_ABIS_IPA_SRV]	= &chan_abis_ipa_srv,
+	[CHAN_ABIS_IPA_CLI]	= &chan_abis_ipa_cli,
 };
 
 struct osmo_chan *osmo_chan_create(void *ctx, int type_id)

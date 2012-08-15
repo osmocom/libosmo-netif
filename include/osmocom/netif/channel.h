@@ -9,6 +9,7 @@
 enum {
 	CHAN_NONE,
 	CHAN_ABIS_IPA_SRV,
+	CHAN_ABIS_IPA_CLI,
 	CHAN_MAX,
 };
 
