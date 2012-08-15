@@ -467,7 +467,7 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 		if (ipa->unit != NULL)
 			abis_ipa_put(ipa);
 
-		osmo_stream_srv_destroy(conn);
+		/* ... the stream socket releases this connection for us */
 		return 0;
 	}
 
