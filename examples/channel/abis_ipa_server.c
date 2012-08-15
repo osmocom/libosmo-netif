@@ -52,15 +52,15 @@ int main(void)
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	/* create channel. */
-	chan = osmo_chan_create(tall_example, CHAN_ABIS_IPA_SERVER);
+	chan = osmo_chan_create(tall_example, CHAN_ABIS_IPA_SRV);
 	if (chan == NULL) {
 		LOGP(DEXAMPLE, LOGL_ERROR, "Cannot create A-bis IPA server\n");
 		exit(EXIT_FAILURE);
 	}
 
 	/* set specific parameters (depends on channel type). */
-	osmo_chan_abis_ipa_server_set_cb_signalmsg(chan, signal_msg_cb);
-	osmo_chan_abis_ipa_unit_add(chan, 1801, 0);
+	osmo_abis_ipa_srv_set_cb_signalmsg(chan, signal_msg_cb);
+	osmo_abis_ipa_unit_add(chan, 1801, 0);
 
 	/* open channel. */
 	if (osmo_chan_open(chan) < 0) {

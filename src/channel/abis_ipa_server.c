@@ -15,16 +15,16 @@
 #include <osmocom/netif/stream.h>
 #include <osmocom/netif/ipa.h>
 
-/* default IPA server ports. */
+/* default IPA srv ports. */
 #define IPA_TCP_PORT_OML	3002
 #define IPA_TCP_PORT_RSL	3003
 
-static void *abis_ipa_server_tall;
+static void *abis_ipa_srv_tall;
 
-static int oml_accept_cb(struct osmo_stream_srv_link *server, int fd);
-static int rsl_accept_cb(struct osmo_stream_srv_link *server, int fd);
+static int oml_accept_cb(struct osmo_stream_srv_link *srv, int fd);
+static int rsl_accept_cb(struct osmo_stream_srv_link *srv, int fd);
 
-struct chan_abis_ipa_server {
+struct chan_abis_ipa_srv {
 	struct osmo_stream_srv_link *oml;
 	struct osmo_stream_srv_link *rsl;
 
@@ -48,10 +48,10 @@ struct ipa {
 	struct osmo_stream_srv	*rsl;
 };
 
-static int chan_abis_ipa_server_create(struct osmo_chan *chan)
+static int chan_abis_ipa_srv_create(struct osmo_chan *chan)
 {
-	struct chan_abis_ipa_server *c =
-		(struct chan_abis_ipa_server *)chan->data;
+	struct chan_abis_ipa_srv *c =
+		(struct chan_abis_ipa_srv *)chan->data;
 	struct ipa *ipa;
 
 	/* dummy connection. */
@@ -61,7 +61,7 @@ static int chan_abis_ipa_server_create(struct osmo_chan *chan)
 
 	ipa->chan = chan;
 
-	c->oml = osmo_stream_srv_link_create(abis_ipa_server_tall);
+	c->oml = osmo_stream_srv_link_create(abis_ipa_srv_tall);
 	if (c->oml == NULL)
 		goto err_oml;
 
@@ -71,7 +71,7 @@ static int chan_abis_ipa_server_create(struct osmo_chan *chan)
 	osmo_stream_srv_link_set_accept_cb(c->oml, oml_accept_cb);
 	osmo_stream_srv_link_set_data(c->oml, ipa);
 
-	c->rsl = osmo_stream_srv_link_create(abis_ipa_server_tall);
+	c->rsl = osmo_stream_srv_link_create(abis_ipa_srv_tall);
 	if (c->rsl == NULL)
 		goto err_rsl;
 
@@ -93,10 +93,10 @@ err:
 	return -1;
 }
 
-static void chan_abis_ipa_server_destroy(struct osmo_chan *chan)
+static void chan_abis_ipa_srv_destroy(struct osmo_chan *chan)
 {
-	struct chan_abis_ipa_server *c =
-		(struct chan_abis_ipa_server *)chan->data;
+	struct chan_abis_ipa_srv *c =
+		(struct chan_abis_ipa_srv *)chan->data;
 	struct ipa *ipa =
 		osmo_stream_srv_link_get_data(c->oml);
 
@@ -105,10 +105,10 @@ static void chan_abis_ipa_server_destroy(struct osmo_chan *chan)
 	talloc_free(c->oml);
 }
 
-static int chan_abis_ipa_server_open(struct osmo_chan *chan)
+static int chan_abis_ipa_srv_open(struct osmo_chan *chan)
 {
-	struct chan_abis_ipa_server *c =
-		(struct chan_abis_ipa_server *)chan->data;
+	struct chan_abis_ipa_srv *c =
+		(struct chan_abis_ipa_srv *)chan->data;
 	struct osmo_fd *ofd;
 	int ret, on = 1;
 
@@ -138,77 +138,77 @@ err:
 	return -1;
 }
 
-static void chan_abis_ipa_server_close(struct osmo_chan *chan)
+static void chan_abis_ipa_srv_close(struct osmo_chan *chan)
 {
-	struct chan_abis_ipa_server *c =
-		(struct chan_abis_ipa_server *)chan->data;
+	struct chan_abis_ipa_srv *c =
+		(struct chan_abis_ipa_srv *)chan->data;
 
 	osmo_stream_srv_link_close(c->oml);
 	osmo_stream_srv_link_close(c->rsl);
 }
 
-static int chan_abis_ipa_server_enqueue(struct osmo_chan *c, struct msgb *msg)
+static int chan_abis_ipa_srv_enqueue(struct osmo_chan *c, struct msgb *msg)
 {
 	osmo_stream_srv_send(msg->dst, msg);
 	return 0;
 }
 
 void
-osmo_chan_abis_ipa_server_set_oml_addr(struct osmo_chan *c, const char *addr)
+osmo_abis_ipa_srv_set_oml_addr(struct osmo_chan *c, const char *addr)
 {
-	struct chan_abis_ipa_server *s =
-		(struct chan_abis_ipa_server *)&c->data;
+	struct chan_abis_ipa_srv *s =
+		(struct chan_abis_ipa_srv *)&c->data;
 
 	osmo_stream_srv_link_set_addr(s->oml, addr);
 }
 
 void
-osmo_chan_abis_ipa_server_set_oml_port(struct osmo_chan *c, uint16_t port)
+osmo_abis_ipa_srv_set_oml_port(struct osmo_chan *c, uint16_t port)
 {
-	struct chan_abis_ipa_server *s =
-		(struct chan_abis_ipa_server *)&c->data;
+	struct chan_abis_ipa_srv *s =
+		(struct chan_abis_ipa_srv *)&c->data;
 
 	osmo_stream_srv_link_set_port(s->oml, port);
 }
 
 void
-osmo_chan_abis_ipa_server_set_rsl_addr(struct osmo_chan *c, const char *addr)
+osmo_abis_ipa_srv_set_rsl_addr(struct osmo_chan *c, const char *addr)
 {
-	struct chan_abis_ipa_server *s =
-		(struct chan_abis_ipa_server *)&c->data;
+	struct chan_abis_ipa_srv *s =
+		(struct chan_abis_ipa_srv *)&c->data;
 
 	osmo_stream_srv_link_set_addr(s->rsl, addr);
 }
 
 void
-osmo_chan_abis_ipa_server_set_rsl_port(struct osmo_chan *c, uint16_t port)
+osmo_abis_ipa_srv_set_rsl_port(struct osmo_chan *c, uint16_t port)
 {
-	struct chan_abis_ipa_server *s =
-		(struct chan_abis_ipa_server *)&c->data;
+	struct chan_abis_ipa_srv *s =
+		(struct chan_abis_ipa_srv *)&c->data;
 
 	osmo_stream_srv_link_set_port(s->rsl, port);
 }
 
 void
-osmo_chan_abis_ipa_server_set_cb_signalmsg(struct osmo_chan *c,
+osmo_abis_ipa_srv_set_cb_signalmsg(struct osmo_chan *c,
 	void (*signal_msg)(struct msgb *msg, int type))
 {
-	struct chan_abis_ipa_server *s =
-		(struct chan_abis_ipa_server *)&c->data;
+	struct chan_abis_ipa_srv *s =
+		(struct chan_abis_ipa_srv *)&c->data;
 
 	s->signal_msg = signal_msg;
 }
 
 static int oml_read_cb(struct osmo_stream_srv *conn);
 
-static int oml_accept_cb(struct osmo_stream_srv_link *server, int fd)
+static int oml_accept_cb(struct osmo_stream_srv_link *srv, int fd)
 {
 	struct osmo_stream_srv *conn;
-	struct ipa *ipa = osmo_stream_srv_link_get_data(server);
+	struct ipa *ipa = osmo_stream_srv_link_get_data(srv);
 	struct osmo_fd *ofd;
 
-	conn = osmo_stream_srv_create(abis_ipa_server_tall,
-					      server, fd,
+	conn = osmo_stream_srv_create(abis_ipa_srv_tall,
+					      srv, fd,
 					      oml_read_cb, NULL, ipa);
 	if (conn == NULL) {
 		LOGP(DLINP, LOGL_ERROR, "error while creating connection\n");
@@ -217,7 +217,7 @@ static int oml_accept_cb(struct osmo_stream_srv_link *server, int fd)
 
 	ofd = osmo_stream_srv_get_ofd(conn);
 
-	/* XXX: better use chan_abis_ipa_server_enqueue. */
+	/* XXX: better use chan_abis_ipa_srv_enqueue. */
 	ipaccess_send_id_req(ofd->fd);
 
 	return 0;
@@ -225,15 +225,14 @@ static int oml_accept_cb(struct osmo_stream_srv_link *server, int fd)
 
 static int rsl_read_cb(struct osmo_stream_srv *conn);
 
-static int rsl_accept_cb(struct osmo_stream_srv_link *server, int fd)
+static int rsl_accept_cb(struct osmo_stream_srv_link *srv, int fd)
 {
 	struct osmo_stream_srv *conn;
-	struct ipa *ipa = osmo_stream_srv_link_get_data(server);
+	struct ipa *ipa = osmo_stream_srv_link_get_data(srv);
 	struct osmo_fd *ofd;
 
-	conn = osmo_stream_srv_create(abis_ipa_server_tall,
-					      server, fd,
-					      rsl_read_cb, NULL, ipa);
+	conn = osmo_stream_srv_create(abis_ipa_srv_tall, srv, fd,
+				      rsl_read_cb, NULL, ipa);
 	if (conn == NULL) {
 		LOGP(DLINP, LOGL_ERROR, "error while creating connection\n");
 		return -1;
@@ -241,18 +240,18 @@ static int rsl_accept_cb(struct osmo_stream_srv_link *server, int fd)
 
 	ofd = osmo_stream_srv_get_ofd(conn);
 
-	/* XXX: better use chan_abis_ipa_server_enqueue. */
+	/* XXX: better use chan_abis_ipa_srv_enqueue. */
 	ipaccess_send_id_req(ofd->fd);
 
 	return 0;
 }
 
 static struct ipa_unit *
-osmo_ipa_unit_find(struct osmo_chan *c, uint16_t site_id, uint16_t bts_id)
+osmo_abis_ipa_unit_find(struct osmo_chan *c, uint16_t site_id, uint16_t bts_id)
 {
 	struct ipa_unit *unit;
-	struct chan_abis_ipa_server *s =
-		(struct chan_abis_ipa_server *)c->data;
+	struct chan_abis_ipa_srv *s =
+		(struct chan_abis_ipa_srv *)c->data;
 
 	llist_for_each_entry(unit, &s->bts_list, head) {
 		if (unit->site_id == site_id &&
@@ -263,12 +262,12 @@ osmo_ipa_unit_find(struct osmo_chan *c, uint16_t site_id, uint16_t bts_id)
 }
 
 int
-osmo_chan_abis_ipa_unit_add(struct osmo_chan *c,
+osmo_abis_ipa_unit_add(struct osmo_chan *c,
 			    uint16_t site_id, uint16_t bts_id)
 {
 	struct ipa_unit *unit;
-	struct chan_abis_ipa_server *s =
-		(struct chan_abis_ipa_server *)c->data;
+	struct chan_abis_ipa_srv *s =
+		(struct chan_abis_ipa_srv *)c->data;
 
 	unit = talloc_zero(c->ctx, struct ipa_unit);
 	if (unit == NULL)
@@ -282,7 +281,7 @@ osmo_chan_abis_ipa_unit_add(struct osmo_chan *c,
 }
 
 static struct ipa *
-osmo_ipa_alloc(struct ipa_unit *unit, struct osmo_chan *chan)
+osmo_abis_ipa_alloc(struct ipa_unit *unit, struct osmo_chan *chan)
 {
 	struct ipa *ipa;
 
@@ -297,13 +296,13 @@ osmo_ipa_alloc(struct ipa_unit *unit, struct osmo_chan *chan)
 }
 
 static struct ipa *
-osmo_ipa_add(struct ipa_unit *unit, struct osmo_chan *chan)
+osmo_abis_ipa_add(struct ipa_unit *unit, struct osmo_chan *chan)
 {
 	struct ipa *ipa;
-	struct chan_abis_ipa_server *s =
-		(struct chan_abis_ipa_server *)chan->data;
+	struct chan_abis_ipa_srv *s =
+		(struct chan_abis_ipa_srv *)chan->data;
 
-	ipa = osmo_ipa_alloc(unit, chan);
+	ipa = osmo_abis_ipa_alloc(unit, chan);
 	if (ipa == NULL)
 		return NULL;
 
@@ -313,11 +312,11 @@ osmo_ipa_add(struct ipa_unit *unit, struct osmo_chan *chan)
 }
 
 static struct ipa *
-osmo_ipa_find(struct ipa_unit *unit, struct osmo_chan *chan)
+osmo_abis_ipa_find(struct ipa_unit *unit, struct osmo_chan *chan)
 {
 	struct ipa *ipa;
-	struct chan_abis_ipa_server *s =
-		(struct chan_abis_ipa_server *)chan->data;
+	struct chan_abis_ipa_srv *s =
+		(struct chan_abis_ipa_srv *)chan->data;
 
 	llist_for_each_entry(ipa, &s->conn_list, head) {
 		if (ipa->unit->site_id == unit->site_id &&
@@ -328,8 +327,7 @@ osmo_ipa_find(struct ipa_unit *unit, struct osmo_chan *chan)
 	return NULL;
 }
 
-static void
-osmo_ipa_put(struct ipa *ipa)
+static void abis_ipa_put(struct ipa *ipa)
 {
 	llist_del(&ipa->head);
 	osmo_stream_srv_destroy(ipa->oml);
@@ -338,7 +336,7 @@ osmo_ipa_put(struct ipa *ipa)
 }
 
 static int
-abis_ipa_server_rcvmsg(struct osmo_chan *c,
+abis_ipa_srv_rcvmsg(struct osmo_chan *c,
 		       struct osmo_stream_srv *conn,
 		       struct msgb *msg, int type)
 {
@@ -386,7 +384,7 @@ abis_ipa_server_rcvmsg(struct osmo_chan *c,
 		unitid[len - 1] = '\0';
 		osmo_ipa_parse_unitid(unitid, &unit_data);
 
-		unit = osmo_ipa_unit_find(c, unit_data.site_id,
+		unit = osmo_abis_ipa_unit_find(c, unit_data.site_id,
 					  unit_data.bts_id);
 		if (unit == NULL) {
 			LOGP(DLINP, LOGL_ERROR, "Unable to find BTS "
@@ -399,9 +397,9 @@ abis_ipa_server_rcvmsg(struct osmo_chan *c,
 			unit_data.site_id, unit_data.bts_id,
 			unit_data.trx_id);
 
-		ipa = osmo_ipa_find(unit, c);
+		ipa = osmo_abis_ipa_find(unit, c);
 		if (ipa == NULL) {
-			ipa = osmo_ipa_add(unit, c);
+			ipa = osmo_abis_ipa_add(unit, c);
 			if (ipa == NULL) {
 				LOGP(DLINP, LOGL_ERROR, "OOM\n");
 				return 0;
@@ -419,7 +417,7 @@ abis_ipa_server_rcvmsg(struct osmo_chan *c,
 		} else if (type == CHAN_SIGN_RSL) {
 			if (!ipa->oml) {
 				/* no OML link? Restart from scratch. */
-				osmo_ipa_put(ipa);
+				abis_ipa_put(ipa);
 				return 0;
 			}
 			if (ipa->rsl) {
@@ -444,7 +442,7 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 	struct msgb *msg;
 	struct osmo_fd *ofd = osmo_stream_srv_get_ofd(conn);
 	struct ipa *ipa = osmo_stream_srv_get_data(conn);
-	struct chan_abis_ipa_server *s;
+	struct chan_abis_ipa_srv *s;
 	struct ipa_head *hh;
 
 	LOGP(DLINP, LOGL_DEBUG, "received message from stream\n");
@@ -460,20 +458,20 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 		msgb_free(msg);
 		/* not the dummy connection, release it. */
 		if (ipa->unit != NULL)
-			osmo_ipa_put(ipa);
+			abis_ipa_put(ipa);
 		return 0;
 	} else if (ret == 0) {
 		/* link has vanished, dead socket. */
 		LOGP(DLINP, LOGL_ERROR, "closed connection\n");
 		msgb_free(msg);
 		if (ipa->unit != NULL)
-			osmo_ipa_put(ipa);
+			abis_ipa_put(ipa);
 		return 0;
 	}
 
 	hh = (struct ipa_head *) msg->data;
 	if (hh->proto == IPAC_PROTO_IPACCESS) {
-		abis_ipa_server_rcvmsg(ipa->chan, conn, msg, type);
+		abis_ipa_srv_rcvmsg(ipa->chan, conn, msg, type);
 		msgb_free(msg);
 		return -EIO;
 	}
@@ -490,7 +488,7 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 	}
 	msg->dst = ipa;
 
-	s = (struct chan_abis_ipa_server *)ipa->chan->data;
+	s = (struct chan_abis_ipa_srv *)ipa->chan->data;
 	s->signal_msg(msg, type);
 
 	return 0;
@@ -506,12 +504,12 @@ static int rsl_read_cb(struct osmo_stream_srv *conn)
 	return read_cb(conn, CHAN_SIGN_RSL);
 }
 
-struct osmo_chan_type chan_abis_ipa_server = {
-	.type		= CHAN_ABIS_IPA_SERVER,
-	.datasiz	= sizeof(struct chan_abis_ipa_server),
-	.create		= chan_abis_ipa_server_create,
-	.destroy	= chan_abis_ipa_server_destroy,
-	.open		= chan_abis_ipa_server_open,
-	.close		= chan_abis_ipa_server_close,
-	.enqueue	= chan_abis_ipa_server_enqueue,
+struct osmo_chan_type chan_abis_ipa_srv = {
+	.type		= CHAN_ABIS_IPA_SRV,
+	.datasiz	= sizeof(struct chan_abis_ipa_srv),
+	.create		= chan_abis_ipa_srv_create,
+	.destroy	= chan_abis_ipa_srv_destroy,
+	.open		= chan_abis_ipa_srv_open,
+	.close		= chan_abis_ipa_srv_close,
+	.enqueue	= chan_abis_ipa_srv_enqueue,
 };
