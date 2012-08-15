@@ -154,6 +154,14 @@ void osmo_abis_ipa_cli_set_rsl_port(struct osmo_chan *c, uint16_t port)
 	osmo_stream_cli_set_port(s->rsl, port);
 }
 
+void osmo_abis_ipa_cli_set_unit(struct osmo_chan *c, struct ipaccess_unit *unit)
+{
+	struct chan_abis_ipa_cli *s = (struct chan_abis_ipa_cli *)&c->data;
+
+	osmo_ipa_unit_free(s->unit);
+	s->unit = unit;
+}
+
 void osmo_abis_ipa_cli_set_cb_signalmsg(struct osmo_chan *c,
 	void (*signal_msg)(struct msgb *msg, int type))
 {
@@ -257,7 +265,7 @@ abis_ipa_cli_rcvmsg(struct osmo_chan *c, struct osmo_stream_cli *conn,
 	int ret;
 
 	/* Handle IPA PING, PONG and ID_ACK messages. */
-	if (osmo_ipa_rcvmsg_base(msg, ofd))
+	if (osmo_ipa_rcvmsg_base(msg, ofd, 0)) /* XXX: 0 indicates client */
 		return 0;
 
 	if (msg_type == IPAC_MSGT_ID_GET) {

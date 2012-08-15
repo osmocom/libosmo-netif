@@ -346,8 +346,8 @@ abis_ipa_srv_rcvmsg(struct osmo_chan *c,
 	char *unitid;
 	int len, ret;
 
-	/* Handle IPA PING, PONG and ID_ACK messages. */
-	if (osmo_ipa_rcvmsg_base(msg, ofd))
+	/* Handle IPA PING, PONG and ID_ACK messages */
+	if (osmo_ipa_rcvmsg_base(msg, ofd, 1)) /* XXX: 1 indicates server */
 		return 0;
 
 	if (msg_type == IPAC_MSGT_ID_RESP) {

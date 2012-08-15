@@ -65,7 +65,7 @@ struct ipaccess_unit {
 struct osmo_fd;
 struct tlv_parsed;
 
-int osmo_ipa_rcvmsg_base(struct msgb *msg, struct osmo_fd *bfd);
+int osmo_ipa_rcvmsg_base(struct msgb *msg, struct osmo_fd *bfd, int server);
 int osmo_ipa_idtag_parse(struct tlv_parsed *dec, unsigned char *buf, int len);
 int osmo_ipa_parse_unitid(const char *str, struct ipaccess_unit *unit_data);
 
