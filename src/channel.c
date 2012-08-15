@@ -1,5 +1,6 @@
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/msgb.h>
+#include <osmocom/core/logging.h>
 
 #include <osmocom/netif/channel.h>
 
@@ -15,17 +16,23 @@ struct osmo_chan *osmo_chan_create(void *ctx, int type_id)
 {
 	struct osmo_chan *c;
 
-	if (type_id >= CHAN_MAX)
+	if (type_id >= CHAN_MAX) {
+		LOGP(DLINP, LOGL_ERROR, "unsupported channel type `%u'\n",
+			type_id);
 		return NULL;
+	}
 
 	c = talloc_zero_size(ctx, sizeof(struct osmo_chan) +
 			     chan_type[type_id]->datasiz);
-	if (c == NULL)
+	if (c == NULL) {
+		LOGP(DLINP, LOGL_ERROR, "cannot allocate channel data\n");
 		return NULL;
+	}
 
 	c->ops = chan_type[type_id];
 
 	if (c->ops->create(c) < 0) {
+		LOGP(DLINP, LOGL_ERROR, "cannot create channel\n");
 		talloc_free(c);
 		return NULL;
 	}
