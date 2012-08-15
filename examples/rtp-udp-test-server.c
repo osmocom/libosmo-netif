@@ -31,10 +31,10 @@ const struct log_info rtp_test_log_info = {
 	.num_cat = ARRAY_SIZE(rtp_test_cat),
 };
 
-static struct osmo_dgram_conn *conn;
+static struct osmo_dgram *conn;
 static struct osmo_rtp_handle *rtp;
 
-int read_cb(struct osmo_dgram_conn *conn)
+int read_cb(struct osmo_dgram *conn)
 {
 	struct msgb *msg;
 	char dummy_data[RTP_PT_GSM_FULL_PAYLOAD_LEN] = "payload test";
@@ -47,7 +47,7 @@ int read_cb(struct osmo_dgram_conn *conn)
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot allocate message\n");
 		return -1;
 	}
-	if (osmo_dgram_conn_recv(conn, msg) < 0) {
+	if (osmo_dgram_recv(conn, msg) < 0) {
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot receive message\n");
 		return -1;
 	}
@@ -80,7 +80,7 @@ int read_cb(struct osmo_dgram_conn *conn)
 		LOGP(DLINP, LOGL_ERROR, "OOM\n");
 		return -1;
 	}
-	osmo_dgram_conn_send(conn, msg);
+	osmo_dgram_send(conn, msg);
 
 	return 0;
 }
@@ -88,8 +88,8 @@ int read_cb(struct osmo_dgram_conn *conn)
 void sighandler(int foo)
 {
 	LOGP(DLINP, LOGL_NOTICE, "closing RTP.\n");
-	osmo_dgram_conn_close(conn);
-	osmo_dgram_conn_destroy(conn);
+	osmo_dgram_close(conn);
+	osmo_dgram_destroy(conn);
 	osmo_rtp_handle_free(rtp);
 	exit(EXIT_SUCCESS);
 }
@@ -121,18 +121,18 @@ int main(int argc, char *argv[])
 	 * initialize datagram server.
 	 */
 
-	conn = osmo_dgram_conn_create(tall_test);
+	conn = osmo_dgram_create(tall_test);
 	if (conn == NULL) {
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot create UDP socket\n");
 		exit(EXIT_FAILURE);
 	}
-	osmo_dgram_conn_set_local_addr(conn, "127.0.0.1");
-	osmo_dgram_conn_set_local_port(conn, 20000);
-	osmo_dgram_conn_set_remote_addr(conn, "127.0.0.1");
-	osmo_dgram_conn_set_remote_port(conn, 20001);
-	osmo_dgram_conn_set_read_cb(conn, read_cb);
+	osmo_dgram_set_local_addr(conn, "127.0.0.1");
+	osmo_dgram_set_local_port(conn, 20000);
+	osmo_dgram_set_remote_addr(conn, "127.0.0.1");
+	osmo_dgram_set_remote_port(conn, 20001);
+	osmo_dgram_set_read_cb(conn, read_cb);
 
-	if (osmo_dgram_conn_open(conn) < 0) {
+	if (osmo_dgram_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
 		exit(EXIT_FAILURE);
 	}

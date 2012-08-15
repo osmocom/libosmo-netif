@@ -33,7 +33,7 @@ const struct log_info lapd_test_log_info = {
 	.num_cat = ARRAY_SIZE(lapd_test_cat),
 };
 
-static struct osmo_dgram_conn *conn;
+static struct osmo_dgram *conn;
 static struct lapd_instance *lapd;
 static int sapi = 63, tei = 0;
 
@@ -44,7 +44,7 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-int read_cb(struct osmo_dgram_conn *conn)
+int read_cb(struct osmo_dgram *conn)
 {
 	int error;
 	struct msgb *msg;
@@ -56,7 +56,7 @@ int read_cb(struct osmo_dgram_conn *conn)
 		LOGP(DLAPDTEST, LOGL_ERROR, "cannot allocate message\n");
 		return -1;
 	}
-	if (osmo_dgram_conn_recv(conn, msg) < 0) {
+	if (osmo_dgram_recv(conn, msg) < 0) {
 		LOGP(DLAPDTEST, LOGL_ERROR, "cannot receive message\n");
 		return -1;
 	}
@@ -70,10 +70,10 @@ int read_cb(struct osmo_dgram_conn *conn)
 
 void lapd_tx_cb(struct msgb *msg, void *cbdata)
 {
-	struct osmo_dgram_conn *conn = cbdata;
+	struct osmo_dgram *conn = cbdata;
 
 	LOGP(DLAPDTEST, LOGL_DEBUG, "sending message over datagram\n");
-	osmo_dgram_conn_send(conn, msg);
+	osmo_dgram_send(conn, msg);
 }
 
 void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
@@ -140,16 +140,16 @@ int main(int argc, char *argv[])
 	 * initialize datagram server.
 	 */
 
-	conn = osmo_dgram_conn_create(tall_test);
+	conn = osmo_dgram_create(tall_test);
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create client\n");
 		exit(EXIT_FAILURE);
 	}
-	osmo_dgram_conn_set_local_addr(conn, "127.0.0.1");
-	osmo_dgram_conn_set_local_port(conn, 10001);
-	osmo_dgram_conn_set_remote_addr(conn, "127.0.0.1");
-	osmo_dgram_conn_set_remote_port(conn, 10000);
-	osmo_dgram_conn_set_read_cb(conn, read_cb);
+	osmo_dgram_set_local_addr(conn, "127.0.0.1");
+	osmo_dgram_set_local_port(conn, 10001);
+	osmo_dgram_set_remote_addr(conn, "127.0.0.1");
+	osmo_dgram_set_remote_port(conn, 10000);
+	osmo_dgram_set_read_cb(conn, read_cb);
 
 	lapd = lapd_instance_alloc(1, lapd_tx_cb, conn, lapd_rx_cb, conn,
 				   &lapd_profile_sat);
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (osmo_dgram_conn_open(conn) < 0) {
+	if (osmo_dgram_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
 		exit(EXIT_FAILURE);
 	}

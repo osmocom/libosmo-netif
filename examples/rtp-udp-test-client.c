@@ -33,10 +33,10 @@ const struct log_info rtp_test_log_info = {
 	.num_cat = ARRAY_SIZE(rtp_test_cat),
 };
 
-static struct osmo_dgram_conn *conn;
+static struct osmo_dgram *conn;
 static struct osmo_rtp_handle *rtp;
 
-static int read_cb(struct osmo_dgram_conn *conn)
+static int read_cb(struct osmo_dgram *conn)
 {
 	struct msgb *msg;
 	struct rtp_hdr *rtph;
@@ -48,7 +48,7 @@ static int read_cb(struct osmo_dgram_conn *conn)
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot allocate message\n");
 		return -1;
 	}
-	if (osmo_dgram_conn_recv(conn, msg) < 0) {
+	if (osmo_dgram_recv(conn, msg) < 0) {
 		msgb_free(msg);
 		LOGP(DRTP_TEST, LOGL_ERROR, "cannot receive message\n");
 		return -1;
@@ -71,8 +71,8 @@ static int read_cb(struct osmo_dgram_conn *conn)
 void sighandler(int foo)
 {
 	LOGP(DLINP, LOGL_NOTICE, "closing RTP.\n");
-	osmo_dgram_conn_close(conn);
-	osmo_dgram_conn_destroy(conn);
+	osmo_dgram_close(conn);
+	osmo_dgram_destroy(conn);
 	osmo_rtp_handle_free(rtp);
 	exit(EXIT_SUCCESS);
 }
@@ -107,18 +107,18 @@ int main(int argc, char *argv[])
 	 * initialize datagram socket.
 	 */
 
-	conn = osmo_dgram_conn_create(tall_test);
+	conn = osmo_dgram_create(tall_test);
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create client\n");
 		exit(EXIT_FAILURE);
 	}
-	osmo_dgram_conn_set_local_addr(conn, "127.0.0.1");
-	osmo_dgram_conn_set_local_port(conn, 20001);
-	osmo_dgram_conn_set_remote_addr(conn, "127.0.0.1");
-	osmo_dgram_conn_set_remote_port(conn, 20000);
-	osmo_dgram_conn_set_read_cb(conn, read_cb);
+	osmo_dgram_set_local_addr(conn, "127.0.0.1");
+	osmo_dgram_set_local_port(conn, 20001);
+	osmo_dgram_set_remote_addr(conn, "127.0.0.1");
+	osmo_dgram_set_remote_port(conn, 20000);
+	osmo_dgram_set_read_cb(conn, read_cb);
 
-	if (osmo_dgram_conn_open(conn) < 0) {
+	if (osmo_dgram_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
 		exit(EXIT_FAILURE);
 	}
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 			LOGP(DLINP, LOGL_ERROR, "OOM\n");
 			continue;
 		}
-		osmo_dgram_conn_send(conn, msg);
+		osmo_dgram_send(conn, msg);
 	}
 
 	LOGP(DLINP, LOGL_NOTICE, "Entering main loop\n");
