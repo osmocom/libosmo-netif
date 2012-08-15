@@ -43,7 +43,7 @@ const struct log_info osmo_stream_client_test_log_info = {
 	.num_cat = ARRAY_SIZE(osmo_stream_client_test_cat),
 };
 
-static struct osmo_stream_client_conn *conn;
+static struct osmo_stream_cli *conn;
 
 void sighandler(int foo)
 {
@@ -51,9 +51,9 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-static int connect_cb(struct osmo_stream_client_conn *conn)
+static int connect_cb(struct osmo_stream_cli *conn)
 {
-	int *__num_msgs = osmo_stream_client_conn_get_data(conn);
+	int *__num_msgs = osmo_stream_cli_get_data(conn);
 	int num_msgs = *__num_msgs, i;
 
 	LOGP(DIPATEST, LOGL_NOTICE, "connected\n");
@@ -85,7 +85,7 @@ static int connect_cb(struct osmo_stream_client_conn *conn)
 
 		osmo_ipa_msg_push_header(msg, IPAC_PROTO_OSMO);
 
-		osmo_stream_client_conn_send(conn, msg);
+		osmo_stream_cli_send(conn, msg);
 
 		LOGP(DIPATEST, LOGL_DEBUG, "enqueueing msg %d of "
 			"%d bytes to be sent\n", i, msg->len);
@@ -93,10 +93,10 @@ static int connect_cb(struct osmo_stream_client_conn *conn)
 	return 0;
 }
 
-static int read_cb(struct osmo_stream_client_conn *conn)
+static int read_cb(struct osmo_stream_cli *conn)
 {
 	struct msgb *msg;
-	struct osmo_fd *ofd = osmo_stream_client_conn_get_ofd(conn);
+	struct osmo_fd *ofd = osmo_stream_cli_get_ofd(conn);
 
 	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream\n");
 
@@ -162,24 +162,24 @@ int main(int argc, char *argv[])
 	 * initialize stream client.
 	 */
 
-	conn = osmo_stream_client_conn_create(tall_test);
+	conn = osmo_stream_cli_create(tall_test);
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create client\n");
 		exit(EXIT_FAILURE);
 	}
-	osmo_stream_client_conn_set_addr(conn, "127.0.0.1");
-	osmo_stream_client_conn_set_port(conn, 10000);
-	osmo_stream_client_conn_set_connect_cb(conn, connect_cb);
-	osmo_stream_client_conn_set_read_cb(conn, read_cb);
-	osmo_stream_client_conn_set_data(conn, &num_msgs);
+	osmo_stream_cli_set_addr(conn, "127.0.0.1");
+	osmo_stream_cli_set_port(conn, 10000);
+	osmo_stream_cli_set_connect_cb(conn, connect_cb);
+	osmo_stream_cli_set_read_cb(conn, read_cb);
+	osmo_stream_cli_set_data(conn, &num_msgs);
 
-	if (osmo_stream_client_conn_open(conn) < 0) {
+	if (osmo_stream_cli_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
 		exit(EXIT_FAILURE);
 	}
 
 	int on = 1, ret;
-	struct osmo_fd *ofd = osmo_stream_client_conn_get_ofd(conn);
+	struct osmo_fd *ofd = osmo_stream_cli_get_ofd(conn);
 
 	ret = setsockopt(ofd->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
 	if (ret < 0) {
