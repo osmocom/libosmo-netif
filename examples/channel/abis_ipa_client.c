@@ -55,10 +55,10 @@ int main(void)
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	/* initialize channel infrastructure. */
-	osmo_chan_init();
+	osmo_chan_init(tall_example);
 
 	/* create channel. */
-	chan = osmo_chan_create(tall_example, OSMO_CHAN_ABIS_IPA_CLI);
+	chan = osmo_chan_create(OSMO_CHAN_ABIS_IPA_CLI);
 	if (chan == NULL) {
 		LOGP(DEXAMPLE, LOGL_ERROR, "Cannot create A-bis IPA client\n");
 		exit(EXIT_FAILURE);

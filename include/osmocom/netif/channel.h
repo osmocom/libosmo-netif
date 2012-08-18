@@ -34,9 +34,9 @@ struct osmo_chan {
 	char			data[0];
 };
 
-void osmo_chan_init(void);
+void osmo_chan_init(void *ctx);
 
-struct osmo_chan *osmo_chan_create(void *ctx, int type);
+struct osmo_chan *osmo_chan_create(int type);
 void osmo_chan_destroy(struct osmo_chan *c);
 
 int osmo_chan_open(struct osmo_chan *c);

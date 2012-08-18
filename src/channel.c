@@ -10,14 +10,17 @@ static LLIST_HEAD(channel_list);
 extern struct osmo_chan_type chan_abis_ipa_srv;
 extern struct osmo_chan_type chan_abis_ipa_cli;
 
-void osmo_chan_init(void)
+static void *osmo_chan_ctx;
+
+void osmo_chan_init(void *ctx)
 {
+	osmo_chan_ctx = ctx;
 	llist_add(&chan_abis_ipa_srv.head, &channel_list);
 	llist_add(&chan_abis_ipa_cli.head, &channel_list);
 	/* add your new channel type here */
 }
 
-struct osmo_chan *osmo_chan_create(void *ctx, int type_id)
+struct osmo_chan *osmo_chan_create(int type_id)
 {
 	struct osmo_chan_type *cur = NULL;
 	int found = 0;
@@ -42,7 +45,8 @@ struct osmo_chan *osmo_chan_create(void *ctx, int type_id)
 		return NULL;
 	}
 
-	c = talloc_zero_size(ctx, sizeof(struct osmo_chan) + cur->datasiz);
+	c = talloc_zero_size(osmo_chan_ctx,
+			     sizeof(struct osmo_chan) + cur->datasiz);
 	if (c == NULL) {
 		LOGP(DLINP, LOGL_ERROR, "cannot allocate channel data\n");
 		return NULL;
