@@ -13,12 +13,6 @@ enum {
 	CHAN_MAX,
 };
 
-#define CHAN_F_DEFAULT		(1 << 0)
-#define CHAN_F_BUFFERED		(1 << 1)
-#define CHAN_F_STREAM		(1 << 2)
-#define CHAN_F_ERRORS		(1 << 3)
-#define CHAN_F_MAX		(1 << 4)
-
 struct osmo_chan;
 struct msgb;
 
