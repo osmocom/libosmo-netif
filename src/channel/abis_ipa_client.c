@@ -356,6 +356,7 @@ static int rsl_read_cb(struct osmo_stream_cli *conn)
 
 struct osmo_chan_type chan_abis_ipa_cli = {
 	.type		= CHAN_ABIS_IPA_CLI,
+	.name		= "A-bis IPA client",
 	.datasiz	= sizeof(struct chan_abis_ipa_cli),
 	.create		= chan_abis_ipa_cli_create,
 	.destroy	= chan_abis_ipa_cli_destroy,

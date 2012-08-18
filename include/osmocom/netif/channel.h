@@ -23,6 +23,7 @@ struct osmo_chan;
 struct msgb;
 
 struct osmo_chan_type {
+	char	*name;
 	int	type;
 	int	datasiz;
 
