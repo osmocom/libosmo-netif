@@ -3,11 +3,12 @@
 
 #include <stdint.h>
 
+/* channel types */
 enum {
-	CHAN_NONE,
-	CHAN_ABIS_IPA_SRV,
-	CHAN_ABIS_IPA_CLI,
-	CHAN_MAX,
+	OSMO_CHAN_NONE,
+	OSMO_CHAN_ABIS_IPA_SRV,
+	OSMO_CHAN_ABIS_IPA_CLI,
+	OSMO_CHAN_MAX,
 };
 
 struct osmo_chan;

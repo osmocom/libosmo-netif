@@ -23,7 +23,7 @@ struct osmo_chan *osmo_chan_create(void *ctx, int type_id)
 	int found = 0;
 	struct osmo_chan *c;
 
-	if (type_id > CHAN_MAX) {
+	if (type_id > OSMO_CHAN_MAX) {
 		LOGP(DLINP, LOGL_ERROR, "unsupported channel type "
 					"number `%u'\n", type_id);
 		return NULL;
