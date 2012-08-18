@@ -15,6 +15,9 @@
 #include <osmocom/netif/stream.h>
 #include <osmocom/netif/ipa.h>
 
+#define CHAN_SIGN_OML	0
+#define CHAN_SIGN_RSL	1
+
 /* default IPA srv ports. */
 #define IPA_TCP_PORT_OML	3002
 #define IPA_TCP_PORT_RSL	3003

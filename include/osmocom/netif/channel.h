@@ -3,9 +3,6 @@
 
 #include <stdint.h>
 
-#define CHAN_SIGN_OML	0
-#define CHAN_SIGN_RSL	1
-
 enum {
 	CHAN_NONE,
 	CHAN_ABIS_IPA_SRV,

@@ -16,6 +16,9 @@
 #include <osmocom/netif/ipa.h>
 #include <osmocom/netif/ipa_unit.h>
 
+#define CHAN_SIGN_OML	0
+#define CHAN_SIGN_RSL	1
+
 /* default IPA cli ports. */
 #define IPA_TCP_PORT_OML	3002
 #define IPA_TCP_PORT_RSL	3003
