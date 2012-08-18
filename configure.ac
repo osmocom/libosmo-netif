@@ -53,6 +53,7 @@ AC_OUTPUT(
 	include/osmocom/netif/channel/Makefile
 	src/Makefile
 	src/channel/Makefile
+	src/channel/abis/Makefile
 	examples/Makefile
 	examples/channel/Makefile
 	Makefile)
