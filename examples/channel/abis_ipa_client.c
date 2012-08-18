@@ -58,7 +58,7 @@ int main(void)
 	osmo_chan_init(tall_example);
 
 	/* create channel. */
-	chan = osmo_chan_create(OSMO_CHAN_ABIS_IPA_CLI);
+	chan = osmo_chan_create(OSMO_CHAN_ABIS_IPA_CLI, OSMO_SUBCHAN_STREAM);
 	if (chan == NULL) {
 		LOGP(DEXAMPLE, LOGL_ERROR, "Cannot create A-bis IPA client\n");
 		exit(EXIT_FAILURE);

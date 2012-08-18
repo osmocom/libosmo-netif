@@ -11,6 +11,12 @@ enum {
 	OSMO_CHAN_MAX,
 };
 
+/* channel subtypes */
+enum {
+	OSMO_SUBCHAN_STREAM,
+	OSMO_SUBCHAN_MAX,
+};
+
 struct osmo_chan;
 struct msgb;
 
@@ -19,6 +25,7 @@ struct osmo_chan_type {
 
 	char	*name;
 	int	type;
+	int	subtype;
 	int	datasiz;
 
 	int	(*create)(struct osmo_chan *chan);
@@ -36,7 +43,7 @@ struct osmo_chan {
 
 void osmo_chan_init(void *ctx);
 
-struct osmo_chan *osmo_chan_create(int type);
+struct osmo_chan *osmo_chan_create(int type, int subtype);
 void osmo_chan_destroy(struct osmo_chan *c);
 
 int osmo_chan_open(struct osmo_chan *c);

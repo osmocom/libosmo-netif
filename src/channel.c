@@ -20,10 +20,10 @@ void osmo_chan_init(void *ctx)
 	/* add your new channel type here */
 }
 
-struct osmo_chan *osmo_chan_create(int type_id)
+struct osmo_chan *osmo_chan_create(int type_id, int subtype_id)
 {
 	struct osmo_chan_type *cur = NULL;
-	int found = 0;
+	int found = 0, found_partial = 0;
 	struct osmo_chan *c;
 
 	if (type_id > OSMO_CHAN_MAX) {
@@ -31,10 +31,18 @@ struct osmo_chan *osmo_chan_create(int type_id)
 					"number `%u'\n", type_id);
 		return NULL;
 	}
+	if (subtype_id > OSMO_SUBCHAN_MAX) {
+		LOGP(DLINP, LOGL_ERROR, "unsupported subchannel type "
+					"number `%u'\n", type_id);
+		return NULL;
+	}
 
 	llist_for_each_entry(cur, &channel_list, head) {
-		if (type_id == cur->type) {
+		if (type_id == cur->type && subtype_id == cur->subtype) {
 			found = 1;
+			break;
+		} else if (type_id == cur->type) {
+			found_partial = 1;
 			break;
 		}
 	}
@@ -42,6 +50,11 @@ struct osmo_chan *osmo_chan_create(int type_id)
 	if (!found) {
 		LOGP(DLINP, LOGL_ERROR, "unsupported channel type `%s'\n",
 			cur->name);
+		return NULL;
+	}
+	if (found_partial) {
+		LOGP(DLINP, LOGL_ERROR, "Sorry, channel type `%s' does not "
+			"support subtype `%u'\n", cur->name, subtype_id);
 		return NULL;
 	}
 
