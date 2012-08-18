@@ -14,6 +14,8 @@ struct osmo_chan;
 struct msgb;
 
 struct osmo_chan_type {
+	struct llist_head head;
+
 	char	*name;
 	int	type;
 	int	datasiz;
@@ -30,6 +32,8 @@ struct osmo_chan {
 	struct osmo_chan_type	*ops;
 	char			data[0];
 };
+
+void osmo_chan_init(void);
 
 struct osmo_chan *osmo_chan_create(void *ctx, int type);
 void osmo_chan_destroy(struct osmo_chan *c);

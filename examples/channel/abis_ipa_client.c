@@ -54,6 +54,9 @@ int main(void)
 	osmo_init_logging(&example_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
+	/* initialize channel infrastructure. */
+	osmo_chan_init();
+
 	/* create channel. */
 	chan = osmo_chan_create(tall_example, CHAN_ABIS_IPA_CLI);
 	if (chan == NULL) {
