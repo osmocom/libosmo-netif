@@ -288,7 +288,6 @@ static int read_cb(struct osmo_stream_cli *conn, int type)
 {
 	int ret;
 	struct msgb *msg;
-	struct osmo_fd *ofd = osmo_stream_cli_get_ofd(conn);
 	struct osmo_chan *chan = osmo_stream_cli_get_data(conn);
 	struct chan_abis_ipa_cli *s;
 	struct ipa_head *hh;
@@ -300,8 +299,7 @@ static int read_cb(struct osmo_stream_cli *conn, int type)
 		LOGP(DLINP, LOGL_ERROR, "cannot allocate message\n");
 		return 0;
 	}
-	/* XXX replace with generic stream reader */
-	ret = osmo_ipa_msg_recv(ofd->fd, msg);
+	ret = osmo_stream_cli_recv(conn, msg);
 	if (ret < 0) {
 		LOGP(DLINP, LOGL_ERROR, "cannot receive message\n");
 		msgb_free(msg);
@@ -312,6 +310,12 @@ static int read_cb(struct osmo_stream_cli *conn, int type)
 		LOGP(DLINP, LOGL_ERROR, "closed connection\n");
 		msgb_free(msg);
 		return 0;
+	}
+
+	if (osmo_ipa_process_msg(msg) < 0) {
+		LOGP(DLINP, LOGL_ERROR, "Bad IPA message\n");
+		msgb_free(msg);
+		return -EIO;
 	}
 
 	hh = (struct ipa_head *) msg->data;

@@ -47,7 +47,8 @@ enum ipaccess_id_tags {
 
 struct msgb *osmo_ipa_msg_alloc(int headroom);
 void osmo_ipa_msg_push_header(struct msgb *msg, uint8_t proto);
-int osmo_ipa_msg_recv(int fd, struct msgb *msg);
+
+int osmo_ipa_process_msg(struct msgb *msg);
 
 struct ipaccess_unit {
 	uint16_t site_id;

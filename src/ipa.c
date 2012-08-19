@@ -88,41 +88,27 @@ void osmo_ipa_msg_push_header(struct msgb *msg, uint8_t proto)
 	hh->len = htons(msgb_l2len(msg));
 }
 
-int osmo_ipa_msg_recv(int fd, struct msgb *msg)
+int osmo_ipa_process_msg(struct msgb *msg)
 {
 	struct ipa_head *hh;
-	int len, ret;
+	int len;
 
-	/* first read our 3-byte header */
+	if (msg->len < sizeof(struct ipa_head)) {
+		LOGP(DLINP, LOGL_ERROR, "too small IPA message\n");
+		return -EIO;
+	}
 	hh = (struct ipa_head *) msg->data;
-	ret = recv(fd, msg->data, sizeof(*hh), 0);
-	if (ret <= 0) {
-		return ret;
-	} else if (ret != sizeof(*hh)) {
-		LOGP(DLINP, LOGL_ERROR, "too small message received\n");
+
+	len = sizeof(struct ipa_head) + ntohs(hh->len);
+	if (len > msg->len) {
+		LOGP(DLINP, LOGL_ERROR, "bad IPA message header "
+					"hdrlen=%u < datalen=%u\n",
+					len, msg->len);
 		return -EIO;
 	}
-	msgb_put(msg, ret);
-
-	/* then read the length as specified in header */
 	msg->l2h = msg->data + sizeof(*hh);
-	len = ntohs(hh->len);
 
-	if (len < 0 || IPA_ALLOC_SIZE < len + sizeof(*hh)) {
-		LOGP(DLINP, LOGL_ERROR, "bad message length of %d bytes, "
-					"received %d bytes\n", len, ret);
-		return -EIO;
-	}
-
-	ret = recv(fd, msg->l2h, len, 0);
-	if (ret <= 0) {
-		return ret;
-	} else if (ret < len) {
-		LOGP(DLINP, LOGL_ERROR, "trunked message received\n");
-		return -EIO;
-	}
-	msgb_put(msg, ret);
-	return ret;
+	return 0;
 }
 
 int osmo_ipa_idtag_parse(struct tlv_parsed *dec, unsigned char *buf, int len)

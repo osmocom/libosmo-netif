@@ -46,7 +46,6 @@ void sighandler(int foo)
 int read_cb(struct osmo_stream_srv *conn)
 {
 	struct msgb *msg;
-	struct osmo_fd *ofd = osmo_stream_srv_get_ofd(conn);
 
 	LOGP(DSTREAMTEST, LOGL_DEBUG, "received message from stream\n");
 
@@ -55,12 +54,18 @@ int read_cb(struct osmo_stream_srv *conn)
 		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
 		return 0;
 	}
-	if (osmo_ipa_msg_recv(ofd->fd, msg) <= 0) {
+	if (osmo_stream_srv_recv(conn, msg) <= 0) {
 		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot receive message\n");
 		osmo_stream_srv_destroy(conn);
 		msgb_free(msg);
 		return 0;
 	}
+	if (osmo_ipa_process_msg(msg) < 0) {
+		LOGP(DSTREAMTEST, LOGL_ERROR, "Bad IPA message\n");
+		msgb_free(msg);
+		return 0;
+	}
+
 	osmo_stream_srv_send(conn, msg);
 	return 0;
 }

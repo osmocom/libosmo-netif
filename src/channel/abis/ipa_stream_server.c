@@ -341,7 +341,6 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 {
 	int ret;
 	struct msgb *msg;
-	struct osmo_fd *ofd = osmo_stream_srv_get_ofd(conn);
 	struct osmo_ipa_unit *unit = osmo_stream_srv_get_data(conn);
 	struct chan_abis_ipa_srv_conn *inst;
 	struct ipa_head *hh;
@@ -353,7 +352,7 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 		LOGP(DLINP, LOGL_ERROR, "cannot allocate message\n");
 		return 0;
 	}
-	ret = osmo_ipa_msg_recv(ofd->fd, msg);
+	ret = osmo_stream_srv_recv(conn, msg);
 	if (ret < 0) {
 		LOGP(DLINP, LOGL_ERROR, "cannot receive message\n");
 		msgb_free(msg);
@@ -369,7 +368,11 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 
 		return 0;
 	}
-	/* XXX: missing IPA message validation */
+	ret = osmo_ipa_process_msg(msg);
+	if (ret < 0) {
+		LOGP(DLINP, LOGL_ERROR, "invalid IPA message\n");
+		msgb_free(msg);
+	}
 
 	hh = (struct ipa_head *) msg->data;
 	if (hh->proto == IPAC_PROTO_IPACCESS) {

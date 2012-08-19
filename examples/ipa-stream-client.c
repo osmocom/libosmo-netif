@@ -96,7 +96,6 @@ static int connect_cb(struct osmo_stream_cli *conn)
 static int read_cb(struct osmo_stream_cli *conn)
 {
 	struct msgb *msg;
-	struct osmo_fd *ofd = osmo_stream_cli_get_ofd(conn);
 
 	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream\n");
 
@@ -105,8 +104,12 @@ static int read_cb(struct osmo_stream_cli *conn)
 		LOGP(DIPATEST, LOGL_ERROR, "cannot allocate message\n");
 		return 0;
 	}
-	if (osmo_ipa_msg_recv(ofd->fd, msg) <= 0) {
+	if (osmo_stream_cli_recv(conn, msg) <= 0) {
 		LOGP(DIPATEST, LOGL_ERROR, "cannot receive message\n");
+		return 0;
+	}
+	if (osmo_ipa_process_msg(msg) < 0) {
+		LOGP(DIPATEST, LOGL_ERROR, "bad IPA message\n");
 		return 0;
 	}
 
