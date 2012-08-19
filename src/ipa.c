@@ -14,6 +14,7 @@
 
 #include <osmocom/netif/channel.h>
 #include <osmocom/netif/ipa.h>
+#include <osmocom/netif/ipa_unit.h>
 
 #define IPA_ALLOC_SIZE 1200
 
@@ -263,4 +264,80 @@ int ipaccess_parse_unitid(const char *str, struct ipaccess_unit *unit_data)
 	unit_data->trx_id = ul & 0xffff;
 
 	return 0;
+}
+
+struct msgb *ipa_cli_id_resp(struct osmo_ipa_unit *dev, uint8_t *data, int len)
+{
+	struct msgb *nmsg;
+	char str[64];
+	uint8_t *tag;
+
+	nmsg = osmo_ipa_msg_alloc(0);
+	if (nmsg == NULL)
+		return NULL;
+
+	*msgb_put(nmsg, 1) = IPAC_MSGT_ID_RESP;
+	while (len) {
+		if (len < 2) {
+			LOGP(DLINP, LOGL_NOTICE,
+				"Short read of ipaccess tag\n");
+			msgb_free(nmsg);
+			return NULL;
+		}
+		switch (data[1]) {
+		case IPAC_IDTAG_UNIT:
+			osmo_ipa_unit_snprintf(str, sizeof(str), dev);
+			break;
+		case IPAC_IDTAG_MACADDR:
+			osmo_ipa_unit_snprintf_mac_addr(str, sizeof(str), dev);
+			break;
+		case IPAC_IDTAG_LOCATION1:
+			osmo_ipa_unit_snprintf_loc1(str, sizeof(str), dev);
+			break;
+		case IPAC_IDTAG_LOCATION2:
+			osmo_ipa_unit_snprintf_loc2(str, sizeof(str), dev);
+			break;
+		case IPAC_IDTAG_EQUIPVERS:
+			osmo_ipa_unit_snprintf_hwvers(str, sizeof(str), dev);
+			break;
+		case IPAC_IDTAG_SWVERSION:
+			osmo_ipa_unit_snprintf_swvers(str, sizeof(str), dev);
+			break;
+		case IPAC_IDTAG_UNITNAME:
+			osmo_ipa_unit_snprintf_name(str, sizeof(str), dev);
+			break;
+		case IPAC_IDTAG_SERNR:
+			osmo_ipa_unit_snprintf_serno(str, sizeof(str), dev);
+			break;
+		default:
+			LOGP(DLINP, LOGL_NOTICE,
+				"Unknown ipaccess tag 0x%02x\n", *data);
+			msgb_free(nmsg);
+			return NULL;
+		}
+		LOGP(DLINP, LOGL_INFO, " tag %d: %s\n", data[1], str);
+		tag = msgb_put(nmsg, 3 + strlen(str) + 1);
+		tag[0] = 0x00;
+		tag[1] = 1 + strlen(str) + 1;
+		tag[2] = data[1];
+		memcpy(tag + 3, str, strlen(str) + 1);
+		data += 2;
+		len -= 2;
+	}
+	osmo_ipa_msg_push_header(nmsg, IPAC_PROTO_IPACCESS);
+	return nmsg;
+}
+
+struct msgb *ipa_cli_id_ack(void)
+{
+	struct msgb *nmsg2;
+
+	nmsg2 = osmo_ipa_msg_alloc(0);
+	if (nmsg2 == NULL)
+		return NULL;
+
+	*msgb_put(nmsg2, 1) = IPAC_MSGT_ID_ACK;
+	osmo_ipa_msg_push_header(nmsg2, IPAC_PROTO_IPACCESS);
+
+	return nmsg2;
 }

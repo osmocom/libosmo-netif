@@ -74,4 +74,9 @@ int ipaccess_send_pong(int fd);
 int ipaccess_send_id_ack(int fd);
 int ipaccess_send_id_req(int fd);
 
+struct osmo_ipa_unit;
+
+struct msgb *ipa_cli_id_resp(struct osmo_ipa_unit *dev, uint8_t *data, int len);
+struct msgb *ipa_cli_id_ack(void);
+
 #endif
