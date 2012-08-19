@@ -358,6 +358,9 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 		msgb_free(msg);
 		if (unit != NULL)
 			abis_ipa_put(unit);
+		else
+			osmo_stream_srv_destroy(conn);
+
 		return 0;
 	} else if (ret == 0) {
 		/* link has vanished, dead socket. */
@@ -365,6 +368,8 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 		msgb_free(msg);
 		if (unit != NULL)
 			abis_ipa_put(unit);
+		else
+			osmo_stream_srv_destroy(conn);
 
 		return 0;
 	}
