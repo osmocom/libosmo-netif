@@ -79,4 +79,6 @@ struct osmo_ipa_unit;
 struct msgb *ipa_cli_id_resp(struct osmo_ipa_unit *dev, uint8_t *data, int len);
 struct msgb *ipa_cli_id_ack(void);
 
+int osmo_ipa_parse_msg_id_resp(struct msgb *msg, struct ipaccess_unit *unit_data);
+
 #endif

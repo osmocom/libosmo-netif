@@ -341,3 +341,41 @@ struct msgb *ipa_cli_id_ack(void)
 
 	return nmsg2;
 }
+
+int
+osmo_ipa_parse_msg_id_resp(struct msgb *msg, struct ipaccess_unit *unit_data)
+{
+	struct tlv_parsed tlvp;
+	char *unitid;
+	int len, ret;
+
+	DEBUGP(DLINP, "ID_RESP\n");
+	/* parse tags, search for Unit ID */
+	ret = osmo_ipa_idtag_parse(&tlvp, (uint8_t *)msg->l2h + 2,
+					msgb_l2len(msg)-2);
+	if (ret < 0) {
+		LOGP(DLINP, LOGL_ERROR, "IPA response message "
+			"with malformed TLVs\n");
+		return -EINVAL;
+	}
+	if (!TLVP_PRESENT(&tlvp, IPAC_IDTAG_UNIT)) {
+		LOGP(DLINP, LOGL_ERROR, "IPA response message "
+			"without unit ID\n");
+		return  -EINVAL;
+	}
+	len = TLVP_LEN(&tlvp, IPAC_IDTAG_UNIT);
+	if (len < 1) {
+		LOGP(DLINP, LOGL_ERROR, "IPA response message "
+			"with too small unit ID\n");
+		return -EINVAL;
+	}
+	unitid = (char *) TLVP_VAL(&tlvp, IPAC_IDTAG_UNIT);
+	unitid[len - 1] = '\0';
+
+	if (osmo_ipa_parse_unitid(unitid, unit_data) < 0) {
+		LOGP(DLINP, LOGL_ERROR, "failed to parse IPA IDTAG\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}

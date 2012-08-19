@@ -246,14 +246,12 @@ static void abis_ipa_put(struct osmo_ipa_unit *unit)
 static int
 abis_ipa_srv_rcvmsg(struct osmo_stream_srv *conn, struct msgb *msg, int type)
 {
-	struct tlv_parsed tlvp;
 	uint8_t msg_type = *(msg->l2h);
 	struct osmo_fd *ofd = osmo_stream_srv_get_ofd(conn);
 	struct osmo_stream_srv_link *link = osmo_stream_srv_get_master(conn);
 	struct chan_abis_ipa_srv *s = osmo_stream_srv_link_get_data(link);
 	struct chan_abis_ipa_srv_conn *inst;
-	char *unitid;
-	int len, ret;
+	int ret;
 
 	/* Handle IPA PING, PONG and ID_ACK messages */
 	if (osmo_ipa_rcvmsg_base(msg, ofd, 1)) /* XXX: 1 indicates server */
@@ -263,33 +261,10 @@ abis_ipa_srv_rcvmsg(struct osmo_stream_srv *conn, struct msgb *msg, int type)
 		struct osmo_ipa_unit *unit;
 		struct ipaccess_unit unit_data;
 
-		DEBUGP(DLINP, "ID_RESP\n");
-		/* parse tags, search for Unit ID */
-		ret = osmo_ipa_idtag_parse(&tlvp, (uint8_t *)msg->l2h + 2,
-						msgb_l2len(msg)-2);
-		if (ret < 0) {
-			LOGP(DLINP, LOGL_ERROR, "IPA response message "
-				"with malformed TLVs\n");
-			ret = -EINVAL;
-			goto err;
+		if (osmo_ipa_parse_msg_id_resp(msg, &unit_data) < 0) {
+			LOGP(DLINP, LOGL_ERROR, "bad ID RESP message\n");
+			return -EIO;
 		}
-		if (!TLVP_PRESENT(&tlvp, IPAC_IDTAG_UNIT)) {
-			LOGP(DLINP, LOGL_ERROR, "IPA response message "
-				"without unit ID\n");
-			ret = -EINVAL;
-			goto err;
-
-		}
-		len = TLVP_LEN(&tlvp, IPAC_IDTAG_UNIT);
-		if (len < 1) {
-			LOGP(DLINP, LOGL_ERROR, "IPA response message "
-				"with too small unit ID\n");
-			ret = -EINVAL;
-			goto err;
-		}
-		unitid = (char *) TLVP_VAL(&tlvp, IPAC_IDTAG_UNIT);
-		unitid[len - 1] = '\0';
-		osmo_ipa_parse_unitid(unitid, &unit_data);
 
 		unit = osmo_ipa_unit_find(&s->bts_list, unit_data.site_id,
 					  unit_data.bts_id);
@@ -333,7 +308,6 @@ abis_ipa_srv_rcvmsg(struct osmo_stream_srv *conn, struct msgb *msg, int type)
 		LOGP(DLINP, LOGL_ERROR, "Unknown IPA message type\n");
 		ret = -EINVAL;
 	}
-err:
 	return ret;
 }
 
