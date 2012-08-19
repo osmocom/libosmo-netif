@@ -207,13 +207,12 @@ int osmo_ipa_rcvmsg_base(struct msgb *msg, struct osmo_fd *bfd, int server)
 {
 	int ipa_ccm = 0;
 	uint8_t msg_type = *(msg->l2h);
-	int ret = 0;
 
 	switch (msg_type) {
 	case IPAC_MSGT_PING:
 		LOGP(DLINP, LOGL_DEBUG, "PING!\n");
 		ipa_ccm = 1;
-		ret = ipaccess_send_pong(bfd->fd);
+		ipaccess_send_pong(bfd->fd);
 		break;
 	case IPAC_MSGT_PONG:
 		LOGP(DLINP, LOGL_DEBUG, "PONG!\n");
@@ -223,7 +222,7 @@ int osmo_ipa_rcvmsg_base(struct msgb *msg, struct osmo_fd *bfd, int server)
 		if (server) {
 			LOGP(DLINP, LOGL_DEBUG, "ID_ACK? -> ACK!\n");
 			ipa_ccm = 1;
-			ret = ipaccess_send_id_ack(bfd->fd);
+			ipaccess_send_id_ack(bfd->fd);
 		} else {
 			LOGP(DLINP, LOGL_DEBUG, "ID_ACK! OK!\n");
 			ipa_ccm = 1;
