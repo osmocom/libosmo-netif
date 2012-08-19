@@ -47,7 +47,7 @@ static struct osmo_chan *chan;
 
 int main(void)
 {
-	struct ipaccess_unit *unit;
+	struct osmo_ipa_unit *unit;
 
 	tall_example = talloc_named_const(NULL, 1, "example");
 
@@ -68,7 +68,7 @@ int main(void)
 	osmo_abis_ipa_cli_set_oml_addr(chan, "127.0.0.1");
 	osmo_abis_ipa_cli_set_rsl_addr(chan, "127.0.0.1");
 
-	unit = osmo_ipa_unit_alloc();
+	unit = osmo_ipa_unit_alloc(0);
 	if (unit == NULL) {
 		LOGP(DEXAMPLE, LOGL_ERROR, "Cannot create IPA unit\n");
 		exit(EXIT_FAILURE);

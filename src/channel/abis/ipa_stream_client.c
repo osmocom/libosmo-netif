@@ -26,7 +26,7 @@
 static void *abis_ipa_cli_tall;
 
 struct chan_abis_ipa_cli {
-	struct ipaccess_unit *unit;
+	struct osmo_ipa_unit *unit;
 
 	struct osmo_stream_cli *oml;
 	struct osmo_stream_cli *rsl;
@@ -41,7 +41,7 @@ static int chan_abis_ipa_cli_create(struct osmo_chan *chan)
 {
 	struct chan_abis_ipa_cli *c = (struct chan_abis_ipa_cli *)chan->data;
 
-	c->unit = osmo_ipa_unit_alloc();
+	c->unit = osmo_ipa_unit_alloc(0);
 	if (c->unit == NULL)
 		goto err;
 
@@ -157,7 +157,7 @@ void osmo_abis_ipa_cli_set_rsl_port(struct osmo_chan *c, uint16_t port)
 	osmo_stream_cli_set_port(s->rsl, port);
 }
 
-void osmo_abis_ipa_cli_set_unit(struct osmo_chan *c, struct ipaccess_unit *unit)
+void osmo_abis_ipa_cli_set_unit(struct osmo_chan *c, struct osmo_ipa_unit *unit)
 {
 	struct chan_abis_ipa_cli *s = (struct chan_abis_ipa_cli *)&c->data;
 
@@ -174,7 +174,7 @@ void osmo_abis_ipa_cli_set_cb_signalmsg(struct osmo_chan *c,
 }
 
 static struct msgb *
-ipa_cli_id_resp(struct ipaccess_unit *dev, uint8_t *data, int len)
+ipa_cli_id_resp(struct osmo_ipa_unit *dev, uint8_t *data, int len)
 {
 	struct msgb *nmsg;
 	char str[64];
@@ -194,36 +194,28 @@ ipa_cli_id_resp(struct ipaccess_unit *dev, uint8_t *data, int len)
 		}
 		switch (data[1]) {
 		case IPAC_IDTAG_UNIT:
-			sprintf(str, "%u/%u/%u",
-				dev->site_id, dev->bts_id, dev->trx_id);
+			osmo_ipa_unit_snprintf(str, sizeof(str), dev);
 			break;
 		case IPAC_IDTAG_MACADDR:
-			sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
-				dev->mac_addr[0], dev->mac_addr[1],
-				dev->mac_addr[2], dev->mac_addr[3],
-				dev->mac_addr[4], dev->mac_addr[5]);
+			osmo_ipa_unit_snprintf_mac_addr(str, sizeof(str), dev);
 			break;
 		case IPAC_IDTAG_LOCATION1:
-			strcpy(str, dev->location1);
+			osmo_ipa_unit_snprintf_loc1(str, sizeof(str), dev);
 			break;
 		case IPAC_IDTAG_LOCATION2:
-			strcpy(str, dev->location2);
+			osmo_ipa_unit_snprintf_loc2(str, sizeof(str), dev);
 			break;
 		case IPAC_IDTAG_EQUIPVERS:
-			strcpy(str, dev->equipvers);
+			osmo_ipa_unit_snprintf_hwvers(str, sizeof(str), dev);
 			break;
 		case IPAC_IDTAG_SWVERSION:
-			strcpy(str, dev->swversion);
+			osmo_ipa_unit_snprintf_swvers(str, sizeof(str), dev);
 			break;
 		case IPAC_IDTAG_UNITNAME:
-			sprintf(str, "%s-%02x-%02x-%02x-%02x-%02x-%02x",
-				dev->unit_name,
-				dev->mac_addr[0], dev->mac_addr[1],
-				dev->mac_addr[2], dev->mac_addr[3],
-				dev->mac_addr[4], dev->mac_addr[5]);
+			osmo_ipa_unit_snprintf_name(str, sizeof(str), dev);
 			break;
 		case IPAC_IDTAG_SERNR:
-			strcpy(str, dev->serno);
+			osmo_ipa_unit_snprintf_serno(str, sizeof(str), dev);
 			break;
 		default:
 			LOGP(DLINP, LOGL_NOTICE,

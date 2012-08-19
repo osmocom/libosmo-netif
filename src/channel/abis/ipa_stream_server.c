@@ -14,6 +14,7 @@
 #include <osmocom/netif/channel.h>
 #include <osmocom/netif/stream.h>
 #include <osmocom/netif/ipa.h>
+#include <osmocom/netif/ipa_unit.h>
 
 #define CHAN_SIGN_OML	0
 #define CHAN_SIGN_RSL	1
@@ -28,41 +29,25 @@ static int oml_accept_cb(struct osmo_stream_srv_link *srv, int fd);
 static int rsl_accept_cb(struct osmo_stream_srv_link *srv, int fd);
 
 struct chan_abis_ipa_srv {
+	struct osmo_chan *chan;
 	struct osmo_stream_srv_link *oml;
 	struct osmo_stream_srv_link *rsl;
 
 	struct llist_head bts_list;
-	struct llist_head conn_list;
 
 	void (*signal_msg)(struct msgb *msg, int type);
 };
 
-struct ipa_unit {
-	struct llist_head	head;
-	uint16_t		site_id;
-	uint16_t		bts_id;
-};
+struct chan_abis_ipa_srv_conn {
+	struct chan_abis_ipa_srv *master;
 
-struct ipa {
-	struct llist_head		head;
-	struct ipa_unit 		*unit;
-	struct osmo_chan		*chan;
 	struct osmo_stream_srv	*oml;
 	struct osmo_stream_srv	*rsl;
 };
 
 static int chan_abis_ipa_srv_create(struct osmo_chan *chan)
 {
-	struct chan_abis_ipa_srv *c =
-		(struct chan_abis_ipa_srv *)chan->data;
-	struct ipa *ipa;
-
-	/* dummy connection. */
-	ipa = talloc_zero(chan->ctx, struct ipa);
-	if (ipa == NULL)
-		goto err;
-
-	ipa->chan = chan;
+	struct chan_abis_ipa_srv *c = (struct chan_abis_ipa_srv *)chan->data;
 
 	c->oml = osmo_stream_srv_link_create(abis_ipa_srv_tall);
 	if (c->oml == NULL)
@@ -72,7 +57,7 @@ static int chan_abis_ipa_srv_create(struct osmo_chan *chan)
 	osmo_stream_srv_link_set_addr(c->oml, "0.0.0.0");
 	osmo_stream_srv_link_set_port(c->oml, IPA_TCP_PORT_OML);
 	osmo_stream_srv_link_set_accept_cb(c->oml, oml_accept_cb);
-	osmo_stream_srv_link_set_data(c->oml, ipa);
+	osmo_stream_srv_link_set_data(c->oml, c);
 
 	c->rsl = osmo_stream_srv_link_create(abis_ipa_srv_tall);
 	if (c->rsl == NULL)
@@ -82,36 +67,28 @@ static int chan_abis_ipa_srv_create(struct osmo_chan *chan)
 	osmo_stream_srv_link_set_addr(c->rsl, "0.0.0.0");
 	osmo_stream_srv_link_set_port(c->rsl, IPA_TCP_PORT_RSL);
 	osmo_stream_srv_link_set_accept_cb(c->rsl, rsl_accept_cb);
-	osmo_stream_srv_link_set_data(c->rsl, ipa);
+	osmo_stream_srv_link_set_data(c->rsl, c);
 
 	INIT_LLIST_HEAD(&c->bts_list);
-	INIT_LLIST_HEAD(&c->conn_list);
 
 	return 0;
 err_rsl:
 	osmo_stream_srv_link_destroy(c->oml);
 err_oml:
-	talloc_free(ipa);
-err:
 	return -1;
 }
 
 static void chan_abis_ipa_srv_destroy(struct osmo_chan *chan)
 {
-	struct chan_abis_ipa_srv *c =
-		(struct chan_abis_ipa_srv *)chan->data;
-	struct ipa *ipa =
-		osmo_stream_srv_link_get_data(c->oml);
+	struct chan_abis_ipa_srv *c = (struct chan_abis_ipa_srv *)chan->data;
 
-	talloc_free(ipa);
-	talloc_free(c->rsl);
-	talloc_free(c->oml);
+	osmo_stream_srv_link_destroy(c->rsl);
+	osmo_stream_srv_link_destroy(c->oml);
 }
 
 static int chan_abis_ipa_srv_open(struct osmo_chan *chan)
 {
-	struct chan_abis_ipa_srv *c =
-		(struct chan_abis_ipa_srv *)chan->data;
+	struct chan_abis_ipa_srv *c = (struct chan_abis_ipa_srv *)chan->data;
 	struct osmo_fd *ofd;
 	int ret, on = 1;
 
@@ -143,8 +120,7 @@ err:
 
 static void chan_abis_ipa_srv_close(struct osmo_chan *chan)
 {
-	struct chan_abis_ipa_srv *c =
-		(struct chan_abis_ipa_srv *)chan->data;
+	struct chan_abis_ipa_srv *c = (struct chan_abis_ipa_srv *)chan->data;
 
 	osmo_stream_srv_link_close(c->oml);
 	osmo_stream_srv_link_close(c->rsl);
@@ -156,50 +132,61 @@ static int chan_abis_ipa_srv_enqueue(struct osmo_chan *c, struct msgb *msg)
 	return 0;
 }
 
-void
-osmo_abis_ipa_srv_set_oml_addr(struct osmo_chan *c, const char *addr)
+void osmo_abis_ipa_srv_set_oml_addr(struct osmo_chan *c, const char *addr)
 {
-	struct chan_abis_ipa_srv *s =
-		(struct chan_abis_ipa_srv *)&c->data;
+	struct chan_abis_ipa_srv *s = (struct chan_abis_ipa_srv *)&c->data;
 
 	osmo_stream_srv_link_set_addr(s->oml, addr);
 }
 
-void
-osmo_abis_ipa_srv_set_oml_port(struct osmo_chan *c, uint16_t port)
+void osmo_abis_ipa_srv_set_oml_port(struct osmo_chan *c, uint16_t port)
 {
-	struct chan_abis_ipa_srv *s =
-		(struct chan_abis_ipa_srv *)&c->data;
+	struct chan_abis_ipa_srv *s = (struct chan_abis_ipa_srv *)&c->data;
 
 	osmo_stream_srv_link_set_port(s->oml, port);
 }
 
-void
-osmo_abis_ipa_srv_set_rsl_addr(struct osmo_chan *c, const char *addr)
+void osmo_abis_ipa_srv_set_rsl_addr(struct osmo_chan *c, const char *addr)
 {
-	struct chan_abis_ipa_srv *s =
-		(struct chan_abis_ipa_srv *)&c->data;
+	struct chan_abis_ipa_srv *s = (struct chan_abis_ipa_srv *)&c->data;
 
 	osmo_stream_srv_link_set_addr(s->rsl, addr);
 }
 
-void
-osmo_abis_ipa_srv_set_rsl_port(struct osmo_chan *c, uint16_t port)
+void osmo_abis_ipa_srv_set_rsl_port(struct osmo_chan *c, uint16_t port)
 {
-	struct chan_abis_ipa_srv *s =
-		(struct chan_abis_ipa_srv *)&c->data;
+	struct chan_abis_ipa_srv *s = (struct chan_abis_ipa_srv *)&c->data;
 
 	osmo_stream_srv_link_set_port(s->rsl, port);
 }
 
-void
-osmo_abis_ipa_srv_set_cb_signalmsg(struct osmo_chan *c,
+void osmo_abis_ipa_srv_set_cb_signalmsg(struct osmo_chan *c,
 	void (*signal_msg)(struct msgb *msg, int type))
 {
-	struct chan_abis_ipa_srv *s =
-		(struct chan_abis_ipa_srv *)&c->data;
+	struct chan_abis_ipa_srv *s = (struct chan_abis_ipa_srv *)&c->data;
 
 	s->signal_msg = signal_msg;
+}
+
+int
+osmo_abis_ipa_unit_add(struct osmo_chan *c, uint16_t site_id, uint16_t bts_id)
+{
+	struct osmo_ipa_unit *unit;
+	struct chan_abis_ipa_srv *s = (struct chan_abis_ipa_srv *)&c->data;
+	struct chan_abis_ipa_srv_conn *inst;
+
+	unit = osmo_ipa_unit_alloc(sizeof(struct chan_abis_ipa_srv_conn));
+	if (unit == NULL)
+		return -1;
+
+	osmo_ipa_unit_set_site_id(unit, site_id);
+	osmo_ipa_unit_set_bts_id(unit, bts_id);
+	osmo_ipa_unit_add(&s->bts_list, unit);
+
+	inst = osmo_ipa_unit_get_data(unit);
+	inst->master = s;
+
+	return 0;
 }
 
 static int oml_read_cb(struct osmo_stream_srv *conn);
@@ -207,12 +194,10 @@ static int oml_read_cb(struct osmo_stream_srv *conn);
 static int oml_accept_cb(struct osmo_stream_srv_link *srv, int fd)
 {
 	struct osmo_stream_srv *conn;
-	struct ipa *ipa = osmo_stream_srv_link_get_data(srv);
 	struct osmo_fd *ofd;
 
 	conn = osmo_stream_srv_create(abis_ipa_srv_tall,
-					      srv, fd,
-					      oml_read_cb, NULL, ipa);
+				      srv, fd, oml_read_cb, NULL, NULL);
 	if (conn == NULL) {
 		LOGP(DLINP, LOGL_ERROR, "error while creating connection\n");
 		return -1;
@@ -231,11 +216,10 @@ static int rsl_read_cb(struct osmo_stream_srv *conn);
 static int rsl_accept_cb(struct osmo_stream_srv_link *srv, int fd)
 {
 	struct osmo_stream_srv *conn;
-	struct ipa *ipa = osmo_stream_srv_link_get_data(srv);
 	struct osmo_fd *ofd;
 
 	conn = osmo_stream_srv_create(abis_ipa_srv_tall, srv, fd,
-				      rsl_read_cb, NULL, ipa);
+				      rsl_read_cb, NULL, NULL);
 	if (conn == NULL) {
 		LOGP(DLINP, LOGL_ERROR, "error while creating connection\n");
 		return -1;
@@ -249,103 +233,25 @@ static int rsl_accept_cb(struct osmo_stream_srv_link *srv, int fd)
 	return 0;
 }
 
-static struct ipa_unit *
-osmo_abis_ipa_unit_find(struct osmo_chan *c, uint16_t site_id, uint16_t bts_id)
+static void abis_ipa_put(struct osmo_ipa_unit *unit)
 {
-	struct ipa_unit *unit;
-	struct chan_abis_ipa_srv *s =
-		(struct chan_abis_ipa_srv *)c->data;
+	struct chan_abis_ipa_srv_conn *inst = osmo_ipa_unit_get_data(unit);
 
-	llist_for_each_entry(unit, &s->bts_list, head) {
-		if (unit->site_id == site_id &&
-		    unit->bts_id == bts_id)
-			return unit;
-	}
-	return NULL;
-}
-
-int
-osmo_abis_ipa_unit_add(struct osmo_chan *c,
-			    uint16_t site_id, uint16_t bts_id)
-{
-	struct ipa_unit *unit;
-	struct chan_abis_ipa_srv *s =
-		(struct chan_abis_ipa_srv *)c->data;
-
-	unit = talloc_zero(c->ctx, struct ipa_unit);
-	if (unit == NULL)
-		return -1;
-
-	unit->site_id = site_id;
-	unit->bts_id = bts_id;
-	llist_add(&unit->head, &s->bts_list);
-
-	return 0;
-}
-
-static struct ipa *
-osmo_abis_ipa_alloc(struct ipa_unit *unit, struct osmo_chan *chan)
-{
-	struct ipa *ipa;
-
-	ipa = talloc_zero(chan->ctx, struct ipa);
-	if (ipa == NULL)
-		return NULL;
-
-	ipa->unit = unit;
-	ipa->chan = chan;
-
-	return ipa;
-}
-
-static struct ipa *
-osmo_abis_ipa_add(struct ipa_unit *unit, struct osmo_chan *chan)
-{
-	struct ipa *ipa;
-	struct chan_abis_ipa_srv *s =
-		(struct chan_abis_ipa_srv *)chan->data;
-
-	ipa = osmo_abis_ipa_alloc(unit, chan);
-	if (ipa == NULL)
-		return NULL;
-
-	llist_add(&ipa->head, &s->conn_list);
-
-	return ipa;
-}
-
-static struct ipa *
-osmo_abis_ipa_find(struct ipa_unit *unit, struct osmo_chan *chan)
-{
-	struct ipa *ipa;
-	struct chan_abis_ipa_srv *s =
-		(struct chan_abis_ipa_srv *)chan->data;
-
-	llist_for_each_entry(ipa, &s->conn_list, head) {
-		if (ipa->unit->site_id == unit->site_id &&
-		    ipa->unit->bts_id == unit->bts_id) {
-			return ipa;
-		}
-	}
-	return NULL;
-}
-
-static void abis_ipa_put(struct ipa *ipa)
-{
-	llist_del(&ipa->head);
-	osmo_stream_srv_destroy(ipa->oml);
-	osmo_stream_srv_destroy(ipa->rsl);
-	talloc_free(ipa);
+	osmo_stream_srv_destroy(inst->oml);
+	osmo_stream_srv_destroy(inst->rsl);
+	inst->oml = NULL;
+	inst->rsl = NULL;
 }
 
 static int
-abis_ipa_srv_rcvmsg(struct osmo_chan *c,
-		       struct osmo_stream_srv *conn,
-		       struct msgb *msg, int type)
+abis_ipa_srv_rcvmsg(struct osmo_stream_srv *conn, struct msgb *msg, int type)
 {
 	struct tlv_parsed tlvp;
 	uint8_t msg_type = *(msg->l2h);
 	struct osmo_fd *ofd = osmo_stream_srv_get_ofd(conn);
+	struct osmo_stream_srv_link *link = osmo_stream_srv_get_master(conn);
+	struct chan_abis_ipa_srv *s = osmo_stream_srv_link_get_data(link);
+	struct chan_abis_ipa_srv_conn *inst;
 	char *unitid;
 	int len, ret;
 
@@ -354,15 +260,13 @@ abis_ipa_srv_rcvmsg(struct osmo_chan *c,
 		return 0;
 
 	if (msg_type == IPAC_MSGT_ID_RESP) {
-		struct ipa_unit *unit;
-		struct ipa *ipa;
+		struct osmo_ipa_unit *unit;
 		struct ipaccess_unit unit_data;
 
-		DEBUGP(DLMI, "ID_RESP\n");
+		DEBUGP(DLINP, "ID_RESP\n");
 		/* parse tags, search for Unit ID */
 		ret = osmo_ipa_idtag_parse(&tlvp, (uint8_t *)msg->l2h + 2,
 						msgb_l2len(msg)-2);
-		DEBUGP(DLMI, "\n");
 		if (ret < 0) {
 			LOGP(DLINP, LOGL_ERROR, "IPA response message "
 				"with malformed TLVs\n");
@@ -387,8 +291,9 @@ abis_ipa_srv_rcvmsg(struct osmo_chan *c,
 		unitid[len - 1] = '\0';
 		osmo_ipa_parse_unitid(unitid, &unit_data);
 
-		unit = osmo_abis_ipa_unit_find(c, unit_data.site_id,
+		unit = osmo_ipa_unit_find(&s->bts_list, unit_data.site_id,
 					  unit_data.bts_id);
+
 		if (unit == NULL) {
 			LOGP(DLINP, LOGL_ERROR, "Unable to find BTS "
 				"configuration for %u/%u/%u, disconnecting\n",
@@ -400,36 +305,29 @@ abis_ipa_srv_rcvmsg(struct osmo_chan *c,
 			unit_data.site_id, unit_data.bts_id,
 			unit_data.trx_id);
 
-		ipa = osmo_abis_ipa_find(unit, c);
-		if (ipa == NULL) {
-			ipa = osmo_abis_ipa_add(unit, c);
-			if (ipa == NULL) {
-				LOGP(DLINP, LOGL_ERROR, "OOM\n");
-				return 0;
-			}
-			osmo_stream_srv_set_data(conn, ipa);
-		}
+		inst = osmo_ipa_unit_get_data(unit);
 
 		if (type == CHAN_SIGN_OML) {
-			if (ipa->oml) {
+			if (inst->oml) {
 				/* link already exists, kill it. */
-				osmo_stream_srv_destroy(ipa->oml);
+				osmo_stream_srv_destroy(inst->oml);
 				return 0;
 			}
-			ipa->oml = conn;
+			inst->oml = conn;
 		} else if (type == CHAN_SIGN_RSL) {
-			if (!ipa->oml) {
+			if (!inst->oml) {
 				/* no OML link? Restart from scratch. */
-				abis_ipa_put(ipa);
+				abis_ipa_put(unit);
 				return 0;
 			}
-			if (ipa->rsl) {
+			if (inst->rsl) {
 				/* RSL link already exists, kill it. */
-				osmo_stream_srv_destroy(ipa->rsl);
+				osmo_stream_srv_destroy(inst->rsl);
 				return 0;
 			}
-			ipa->rsl = conn;
+			inst->rsl = conn;
 		}
+		osmo_stream_srv_set_data(conn, unit);
 		ret = 0;
 	} else {
 		LOGP(DLINP, LOGL_ERROR, "Unknown IPA message type\n");
@@ -444,8 +342,8 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 	int ret;
 	struct msgb *msg;
 	struct osmo_fd *ofd = osmo_stream_srv_get_ofd(conn);
-	struct ipa *ipa = osmo_stream_srv_get_data(conn);
-	struct chan_abis_ipa_srv *s;
+	struct osmo_ipa_unit *unit = osmo_stream_srv_get_data(conn);
+	struct chan_abis_ipa_srv_conn *inst;
 	struct ipa_head *hh;
 
 	LOGP(DLINP, LOGL_DEBUG, "received message from stream\n");
@@ -459,42 +357,41 @@ static int read_cb(struct osmo_stream_srv *conn, int type)
 	if (ret < 0) {
 		LOGP(DLINP, LOGL_ERROR, "cannot receive message\n");
 		msgb_free(msg);
-		/* not the dummy connection, release it. */
-		if (ipa->unit != NULL)
-			abis_ipa_put(ipa);
+		if (unit != NULL)
+			abis_ipa_put(unit);
 		return 0;
 	} else if (ret == 0) {
 		/* link has vanished, dead socket. */
 		LOGP(DLINP, LOGL_ERROR, "closed connection\n");
 		msgb_free(msg);
-		if (ipa->unit != NULL)
-			abis_ipa_put(ipa);
+		if (unit != NULL)
+			abis_ipa_put(unit);
 
-		/* ... the stream socket releases this connection for us */
 		return 0;
 	}
+	/* XXX: missing IPA message validation */
 
 	hh = (struct ipa_head *) msg->data;
 	if (hh->proto == IPAC_PROTO_IPACCESS) {
-		abis_ipa_srv_rcvmsg(ipa->chan, conn, msg, type);
+		abis_ipa_srv_rcvmsg(conn, msg, type);
 		msgb_free(msg);
 		return -EIO;
 	}
 
-	ipa = osmo_stream_srv_get_data(conn);
-	if (ipa == NULL) {
-		LOGP(DLINP, LOGL_ERROR, "no matching signalling link\n");
-		msgb_free(msg);
+	if (unit == NULL) {
+		LOGP(DLINP, LOGL_ERROR, "no IPA unit associated to this "
+					"connection\n");
 		return -EIO;
 	}
+	inst = osmo_ipa_unit_get_data(unit);
+
 	if (hh->proto != IPAC_PROTO_OML && hh->proto != IPAC_PROTO_RSL) {
 		LOGP(DLINP, LOGL_ERROR, "wrong protocol\n");
 		return -EIO;
 	}
-	msg->dst = ipa;
+	msg->dst = conn;
 
-	s = (struct chan_abis_ipa_srv *)ipa->chan->data;
-	s->signal_msg(msg, type);
+	inst->master->signal_msg(msg, type);
 
 	return 0;
 }
