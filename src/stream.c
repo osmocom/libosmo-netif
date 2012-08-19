@@ -523,6 +523,11 @@ osmo_stream_srv_get_ofd(struct osmo_stream_srv *link)
 	return &link->ofd;
 }
 
+struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *conn)
+{
+	return conn->srv;
+}
+
 void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 {
 	close(conn->ofd.fd);
