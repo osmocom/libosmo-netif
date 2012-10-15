@@ -60,6 +60,7 @@ static void deliver(struct msgb *batch_msg)
 		osmux_xfrm_output(osmuxh, &h_output, &list);
 		osmux_tx_sched(&list, tx_cb, NULL);
 	}
+	msgb_free(batch_msg);
 }
 
 /*

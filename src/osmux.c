@@ -248,7 +248,6 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 	LOGP(DLMIB, LOGL_DEBUG, "invoking delivery function\n");
 	batch_msg = osmux_build_batch(h);
 	h->deliver(batch_msg);
-	msgb_free(batch_msg);
 	osmo_timer_del(&batch->timer);
 	batch->remaining_bytes = OSMUX_BATCH_MAX;
 }
