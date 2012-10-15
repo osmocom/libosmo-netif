@@ -93,7 +93,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 
 	/* bump last RTP sequence number and timestamp that has been used */
 	h->rtp_seq[osmuxh->circuit_id]++;
-	h->rtp_timestamp[osmuxh->circuit_id]++;
+	h->rtp_timestamp[osmuxh->circuit_id] += 160;
 
 	osmo_rtp_snprintf(buf, sizeof(buf), out_msg);
 	LOGP(DLMIB, LOGL_DEBUG, "%s\n", buf);
