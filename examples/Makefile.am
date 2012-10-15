@@ -13,7 +13,9 @@ noinst_PROGRAMS = ipa-stream-client		\
 		  rs232-read			\
 		  rs232-write			\
 		  rtp-udp-test-client		\
-		  rtp-udp-test-server
+		  rtp-udp-test-server		\
+		  osmux-test-input		\
+		  osmux-test-output
 
 ipa_stream_client_SOURCES = ipa-stream-client.c
 ipa_stream_client_LDADD = $(top_builddir)/src/libosmonetif.la \
@@ -54,3 +56,11 @@ rtp_udp_test_client_LDADD = $(top_builddir)/src/libosmonetif.la \
 rtp_udp_test_server_SOURCES = rtp-udp-test-server.c
 rtp_udp_test_server_LDADD = $(top_builddir)/src/libosmonetif.la \
 			    $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS)
+
+osmux_test_input_SOURCES = osmux-test-input.c
+osmux_test_input_LDADD = $(top_builddir)/src/libosmonetif.la \
+			 $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS)
+
+osmux_test_output_SOURCES = osmux-test-output.c
+osmux_test_output_LDADD = $(top_builddir)/src/libosmonetif.la \
+			  $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS)
