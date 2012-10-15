@@ -25,9 +25,6 @@
 
 #define DEBUG_TIMING		1
 
-/* XXX: this needs to be defined in libosmocore */
-#define DOSMUX 0
-
 /* XXX: MTU - iphdr (20 bytes) - udphdr (8 bytes) */
 #define OSMUX_BATCH_MAX		1472
 
@@ -44,7 +41,7 @@ struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 		msgb_pull(msg, sizeof(struct osmux_hdr) +
 			  (osmo_amr_bytes(osmuxh->amr_cmr) * (osmuxh->ctr+1)));
 	} else if (msg->len > 0) {
-		LOGP(DOSMUX, LOGL_ERROR,
+		LOGP(DLMIB, LOGL_ERROR,
 			"remaining %d bytes, broken osmuxhdr?\n", msg->len);
 	}
 
@@ -99,7 +96,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	h->rtp_timestamp[osmuxh->circuit_id]++;
 
 	osmo_rtp_snprintf(buf, sizeof(buf), out_msg);
-	LOGP(DOSMUX, LOGL_DEBUG, "%s\n", buf);
+	LOGP(DLMIB, LOGL_DEBUG, "%s\n", buf);
 
 	return out_msg;
 }
@@ -120,7 +117,7 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 		if (msg == NULL)
 			break;
 
-		LOGP(DOSMUX, LOGL_DEBUG, "extracted RTP message from batch "
+		LOGP(DLMIB, LOGL_DEBUG, "extracted RTP message from batch "
 					 "msg=%p\n", msg);
 
 		llist_add_tail(&msg->list, list);
@@ -162,7 +159,7 @@ osmux_batch_add(struct osmux_in_handle *h, struct msgb *out_msg,
 		batch->osmuxh = osmuxh;
 	} else {
 		if (batch->osmuxh->ctr == 0x7) {
-			LOGP(DOSMUX, LOGL_ERROR, "cannot add msg=%p, "
+			LOGP(DLMIB, LOGL_ERROR, "cannot add msg=%p, "
 				"too many messages for this RTP ssrc=%u\n",
 				msg, rtph->ssrc);
 			return 0;
@@ -208,11 +205,11 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 
 	batch_msg = msgb_alloc(OSMUX_BATCH_MAX, "OSMUX");
 	if (batch_msg == NULL) {
-		LOGP(DOSMUX, LOGL_ERROR, "Not enough memory\n");
+		LOGP(DLMIB, LOGL_ERROR, "Not enough memory\n");
 		return NULL;
 	}
 
-	LOGP(DOSMUX, LOGL_DEBUG, "Now building batch\n");
+	LOGP(DLMIB, LOGL_DEBUG, "Now building batch\n");
 
 	llist_for_each_entry_safe(cur, tmp, &batch->msgb_list, list) {
 		struct rtp_hdr *rtph;
@@ -225,12 +222,12 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 		if (last_rtp_ssrc_set) {
 			add_osmux_hdr = (last_rtp_ssrc != rtph->ssrc);
 			if (add_osmux_hdr)
-				LOGP(DOSMUX, LOGL_DEBUG, "add osmux header\n");
+				LOGP(DLMIB, LOGL_DEBUG, "add osmux header\n");
 		}
 
 		osmo_rtp_snprintf(buf, sizeof(buf), cur);
 
-		LOGP(DOSMUX, LOGL_DEBUG, "%s\n", buf);
+		LOGP(DLMIB, LOGL_DEBUG, "%s\n", buf);
 
 		osmux_xfrm_encode_amr(h, batch_msg, rtph, cur, add_osmux_hdr);
 
@@ -248,7 +245,7 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 	struct msgb *batch_msg;
 	struct osmux_batch *batch = (struct osmux_batch *)h->data;
 
-	LOGP(DOSMUX, LOGL_DEBUG, "invoking delivery function\n");
+	LOGP(DLMIB, LOGL_DEBUG, "invoking delivery function\n");
 	batch_msg = osmux_build_batch(h);
 	h->deliver(batch_msg);
 	msgb_free(batch_msg);
@@ -260,7 +257,7 @@ static void osmux_batch_timer_expired(void *data)
 {
 	struct osmux_in_handle *h = data;
 
-	LOGP(DOSMUX, LOGL_DEBUG, "received message from stream\n");
+	LOGP(DLMIB, LOGL_DEBUG, "received message from stream\n");
 	osmux_xfrm_input_deliver(h);
 }
 
@@ -325,7 +322,7 @@ osmux_msgb_batch_queue_add(struct osmux_batch *batch, struct msgb *msg)
 	else
 		llist_add_tail(&msg->list, &batch->msgb_list);
 
-	LOGP(DOSMUX, LOGL_DEBUG, "adding to batch (%p)\n", msg);
+	LOGP(DLMIB, LOGL_DEBUG, "adding to batch (%p)\n", msg);
 
 	return 0;
 }
@@ -356,7 +353,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg)
 			 * batch timer to deliver it.
 			 */
 			if (llist_empty(&batch->msgb_list)) {
-				LOGP(DOSMUX, LOGL_DEBUG,
+				LOGP(DLMIB, LOGL_DEBUG,
 					"osmux start timer batch\n");
 
 				osmo_timer_schedule(&batch->timer, 0,
@@ -377,7 +374,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	struct osmux_batch *batch;
 	int i;
 
-	LOGP(DOSMUX, LOGL_DEBUG, "initialized osmux input converter\n");
+	LOGP(DLMIB, LOGL_DEBUG, "initialized osmux input converter\n");
 
 	batch = talloc(NULL, struct osmux_batch);
 	if (batch == NULL)
@@ -414,7 +411,7 @@ static void osmux_tx_cb(void *data)
 	gettimeofday(&now, NULL);
 	timersub(&now, &h->start, &diff);
 	timersub(&diff,&h->when, &diff);
-	LOGP(DOSMUX, LOGL_DEBUG, "we are lagging %lu.%.6lu in scheduled "
+	LOGP(DLMIB, LOGL_DEBUG, "we are lagging %lu.%.6lu in scheduled "
 		"transmissions\n", diff.tv_sec, diff.tv_usec);
 #endif
 
@@ -464,7 +461,7 @@ osmux_tx_sched(struct llist_head *list,
 
 	llist_for_each_entry_safe(cur, tmp, list, list) {
 
-		LOGP(DOSMUX, LOGL_DEBUG, "scheduled transmision in %lu.%6lu "
+		LOGP(DLMIB, LOGL_DEBUG, "scheduled transmision in %lu.%6lu "
 			"seconds, msg=%p\n", when.tv_sec, when.tv_usec, cur);
 
 		osmux_tx(cur, &when, tx_cb, NULL);
@@ -489,10 +486,10 @@ void osmux_xfrm_input_register_ccid(struct osmux_in_handle *h, uint32_t ssrc)
 
 	if (found) {
 		batch->ccid[i] = ssrc;
-		LOGP(DOSMUX, LOGL_DEBUG, "mapping ssrc=%u to ccid=%d\n",
+		LOGP(DLMIB, LOGL_DEBUG, "mapping ssrc=%u to ccid=%d\n",
 			ntohl(ssrc), i);
 	} else {
-		LOGP(DOSMUX, LOGL_ERROR, "cannot map ssrc to ccid!\n");
+		LOGP(DLMIB, LOGL_ERROR, "cannot map ssrc to ccid!\n");
 	}
 }
 
