@@ -29,7 +29,8 @@
 #define OSMUX_BATCH_MAX		1472
 
 /* delta time between two RTP messages */
-#define DELTA_RTP_MSG		20000
+#define DELTA_RTP_MSG		16000
+#define DELTA_RTP_TIMESTAMP	160
 
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 {
@@ -93,7 +94,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 
 	/* bump last RTP sequence number and timestamp that has been used */
 	h->rtp_seq[osmuxh->circuit_id]++;
-	h->rtp_timestamp[osmuxh->circuit_id] += 160;
+	h->rtp_timestamp[osmuxh->circuit_id] += DELTA_RTP_TIMESTAMP;
 
 	osmo_rtp_snprintf(buf, sizeof(buf), out_msg);
 	LOGP(DLMIB, LOGL_DEBUG, "%s\n", buf);
