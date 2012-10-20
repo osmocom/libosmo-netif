@@ -138,14 +138,13 @@ struct osmux_batch {
 	struct llist_head	node_list;
 	unsigned int		remaining_bytes;
 	uint8_t			seq;
-	int64_t			ccid[OSMUX_MAX_CONCURRENT_CALLS];
 };
 
 static int
-osmux_batch_add(struct osmux_in_handle *h, struct msgb *out_msg,
+osmux_batch_put(struct osmux_in_handle *h, struct msgb *out_msg,
 		struct msgb *msg, struct rtp_hdr *rtph,
 		struct amr_hdr *amrh, uint32_t amr_payload_len,
-		int add_osmux_header)
+		int ccid, int add_osmux_header)
 {
 	struct osmux_batch *batch = (struct osmux_batch *)h->data;
 	struct osmux_hdr *osmuxh;
@@ -157,7 +156,7 @@ osmux_batch_add(struct osmux_in_handle *h, struct msgb *out_msg,
 		osmuxh->amr_f = amrh->f;
 		osmuxh->amr_q= amrh->q;
 		osmuxh->seq = batch->seq++;
-		osmuxh->circuit_id = osmux_xfrm_input_get_ccid(h, rtph->ssrc);
+		osmuxh->circuit_id = ccid;
 		osmuxh->amr_cmr = amrh->cmr;
 		osmuxh->amr_ft = amrh->ft;
 		msgb_put(out_msg, sizeof(struct osmux_hdr));
@@ -184,7 +183,7 @@ static int
 osmux_xfrm_encode_amr(struct osmux_in_handle *h,
 		      struct msgb *out_msg,
 		      struct rtp_hdr *rtph, struct msgb *msg,
-		      int add_osmux_header)
+		      int ccid, int add_osmux_header)
 {
 	struct amr_hdr *amrh;
 	uint32_t amr_len;
@@ -196,8 +195,8 @@ osmux_xfrm_encode_amr(struct osmux_in_handle *h,
 
 	amr_payload_len = amr_len - sizeof(struct amr_hdr);
 
-	if (osmux_batch_add(h, out_msg, msg, rtph, amrh, amr_payload_len,
-			    add_osmux_header) < 0)
+	if (osmux_batch_put(h, out_msg, msg, rtph, amrh, amr_payload_len,
+			    ccid, add_osmux_header) < 0)
 		return -1;
 
 	return 0;
@@ -206,6 +205,7 @@ osmux_xfrm_encode_amr(struct osmux_in_handle *h,
 struct batch_list_node {
 	struct llist_head	head;
 	uint32_t		ssrc;
+	int			ccid;
 	struct llist_head	list;
 };
 
@@ -245,7 +245,7 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 			}
 
 			osmux_xfrm_encode_amr(h, batch_msg, rtph, cur,
-						add_osmux_hdr);
+						node->ccid, add_osmux_hdr);
 			llist_del(&cur->list);
 			msgb_free(cur);
 			ctr++;
@@ -289,7 +289,7 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 }
 
 static int
-osmux_msgb_batch_queue_add(struct osmux_batch *batch, struct msgb *msg)
+osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
 {
 	struct rtp_hdr *rtph;
 	struct batch_list_node *node;
@@ -342,6 +342,7 @@ osmux_msgb_batch_queue_add(struct osmux_batch *batch, struct msgb *msg)
 		if (node == NULL)
 			return 0;
 
+		node->ccid = ccid;
 		node->ssrc = rtph->ssrc;
 		INIT_LLIST_HEAD(&node->list);
 		llist_add_tail(&node->head, &batch->node_list);
@@ -365,7 +366,7 @@ osmux_msgb_batch_queue_add(struct osmux_batch *batch, struct msgb *msg)
  * an error occured and we have skipped the message. If 1 is returned, you
  * have to invoke osmux_xfrm_input_deliver and try again.
  */
-int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg)
+int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 {
 	int ret;
 	struct rtp_hdr *rtph;
@@ -389,7 +390,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg)
 				osmo_timer_schedule(&batch->timer, 0,
 					h->batch_factor * DELTA_RTP_MSG);
 			}
-			ret = osmux_msgb_batch_queue_add(batch, msg);
+			ret = osmux_batch_add(batch, msg, ccid);
 			break;
 		default:
 			/* Only AMR supported so far, sorry. */
@@ -402,7 +403,6 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg)
 void osmux_xfrm_input_init(struct osmux_in_handle *h)
 {
 	struct osmux_batch *batch;
-	int i;
 
 	LOGP(DLMIB, LOGL_DEBUG, "initialized osmux input converter\n");
 
@@ -414,9 +414,6 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	batch->remaining_bytes = OSMUX_BATCH_MAX;
 	batch->timer.cb = osmux_batch_timer_expired;
 	batch->timer.data = h;
-
-	for (i=0; i<OSMUX_MAX_CONCURRENT_CALLS; i++)
-		batch->ccid[i] = -1;
 
 	h->data = (void *)batch;
 }
@@ -498,44 +495,6 @@ osmux_tx_sched(struct llist_head *list,
 		timeradd(&when, &delta, &when);
 		llist_del(&cur->list);
 	}
-}
-
-void osmux_xfrm_input_register_ccid(struct osmux_in_handle *h, uint32_t ssrc)
-{
-	struct osmux_batch *batch = (struct osmux_batch *)h->data;;
-	int i, found = 0;
-
-	for (i=0; i<OSMUX_MAX_CONCURRENT_CALLS; i++) {
-		if (batch->ccid[i] == ssrc)
-			continue;
-		if (batch->ccid[i] < 0) {
-			found = 1;
-			break;
-		}
-	}
-
-	if (found) {
-		batch->ccid[i] = ssrc;
-		LOGP(DLMIB, LOGL_DEBUG, "mapping ssrc=%u to ccid=%d\n",
-			ntohl(ssrc), i);
-	} else {
-		LOGP(DLMIB, LOGL_ERROR, "cannot map ssrc to ccid!\n");
-	}
-}
-
-int osmux_xfrm_input_get_ccid(struct osmux_in_handle *h, uint32_t ssrc)
-{
-	struct osmux_batch *batch = (struct osmux_batch *)h->data;;
-	int i, found = 0;
-
-	for (i=0; i<OSMUX_MAX_CONCURRENT_CALLS; i++) {
-		if (batch->ccid[i] == ssrc) {
-			found = 1;
-			break;
-		}
-	}
-
-	return found ? i : -1;
 }
 
 void osmux_xfrm_output_init(struct osmux_out_handle *h)

@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
 
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/msgb.h>
@@ -84,11 +85,51 @@ struct osmux_in_handle h_input = {
 	.deliver	= osmux_deliver,
 };
 
+#define MAX_CONCURRENT_CALLS	8
+
+static int ccid[MAX_CONCURRENT_CALLS];
+
+static int get_ccid(uint32_t ssrc)
+{
+       int i, found = 0;
+
+       for (i=0; i<MAX_CONCURRENT_CALLS; i++) {
+	       if (ccid[i] == ssrc) {
+		       found = 1;
+		       break;
+	       }
+       }
+
+       return found ? i : -1;
+}
+
+static void register_ccid(uint32_t ssrc)
+{
+       int i, found = 0;
+
+       for (i=0; i<MAX_CONCURRENT_CALLS; i++) {
+	       if (ccid[i] == ssrc)
+		       continue;
+	       if (ccid[i] < 0) {
+		       found = 1;
+		       break;
+	       }
+       }
+
+       if (found) {
+	       ccid[i] = ssrc;
+	       LOGP(DOSMUX_TEST, LOGL_DEBUG, "mapping ssrc=%u to ccid=%d\n",
+		       ntohl(ssrc), i);
+       } else {
+	       LOGP(DOSMUX_TEST, LOGL_ERROR, "cannot map ssrc to ccid!\n");
+       }
+}
+
 int read_cb(struct osmo_dgram *conn)
 {
 	struct msgb *msg;
 	struct rtp_hdr *rtph;
-	int ret;
+	int ret, ccid;
 
 	LOGP(DOSMUX_TEST, LOGL_DEBUG, "received message from datagram\n");
 
@@ -113,11 +154,11 @@ int read_cb(struct osmo_dgram *conn)
 	if (rtph->payload_type == RTP_PT_AMR)
 		amr_write(msg);
 
-	/* now build the osmux frame */
-	if (osmux_xfrm_input_get_ccid(&h_input, rtph->ssrc) < 0)
-		osmux_xfrm_input_register_ccid(&h_input, rtph->ssrc);
+	ccid = get_ccid(rtph->ssrc);
+	if (ccid < 0)
+		register_ccid(rtph->ssrc);
 
-	while ((ret = osmux_xfrm_input(&h_input, msg)) > 0) {
+	while ((ret = osmux_xfrm_input(&h_input, msg, ccid)) > 0) {
 		/* batch full, deliver it */
 		osmux_xfrm_input_deliver(&h_input);
 	}

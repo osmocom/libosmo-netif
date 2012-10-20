@@ -73,19 +73,60 @@ struct osmux_in_handle h_input = {
 	.deliver	= deliver,
 };
 
+#define MAX_CONCURRENT_CALLS	8
+
+static int ccid[MAX_CONCURRENT_CALLS];
+
+static void register_ccid(uint32_t ssrc)
+{
+       int i, found = 0;
+
+       for (i=0; i<MAX_CONCURRENT_CALLS; i++) {
+               if (ccid[i] == ssrc)
+                       continue;
+               if (ccid[i] < 0) {
+                       found = 1;
+                       break;
+               }
+       }
+
+       if (found) {
+               ccid[i] = ssrc;
+               LOGP(DOSMUXTEST, LOGL_DEBUG, "mapping ssrc=%u to ccid=%d\n",
+                       ntohl(ssrc), i);
+       } else {
+               LOGP(DOSMUXTEST, LOGL_ERROR, "cannot map ssrc to ccid!\n");
+       }
+}
+
+static int get_ccid(uint32_t ssrc)
+{
+       int i, found = 0;
+
+       for (i=0; i<MAX_CONCURRENT_CALLS; i++) {
+               if (ccid[i] == ssrc) {
+                       found = 1;
+                       break;
+               }
+       }
+
+       return found ? i : -1;
+}
+
 static int pcap_test_run(struct msgb *msg)
 {
-	int ret;
+	int ret, ccid;
 	struct rtp_hdr *rtph;
 
 	rtph = osmo_rtp_get_hdr(msg);
 	if (rtph == NULL)
 		return 0;
 
-	if (osmux_xfrm_input_get_ccid(&h_input, rtph->ssrc) < 0)
-		osmux_xfrm_input_register_ccid(&h_input, rtph->ssrc);
+	ccid = get_ccid(&h_input, rtph->ssrc);
+	if (ccid < 0)
+		register_ccid(&h_input, rtph->ssrc);
 
-	while ((ret = osmux_xfrm_input(&h_input, msg)) > 1) {
+	while ((ret = osmux_xfrm_input(&h_input, msg, ccid)) > 1) {
 		/* batch full, deliver it */
 		osmux_xfrm_input_deliver(&h_input);
 	}
