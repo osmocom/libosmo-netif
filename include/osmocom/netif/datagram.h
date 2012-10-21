@@ -43,6 +43,7 @@ void osmo_dgram_set_local_port(struct osmo_dgram *conn, uint16_t port);
 void osmo_dgram_set_remote_port(struct osmo_dgram *conn, uint16_t port);
 void osmo_dgram_set_read_cb(struct osmo_dgram *conn, int (*read_cb)(struct osmo_dgram *conn));
 void osmo_dgram_set_data(struct osmo_dgram *conn, void *data);
+void *osmo_dgram_get_data(struct osmo_dgram *conn);
 
 void osmo_dgram_send(struct osmo_dgram *conn, struct msgb *msg);
 int osmo_dgram_recv(struct osmo_dgram *conn, struct msgb *msg);

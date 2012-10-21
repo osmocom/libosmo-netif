@@ -365,6 +365,11 @@ void osmo_dgram_set_data(struct osmo_dgram *conn, void *data)
 	conn->data = data;
 }
 
+void *osmo_dgram_get_data(struct osmo_dgram *conn)
+{
+	return conn->data;
+}
+
 int osmo_dgram_open(struct osmo_dgram *conn)
 {
 	int ret;
