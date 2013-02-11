@@ -146,7 +146,7 @@ osmux_batch_put(struct osmux_in_handle *h, struct msgb *out_msg,
 		struct amr_hdr *amrh, uint32_t amr_payload_len,
 		int ccid, int add_osmux_header)
 {
-	struct osmux_batch *batch = (struct osmux_batch *)h->data;
+	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 	struct osmux_hdr *osmuxh;
 
 	if (add_osmux_header) {
@@ -213,7 +213,7 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 {
 	struct msgb *batch_msg;
 	struct batch_list_node *node, *tnode;
-	struct osmux_batch *batch = (struct osmux_batch *)h->data;
+	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
 	LOGP(DLMIB, LOGL_DEBUG, "Now building batch\n");
 
@@ -259,11 +259,11 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 {
 	struct msgb *batch_msg;
-	struct osmux_batch *batch = (struct osmux_batch *)h->data;
+	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
 	LOGP(DLMIB, LOGL_DEBUG, "invoking delivery function\n");
 	batch_msg = osmux_build_batch(h);
-	h->deliver(batch_msg);
+	h->deliver(batch_msg, h->data);
 	osmo_timer_del(&batch->timer);
 	batch->remaining_bytes = OSMUX_BATCH_MAX;
 }
@@ -370,7 +370,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 {
 	int ret;
 	struct rtp_hdr *rtph;
-	struct osmux_batch *batch = (struct osmux_batch *)h->data;
+	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
 	rtph = osmo_rtp_get_hdr(msg);
 	if (rtph == NULL)
@@ -415,7 +415,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	batch->timer.cb = osmux_batch_timer_expired;
 	batch->timer.data = h;
 
-	h->data = (void *)batch;
+	h->internal_data = (void *)batch;
 }
 
 struct osmux_tx_handle {

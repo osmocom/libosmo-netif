@@ -43,8 +43,9 @@ struct osmux_hdr {
 struct osmux_in_handle {
 	uint8_t osmux_seq;
 	uint8_t batch_factor;
-	void (*deliver)(struct msgb *msg);
-	char *data;				/* internal data */
+	void (*deliver)(struct msgb *msg, void *data);
+	void *data;
+	char *internal_data;	/* internal data to store batch */
 };
 
 #define OSMUX_MAX_CONCURRENT_CALLS	8
