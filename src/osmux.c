@@ -40,7 +40,7 @@ struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 		osmuxh = (struct osmux_hdr *)msg->data;
 
 		msgb_pull(msg, sizeof(struct osmux_hdr) +
-			  (osmo_amr_bytes(osmuxh->amr_cmr) * (osmuxh->ctr+1)));
+			  (osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1)));
 	} else if (msg->len > 0) {
 		LOGP(DLMIB, LOGL_ERROR,
 			"remaining %d bytes, broken osmuxhdr?\n", msg->len);
@@ -61,7 +61,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 
 	out_msg = msgb_alloc(sizeof(struct rtp_hdr) +
 			     sizeof(struct amr_hdr) +
-			     osmo_amr_bytes(osmuxh->amr_cmr),
+			     osmo_amr_bytes(osmuxh->amr_ft),
 			     "OSMUX test");
 	if (out_msg == NULL)
 		return NULL;
@@ -116,8 +116,8 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 
 		msg = osmux_rebuild_rtp(h, osmuxh,
 					osmux_get_payload(osmuxh) +
-					i * osmo_amr_bytes(osmuxh->amr_cmr),
-					osmo_amr_bytes(osmuxh->amr_cmr));
+					i * osmo_amr_bytes(osmuxh->amr_ft),
+					osmo_amr_bytes(osmuxh->amr_ft));
 		if (msg == NULL)
 			continue;
 

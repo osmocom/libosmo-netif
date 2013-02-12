@@ -25,18 +25,18 @@
  *      7         12.20      244    31
  */
 
-static size_t amr_cmr_to_bytes[AMR_CMR_MAX] = {
-	[AMR_CMR_0]	= 12,
-	[AMR_CMR_1]	= 13,
-	[AMR_CMR_2]	= 15,
-	[AMR_CMR_3]	= 17,
-	[AMR_CMR_4]	= 19,
-	[AMR_CMR_5]	= 20,
-	[AMR_CMR_6]	= 26,
-	[AMR_CMR_7]	= 31,
+static size_t amr_ft_to_bytes[AMR_FT_MAX] = {
+	[AMR_FT_0]	= 12,
+	[AMR_FT_1]	= 13,
+	[AMR_FT_2]	= 15,
+	[AMR_FT_3]	= 17,
+	[AMR_FT_4]	= 19,
+	[AMR_FT_5]	= 20,
+	[AMR_FT_6]	= 26,
+	[AMR_FT_7]	= 31,
 };
 
-size_t osmo_amr_bytes(uint8_t amr_cmr)
+size_t osmo_amr_bytes(uint8_t amr_ft)
 {
-	return amr_cmr_to_bytes[amr_cmr];
+	return amr_ft_to_bytes[amr_ft];
 }

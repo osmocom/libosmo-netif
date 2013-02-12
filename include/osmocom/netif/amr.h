@@ -22,7 +22,7 @@
  * According to: 3GPP TS 26.201 "AMR Wideband speech codec; Frame Structure",
  * version 5.0.0 (2001-03), 3rd Generation Partnership Project (3GPP):
  *
- * Possible AMR-CMR values:
+ * Possible Frame type / CMR values:
  *
  * 0-8 for AMR-WB (from 6.60 kbit/s to 23.85 kbit/s)
  * 9 (SID) confort noise.
@@ -67,15 +67,15 @@ static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
 	return (uint8_t *)amrh + sizeof(struct amr_hdr);
 }
 
-#define AMR_CMR_0	0	/* 4.75 */
-#define AMR_CMR_1	1	/* 5.15 */
-#define AMR_CMR_2	2	/* 5.90 */
-#define AMR_CMR_3	3	/* 6.70 */
-#define AMR_CMR_4	4	/* 7.40 */
-#define AMR_CMR_5	5	/* 7.95 */
-#define AMR_CMR_6	6	/* 10.2 */
-#define AMR_CMR_7	7	/* 12.2 */
-#define AMR_CMR_MAX	8
+#define AMR_FT_0	0	/* 4.75 */
+#define AMR_FT_1	1	/* 5.15 */
+#define AMR_FT_2	2	/* 5.90 */
+#define AMR_FT_3	3	/* 6.70 */
+#define AMR_FT_4	4	/* 7.40 */
+#define AMR_FT_5	5	/* 7.95 */
+#define AMR_FT_6	6	/* 10.2 */
+#define AMR_FT_7	7	/* 12.2 */
+#define AMR_FT_MAX	8
 
 size_t osmo_amr_bytes(uint8_t amr_cmr);
 
