@@ -31,6 +31,8 @@
 
 #include "osmo_pcap.h"
 
+#define DOSMUXTEST 0
+
 /*
  * This is the output handle for osmux, it stores last RTP sequence and
  * timestamp that has been used. There should be one per circuit ID.
@@ -75,7 +77,7 @@ struct osmux_in_handle h_input = {
 
 #define MAX_CONCURRENT_CALLS	8
 
-static int ccid[MAX_CONCURRENT_CALLS];
+static int ccid[MAX_CONCURRENT_CALLS] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 
 static void register_ccid(uint32_t ssrc)
 {
@@ -122,9 +124,9 @@ static int pcap_test_run(struct msgb *msg)
 	if (rtph == NULL)
 		return 0;
 
-	ccid = get_ccid(&h_input, rtph->ssrc);
+	ccid = get_ccid(rtph->ssrc);
 	if (ccid < 0)
-		register_ccid(&h_input, rtph->ssrc);
+		register_ccid(rtph->ssrc);
 
 	while ((ret = osmux_xfrm_input(&h_input, msg, ccid)) > 1) {
 		/* batch full, deliver it */
@@ -147,8 +149,6 @@ static void osmo_pcap_pkt_timer_cb(void *data)
 		exit(EXIT_SUCCESS);
 	}
 }
-
-#define DOSMUXTEST 0
 
 struct log_info_cat osmux_test_cat[] = {
 	[DOSMUXTEST] = {
