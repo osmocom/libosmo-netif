@@ -52,8 +52,8 @@ struct osmux_in_handle {
 
 /* one per OSmux circuit_id, ie. one per RTP flow. */
 struct osmux_out_handle {
-	uint16_t rtp_seq[OSMUX_MAX_CONCURRENT_CALLS];
-	uint32_t rtp_timestamp[OSMUX_MAX_CONCURRENT_CALLS];
+	uint16_t rtp_seq;
+	uint32_t rtp_timestamp;
 };
 
 static inline uint8_t *osmux_get_payload(struct osmux_hdr *osmuxh)

@@ -73,8 +73,8 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	rtph->version = RTP_VERSION;
 	rtph->payload_type = 98;
 	/* ... emulate timestamp and ssrc */
-	rtph->timestamp = htonl(h->rtp_timestamp[osmuxh->circuit_id]);
-	rtph->sequence = htons(h->rtp_seq[osmuxh->circuit_id]);
+	rtph->timestamp = htonl(h->rtp_timestamp);
+	rtph->sequence = htons(h->rtp_seq);
 	rtph->ssrc = htonl(ssrc_from_ccid);
 
 	msgb_put(out_msg, sizeof(struct rtp_hdr));
@@ -93,8 +93,8 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	msgb_put(out_msg, payload_len);
 
 	/* bump last RTP sequence number and timestamp that has been used */
-	h->rtp_seq[osmuxh->circuit_id]++;
-	h->rtp_timestamp[osmuxh->circuit_id] += DELTA_RTP_TIMESTAMP;
+	h->rtp_seq++;
+	h->rtp_timestamp += DELTA_RTP_TIMESTAMP;
 
 	osmo_rtp_snprintf(buf, sizeof(buf), out_msg);
 	LOGP(DLMIB, LOGL_DEBUG, "%s\n", buf);
@@ -499,10 +499,6 @@ osmux_tx_sched(struct llist_head *list,
 
 void osmux_xfrm_output_init(struct osmux_out_handle *h)
 {
-	int i;
-
-	for (i=0; i<OSMUX_MAX_CONCURRENT_CALLS; i++) {
-		h->rtp_seq[i] = (uint16_t)random();
-		h->rtp_timestamp[i] = (uint32_t)random();
-	}
+	h->rtp_seq = (uint16_t)random();
+	h->rtp_timestamp = (uint32_t)random();
 }
