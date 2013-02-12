@@ -87,7 +87,7 @@ struct osmux_in_handle h_input = {
 
 #define MAX_CONCURRENT_CALLS	8
 
-static int ccid[MAX_CONCURRENT_CALLS];
+static int ccid[MAX_CONCURRENT_CALLS] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 
 static int get_ccid(uint32_t ssrc)
 {
