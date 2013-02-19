@@ -32,6 +32,8 @@
 #define DELTA_RTP_MSG		16000
 #define DELTA_RTP_TIMESTAMP	160
 
+static void *osmux_ctx;
+
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 {
 	struct osmux_hdr *osmuxh = NULL;
@@ -338,7 +340,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
 		}
 	} else {
 		/* This is the first message with that ssrc we've seen */
-		node = talloc_zero(NULL, struct batch_list_node);
+		node = talloc_zero(osmux_ctx, struct batch_list_node);
 		if (node == NULL)
 			return 0;
 
@@ -406,7 +408,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 
 	LOGP(DLMIB, LOGL_DEBUG, "initialized osmux input converter\n");
 
-	batch = talloc_zero(NULL, struct osmux_batch);
+	batch = talloc_zero(osmux_ctx, struct osmux_batch);
 	if (batch == NULL)
 		return;
 
@@ -453,7 +455,7 @@ osmux_tx(struct msgb *msg, struct timeval *when,
 {
 	struct osmux_tx_handle *h;
 
-	h = talloc_zero(NULL, struct osmux_tx_handle);
+	h = talloc_zero(osmux_ctx, struct osmux_tx_handle);
 	if (h == NULL)
 		return;
 
