@@ -69,7 +69,7 @@ static void amr_write(struct msgb *msg)
 static struct osmo_dgram *conn;
 static struct osmo_rtp_handle *rtp;
 
-static void osmux_deliver(struct msgb *batch_msg)
+static void osmux_deliver(struct msgb *batch_msg, void *data)
 {
 	printf("sending batch (len=%d)\n", batch_msg->len);
 	osmo_dgram_send(conn, batch_msg);
