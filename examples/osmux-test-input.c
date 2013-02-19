@@ -148,7 +148,7 @@ int read_cb(struct osmo_dgram *conn)
 		LOGP(DOSMUX_TEST, LOGL_ERROR, "cannot parse RTP message\n");
 		return -1;
 	}
-	LOGP(DLINP, LOGL_DEBUG, "received message with RTP payload type: %d\n",
+	LOGP(DOSMUX_TEST, LOGL_DEBUG, "received message with RTP payload type: %d\n",
 		rtph->payload_type);
 
 	if (rtph->payload_type == RTP_PT_AMR)
@@ -170,7 +170,7 @@ int read_cb(struct osmo_dgram *conn)
 
 void sighandler(int foo)
 {
-	LOGP(DLINP, LOGL_NOTICE, "closing test.\n");
+	LOGP(DOSMUX_TEST, LOGL_NOTICE, "closing test.\n");
 	osmo_dgram_close(conn);
 	osmo_dgram_destroy(conn);
 	osmo_rtp_handle_free(rtp);

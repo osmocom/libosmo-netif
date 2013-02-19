@@ -102,7 +102,7 @@ int read_cb(struct osmo_dgram *conn)
 		return -1;
 	}
 
-	LOGP(DLINP, LOGL_DEBUG, "received OSMUX message (len=%d)\n", msg->len);
+	LOGP(DOSMUX_TEST, LOGL_DEBUG, "received OSMUX message (len=%d)\n", msg->len);
 
 	while((osmuxh = osmux_xfrm_output_pull(msg)) != NULL) {
 		printf("tx_sched\n");
@@ -115,7 +115,7 @@ int read_cb(struct osmo_dgram *conn)
 
 void sighandler(int foo)
 {
-	LOGP(DLINP, LOGL_NOTICE, "closing OSMUX.\n");
+	LOGP(DOSMUX_TEST, LOGL_NOTICE, "closing OSMUX.\n");
 	osmo_dgram_close(conn);
 	osmo_dgram_destroy(conn);
 	osmo_rtp_handle_free(rtp);
