@@ -406,7 +406,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 
 	LOGP(DLMIB, LOGL_DEBUG, "initialized osmux input converter\n");
 
-	batch = talloc(NULL, struct osmux_batch);
+	batch = talloc_zero(NULL, struct osmux_batch);
 	if (batch == NULL)
 		return;
 
