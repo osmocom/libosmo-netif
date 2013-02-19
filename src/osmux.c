@@ -381,7 +381,12 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	switch(rtph->payload_type) {
 		case RTP_PT_RTCP:
 			return 0;
-		case RTP_PT_AMR:
+		default:
+			/* The RTP payload type is dynamically allocated,
+			 * although we use static ones. Assume that we always
+			 * receive AMR traffic.
+			 */
+
 			/* This is the first message in the batch, start the
 			 * batch timer to deliver it.
 			 */
@@ -393,10 +398,6 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 					h->batch_factor * DELTA_RTP_MSG);
 			}
 			ret = osmux_batch_add(batch, msg, ccid);
-			break;
-		default:
-			/* Only AMR supported so far, sorry. */
-			ret = 0;
 			break;
 	}
 	return ret;
