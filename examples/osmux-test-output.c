@@ -78,7 +78,7 @@ static void tx_cb(struct msgb *msg, void *data)
 	char buf[4096];
 
 	osmo_rtp_snprintf(buf, sizeof(buf), msg);
-	printf("sending: %s\n", buf);
+	LOGP(DOSMUX_TEST, LOGL_DEBUG, "sending: %s\n", buf);
 	osmo_dgram_send(conn, msg);
 
 	amr_write(msg);
@@ -102,10 +102,12 @@ int read_cb(struct osmo_dgram *conn)
 		return -1;
 	}
 
-	LOGP(DOSMUX_TEST, LOGL_DEBUG, "received OSMUX message (len=%d)\n", msg->len);
+	char buf[1024];
+	osmux_snprintf(buf, sizeof(buf), msg);
+	LOGP(DOSMUX_TEST, LOGL_DEBUG, "received OSMUX message (len=%d) %s\n",
+		msg->len, buf);
 
 	while((osmuxh = osmux_xfrm_output_pull(msg)) != NULL) {
-		printf("tx_sched\n");
 		osmux_xfrm_output(osmuxh, &h_output, &list);
 		osmux_tx_sched(&list, tx_cb, NULL);
 	}

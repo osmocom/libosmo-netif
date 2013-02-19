@@ -34,6 +34,23 @@
 
 static void *osmux_ctx;
 
+struct osmux_hdr *osmux_get_hdr(struct msgb *msg)
+{
+	struct osmux_hdr *osmuxh = (struct osmux_hdr *)msg->data;
+
+	if (msg->len < sizeof(struct osmux_hdr)) {
+		DEBUGPC(DLMUX, "received OSMUX frame too short (len = %d)\n",
+			msg->len);
+		return NULL;
+	}
+	return osmuxh;
+}
+
+static uint32_t osmux_get_payload_len(struct osmux_hdr *osmuxh)
+{
+	return osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1);
+}
+
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 {
 	struct osmux_hdr *osmuxh = NULL;
@@ -504,4 +521,79 @@ void osmux_xfrm_output_init(struct osmux_out_handle *h)
 {
 	h->rtp_seq = (uint16_t)random();
 	h->rtp_timestamp = (uint32_t)random();
+}
+
+#define SNPRINTF_BUFFER_SIZE(ret, size, len, offset)	\
+	size += ret;					\
+	if (ret > len)					\
+		ret = len;				\
+	offset += ret;					\
+	len -= ret;
+
+static int osmux_snprintf_header(char *buf, size_t size, struct osmux_hdr *osmuxh)
+{
+	int ret;
+	int len = size, offset = 0;
+
+	ret = snprintf(buf, len, "OSMUX seq=%03u ccid=%03u "
+				 "ft=%01u ctr=%01u "
+				 "amr_f=%01u amr_q=%01u "
+				 "amr_ft=%02u amr_cmr=%02u ",
+			osmuxh->seq, osmuxh->circuit_id,
+			osmuxh->ft, osmuxh->ctr,
+			osmuxh->amr_f, osmuxh->amr_q,
+			osmuxh->amr_ft, osmuxh->amr_cmr);
+	SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+
+	return offset;
+}
+
+static int osmux_snprintf_payload(char *buf, size_t size,
+				  const uint8_t *payload, int payload_len)
+{
+	int ret, i;
+	int len = size, offset = 0;
+
+	for (i=0; i<payload_len; i++) {
+		ret = snprintf(buf+offset, len, "%02x ", payload[i]);
+		SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+	}
+
+	ret = snprintf(buf+offset, len, "]\n");
+	SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+
+	return offset;
+}
+
+
+int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
+{
+	int ret;
+	unsigned int offset = 0;
+	int msg_len = msg->len, len = size;
+	struct osmux_hdr *osmuxh = (struct osmux_hdr *)msg->data;
+	int this_len;
+
+	while (msg_len > 0) {
+		this_len = sizeof(struct osmux_hdr) +
+			   osmux_get_payload_len(osmuxh);
+
+		ret = osmux_snprintf_header(buf+offset, size, osmuxh);
+		if (ret < 0)
+			break;
+		SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+
+		ret = osmux_snprintf_payload(buf+offset, size,
+					     osmux_get_payload(osmuxh),
+					     osmux_get_payload_len(osmuxh));
+		if (ret < 0)
+			break;
+		SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+
+		msg_len -= this_len;
+
+		osmuxh = (struct osmux_hdr *)((uint8_t *)msg->data + this_len);
+	}
+
+	return offset;
 }

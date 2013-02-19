@@ -71,7 +71,11 @@ static struct osmo_rtp_handle *rtp;
 
 static void osmux_deliver(struct msgb *batch_msg, void *data)
 {
-	printf("sending batch (len=%d)\n", batch_msg->len);
+	char buf[1024];
+
+	osmux_snprintf(buf, sizeof(buf), batch_msg);
+	LOGP(DOSMUX_TEST, LOGL_DEBUG, "sending batch (len=%d): %s\n",
+		batch_msg->len, buf);
 	osmo_dgram_send(conn, batch_msg);
 }
 
@@ -131,8 +135,6 @@ int read_cb(struct osmo_dgram *conn)
 	struct rtp_hdr *rtph;
 	int ret, ccid;
 
-	LOGP(DOSMUX_TEST, LOGL_DEBUG, "received message from datagram\n");
-
 	msg = msgb_alloc(RTP_MSGB_SIZE, "OSMUX/test");
 	if (msg == NULL) {
 		LOGP(DOSMUX_TEST, LOGL_ERROR, "cannot allocate message\n");
@@ -153,6 +155,11 @@ int read_cb(struct osmo_dgram *conn)
 
 	if (rtph->payload_type == RTP_PT_AMR)
 		amr_write(msg);
+
+	char buf[1024];
+
+	osmo_rtp_snprintf(buf, sizeof(buf), msg);
+	LOGP(DOSMUX_TEST, LOGL_DEBUG, "received RTP (len=%d): %s\n", msg->len, buf);
 
 	ccid = get_ccid(rtph->ssrc);
 	if (ccid < 0)
