@@ -572,16 +572,31 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 	unsigned int offset = 0;
 	int msg_len = msg->len, len = size;
 	struct osmux_hdr *osmuxh = (struct osmux_hdr *)msg->data;
-	int this_len;
+	int this_len = 0;
 
 	while (msg_len > 0) {
-		this_len = sizeof(struct osmux_hdr) +
-			   osmux_get_payload_len(osmuxh);
+		if (msg_len < sizeof(struct osmux_hdr)) {
+			LOGP(DLMIB, LOGL_ERROR,
+			     "No room for OSMUX header: only %d bytes\n",
+			     msg_len);
+			return -1;
+		}
+		osmuxh = (struct osmux_hdr *)((uint8_t *)msg->data + this_len);
 
 		ret = osmux_snprintf_header(buf+offset, size, osmuxh);
 		if (ret < 0)
 			break;
 		SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+
+		this_len = sizeof(struct osmux_hdr) +
+			   osmux_get_payload_len(osmuxh);
+
+		if (msg_len < this_len) {
+			LOGP(DLMIB, LOGL_ERROR,
+			     "No room for OSMUX payload: only %d bytes\n",
+			     msg_len);
+			return -1;
+		}
 
 		ret = osmux_snprintf_payload(buf+offset, size,
 					     osmux_get_payload(osmuxh),
@@ -591,8 +606,6 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 		SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
 
 		msg_len -= this_len;
-
-		osmuxh = (struct osmux_hdr *)((uint8_t *)msg->data + this_len);
 	}
 
 	return offset;
