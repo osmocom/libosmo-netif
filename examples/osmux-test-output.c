@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 	/*
 	 * initialize OSMUX handlers.
 	 */
-	osmux_xfrm_output_init(&h_output);
+	osmux_xfrm_output_init(&h_output, random());
 
 	/*
 	 * initialize datagram server.

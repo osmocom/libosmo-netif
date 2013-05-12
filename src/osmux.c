@@ -75,7 +75,6 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	struct msgb *out_msg;
 	struct rtp_hdr *rtph;
 	struct amr_hdr *amrh;
-	uint32_t ssrc_from_ccid = osmuxh->circuit_id;
 	char buf[4096];
 
 	out_msg = msgb_alloc(sizeof(struct rtp_hdr) +
@@ -94,7 +93,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	/* ... emulate timestamp and ssrc */
 	rtph->timestamp = htonl(h->rtp_timestamp);
 	rtph->sequence = htons(h->rtp_seq);
-	rtph->ssrc = htonl(ssrc_from_ccid);
+	rtph->ssrc = htonl(h->rtp_ssrc);
 
 	msgb_put(out_msg, sizeof(struct rtp_hdr));
 
@@ -517,10 +516,11 @@ osmux_tx_sched(struct llist_head *list,
 	}
 }
 
-void osmux_xfrm_output_init(struct osmux_out_handle *h)
+void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
 {
 	h->rtp_seq = (uint16_t)random();
 	h->rtp_timestamp = (uint32_t)random();
+	h->rtp_ssrc = rtp_ssrc;
 }
 
 #define SNPRINTF_BUFFER_SIZE(ret, size, len, offset)	\

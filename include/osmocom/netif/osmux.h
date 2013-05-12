@@ -54,6 +54,7 @@ struct osmux_in_handle {
 struct osmux_out_handle {
 	uint16_t rtp_seq;
 	uint32_t rtp_timestamp;
+	uint32_t rtp_ssrc;
 };
 
 struct osmux_hdr *osmux_get_hdr(struct msgb *msg);
@@ -70,7 +71,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h);
 int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid);
 void osmux_xfrm_input_deliver(struct osmux_in_handle *h);
 
-void osmux_xfrm_output_init(struct osmux_out_handle *h);
+void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc);
 int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h, struct llist_head *list);
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg);
 
