@@ -305,6 +305,54 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 	return amr_len - sizeof(struct amr_hdr);
 }
 
+static void osmux_replay_lost_packets(struct batch_list_node *node,
+				      struct rtp_hdr *cur_rtph)
+{
+	uint16_t diff;
+	struct msgb *last;
+	struct rtp_hdr *rtph;
+	int i;
+
+	/* Have we see any RTP packet in this batch before? */
+	if (llist_empty(&node->list))
+		return;
+
+	/* Get last RTP packet seen in this batch */
+	last = llist_entry(node->list.prev, struct msgb, list);
+	rtph = osmo_rtp_get_hdr(last);
+	if (rtph == NULL)
+		return;
+
+	diff = ntohs(cur_rtph->sequence) - ntohs(rtph->sequence);
+
+	/* If diff between last RTP packet seen and this one is > 1,
+	 * then we lost several RTP packets, let's replay them.
+	 */
+	for (i=1; i<diff; i++) {
+		struct msgb *clone;
+
+		/* Clone last RTP packet seen */
+		clone = msgb_alloc(last->data_len, "RTP clone");
+		if (!clone)
+			continue;
+
+		memcpy(clone->data, last->data, last->len);
+		msgb_put(clone, last->len);
+
+		rtph = osmo_rtp_get_hdr(clone);
+		if (rtph == NULL)
+			return;
+
+		/* Adjust sequence number and timestamp */
+		rtph->sequence = htons(ntohs(rtph->sequence) + i);
+		rtph->timestamp = htonl(ntohl(rtph->timestamp) +
+					DELTA_RTP_TIMESTAMP);
+
+		LOGP(DLMIB, LOGL_ERROR, "adding cloned RTP\n");
+		llist_add_tail(&clone->list, &node->list);
+	}
+}
+
 static int
 osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
 {
@@ -352,6 +400,9 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
 				return 0;
 			}
 		}
+		/* Handle RTP packet loss scenario */
+		osmux_replay_lost_packets(node, rtph);
+
 	} else {
 		/* This is the first message with that ssrc we've seen */
 		node = talloc_zero(osmux_ctx, struct batch_list_node);
