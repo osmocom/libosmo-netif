@@ -222,7 +222,6 @@ osmux_xfrm_encode_amr(struct osmux_in_handle *h,
 
 struct batch_list_node {
 	struct llist_head	head;
-	uint32_t		ssrc;
 	int			ccid;
 	struct llist_head	list;
 };
@@ -313,17 +312,16 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
 	struct batch_list_node *node;
 	int found = 0, bytes = 0;
 
-	rtph = osmo_rtp_get_hdr(msg);
-	if (rtph == NULL)
-		return 0;
-
-	/* Yes, there is room. Check if we have more message with same ssrc */
 	llist_for_each_entry(node, &batch->node_list, head) {
-		if (node->ssrc == rtph->ssrc) {
+		if (node->ccid == ccid) {
 			found = 1;
 			break;
 		}
 	}
+
+	rtph = osmo_rtp_get_hdr(msg);
+	if (rtph == NULL)
+		return 0;
 
 	/* First check if there is room for this message in the batch */
 	bytes += osmux_rtp_amr_payload_len(msg, rtph);
@@ -361,7 +359,6 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
 			return 0;
 
 		node->ccid = ccid;
-		node->ssrc = rtph->ssrc;
 		INIT_LLIST_HEAD(&node->list);
 		llist_add_tail(&node->head, &batch->node_list);
 	}
