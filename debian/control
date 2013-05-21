@@ -1,0 +1,27 @@
+Source: libosmo-netif
+Section: libs
+Priority: optional
+Maintainer: Holger Hans Peter Freyther <holger@moiji-mobile.com>
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev, autoconf, automake, libtool, dh-autoreconf, libdpkg-perl, git, libosmocore-dev, libosmo-abis-dev, pkg-config
+Standards-Version: 3.8.4
+Vcs-Git: git://git.osmocom.org/libosmo-netif.git
+Vcs-Browser: http://git.osmocom.org/gitweb?p=libosmo-netif.git;a=summary
+
+Package: libosmo-netif
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Library containing common/shared code regarding network interface
+
+Package: libosmo-netif-dev
+Section: libdevel
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libosmocore, libosmo-netif
+Description: Development headers for Osmocom network interface
+
+Package: libosmo-netif-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: libosmo-netif (= ${binary:Version}), ${misc:Depends}
+Description: Debug symbols for Osmocom network interface
