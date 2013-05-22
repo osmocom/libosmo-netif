@@ -143,11 +143,11 @@ osmo_rtp_build(struct osmo_rtp_handle *h, uint8_t payload_type,
 {
 	struct msgb *msg;
 	struct rtp_hdr *rtph;
-	struct timeval tv, tv_diff = {};
+	struct timeval tv, tv_diff;
 	long int usec_diff, frame_diff;
 
 	gettimeofday(&tv, NULL);
-	timersub(&tv_diff, &h->tx.last_tv, &tv);
+	timersub(&tv, &h->tx.last_tv, &tv_diff);
 	h->tx.last_tv = tv;
 
 	usec_diff = tv_diff.tv_sec * 1000000 + tv_diff.tv_usec;
