@@ -619,7 +619,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 	int ret;
 	unsigned int offset = 0;
 	int msg_len = msg->len, len = size;
-	struct osmux_hdr *osmuxh = (struct osmux_hdr *)msg->data;
+	struct osmux_hdr *osmuxh;
 	int this_len = 0;
 
 	while (msg_len > 0) {
