@@ -118,7 +118,7 @@ int main(void)
 	char buf[1024];
 	struct rtp_hdr *rtph = (struct rtp_hdr *)rtp_pkt;
 	uint16_t seq;
-	int i, j;
+	int i, j, k = 0;
 
 	if (signal(SIGALRM, sigalarm_handler) == SIG_ERR) {
 		perror("signal");
@@ -151,7 +151,13 @@ int main(void)
 		fprintf(stderr, "adding %s\n", buf);
 		rtp_pkts++;
 
+		/* Intentionally skip RTP message to test replay RTP */
+		if (i % 3 == 0)
+			continue;
+
+		k++;
 		osmux_xfrm_input(&h_input, msg, 0);
+
 		if (i % 4 == 0) {
 			gettimeofday(&last, NULL);
 
@@ -164,8 +170,10 @@ int main(void)
 			 * wait until the three RTP messages that are extracted
 			 * from OSMUX has been delivered.
 			 */
-			for (j=0; j<3; j++)
+			for (j=0; j<k; j++)
 				osmo_select_main(0);
+
+			k = 0;
 		}
 	}
 	fprintf(stdout, "OK: Test passed\n");
