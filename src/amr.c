@@ -41,3 +41,22 @@ size_t osmo_amr_bytes(uint8_t amr_ft)
 {
 	return amr_ft_to_bytes[amr_ft];
 }
+
+int osmo_amr_ft_valid(uint8_t amr_ft)
+{
+	/*
+	 * Extracted from RFC3267:
+	 *
+	 * "... with a FT value in the range 9-14 for AMR ... the whole packet
+	 *  SHOULD be discarded."
+	 *
+	 * "... packets containing only NO_DATA frames (FT=15) SHOULD NOT be
+	 *  transmitted."
+	 *
+	 * So, let's discard frames with a AMR FT >= 9.
+	 */
+	if (amr_ft >= 9)
+		return 0;
+
+	return 1;
+}

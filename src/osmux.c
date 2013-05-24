@@ -59,6 +59,13 @@ struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 		size_t len;
 
 		osmuxh = (struct osmux_hdr *)msg->data;
+
+		if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
+			LOGP(DLMIB, LOGL_ERROR, "Discarding bad AMR FT %d\n",
+			     osmuxh->amr_ft);
+			return NULL;
+		}
+
 		len = osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1) +
 			sizeof(struct osmux_hdr);
 
@@ -311,6 +318,9 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 	if (amrh == NULL)
 		return -1;
 
+	if (!osmo_amr_ft_valid(amrh->ft))
+		return -1;
+
 	return amr_len - sizeof(struct amr_hdr);
 }
 
@@ -367,7 +377,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
 {
 	struct rtp_hdr *rtph;
 	struct batch_list_node *node;
-	int found = 0, bytes = 0;
+	int found = 0, bytes = 0, amr_payload_len;
 
 	llist_for_each_entry(node, &batch->node_list, head) {
 		if (node->ccid == ccid) {
@@ -380,8 +390,12 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
 	if (rtph == NULL)
 		return 0;
 
+	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
+	if (amr_payload_len < 0)
+		return 0;
+
 	/* First check if there is room for this message in the batch */
-	bytes += osmux_rtp_amr_payload_len(msg, rtph);
+	bytes += amr_payload_len;
 	if (!found)
 		bytes += sizeof(struct osmux_hdr);
 
@@ -443,7 +457,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
  */
 int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 {
-	int ret;
+	int ret, first_rtp_msg;
 	struct rtp_hdr *rtph;
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
@@ -463,14 +477,20 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 			/* This is the first message in the batch, start the
 			 * batch timer to deliver it.
 			 */
-			if (llist_empty(&batch->node_list)) {
+			first_rtp_msg = llist_empty(&batch->node_list) ? 1 : 0;
+
+			/* Add this RTP to the OSMUX batch */
+			ret = osmux_batch_add(batch, msg, ccid);
+			if (ret < 0)
+				return 0;
+
+			if (first_rtp_msg) {
 				LOGP(DLMIB, LOGL_DEBUG,
 					"osmux start timer batch\n");
 
 				osmo_timer_schedule(&batch->timer, 0,
 					h->batch_factor * DELTA_RTP_MSG);
 			}
-			ret = osmux_batch_add(batch, msg, ccid);
 			break;
 	}
 	return ret;
