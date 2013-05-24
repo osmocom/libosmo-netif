@@ -56,10 +56,19 @@ struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 	struct osmux_hdr *osmuxh = NULL;
 
 	if (msg->len > sizeof(struct osmux_hdr)) {
-		osmuxh = (struct osmux_hdr *)msg->data;
+		size_t len;
 
-		msgb_pull(msg, sizeof(struct osmux_hdr) +
-			  (osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1)));
+		osmuxh = (struct osmux_hdr *)msg->data;
+		len = osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1) +
+			sizeof(struct osmux_hdr);
+
+		if (len > msg->len) {
+			LOGP(DLMIB, LOGL_ERROR, "Discarding malformed "
+						"OSMUX message\n");
+			return NULL;
+		}
+
+		msgb_pull(msg, len);
 	} else if (msg->len > 0) {
 		LOGP(DLMIB, LOGL_ERROR,
 			"remaining %d bytes, broken osmuxhdr?\n", msg->len);
