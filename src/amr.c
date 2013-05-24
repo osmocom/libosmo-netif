@@ -34,6 +34,7 @@ static size_t amr_ft_to_bytes[AMR_FT_MAX] = {
 	[AMR_FT_5]	= 20,
 	[AMR_FT_6]	= 26,
 	[AMR_FT_7]	= 31,
+	[AMR_FT_SID]	= 6,
 };
 
 size_t osmo_amr_bytes(uint8_t amr_ft)

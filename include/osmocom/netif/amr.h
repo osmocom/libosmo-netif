@@ -75,7 +75,8 @@ static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
 #define AMR_FT_5	5	/* 7.95 */
 #define AMR_FT_6	6	/* 10.2 */
 #define AMR_FT_7	7	/* 12.2 */
-#define AMR_FT_MAX	8
+#define AMR_FT_SID	8	/* SID */
+#define AMR_FT_MAX	9
 
 size_t osmo_amr_bytes(uint8_t amr_cmr);
 
