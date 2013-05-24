@@ -3,14 +3,14 @@
 
 /* OSmux header:
  *
- *	ft (4 bits):		0=signalling, 1=voice (AMR-CMR)
- * 	amr_cmr (4 bits): 	see cmr field in AMR header (RFC3267)
- * 	circuit_id (8 bits):	simplified version of RTP SSRC
- * 	seq (8-bits): 		combination of RTP timestamp and seq. number
- *	amr_f (1-bits):		AMR f bit (RFC3267)
- *	amr_ft (4-bits):	AMR ft bit (RFC3267)
- *	amr_q (1-bits): 	AMR q bit (RFC3267)
- * 	rtp_marker (1 bits):	RTP marker
+ *	ft (3 bits):		0=signalling, 1=voice
+ *	ctr (3 bits):		Number of batched AMR payloads (starting 0)
+ *	amr_f (1 bit):		AMR F field (RFC3267)
+ *	amr_q (1 bit): 		AMR Q field (RFC3267)
+ * 	seq (8 bits): 		Combination of RTP timestamp and seq. number
+ * 	circuit_id (8 bits):	Circuit ID, ie. Call identifier.
+ *	amr_ft (4 bits):	AMR FT field (RFC3267)
+ * 	amr_cmr (4 bits): 	AMR CMT field (RFC3267)
  */
 
 #define OSMUX_FT_SIGNAL		0
