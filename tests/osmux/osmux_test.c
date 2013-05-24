@@ -106,6 +106,12 @@ struct osmux_in_handle h_input = {
 	.deliver	= osmux_deliver,
 };
 
+static void sigalarm_handler(int foo)
+{
+	printf("FAIL: test did not run successfully\n");
+	exit(EXIT_FAILURE);
+}
+
 int main(void)
 {
 	struct msgb *msg;
@@ -114,12 +120,20 @@ int main(void)
 	uint16_t seq;
 	int i, j;
 
+	if (signal(SIGALRM, sigalarm_handler) == SIG_ERR) {
+		perror("signal");
+		exit(EXIT_FAILURE);
+	}
+
 	/* This test doesn't use it, but osmux requires it internally. */
 	osmo_init_logging(&osmux_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	osmux_xfrm_input_init(&h_input);
 	osmux_xfrm_output_init(&h_output, 0x7000000);
+
+	/* If the test takes longer than 10 seconds, abort it */
+	alarm(10);
 
 	for (i=1; i<64; i++) {
 		msg = msgb_alloc(1500, "test");
