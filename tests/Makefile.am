@@ -3,7 +3,7 @@ AM_CFLAGS = -Wall $(all_includes) -I$(top_srcdir)/include
 check_PROGRAMS = osmux/osmux_test
 
 osmux_osmux_test_SOURCES = osmux/osmux_test.c
-osmux_osmux_test_LDADD = -losmocore -losmonetif
+osmux_osmux_test_LDADD = -losmocore $(top_builddir)/src/libosmonetif.la
 
 # The `:;' works around a Bash 3.2 bug when the output is not writeable.
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac
