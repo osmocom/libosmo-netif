@@ -131,6 +131,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	h->rtp_timestamp += DELTA_RTP_TIMESTAMP;
 
 	osmo_rtp_snprintf(buf, sizeof(buf), out_msg);
+	buf[sizeof(buf)-1] = '\0';
 	LOGP(DLMIB, LOGL_DEBUG, "%s\n", buf);
 
 	return out_msg;
@@ -160,6 +161,7 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 			continue;
 
 		osmo_rtp_snprintf(buf, sizeof(buf), msg);
+		buf[sizeof(buf)-1] = '\0';
 		LOGP(DLMIB, LOGL_DEBUG, "extracted: %s\n", buf);
 		llist_add_tail(&msg->list, list);
 	}
@@ -266,6 +268,7 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 			int add_osmux_hdr = 0;
 
 			osmo_rtp_snprintf(buf, sizeof(buf), cur);
+			buf[sizeof(buf)-1] = '\0';
 			LOGP(DLMIB, LOGL_DEBUG, "built: %s\n", buf);
 
 			rtph = osmo_rtp_get_hdr(cur);
