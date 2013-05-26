@@ -23,7 +23,7 @@
 
 #include <arpa/inet.h>
 
-#define DEBUG_TIMING		1
+#define DEBUG_TIMING		0
 
 /* XXX: MTU - iphdr (20 bytes) - udphdr (8 bytes) */
 #define OSMUX_BATCH_MAX		1472
