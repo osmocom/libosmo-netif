@@ -62,7 +62,7 @@ static void tx_cb(struct msgb *msg, void *data)
 	timersub(&now, &last, &diff);
 	last = now;
 
-	if (diff.tv_usec > 17000) {
+	if (diff.tv_usec > 2*17000) {
 		fprintf(stdout, "lagging to deliver reconstructed RTP\n");
 		exit(EXIT_FAILURE);
 	}
