@@ -29,12 +29,12 @@ struct osmo_ipa_unit *osmo_ipa_unit_alloc(size_t datalen)
 	if (unit == NULL)
 		return NULL;
 
-	unit->name = strdup("");
-	unit->hwvers = strdup("");
-	unit->swvers = strdup("");
-	unit->location1 = strdup("");
-	unit->location2 = strdup("");
-	unit->serno = strdup("");
+	unit->name = talloc_strdup(unit, "");
+	unit->hwvers = talloc_strdup(unit, "");
+	unit->swvers = talloc_strdup(unit, "");
+	unit->location1 = talloc_strdup(unit, "");
+	unit->location2 = talloc_strdup(unit, "");
+	unit->serno = talloc_strdup(unit, "");
 
 	return unit;
 }
@@ -82,7 +82,7 @@ void osmo_ipa_unit_set_unit_name(struct osmo_ipa_unit *unit, const char *name)
 	if (unit->name)
 		free(unit->name);
 
-	unit->name = strdup(name);
+	unit->name = talloc_strdup(unit, name);
 }
 
 void osmo_ipa_unit_set_unit_hwvers(struct osmo_ipa_unit *unit, const char *vers)
@@ -90,7 +90,7 @@ void osmo_ipa_unit_set_unit_hwvers(struct osmo_ipa_unit *unit, const char *vers)
 	if (unit->hwvers)
 		free(unit->hwvers);
 
-	unit->hwvers = strdup(vers);
+	unit->hwvers = talloc_strdup(unit, vers);
 }
 
 void osmo_ipa_unit_set_unit_swvers(struct osmo_ipa_unit *unit, const char *vers)
@@ -98,7 +98,7 @@ void osmo_ipa_unit_set_unit_swvers(struct osmo_ipa_unit *unit, const char *vers)
 	if (unit->swvers)
 		free(unit->swvers);
 
-	unit->swvers = strdup(vers);
+	unit->swvers = talloc_strdup(unit, vers);
 }
 
 void osmo_ipa_unit_set_unit_mac_addr(struct osmo_ipa_unit *unit, uint8_t *addr)
@@ -111,7 +111,7 @@ void osmo_ipa_unit_set_unit_location1(struct osmo_ipa_unit *unit, const char *lo
 	if (unit->location1)
 		free(unit->location1);
 
-	unit->location1 = strdup(loc);
+	unit->location1 = talloc_strdup(unit, loc);
 }
 
 void osmo_ipa_unit_set_unit_location2(struct osmo_ipa_unit *unit, const char *loc)
@@ -119,12 +119,12 @@ void osmo_ipa_unit_set_unit_location2(struct osmo_ipa_unit *unit, const char *lo
 	if (unit->location2)
 		free(unit->location2);
 
-	unit->location2 = strdup(loc);
+	unit->location2 = talloc_strdup(unit, loc);
 }
 
 void osmo_ipa_unit_set_unit_serno(struct osmo_ipa_unit *unit, const char *serno)
 {
-	unit->serno = strdup(serno);
+	unit->serno = talloc_strdup(unit, serno);
 }
 
 uint16_t osmo_ipa_unit_get_site_id(struct osmo_ipa_unit *unit)
