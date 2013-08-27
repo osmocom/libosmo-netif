@@ -464,6 +464,12 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	struct rtp_hdr *rtph;
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
+	/* Ignore too big RTP/RTCP messages, most likely forged. Sanity check
+	 * to avoid a possible forever loop in the caller.
+	 */
+	if (msg->len > OSMUX_BATCH_MAX - sizeof(struct osmux_hdr))
+		return 1;
+
 	rtph = osmo_rtp_get_hdr(msg);
 	if (rtph == NULL)
 		return 0;
