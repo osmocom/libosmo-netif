@@ -347,6 +347,10 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 
 	diff = ntohs(cur_rtph->sequence) - ntohs(rtph->sequence);
 
+	/* Lifesaver: make sure bugs don't spawn lots of clones */
+	if (diff > 16)
+		diff = 16;
+
 	/* If diff between last RTP packet seen and this one is > 1,
 	 * then we lost several RTP packets, let's replay them.
 	 */
