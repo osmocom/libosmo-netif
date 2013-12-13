@@ -661,7 +661,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 	unsigned int offset = 0;
 	int msg_len = msg->len, len = size;
 	struct osmux_hdr *osmuxh;
-	int this_len = 0;
+	int this_len, msg_off = 0;
 
 	while (msg_len > 0) {
 		if (msg_len < sizeof(struct osmux_hdr)) {
@@ -670,7 +670,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 			     msg_len);
 			return -1;
 		}
-		osmuxh = (struct osmux_hdr *)((uint8_t *)msg->data + this_len);
+		osmuxh = (struct osmux_hdr *)((uint8_t *)msg->data + msg_off);
 
 		ret = osmux_snprintf_header(buf+offset, size, osmuxh);
 		if (ret < 0)
@@ -679,6 +679,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 
 		this_len = sizeof(struct osmux_hdr) +
 			   osmux_get_payload_len(osmuxh);
+		msg_off += this_len;
 
 		if (msg_len < this_len) {
 			LOGP(DLMIB, LOGL_ERROR,
