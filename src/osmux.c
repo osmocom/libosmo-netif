@@ -599,10 +599,9 @@ osmux_tx_sched(struct llist_head *list,
 
 		LOGP(DLMIB, LOGL_DEBUG, "scheduled transmision in %lu.%6lu "
 			"seconds, msg=%p\n", when.tv_sec, when.tv_usec, cur);
-
+		llist_del(&cur->list);
 		osmux_tx(cur, &when, tx_cb, data);
 		timeradd(&when, &delta, &when);
-		llist_del(&cur->list);
 	}
 }
 
