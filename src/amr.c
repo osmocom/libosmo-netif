@@ -55,7 +55,7 @@ int osmo_amr_ft_valid(uint8_t amr_ft)
 	 *
 	 * So, let's discard frames with a AMR FT >= 9.
 	 */
-	if (amr_ft >= 9)
+	if (amr_ft >= AMR_FT_MAX)
 		return 0;
 
 	return 1;
