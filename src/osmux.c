@@ -672,6 +672,12 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 		}
 		osmuxh = (struct osmux_hdr *)((uint8_t *)msg->data + msg_off);
 
+		if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
+			LOGP(DLMIB, LOGL_ERROR, "Bad AMR FT %d, skipping\n",
+			     osmuxh->amr_ft);
+			return -1;
+		}
+
 		ret = osmux_snprintf_header(buf+offset, size, osmuxh);
 		if (ret < 0)
 			break;
