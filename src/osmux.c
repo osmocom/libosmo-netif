@@ -380,9 +380,9 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 }
 
 static int
-osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
+osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
+		struct rtp_hdr *rtph, int ccid)
 {
-	struct rtp_hdr *rtph;
 	struct batch_list_node *node;
 	int found = 0, bytes = 0, amr_payload_len;
 
@@ -392,10 +392,6 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg, int ccid)
 			break;
 		}
 	}
-
-	rtph = osmo_rtp_get_hdr(msg);
-	if (rtph == NULL)
-		return 0;
 
 	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
 	if (amr_payload_len < 0)
@@ -493,7 +489,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 			first_rtp_msg = llist_empty(&batch->node_list) ? 1 : 0;
 
 			/* Add this RTP to the OSMUX batch */
-			ret = osmux_batch_add(batch, msg, ccid);
+			ret = osmux_batch_add(batch, msg, rtph, ccid);
 			if (ret < 0)
 				return 0;
 
