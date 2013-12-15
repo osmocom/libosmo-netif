@@ -472,7 +472,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	 * to avoid a possible forever loop in the caller.
 	 */
 	if (msg->len > OSMUX_BATCH_MAX - sizeof(struct osmux_hdr))
-		return 1;
+		return 0;
 
 	rtph = osmo_rtp_get_hdr(msg);
 	if (rtph == NULL)
