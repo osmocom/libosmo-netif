@@ -156,7 +156,10 @@ int main(void)
 			continue;
 
 		k++;
-		osmux_xfrm_input(&h_input, msg, 0);
+		/* Fan out RTP packets between two circuit IDs to test
+		 * multi-batch support.
+		 */
+		osmux_xfrm_input(&h_input, msg, i % 2);
 
 		if (i % 4 == 0) {
 			gettimeofday(&last, NULL);
@@ -166,11 +169,12 @@ int main(void)
 			 */
 			osmux_xfrm_input_deliver(&h_input);
 
-			/* The first RTP message that is delivered immediately,
-			 * wait until the three RTP messages that are extracted
-			 * from OSMUX has been delivered.
+			/* The first two RTP message (one per circuit ID batch)
+			 * are delivered immediately, wait until the three RTP
+			 * messages that are extracted from OSMUX has been
+			 * delivered.
 			 */
-			for (j=0; j<k; j++)
+			for (j=0; j<k-2; j++)
 				osmo_select_main(0);
 
 			k = 0;
