@@ -413,7 +413,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 		struct rtp_hdr *rtph, int ccid)
 {
 	struct batch_list_node *node;
-	int found = 0, bytes = 0, amr_payload_len;
+	int found = 0, bytes = 0, amr_payload_len, real_plen;
 
 	llist_for_each_entry(node, &batch->node_list, head) {
 		if (node->ccid == ccid) {
@@ -425,6 +425,14 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
 	if (amr_payload_len < 0)
 		return 0;
+
+	real_plen = msg->len - sizeof(struct rtp_hdr) - sizeof(struct amr_hdr);
+	/* The AMR payload does not fit with what we expect */
+	if (amr_payload_len != real_plen) {
+		LOGP(DLMIB, LOGL_DEBUG, "adding msg with ssrc=%u to batch\n",
+		     rtph->ssrc);
+		return 0;
+	}
 
 	/* First check if there is room for this message in the batch */
 	bytes += amr_payload_len;
