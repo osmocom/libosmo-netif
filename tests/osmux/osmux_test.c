@@ -148,16 +148,14 @@ int main(void)
 		rtph->sequence = htons(seq);
 
 		osmo_rtp_snprintf(buf, sizeof(buf), msg);
-		fprintf(stderr, "adding %s\n", buf);
+		fprintf(stderr, "adding to ccid=%u %s\n", i % 2, buf);
 		rtp_pkts++;
-
-		/* Intentionally skip RTP message to test replay RTP */
-		if (i % 3 == 0)
-			continue;
 
 		k++;
 		/* Fan out RTP packets between two circuit IDs to test
-		 * multi-batch support.
+		 * multi-batch support. Mind that this approach implicitly add
+		 * gaps between two messages to test the osmux replaying
+		 * feature.
 		 */
 		osmux_xfrm_input(&h_input, msg, i % 2);
 
