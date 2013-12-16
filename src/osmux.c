@@ -345,6 +345,7 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 {
 	struct amr_hdr *amrh;
 	unsigned int amr_len;
+	int amr_payload_len;
 
 	amrh = osmo_rtp_get_payload(rtph, msg, &amr_len);
 	if (amrh == NULL)
@@ -353,7 +354,16 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 	if (!osmo_amr_ft_valid(amrh->ft))
 		return -1;
 
-	return amr_len - sizeof(struct amr_hdr);
+	amr_payload_len = amr_len - sizeof(struct amr_hdr);
+
+	/* The AMR payload does not fit with what we expect */
+	if (osmo_amr_bytes(amrh->ft) != amr_payload_len) {
+		LOGP(DLMIB, LOGL_ERROR,
+		     "Bad AMR frame, expected %zd bytes, got %d bytes\n",
+		     osmo_amr_bytes(amrh->ft), amr_len);
+		return -1;
+	}
+	return amr_payload_len;
 }
 
 static void osmux_replay_lost_packets(struct batch_list_node *node,
@@ -413,7 +423,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 		struct rtp_hdr *rtph, int ccid)
 {
 	struct batch_list_node *node;
-	int found = 0, bytes = 0, amr_payload_len, real_plen;
+	int found = 0, bytes = 0, amr_payload_len;
 
 	llist_for_each_entry(node, &batch->node_list, head) {
 		if (node->ccid == ccid) {
@@ -425,14 +435,6 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
 	if (amr_payload_len < 0)
 		return 0;
-
-	real_plen = msg->len - sizeof(struct rtp_hdr) - sizeof(struct amr_hdr);
-	/* The AMR payload does not fit with what we expect */
-	if (amr_payload_len != real_plen) {
-		LOGP(DLMIB, LOGL_DEBUG, "adding msg with ssrc=%u to batch\n",
-		     rtph->ssrc);
-		return 0;
-	}
 
 	/* First check if there is room for this message in the batch */
 	bytes += amr_payload_len;
