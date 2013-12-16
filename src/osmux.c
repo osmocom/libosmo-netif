@@ -176,6 +176,41 @@ struct osmux_batch {
 	uint8_t			seq;
 };
 
+struct batch_list_node {
+	struct llist_head	head;
+	int			ccid;
+	struct llist_head	list;
+	int			nmsgs;
+};
+
+static void osmux_batch_enqueue(struct msgb *msg, struct batch_list_node *node)
+{
+	/* Too many messages per batch, discard it. The counter field of the
+	 * osmux header is just 3 bits long, so make sure it doesn't overflow.
+	 */
+	if (node->nmsgs >= 8) {
+		struct rtp_hdr *rtph;
+
+		rtph = osmo_rtp_get_hdr(msg);
+		if (rtph == NULL)
+			return;
+
+		LOGP(DLMIB, LOGL_ERROR, "too many messages for this RTP "
+					"ssrc=%u\n", rtph->ssrc);
+		msgb_free(msg);
+		return;
+	}
+
+	llist_add_tail(&msg->list, &node->list);
+	node->nmsgs++;
+}
+
+static void osmux_batch_dequeue(struct msgb *msg, struct batch_list_node *node)
+{
+	llist_del(&msg->list);
+	node->nmsgs--;
+}
+
 static int
 osmux_batch_put(struct osmux_in_handle *h, struct msgb *out_msg,
 		struct msgb *msg, struct rtp_hdr *rtph,
@@ -238,12 +273,6 @@ osmux_xfrm_encode_amr(struct osmux_in_handle *h,
 	return 0;
 }
 
-struct batch_list_node {
-	struct llist_head	head;
-	int			ccid;
-	struct llist_head	list;
-};
-
 static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 {
 	struct msgb *batch_msg;
@@ -282,7 +311,7 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 
 			osmux_xfrm_encode_amr(h, batch_msg, rtph, cur,
 						node->ccid, add_osmux_hdr);
-			llist_del(&cur->list);
+			osmux_batch_dequeue(cur, node);
 			msgb_free(cur);
 			ctr++;
 		}
@@ -375,7 +404,7 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 					DELTA_RTP_TIMESTAMP);
 
 		LOGP(DLMIB, LOGL_ERROR, "adding cloned RTP\n");
-		llist_add_tail(&clone->list, &node->list);
+		osmux_batch_enqueue(clone, node);
 	}
 }
 
@@ -442,7 +471,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 
 	LOGP(DLMIB, LOGL_DEBUG, "adding msg with ssrc=%u to batch\n",
 		rtph->ssrc);
-	llist_add_tail(&msg->list, &node->list);
+	osmux_batch_enqueue(msg, node);
 
 	/* Update remaining room in this batch */
 	batch->remaining_bytes -= bytes;
