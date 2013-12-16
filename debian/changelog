@@ -1,9 +1,10 @@
-libosmo-netif (0.0.2-z5) UNRELEASED; urgency=low
+libosmo-netif (0.0.2-z6) UNRELEASED; urgency=low
 
   * Upgrade with increased test coverage.
   * More changes
   * Fix use after free issue.
   * Fix osmux_snprintf for multiple batched messages
+  * Clean-ups.
 
  -- Holger Hans Peter Freyther <holger@freyther.de>  Sat, 25 May 2013 09:42:30 +0200
 
