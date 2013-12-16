@@ -330,7 +330,7 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 static void osmux_replay_lost_packets(struct batch_list_node *node,
 				      struct rtp_hdr *cur_rtph)
 {
-	uint16_t diff;
+	int16_t diff;
 	struct msgb *last;
 	struct rtp_hdr *rtph;
 	int i;
