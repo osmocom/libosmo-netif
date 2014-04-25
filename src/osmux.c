@@ -91,7 +91,6 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	struct msgb *out_msg;
 	struct rtp_hdr *rtph;
 	struct amr_hdr *amrh;
-	char buf[4096];
 
 	out_msg = msgb_alloc(sizeof(struct rtp_hdr) +
 			     sizeof(struct amr_hdr) +
@@ -130,10 +129,6 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	h->rtp_seq++;
 	h->rtp_timestamp += DELTA_RTP_TIMESTAMP;
 
-	osmo_rtp_snprintf(buf, sizeof(buf), out_msg);
-	buf[sizeof(buf)-1] = '\0';
-	LOGP(DLMIB, LOGL_DEBUG, "%s\n", buf);
-
 	return out_msg;
 }
 
@@ -162,7 +157,7 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 
 		osmo_rtp_snprintf(buf, sizeof(buf), msg);
 		buf[sizeof(buf)-1] = '\0';
-		LOGP(DLMIB, LOGL_DEBUG, "extracted: %s\n", buf);
+		LOGP(DLMIB, LOGL_DEBUG, "to BTS: %s\n", buf);
 		llist_add_tail(&msg->list, list);
 	}
 	return i;
@@ -298,7 +293,7 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 
 			osmo_rtp_snprintf(buf, sizeof(buf), cur);
 			buf[sizeof(buf)-1] = '\0';
-			LOGP(DLMIB, LOGL_DEBUG, "built: %s\n", buf);
+			LOGP(DLMIB, LOGL_DEBUG, "to BSC-NAT: %s\n", buf);
 
 			rtph = osmo_rtp_get_hdr(cur);
 			if (rtph == NULL)
