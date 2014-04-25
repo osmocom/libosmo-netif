@@ -60,7 +60,7 @@ struct amr_hdr {
 		ft:4,
 		f:1;
 #endif
-};
+} __attribute__((packed));
 
 static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
 {
