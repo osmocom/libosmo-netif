@@ -11,6 +11,7 @@ SUBDIRS = channel
 lib_LTLIBRARIES = libosmonetif.la
 
 libosmonetif_la_LIBADD = channel/abis/libosmonetif-abis.la
+libosmonetif_la_LDFLAGS = -version-info $(LIBVERSION) -no-undefined
 
 libosmonetif_la_SOURCES = amr.c			\
 			  channel.c		\
