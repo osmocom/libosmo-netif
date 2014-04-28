@@ -1,4 +1,11 @@
-libosmo-netif (0.0.2-z6) UNRELEASED; urgency=low
+libosmo-netif (0.0.3) UNRELEASED; urgency=medium
+
+  * Bump API due the AMR header structure now being packed
+    and potentially having different storage requirements.
+
+ -- Holger Hans Peter Freyther <holger@freyther.de>  Mon, 28 Apr 2014 20:50:18 +0200
+
+libosmo-netif (0.0.2-z6) unstable; urgency=low
 
   * Upgrade with increased test coverage.
   * More changes
