@@ -5,11 +5,13 @@ Makefile.in
 *.o
 *.lo
 *.la
+*.pc
 aclocal.m4
 acinclude.m4
 aminclude.am
 m4/*.m4
 autom4te.cache
+compile
 config.h*
 config.sub
 config.log
@@ -26,5 +28,21 @@ libtool
 .tarball-version
 .version
 
+tests/atconfig
 tests/package.m4
 tests/testsuite
+
+examples/channel/abis_ipa_stream_client
+examples/channel/abis_ipa_stream_server
+examples/ipa-stream-client
+examples/ipa-stream-server
+examples/lapd-over-datagram-network
+examples/lapd-over-datagram-user
+examples/osmux-test-input
+examples/osmux-test-output
+examples/rs232-read
+examples/rs232-write
+examples/rtp-udp-test-client
+examples/rtp-udp-test-server
+examples/stream-client
+examples/stream-server
