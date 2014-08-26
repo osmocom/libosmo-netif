@@ -29,6 +29,7 @@ struct osmux_hdr {
 		ft:3;
 #endif
 	uint8_t seq;
+#define OSMUX_CID_MAX		255	/* determined by circuit_id */
 	uint8_t circuit_id;
 #if __BYTE_ORDER == __BIG_ENDIAN
 	uint8_t amr_ft:4,
