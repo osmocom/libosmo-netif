@@ -327,6 +327,10 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 
 	LOGP(DLMIB, LOGL_DEBUG, "invoking delivery function\n");
 	batch_msg = osmux_build_batch(h);
+
+	h->stats.output_osmux_msgs++;
+	h->stats.output_osmux_bytes += batch_msg->len;
+
 	h->deliver(batch_msg, h->data);
 	osmo_timer_del(&batch->timer);
 	batch->remaining_bytes = h->batch_size;
@@ -535,6 +539,9 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 			ret = osmux_batch_add(batch, msg, rtph, ccid);
 			if (ret < 0)
 				return 0;
+
+			h->stats.input_rtp_msgs++;
+			h->stats.input_rtp_bytes += msg->len;
 
 			if (first_rtp_msg) {
 				LOGP(DLMIB, LOGL_DEBUG,
