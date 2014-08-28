@@ -178,7 +178,7 @@ struct batch_list_node {
 	int			nmsgs;
 };
 
-static void osmux_batch_enqueue(struct msgb *msg, struct batch_list_node *node)
+static int osmux_batch_enqueue(struct msgb *msg, struct batch_list_node *node)
 {
 	/* Too many messages per batch, discard it. The counter field of the
 	 * osmux header is just 3 bits long, so make sure it doesn't overflow.
@@ -188,16 +188,17 @@ static void osmux_batch_enqueue(struct msgb *msg, struct batch_list_node *node)
 
 		rtph = osmo_rtp_get_hdr(msg);
 		if (rtph == NULL)
-			return;
+			return -1;
 
 		LOGP(DLMIB, LOGL_ERROR, "too many messages for this RTP "
 					"ssrc=%u\n", rtph->ssrc);
 		msgb_free(msg);
-		return;
+		return -1;
 	}
 
 	llist_add_tail(&msg->list, &node->list);
 	node->nmsgs++;
+	return 0;
 }
 
 static void osmux_batch_dequeue(struct msgb *msg, struct batch_list_node *node)
@@ -408,8 +409,11 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 		rtph->timestamp = htonl(ntohl(rtph->timestamp) +
 					DELTA_RTP_TIMESTAMP);
 
+		/* No more room in this batch, skip padding with more clones */
+		if (osmux_batch_enqueue(clone, node) < 0)
+			break;
+
 		LOGP(DLMIB, LOGL_ERROR, "adding cloned RTP\n");
-		osmux_batch_enqueue(clone, node);
 	}
 }
 
@@ -474,9 +478,12 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 		llist_add_tail(&node->head, &batch->node_list);
 	}
 
+	/* This batch is full, force batch delivery */
+	if (osmux_batch_enqueue(msg, node) < 0)
+		return 1;
+
 	LOGP(DLMIB, LOGL_DEBUG, "adding msg with ssrc=%u to batch\n",
 		rtph->ssrc);
-	osmux_batch_enqueue(msg, node);
 
 	/* Update remaining room in this batch */
 	batch->remaining_bytes -= bytes;
