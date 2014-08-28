@@ -557,6 +557,18 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	h->internal_data = (void *)batch;
 }
 
+void osmux_xfrm_input_fini(struct osmux_in_handle *h)
+{
+	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
+	struct batch_list_node *node, *next;
+
+	llist_for_each_entry_safe(node, next, &batch->node_list, head) {
+		llist_del(&node->head);
+		talloc_free(node);
+	}
+	talloc_free(batch);
+}
+
 struct osmux_tx_handle {
 	struct osmo_timer_list	timer;
 	struct msgb		*msg;

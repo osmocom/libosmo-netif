@@ -68,6 +68,7 @@ static inline uint8_t *osmux_get_payload(struct osmux_hdr *osmuxh)
 int osmux_snprintf(char *buf, size_t size, struct msgb *msg);
 
 void osmux_xfrm_input_init(struct osmux_in_handle *h);
+void osmux_xfrm_input_fini(struct osmux_in_handle *h);
 
 int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid);
 void osmux_xfrm_input_deliver(struct osmux_in_handle *h);
