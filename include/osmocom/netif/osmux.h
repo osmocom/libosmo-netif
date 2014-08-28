@@ -44,6 +44,7 @@ struct osmux_hdr {
 struct osmux_in_handle {
 	uint8_t osmux_seq;
 	uint8_t batch_factor;
+	uint16_t batch_size;
 	void (*deliver)(struct msgb *msg, void *data);
 	void *data;
 	char *internal_data;	/* internal data to store batch */

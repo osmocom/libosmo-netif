@@ -25,7 +25,7 @@
 
 #define DEBUG_TIMING		0
 
-/* XXX: MTU - iphdr (20 bytes) - udphdr (8 bytes) */
+/* Default: MTU - iphdr (20 bytes) - udphdr (8 bytes) */
 #define OSMUX_BATCH_MAX		1472
 
 /* delta time between two RTP messages */
@@ -277,7 +277,7 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 
 	LOGP(DLMIB, LOGL_DEBUG, "Now building batch\n");
 
-	batch_msg = msgb_alloc(OSMUX_BATCH_MAX, "OSMUX");
+	batch_msg = msgb_alloc(h->batch_size, "osmux");
 	if (batch_msg == NULL) {
 		LOGP(DLMIB, LOGL_ERROR, "Not enough memory\n");
 		return NULL;
@@ -326,7 +326,7 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 	batch_msg = osmux_build_batch(h);
 	h->deliver(batch_msg, h->data);
 	osmo_timer_del(&batch->timer);
-	batch->remaining_bytes = OSMUX_BATCH_MAX;
+	batch->remaining_bytes = h->batch_size;
 }
 
 static void osmux_batch_timer_expired(void *data)
@@ -507,7 +507,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	/* Ignore too big RTP/RTCP messages, most likely forged. Sanity check
 	 * to avoid a possible forever loop in the caller.
 	 */
-	if (msg->len > OSMUX_BATCH_MAX - sizeof(struct osmux_hdr))
+	if (msg->len > h->batch_size - sizeof(struct osmux_hdr))
 		return 0;
 
 	rtph = osmo_rtp_get_hdr(msg);
@@ -549,18 +549,22 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 {
 	struct osmux_batch *batch;
 
-	LOGP(DLMIB, LOGL_DEBUG, "initialized osmux input converter\n");
+	/* Default to osmux packet size if not specified */
+	if (h->batch_size == 0)
+		h->batch_size = OSMUX_BATCH_MAX;
 
 	batch = talloc_zero(osmux_ctx, struct osmux_batch);
 	if (batch == NULL)
 		return;
 
 	INIT_LLIST_HEAD(&batch->node_list);
-	batch->remaining_bytes = OSMUX_BATCH_MAX;
+	batch->remaining_bytes = h->batch_size;
 	batch->timer.cb = osmux_batch_timer_expired;
 	batch->timer.data = h;
 
 	h->internal_data = (void *)batch;
+
+	LOGP(DLMIB, LOGL_DEBUG, "initialized osmux input converter\n");
 }
 
 void osmux_xfrm_input_fini(struct osmux_in_handle *h)
