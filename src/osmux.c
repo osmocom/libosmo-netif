@@ -528,6 +528,9 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
  * If 0 is returned, this indicates that the message has been batched or that
  * an error occured and we have skipped the message. If 1 is returned, you
  * have to invoke osmux_xfrm_input_deliver and try again.
+ *
+ * The function takes care of releasing the messages in case of error and
+ * when building the batch.
  */
 int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 {
@@ -538,15 +541,20 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	/* Ignore too big RTP/RTCP messages, most likely forged. Sanity check
 	 * to avoid a possible forever loop in the caller.
 	 */
-	if (msg->len > h->batch_size - sizeof(struct osmux_hdr))
+	if (msg->len > h->batch_size - sizeof(struct osmux_hdr)) {
+		msgb_free(msg);
 		return 0;
+	}
 
 	rtph = osmo_rtp_get_hdr(msg);
-	if (rtph == NULL)
+	if (rtph == NULL) {
+		msgb_free(msg);
 		return 0;
+	}
 
 	switch(rtph->payload_type) {
 		case RTP_PT_RTCP:
+			msgb_free(msg);
 			return 0;
 		default:
 			/* The RTP payload type is dynamically allocated,
