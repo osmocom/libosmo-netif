@@ -617,6 +617,7 @@ void osmux_xfrm_input_fini(struct osmux_in_handle *h)
 		llist_del(&node->head);
 		talloc_free(node);
 	}
+	osmo_timer_del(&batch->timer);
 	talloc_free(batch);
 }
 
