@@ -288,7 +288,9 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 	struct batch_list_node *node, *tnode;
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
+#ifdef DEBUG_MSG
 	LOGP(DLMIB, LOGL_DEBUG, "Now building batch\n");
+#endif
 
 	batch_msg = msgb_alloc(h->batch_size, "osmux");
 	if (batch_msg == NULL) {
