@@ -169,9 +169,9 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 			osmo_rtp_snprintf(buf, sizeof(buf), msg);
 			buf[sizeof(buf)-1] = '\0';
 			LOGP(DLMIB, LOGL_DEBUG, "to BTS: %s\n", buf);
-			llist_add_tail(&msg->list, list);
 		}
 #endif
+		llist_add_tail(&msg->list, list);
 	}
 	return i;
 }
