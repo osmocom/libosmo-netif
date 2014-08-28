@@ -205,7 +205,6 @@ static int osmux_batch_enqueue(struct msgb *msg, struct batch_list_node *node)
 
 		LOGP(DLMIB, LOGL_ERROR, "too many messages for this RTP "
 					"ssrc=%u\n", rtph->ssrc);
-		msgb_free(msg);
 		return -1;
 	}
 
@@ -437,8 +436,10 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 					DELTA_RTP_TIMESTAMP);
 
 		/* No more room in this batch, skip padding with more clones */
-		if (osmux_batch_enqueue(clone, node) < 0)
+		if (osmux_batch_enqueue(clone, node) < 0) {
+			msgb_free(clone);
 			break;
+		}
 
 		LOGP(DLMIB, LOGL_ERROR, "adding cloned RTP\n");
 	}
@@ -460,7 +461,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 
 	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
 	if (amr_payload_len < 0)
-		return 0;
+		return -1;
 
 	/* First check if there is room for this message in the batch */
 	bytes += amr_payload_len;
@@ -481,14 +482,14 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 		llist_for_each_entry(cur, &node->list, list) {
 			struct rtp_hdr *rtph2 = osmo_rtp_get_hdr(cur);
 			if (rtph2 == NULL)
-				return 0;
+				return -1;
 
 			/* Already exists message with this sequence, skip */
 			if (rtph2->sequence == rtph->sequence) {
 				LOGP(DLMIB, LOGL_ERROR, "already exists "
 					"message with seq=%u, skip it\n",
 					rtph->sequence);
-				return 0;
+				return -1;
 			}
 		}
 		/* Handle RTP packet loss scenario */
@@ -498,7 +499,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 		/* This is the first message with that ssrc we've seen */
 		node = talloc_zero(osmux_ctx, struct batch_list_node);
 		if (node == NULL)
-			return 0;
+			return -1;
 
 		node->ccid = ccid;
 		INIT_LLIST_HEAD(&node->list);
@@ -560,8 +561,14 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 
 			/* Add this RTP to the OSMUX batch */
 			ret = osmux_batch_add(batch, msg, rtph, ccid);
-			if (ret < 0)
+			if (ret < 0) {
+				/* Cannot put this message into the batch.
+				 * Malformed, duplicated, OOM. Drop it and tell
+				 * the upper layer that we have digest it.
+				 */
+				msgb_free(msg);
 				return 0;
+			}
 
 			h->stats.input_rtp_msgs++;
 			h->stats.input_rtp_bytes += msg->len;
