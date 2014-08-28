@@ -400,9 +400,8 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 		memcpy(clone->data, last->data, last->len);
 		msgb_put(clone, last->len);
 
+		/* The original RTP message has been already sanity check. */
 		rtph = osmo_rtp_get_hdr(clone);
-		if (rtph == NULL)
-			return;
 
 		/* Adjust sequence number and timestamp */
 		rtph->sequence = htons(ntohs(rtph->sequence) + i);
