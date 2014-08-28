@@ -28,6 +28,11 @@
 #define DEBUG_TIMING		0
 #endif
 
+/* This allows you to debug osmux message transformations (spamming) */
+#if 0
+#define DEBUG_MSG		0
+#endif
+
 /* Default: MTU - iphdr (20 bytes) - udphdr (8 bytes) */
 #define OSMUX_BATCH_MAX		1472
 
@@ -145,7 +150,6 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 
 	for (i=0; i<osmuxh->ctr+1; i++) {
 		struct rtp_hdr *rtph;
-		char buf[4096];
 
 		msg = osmux_rebuild_rtp(h, osmuxh,
 					osmux_get_payload(osmuxh) +
@@ -158,10 +162,16 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 		if (rtph == NULL)
 			continue;
 
-		osmo_rtp_snprintf(buf, sizeof(buf), msg);
-		buf[sizeof(buf)-1] = '\0';
-		LOGP(DLMIB, LOGL_DEBUG, "to BTS: %s\n", buf);
-		llist_add_tail(&msg->list, list);
+#ifdef DEBUG_MSG
+		{
+			char buf[4096];
+
+			osmo_rtp_snprintf(buf, sizeof(buf), msg);
+			buf[sizeof(buf)-1] = '\0';
+			LOGP(DLMIB, LOGL_DEBUG, "to BTS: %s\n", buf);
+			llist_add_tail(&msg->list, list);
+		}
+#endif
 	}
 	return i;
 }
@@ -292,19 +302,24 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 
 		llist_for_each_entry_safe(cur, tmp, &node->list, list) {
 			struct rtp_hdr *rtph;
-			char buf[4096];
 			int add_osmux_hdr = 0;
+
+#ifdef DEBUG_MSG
+			char buf[4096];
 
 			osmo_rtp_snprintf(buf, sizeof(buf), cur);
 			buf[sizeof(buf)-1] = '\0';
 			LOGP(DLMIB, LOGL_DEBUG, "to BSC-NAT: %s\n", buf);
+#endif
 
 			rtph = osmo_rtp_get_hdr(cur);
 			if (rtph == NULL)
 				return NULL;
 
 			if (ctr == 0) {
+#ifdef DEBUG_MSG
 				LOGP(DLMIB, LOGL_DEBUG, "add osmux header\n");
+#endif
 				add_osmux_hdr = 1;
 			}
 
@@ -325,7 +340,9 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 	struct msgb *batch_msg;
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
+#ifdef DEBUG_MSG
 	LOGP(DLMIB, LOGL_DEBUG, "invoking delivery function\n");
+#endif
 	batch_msg = osmux_build_batch(h);
 
 	h->stats.output_osmux_msgs++;
@@ -340,7 +357,9 @@ static void osmux_batch_timer_expired(void *data)
 {
 	struct osmux_in_handle *h = data;
 
+#ifdef DEBUG_MSG
 	LOGP(DLMIB, LOGL_DEBUG, "osmux_batch_timer_expired\n");
+#endif
 	osmux_xfrm_input_deliver(h);
 }
 
@@ -464,7 +483,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 
 			/* Already exists message with this sequence, skip */
 			if (rtph2->sequence == rtph->sequence) {
-				LOGP(DLMIB, LOGL_DEBUG, "already exists "
+				LOGP(DLMIB, LOGL_ERROR, "already exists "
 					"message with seq=%u, skip it\n",
 					rtph->sequence);
 				return 0;
@@ -488,8 +507,10 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 	if (osmux_batch_enqueue(msg, node) < 0)
 		return 1;
 
+#ifdef DEBUG_MSG
 	LOGP(DLMIB, LOGL_DEBUG, "adding msg with ssrc=%u to batch\n",
 		rtph->ssrc);
+#endif
 
 	/* Update remaining room in this batch */
 	batch->remaining_bytes -= bytes;
@@ -544,9 +565,10 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 			h->stats.input_rtp_bytes += msg->len;
 
 			if (first_rtp_msg) {
+#ifdef DEBUG_MSG
 				LOGP(DLMIB, LOGL_DEBUG,
 					"osmux start timer batch\n");
-
+#endif
 				osmo_timer_schedule(&batch->timer, 0,
 					h->batch_factor * DELTA_RTP_MSG);
 			}
@@ -659,8 +681,10 @@ osmux_tx_sched(struct llist_head *list,
 
 	llist_for_each_entry_safe(cur, tmp, list, list) {
 
+#ifdef DEBUG_MSG
 		LOGP(DLMIB, LOGL_DEBUG, "scheduled transmision in %lu.%6lu "
 			"seconds, msg=%p\n", when.tv_sec, when.tv_usec, cur);
+#endif
 		llist_del(&cur->list);
 		osmux_tx(cur, &when, tx_cb, data);
 		timeradd(&when, &delta, &when);
