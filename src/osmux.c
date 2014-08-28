@@ -23,7 +23,10 @@
 
 #include <arpa/inet.h>
 
+/* This allows you to debug timing reconstruction in the output path */
+#if 0
 #define DEBUG_TIMING		0
+#endif
 
 /* Default: MTU - iphdr (20 bytes) - udphdr (8 bytes) */
 #define OSMUX_BATCH_MAX		1472
