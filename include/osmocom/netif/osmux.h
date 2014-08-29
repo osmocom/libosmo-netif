@@ -76,6 +76,9 @@ static inline uint8_t *osmux_get_payload(struct osmux_hdr *osmuxh)
 
 int osmux_snprintf(char *buf, size_t size, struct msgb *msg);
 
+/* 1500 - sizeof(iphdr) = 20 bytes - sizeof(udphdr) = 8 bytes. */
+#define OSMUX_BATCH_DEFAULT_MAX		1472
+
 void osmux_xfrm_input_init(struct osmux_in_handle *h);
 void osmux_xfrm_input_fini(struct osmux_in_handle *h);
 

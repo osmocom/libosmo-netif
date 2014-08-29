@@ -33,9 +33,6 @@
 #define DEBUG_MSG		0
 #endif
 
-/* Default: MTU - iphdr (20 bytes) - udphdr (8 bytes) */
-#define OSMUX_BATCH_MAX		1472
-
 /* delta time between two RTP messages */
 #define DELTA_RTP_MSG		16000
 #define DELTA_RTP_TIMESTAMP	160
@@ -600,7 +597,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 
 	/* Default to osmux packet size if not specified */
 	if (h->batch_size == 0)
-		h->batch_size = OSMUX_BATCH_MAX;
+		h->batch_size = OSMUX_BATCH_DEFAULT_MAX;
 
 	batch = talloc_zero(osmux_ctx, struct osmux_batch);
 	if (batch == NULL)
