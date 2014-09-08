@@ -31,6 +31,8 @@ libtool
 tests/atconfig
 tests/package.m4
 tests/testsuite
+tests/osmux/osmux_test
+tests/testsuite.log
 
 examples/channel/abis_ipa_stream_client
 examples/channel/abis_ipa_stream_server
