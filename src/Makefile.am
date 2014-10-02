@@ -4,13 +4,13 @@ LIBVERSION=2:0:0
 
 AM_CPPFLAGS = $(all_includes) -I$(top_srcdir)/include -I$(top_builddir)
 AM_CFLAGS= -fPIC -Wall $(LIBOSMOCORE_CFLAGS) $(LIBOSMOGSM_CFLAGS) $(LIBOSMOVTY_CFLAGS) $(COVERAGE_CFLAGS)
-AM_LDFLAGS = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS) $(COVERAGE_LDFLAGS)
+AM_LDFLAGS = $(COVERAGE_LDFLAGS)
 
 SUBDIRS = channel
 
 lib_LTLIBRARIES = libosmonetif.la
 
-libosmonetif_la_LIBADD = channel/abis/libosmonetif-abis.la
+libosmonetif_la_LIBADD = channel/abis/libosmonetif-abis.la $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBOSMOVTY_LIBS)
 libosmonetif_la_LDFLAGS = -version-info $(LIBVERSION) -no-undefined
 
 libosmonetif_la_SOURCES = amr.c			\
