@@ -1,4 +1,4 @@
-AM_CFLAGS = -Wall $(all_includes) -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS)
+AM_CFLAGS = -Wall -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS)
 AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS)
 
 check_PROGRAMS = osmux/osmux_test

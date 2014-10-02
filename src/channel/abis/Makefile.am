@@ -1,4 +1,4 @@
-AM_CPPFLAGS = $(all_includes) -I$(top_srcdir)/include -I$(top_builddir)
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)
 AM_CFLAGS= -fPIC -Wall $(LIBOSMOCORE_CFLAGS) $(LIBOSMOGSM_CFLAGS) $(LIBOSMOVTY_CFLAGS) $(COVERAGE_CFLAGS)
 AM_LDFLAGS = $(COVERAGE_LDFLAGS)
 
