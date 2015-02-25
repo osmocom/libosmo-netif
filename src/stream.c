@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include <osmocom/core/timer.h>
 #include <osmocom/core/select.h>
