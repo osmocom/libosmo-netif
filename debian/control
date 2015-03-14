@@ -2,8 +2,8 @@ Source: libosmo-netif
 Section: libs
 Priority: optional
 Maintainer: Holger Hans Peter Freyther <holger@moiji-mobile.com>
-Build-Depends: debhelper (>= 7.0.50~), autotools-dev, autoconf, automake, libtool, dh-autoreconf, libdpkg-perl, git, libosmocore-dev, libosmo-abis-dev, pkg-config, libortp-dev
-Standards-Version: 3.8.4
+Build-Depends: debhelper (>= 9), autotools-dev, autoconf, automake, libtool, dh-autoreconf, libdpkg-perl, git, libosmocore-dev, libosmo-abis-dev, pkg-config, libortp-dev
+Standards-Version: 3.9.6
 Vcs-Git: git://git.osmocom.org/libosmo-netif.git
 Vcs-Browser: http://git.osmocom.org/gitweb?p=libosmo-netif.git;a=summary
 
@@ -11,12 +11,14 @@ Package: libosmonetif2
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Multi-Arch: same
 Description: Library containing common/shared code regarding network interface
 
 Package: libosmo-netif-dev
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libosmocore, libosmonetif2
+Depends: ${shlibs:Depends}, ${misc:Depends}, libosmocore, libosmonetif2 (= ${binary:Version})
+Multi-Arch: same
 Description: Development headers for Osmocom network interface
 
 Package: libosmo-netif-dbg
@@ -24,4 +26,5 @@ Section: debug
 Architecture: any
 Priority: extra
 Depends: libosmonetif2 (= ${binary:Version}), ${misc:Depends}
+Multi-Arch: same
 Description: Debug symbols for Osmocom network interface

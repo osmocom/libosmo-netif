@@ -1,1 +1,1 @@
-usr/lib/libosmonetif*.so.*
+usr/lib/*/libosmonetif*.so.*
