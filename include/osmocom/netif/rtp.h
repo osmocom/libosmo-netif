@@ -1,16 +1,18 @@
 #ifndef _OSMO_RTP_H_
 #define _OSMO_RTP_H_
 
+#include <osmocom/core/endian.h>
+
 /* RTP header as defined by RFC 3550 */
 struct rtp_hdr {
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#if OSMO_IS_LITTLE_ENDIAN
 	uint8_t  csrc_count:4,
 		 extension:1,
 		 padding:1,
 		 version:2;
 	uint8_t  payload_type:7,
 		 marker:1;
-#elif __BYTE_ORDER == __BIG_ENDIAN
+#elif OSMO_IS_BIG_ENDIAN
 	uint8_t  version:2,
 		 padding:1,
 		 extension:1,

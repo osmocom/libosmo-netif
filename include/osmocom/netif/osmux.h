@@ -1,6 +1,8 @@
 #ifndef _OSMUX_H_
 #define _OSMUX_H_
 
+#include <osmocom/core/endian.h>
+
 /* OSmux header:
  *
  *	ft (3 bits):		0=signalling, 1=voice
@@ -17,12 +19,12 @@
 #define OSMUX_FT_VOICE_AMR	1
 
 struct osmux_hdr {
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if OSMO_IS_BIG_ENDIAN
 	uint8_t ft:3,
 		ctr:3,
 		amr_f:1,
 		amr_q:1;
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
+#elif OSMO_IS_LITTLE_ENDIAN
 	uint8_t amr_q:1,
 		amr_f:1,
 		ctr:3,
@@ -31,10 +33,10 @@ struct osmux_hdr {
 	uint8_t seq;
 #define OSMUX_CID_MAX		255	/* determined by circuit_id */
 	uint8_t circuit_id;
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if OSMO_IS_BIG_ENDIAN
 	uint8_t amr_ft:4,
 		amr_cmr:4;
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
+#elif OSMO_IS_LITTLE_ENDIAN
 	uint8_t amr_cmr:4,
 		amr_ft:4;
 #endif

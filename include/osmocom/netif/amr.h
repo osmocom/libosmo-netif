@@ -1,6 +1,8 @@
 #ifndef _OSMO_AMR_H_
 #define _OSMO_AMR_H_
 
+#include <osmocom/core/endian.h>
+
 /* As defined by RFC3267: Adaptive Multi-Rate (AMR) */
 
 /*
@@ -41,7 +43,7 @@
  */
 
 struct amr_hdr {
-#if __BYTE_ORDER == __BIG_ENDIAN
+#if OSMO_IS_BIG_ENDIAN
 	/* Payload Header */
 	uint8_t cmr:4,	/* Codec Mode Request */
 		pad1:4;
@@ -50,7 +52,7 @@ struct amr_hdr {
 		ft:4,	/* coding mode */
 		q:1,	/* OK (not damaged) at origin? */
 		pad2:2;
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
+#elif OSMO_IS_LITTLE_ENDIAN
 	/* Payload Header */
 	uint8_t pad1:4,
 		cmr:4;

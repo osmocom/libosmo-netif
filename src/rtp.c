@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <sys/time.h>
-#include <endian.h>
 #include <errno.h>
 #include <string.h>	/* for memcpy. */
 #include <arpa/inet.h>	/* for ntohs. */

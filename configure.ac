@@ -32,8 +32,6 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([char foo;])],
 CFLAGS="$saved_CFLAGS"
 AC_SUBST(SYMBOL_VISIBILITY)
 
-AC_CHECK_HEADER([endian.h], [], [AC_MSG_ERROR([endian.h not found!]) ])
-
 dnl Generate the output
 AM_CONFIG_HEADER(config.h)
 

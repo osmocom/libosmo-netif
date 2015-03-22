@@ -9,6 +9,7 @@
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
 #include <osmocom/core/application.h>
+#include <osmocom/core/endian.h>
 
 #include <osmocom/netif/rs232.h>
 
@@ -110,13 +111,13 @@ static void ubx_checksum(struct msgb *msg, uint8_t *ck)
 	}
 }
 
-# if __BYTE_ORDER == __LITTLE_ENDIAN
+# if OSMO_IS_LITTLE_ENDIAN
 # define utohl(x)       (x)
 # define utohs(x)       (x)
 # define htoul(x)       (x)
 # define htous(x)       (x)
 # else
-#  if __BYTE_ORDER == __BIG_ENDIAN
+#  if OSMO_IS_BIG_ENDIAN
 #   define utohl(x)     __bswap_32 (x)
 #   define utohs(x)     __bswap_16 (x)
 #   define htoul(x)     __bswap_32 (x)
