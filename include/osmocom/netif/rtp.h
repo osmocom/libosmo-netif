@@ -53,6 +53,9 @@ struct rtcp_hdr {
 	existing MTU. */
 #define RTP_MSGB_SIZE  1500
 
+
+struct msgb;
+
 struct osmo_rtp_handle *osmo_rtp_handle_create(void *ctx);
 void osmo_rtp_handle_free(struct osmo_rtp_handle *h);
 
