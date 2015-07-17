@@ -65,6 +65,11 @@ struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 
 		osmuxh = (struct osmux_hdr *)msg->data;
 
+		if (osmuxh->ft != OSMUX_FT_VOICE_AMR) {
+			LOGP(DLMIB, LOGL_ERROR, "Discarding unsupported Osmux FT %d\n",
+			     osmuxh->ft);
+			return NULL;
+		}
 		if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
 			LOGP(DLMIB, LOGL_ERROR, "Discarding bad AMR FT %d\n",
 			     osmuxh->amr_ft);
