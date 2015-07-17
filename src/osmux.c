@@ -181,24 +181,24 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 struct osmux_batch {
 	struct osmo_timer_list	timer;
 	struct osmux_hdr	*osmuxh;
-	struct llist_head	node_list;
+	struct llist_head	circuit_list;
 	unsigned int		remaining_bytes;
 	uint8_t			seq;
 };
 
-struct batch_list_node {
+struct osmux_circuit {
 	struct llist_head	head;
 	int			ccid;
 	struct llist_head	list;
 	int			nmsgs;
 };
 
-static int osmux_batch_enqueue(struct msgb *msg, struct batch_list_node *node)
+static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit)
 {
 	/* Too many messages per batch, discard it. The counter field of the
 	 * osmux header is just 3 bits long, so make sure it doesn't overflow.
 	 */
-	if (node->nmsgs >= 8) {
+	if (circuit->nmsgs >= 8) {
 		struct rtp_hdr *rtph;
 
 		rtph = osmo_rtp_get_hdr(msg);
@@ -210,15 +210,15 @@ static int osmux_batch_enqueue(struct msgb *msg, struct batch_list_node *node)
 		return -1;
 	}
 
-	llist_add_tail(&msg->list, &node->list);
-	node->nmsgs++;
+	llist_add_tail(&msg->list, &circuit->list);
+	circuit->nmsgs++;
 	return 0;
 }
 
-static void osmux_batch_dequeue(struct msgb *msg, struct batch_list_node *node)
+static void osmux_batch_dequeue(struct msgb *msg, struct osmux_circuit *circuit)
 {
 	llist_del(&msg->list);
-	node->nmsgs--;
+	circuit->nmsgs--;
 }
 
 struct osmux_input_state {
@@ -288,7 +288,7 @@ static int osmux_xfrm_encode_amr(struct osmux_in_handle *h,
 static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 {
 	struct msgb *batch_msg;
-	struct batch_list_node *node, *tnode;
+	struct osmux_circuit *circuit, *next;
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
 #ifdef DEBUG_MSG
@@ -301,15 +301,15 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 		return NULL;
 	}
 
-	llist_for_each_entry_safe(node, tnode, &batch->node_list, head) {
+	llist_for_each_entry_safe(circuit, next, &batch->circuit_list, head) {
 		struct msgb *cur, *tmp;
 		int ctr = 0;
 
-		llist_for_each_entry_safe(cur, tmp, &node->list, list) {
+		llist_for_each_entry_safe(cur, tmp, &circuit->list, list) {
 			struct osmux_input_state state = {
 				.msg		= cur,
 				.out_msg	= batch_msg,
-				.ccid		= node->ccid,
+				.ccid		= circuit->ccid,
 			};
 #ifdef DEBUG_MSG
 			char buf[4096];
@@ -331,12 +331,12 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 			}
 
 			osmux_xfrm_encode_amr(h, &state);
-			osmux_batch_dequeue(cur, node);
+			osmux_batch_dequeue(cur, circuit);
 			msgb_free(cur);
 			ctr++;
 		}
-		llist_del(&node->head);
-		talloc_free(node);
+		llist_del(&circuit->head);
+		talloc_free(circuit);
 	}
 	return batch_msg;
 }
@@ -394,7 +394,7 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 	return amr_payload_len;
 }
 
-static void osmux_replay_lost_packets(struct batch_list_node *node,
+static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
 				      struct rtp_hdr *cur_rtph)
 {
 	int16_t diff;
@@ -403,11 +403,11 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 	int i;
 
 	/* Have we see any RTP packet in this batch before? */
-	if (llist_empty(&node->list))
+	if (llist_empty(&circuit->list))
 		return;
 
 	/* Get last RTP packet seen in this batch */
-	last = llist_entry(node->list.prev, struct msgb, list);
+	last = llist_entry(circuit->list.prev, struct msgb, list);
 	rtph = osmo_rtp_get_hdr(last);
 	if (rtph == NULL)
 		return;
@@ -441,7 +441,7 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 					DELTA_RTP_TIMESTAMP);
 
 		/* No more room in this batch, skip padding with more clones */
-		if (osmux_batch_enqueue(clone, node) < 0) {
+		if (osmux_batch_enqueue(clone, circuit) < 0) {
 			msgb_free(clone);
 			break;
 		}
@@ -450,22 +450,22 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 	}
 }
 
-static struct batch_list_node *
+static struct osmux_circuit *
 osmux_batch_find_circuit(struct osmux_batch *batch, int ccid)
 {
-	struct batch_list_node *circuit;
+	struct osmux_circuit *circuit;
 
-	llist_for_each_entry(circuit, &batch->node_list, head) {
+	llist_for_each_entry(circuit, &batch->circuit_list, head) {
 		if (circuit->ccid == ccid)
 			return circuit;
 	}
 	return NULL;
 }
 
-static struct batch_list_node *
+static struct osmux_circuit *
 osmux_batch_add_circuit(struct osmux_batch *batch, int ccid)
 {
-	struct batch_list_node *circuit;
+	struct osmux_circuit *circuit;
 
 	circuit = osmux_batch_find_circuit(batch, ccid);
 	if (circuit != NULL) {
@@ -473,7 +473,7 @@ osmux_batch_add_circuit(struct osmux_batch *batch, int ccid)
 		return NULL;
 	}
 
-	circuit = talloc_zero(osmux_ctx, struct batch_list_node);
+	circuit = talloc_zero(osmux_ctx, struct osmux_circuit);
 	if (circuit == NULL) {
 		LOGP(DLMIB, LOGL_ERROR, "OOM on circuit %u\n", ccid);
 		return NULL;
@@ -481,7 +481,7 @@ osmux_batch_add_circuit(struct osmux_batch *batch, int ccid)
 
 	circuit->ccid = ccid;
 	INIT_LLIST_HEAD(&circuit->list);
-	llist_add_tail(&circuit->head, &batch->node_list);
+	llist_add_tail(&circuit->head, &batch->circuit_list);
 
 	return circuit;
 }
@@ -491,7 +491,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 		struct rtp_hdr *rtph, int ccid)
 {
 	int bytes = 0, amr_payload_len;
-	struct batch_list_node *circuit;
+	struct osmux_circuit *circuit;
 
 	circuit = osmux_batch_find_circuit(batch, ccid);
 
@@ -597,7 +597,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 			/* This is the first message in the batch, start the
 			 * batch timer to deliver it.
 			 */
-			first_rtp_msg = llist_empty(&batch->node_list) ? 1 : 0;
+			first_rtp_msg = llist_empty(&batch->circuit_list) ? 1 : 0;
 
 			/* Add this RTP to the OSMUX batch */
 			ret = osmux_batch_add(batch, msg, rtph, ccid);
@@ -638,7 +638,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	if (batch == NULL)
 		return;
 
-	INIT_LLIST_HEAD(&batch->node_list);
+	INIT_LLIST_HEAD(&batch->circuit_list);
 	batch->remaining_bytes = h->batch_size;
 	batch->timer.cb = osmux_batch_timer_expired;
 	batch->timer.data = h;
@@ -651,11 +651,11 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 void osmux_xfrm_input_fini(struct osmux_in_handle *h)
 {
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
-	struct batch_list_node *node, *next;
+	struct osmux_circuit *circuit, *next;
 
-	llist_for_each_entry_safe(node, next, &batch->node_list, head) {
-		llist_del(&node->head);
-		talloc_free(node);
+	llist_for_each_entry_safe(circuit, next, &batch->circuit_list, head) {
+		llist_del(&circuit->head);
+		talloc_free(circuit);
 	}
 	osmo_timer_del(&batch->timer);
 	talloc_free(batch);
