@@ -221,63 +221,65 @@ static void osmux_batch_dequeue(struct msgb *msg, struct batch_list_node *node)
 	node->nmsgs--;
 }
 
-static int
-osmux_batch_put(struct osmux_in_handle *h, struct msgb *out_msg,
-		struct msgb *msg, struct rtp_hdr *rtph,
-		struct amr_hdr *amrh, uint32_t amr_payload_len,
-		int ccid, int add_osmux_header)
+struct osmux_input_state {
+	struct msgb	*out_msg;
+	struct msgb	*msg;
+	struct rtp_hdr	*rtph;
+	struct amr_hdr	*amrh;
+	uint32_t	amr_payload_len;
+	int		ccid;
+	int		add_osmux_hdr;
+};
+
+static int osmux_batch_put(struct osmux_in_handle *h,
+			   struct osmux_input_state *state)
 {
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 	struct osmux_hdr *osmuxh;
 
-	if (add_osmux_header) {
-		osmuxh = (struct osmux_hdr *)out_msg->tail;
+	if (state->add_osmux_hdr) {
+		osmuxh = (struct osmux_hdr *)state->out_msg->tail;
 		osmuxh->ft = OSMUX_FT_VOICE_AMR;
 		osmuxh->ctr = 0;
-		osmuxh->amr_f = amrh->f;
-		osmuxh->amr_q= amrh->q;
+		osmuxh->amr_f = state->amrh->f;
+		osmuxh->amr_q= state->amrh->q;
 		osmuxh->seq = batch->seq++;
-		osmuxh->circuit_id = ccid;
-		osmuxh->amr_cmr = amrh->cmr;
-		osmuxh->amr_ft = amrh->ft;
-		msgb_put(out_msg, sizeof(struct osmux_hdr));
+		osmuxh->circuit_id = state->ccid;
+		osmuxh->amr_cmr = state->amrh->cmr;
+		osmuxh->amr_ft = state->amrh->ft;
+		msgb_put(state->out_msg, sizeof(struct osmux_hdr));
 
 		/* annotate current osmux header */
 		batch->osmuxh = osmuxh;
 	} else {
 		if (batch->osmuxh->ctr == 0x7) {
 			LOGP(DLMIB, LOGL_ERROR, "cannot add msg=%p, "
-				"too many messages for this RTP ssrc=%u\n",
-				msg, rtph->ssrc);
+			     "too many messages for this RTP ssrc=%u\n",
+			     state->msg, state->rtph->ssrc);
 			return 0;
 		}
 		batch->osmuxh->ctr++;
 	}
 
-	memcpy(out_msg->tail, osmo_amr_get_payload(amrh), amr_payload_len);
-	msgb_put(out_msg, amr_payload_len);
+	memcpy(state->out_msg->tail, osmo_amr_get_payload(state->amrh),
+	       state->amr_payload_len);
+	msgb_put(state->out_msg, state->amr_payload_len);
 
 	return 0;
 }
 
-static int
-osmux_xfrm_encode_amr(struct osmux_in_handle *h,
-		      struct msgb *out_msg,
-		      struct rtp_hdr *rtph, struct msgb *msg,
-		      int ccid, int add_osmux_header)
+static int osmux_xfrm_encode_amr(struct osmux_in_handle *h,
+				 struct osmux_input_state *state)
 {
-	struct amr_hdr *amrh;
 	uint32_t amr_len;
-	uint32_t amr_payload_len;
 
-	amrh = osmo_rtp_get_payload(rtph, msg, &amr_len);
-	if (amrh == NULL)
+	state->amrh = osmo_rtp_get_payload(state->rtph, state->msg, &amr_len);
+	if (state->amrh == NULL)
 		return -1;
 
-	amr_payload_len = amr_len - sizeof(struct amr_hdr);
+	state->amr_payload_len = amr_len - sizeof(struct amr_hdr);
 
-	if (osmux_batch_put(h, out_msg, msg, rtph, amrh, amr_payload_len,
-			    ccid, add_osmux_header) < 0)
+	if (osmux_batch_put(h, state) < 0)
 		return -1;
 
 	return 0;
@@ -304,9 +306,11 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 		int ctr = 0;
 
 		llist_for_each_entry_safe(cur, tmp, &node->list, list) {
-			struct rtp_hdr *rtph;
-			int add_osmux_hdr = 0;
-
+			struct osmux_input_state state = {
+				.msg		= cur,
+				.out_msg	= batch_msg,
+				.ccid		= node->ccid,
+			};
 #ifdef DEBUG_MSG
 			char buf[4096];
 
@@ -315,19 +319,18 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 			LOGP(DLMIB, LOGL_DEBUG, "to BSC-NAT: %s\n", buf);
 #endif
 
-			rtph = osmo_rtp_get_hdr(cur);
-			if (rtph == NULL)
+			state.rtph = osmo_rtp_get_hdr(cur);
+			if (state.rtph == NULL)
 				return NULL;
 
 			if (ctr == 0) {
 #ifdef DEBUG_MSG
 				LOGP(DLMIB, LOGL_DEBUG, "add osmux header\n");
 #endif
-				add_osmux_hdr = 1;
+				state.add_osmux_hdr = 1;
 			}
 
-			osmux_xfrm_encode_amr(h, batch_msg, rtph, cur,
-						node->ccid, add_osmux_hdr);
+			osmux_xfrm_encode_amr(h, &state);
 			osmux_batch_dequeue(cur, node);
 			msgb_free(cur);
 			ctr++;
