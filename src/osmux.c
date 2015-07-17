@@ -231,10 +231,9 @@ struct osmux_input_state {
 	int		add_osmux_hdr;
 };
 
-static int osmux_batch_put(struct osmux_in_handle *h,
+static int osmux_batch_put(struct osmux_batch *batch,
 			   struct osmux_input_state *state)
 {
-	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 	struct osmux_hdr *osmuxh;
 
 	if (state->add_osmux_hdr) {
@@ -268,7 +267,7 @@ static int osmux_batch_put(struct osmux_in_handle *h,
 	return 0;
 }
 
-static int osmux_xfrm_encode_amr(struct osmux_in_handle *h,
+static int osmux_xfrm_encode_amr(struct osmux_batch *batch,
 				 struct osmux_input_state *state)
 {
 	uint32_t amr_len;
@@ -279,23 +278,23 @@ static int osmux_xfrm_encode_amr(struct osmux_in_handle *h,
 
 	state->amr_payload_len = amr_len - sizeof(struct amr_hdr);
 
-	if (osmux_batch_put(h, state) < 0)
+	if (osmux_batch_put(batch, state) < 0)
 		return -1;
 
 	return 0;
 }
 
-static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
+static struct msgb *osmux_build_batch(struct osmux_batch *batch,
+				      uint32_t batch_size)
 {
 	struct msgb *batch_msg;
 	struct osmux_circuit *circuit, *next;
-	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
 #ifdef DEBUG_MSG
 	LOGP(DLMIB, LOGL_DEBUG, "Now building batch\n");
 #endif
 
-	batch_msg = msgb_alloc(h->batch_size, "osmux");
+	batch_msg = msgb_alloc(batch_size, "osmux");
 	if (batch_msg == NULL) {
 		LOGP(DLMIB, LOGL_ERROR, "Not enough memory\n");
 		return NULL;
@@ -330,7 +329,7 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 				state.add_osmux_hdr = 1;
 			}
 
-			osmux_xfrm_encode_amr(h, &state);
+			osmux_xfrm_encode_amr(batch, &state);
 			osmux_batch_dequeue(cur, circuit);
 			msgb_free(cur);
 			ctr++;
@@ -349,7 +348,7 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 #ifdef DEBUG_MSG
 	LOGP(DLMIB, LOGL_DEBUG, "invoking delivery function\n");
 #endif
-	batch_msg = osmux_build_batch(h);
+	batch_msg = osmux_build_batch(batch, h->batch_size);
 
 	h->stats.output_osmux_msgs++;
 	h->stats.output_osmux_bytes += batch_msg->len;
