@@ -189,7 +189,7 @@ struct osmux_batch {
 struct osmux_circuit {
 	struct llist_head	head;
 	int			ccid;
-	struct llist_head	list;
+	struct llist_head	msg_list;
 	int			nmsgs;
 };
 
@@ -210,7 +210,7 @@ static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit)
 		return -1;
 	}
 
-	llist_add_tail(&msg->list, &circuit->list);
+	llist_add_tail(&msg->list, &circuit->msg_list);
 	circuit->nmsgs++;
 	return 0;
 }
@@ -305,7 +305,7 @@ static struct msgb *osmux_build_batch(struct osmux_in_handle *h)
 		struct msgb *cur, *tmp;
 		int ctr = 0;
 
-		llist_for_each_entry_safe(cur, tmp, &circuit->list, list) {
+		llist_for_each_entry_safe(cur, tmp, &circuit->msg_list, list) {
 			struct osmux_input_state state = {
 				.msg		= cur,
 				.out_msg	= batch_msg,
@@ -403,11 +403,11 @@ static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
 	int i;
 
 	/* Have we see any RTP packet in this batch before? */
-	if (llist_empty(&circuit->list))
+	if (llist_empty(&circuit->msg_list))
 		return;
 
 	/* Get last RTP packet seen in this batch */
-	last = llist_entry(circuit->list.prev, struct msgb, list);
+	last = llist_entry(circuit->msg_list.prev, struct msgb, list);
 	rtph = osmo_rtp_get_hdr(last);
 	if (rtph == NULL)
 		return;
@@ -480,7 +480,7 @@ osmux_batch_add_circuit(struct osmux_batch *batch, int ccid)
 	}
 
 	circuit->ccid = ccid;
-	INIT_LLIST_HEAD(&circuit->list);
+	INIT_LLIST_HEAD(&circuit->msg_list);
 	llist_add_tail(&circuit->head, &batch->circuit_list);
 
 	return circuit;
@@ -515,7 +515,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 		 * should not happen but make sure we don't propagate
 		 * duplicated messages.
 		 */
-		llist_for_each_entry(cur, &circuit->list, list) {
+		llist_for_each_entry(cur, &circuit->msg_list, list) {
 			struct rtp_hdr *rtph2 = osmo_rtp_get_hdr(cur);
 			if (rtph2 == NULL)
 				return -1;
