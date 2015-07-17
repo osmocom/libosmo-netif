@@ -289,7 +289,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 				      uint32_t batch_size)
 {
 	struct msgb *batch_msg;
-	struct osmux_circuit *circuit, *next;
+	struct osmux_circuit *circuit;
 
 #ifdef DEBUG_MSG
 	LOGP(DLMIB, LOGL_DEBUG, "Now building batch\n");
@@ -301,7 +301,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 		return NULL;
 	}
 
-	llist_for_each_entry_safe(circuit, next, &batch->circuit_list, head) {
+	llist_for_each_entry(circuit, &batch->circuit_list, head) {
 		struct msgb *cur, *tmp;
 		int ctr = 0;
 
@@ -336,8 +336,6 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 			ctr++;
 			batch->nmsgs--;
 		}
-		llist_del(&circuit->head);
-		talloc_free(circuit);
 	}
 	return batch_msg;
 }
@@ -487,6 +485,18 @@ osmux_batch_add_circuit(struct osmux_batch *batch, int ccid)
 	return circuit;
 }
 
+static void osmux_batch_del_circuit(struct osmux_batch *batch, int ccid)
+{
+	struct osmux_circuit *circuit;
+
+	circuit = osmux_batch_find_circuit(batch, ccid);
+	if (circuit == NULL)
+		return;
+
+	llist_del(&circuit->head);
+	talloc_free(circuit);
+}
+
 static int
 osmux_batch_add(struct osmux_batch *batch, int batch_factor, struct msgb *msg,
 		struct rtp_hdr *rtph, int ccid)
@@ -502,7 +512,7 @@ osmux_batch_add(struct osmux_batch *batch, int batch_factor, struct msgb *msg,
 
 	/* First check if there is room for this message in the batch */
 	bytes += amr_payload_len;
-	if (!circuit)
+	if (!circuit || circuit->nmsgs == 0)
 		bytes += sizeof(struct osmux_hdr);
 
 	/* No room, sorry. You'll have to retry */
@@ -643,6 +653,13 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	h->internal_data = (void *)batch;
 
 	LOGP(DLMIB, LOGL_DEBUG, "initialized osmux input converter\n");
+}
+
+void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid)
+{
+	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
+
+	osmux_batch_del_circuit(batch, ccid);
 }
 
 void osmux_xfrm_input_fini(struct osmux_in_handle *h)

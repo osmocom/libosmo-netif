@@ -84,6 +84,8 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg);
 void osmux_xfrm_input_init(struct osmux_in_handle *h);
 void osmux_xfrm_input_fini(struct osmux_in_handle *h);
 
+void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid);
+
 int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid);
 void osmux_xfrm_input_deliver(struct osmux_in_handle *h);
 
