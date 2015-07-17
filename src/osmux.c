@@ -184,6 +184,7 @@ struct osmux_batch {
 	struct llist_head	circuit_list;
 	unsigned int		remaining_bytes;
 	uint8_t			seq;
+	uint32_t		nmsgs;
 };
 
 struct osmux_circuit {
@@ -333,6 +334,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 			osmux_batch_dequeue(cur, circuit);
 			msgb_free(cur);
 			ctr++;
+			batch->nmsgs--;
 		}
 		llist_del(&circuit->head);
 		talloc_free(circuit);
@@ -486,7 +488,7 @@ osmux_batch_add_circuit(struct osmux_batch *batch, int ccid)
 }
 
 static int
-osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
+osmux_batch_add(struct osmux_batch *batch, int batch_factor, struct msgb *msg,
 		struct rtp_hdr *rtph, int ccid)
 {
 	int bytes = 0, amr_payload_len;
@@ -549,6 +551,15 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 	/* Update remaining room in this batch */
 	batch->remaining_bytes -= bytes;
 
+	if (batch->nmsgs == 0) {
+#ifdef DEBUG_MSG
+		LOGP(DLMIB, LOGL_DEBUG, "osmux start timer batch\n");
+#endif
+		osmo_timer_schedule(&batch->timer, 0,
+				    batch_factor * DELTA_RTP_MSG);
+	}
+	batch->nmsgs++;
+
 	return 0;
 }
 
@@ -565,7 +576,7 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
  */
 int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 {
-	int ret, first_rtp_msg;
+	int ret;
 	struct rtp_hdr *rtph;
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
@@ -593,13 +604,9 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 			 * receive AMR traffic.
 			 */
 
-			/* This is the first message in the batch, start the
-			 * batch timer to deliver it.
-			 */
-			first_rtp_msg = llist_empty(&batch->circuit_list) ? 1 : 0;
-
 			/* Add this RTP to the OSMUX batch */
-			ret = osmux_batch_add(batch, msg, rtph, ccid);
+			ret = osmux_batch_add(batch, h->batch_factor,
+					      msg, rtph, ccid);
 			if (ret < 0) {
 				/* Cannot put this message into the batch.
 				 * Malformed, duplicated, OOM. Drop it and tell
@@ -611,15 +618,6 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 
 			h->stats.input_rtp_msgs++;
 			h->stats.input_rtp_bytes += msg->len;
-
-			if (first_rtp_msg) {
-#ifdef DEBUG_MSG
-				LOGP(DLMIB, LOGL_DEBUG,
-					"osmux start timer batch\n");
-#endif
-				osmo_timer_schedule(&batch->timer, 0,
-					h->batch_factor * DELTA_RTP_MSG);
-			}
 			break;
 	}
 	return ret;
