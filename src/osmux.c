@@ -450,19 +450,50 @@ static void osmux_replay_lost_packets(struct batch_list_node *node,
 	}
 }
 
+static struct batch_list_node *
+osmux_batch_find_circuit(struct osmux_batch *batch, int ccid)
+{
+	struct batch_list_node *circuit;
+
+	llist_for_each_entry(circuit, &batch->node_list, head) {
+		if (circuit->ccid == ccid)
+			return circuit;
+	}
+	return NULL;
+}
+
+static struct batch_list_node *
+osmux_batch_add_circuit(struct osmux_batch *batch, int ccid)
+{
+	struct batch_list_node *circuit;
+
+	circuit = osmux_batch_find_circuit(batch, ccid);
+	if (circuit != NULL) {
+		LOGP(DLMIB, LOGL_ERROR, "circuit %u already exists!\n", ccid);
+		return NULL;
+	}
+
+	circuit = talloc_zero(osmux_ctx, struct batch_list_node);
+	if (circuit == NULL) {
+		LOGP(DLMIB, LOGL_ERROR, "OOM on circuit %u\n", ccid);
+		return NULL;
+	}
+
+	circuit->ccid = ccid;
+	INIT_LLIST_HEAD(&circuit->list);
+	llist_add_tail(&circuit->head, &batch->node_list);
+
+	return circuit;
+}
+
 static int
 osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 		struct rtp_hdr *rtph, int ccid)
 {
-	struct batch_list_node *node;
-	int found = 0, bytes = 0, amr_payload_len;
+	int bytes = 0, amr_payload_len;
+	struct batch_list_node *circuit;
 
-	llist_for_each_entry(node, &batch->node_list, head) {
-		if (node->ccid == ccid) {
-			found = 1;
-			break;
-		}
-	}
+	circuit = osmux_batch_find_circuit(batch, ccid);
 
 	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
 	if (amr_payload_len < 0)
@@ -470,21 +501,21 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 
 	/* First check if there is room for this message in the batch */
 	bytes += amr_payload_len;
-	if (!found)
+	if (!circuit)
 		bytes += sizeof(struct osmux_hdr);
 
 	/* No room, sorry. You'll have to retry */
 	if (bytes > batch->remaining_bytes)
 		return 1;
 
-	if (found) {
+	if (circuit) {
 		struct msgb *cur;
 
 		/* Extra validation: check if this message already exists,
 		 * should not happen but make sure we don't propagate
 		 * duplicated messages.
 		 */
-		llist_for_each_entry(cur, &node->list, list) {
+		llist_for_each_entry(cur, &circuit->list, list) {
 			struct rtp_hdr *rtph2 = osmo_rtp_get_hdr(cur);
 			if (rtph2 == NULL)
 				return -1;
@@ -498,21 +529,17 @@ osmux_batch_add(struct osmux_batch *batch, struct msgb *msg,
 			}
 		}
 		/* Handle RTP packet loss scenario */
-		osmux_replay_lost_packets(node, rtph);
+		osmux_replay_lost_packets(circuit, rtph);
 
 	} else {
 		/* This is the first message with that ssrc we've seen */
-		node = talloc_zero(osmux_ctx, struct batch_list_node);
-		if (node == NULL)
+		circuit = osmux_batch_add_circuit(batch, ccid);
+		if (!circuit)
 			return -1;
-
-		node->ccid = ccid;
-		INIT_LLIST_HEAD(&node->list);
-		llist_add_tail(&node->head, &batch->node_list);
 	}
 
 	/* This batch is full, force batch delivery */
-	if (osmux_batch_enqueue(msg, node) < 0)
+	if (osmux_batch_enqueue(msg, circuit) < 0)
 		return 1;
 
 #ifdef DEBUG_MSG
