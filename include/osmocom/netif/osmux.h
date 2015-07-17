@@ -5,7 +5,7 @@
 
 /* OSmux header:
  *
- *	ft (3 bits):		0=signalling, 1=voice
+ *	ft (3 bits):		0=signalling, 1=voice, 2=dummy
  *	ctr (3 bits):		Number of batched AMR payloads (starting 0)
  *	amr_f (1 bit):		AMR F field (RFC3267)
  *	amr_q (1 bit): 		AMR Q field (RFC3267)
@@ -17,6 +17,7 @@
 
 #define OSMUX_FT_SIGNAL		0
 #define OSMUX_FT_VOICE_AMR	1
+#define OSMUX_FT_DUMMY		2
 
 struct osmux_hdr {
 #if OSMO_IS_BIG_ENDIAN
@@ -84,6 +85,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg);
 void osmux_xfrm_input_init(struct osmux_in_handle *h);
 void osmux_xfrm_input_fini(struct osmux_in_handle *h);
 
+int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid, int dummy);
 void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid);
 
 int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid);

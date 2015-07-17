@@ -56,16 +56,29 @@ static uint32_t osmux_get_payload_len(struct osmux_hdr *osmuxh)
 	return osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1);
 }
 
+static uint32_t osmux_ft_dummy_size(uint8_t amr_ft, uint32_t batch_factor)
+{
+	return sizeof(struct osmux_hdr) + (osmo_amr_bytes(amr_ft) * batch_factor);
+}
+
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 {
-	struct osmux_hdr *osmuxh = NULL;
-
+	struct osmux_hdr *osmuxh;
+next:
+	osmuxh = NULL;
 	if (msg->len > sizeof(struct osmux_hdr)) {
 		size_t len;
 
 		osmuxh = (struct osmux_hdr *)msg->data;
 
-		if (osmuxh->ft != OSMUX_FT_VOICE_AMR) {
+		switch (osmuxh->ft) {
+		case OSMUX_FT_VOICE_AMR:
+			break;
+		case OSMUX_FT_DUMMY:
+			msgb_pull(msg, osmux_ft_dummy_size(osmuxh->amr_ft,
+							   osmuxh->ctr + 1));
+			goto next;
+		default:
 			LOGP(DLMIB, LOGL_ERROR, "Discarding unsupported Osmux FT %d\n",
 			     osmuxh->ft);
 			return NULL;
@@ -185,6 +198,7 @@ struct osmux_batch {
 	unsigned int		remaining_bytes;
 	uint8_t			seq;
 	uint32_t		nmsgs;
+	int			dummy;
 };
 
 struct osmux_circuit {
@@ -192,6 +206,7 @@ struct osmux_circuit {
 	int			ccid;
 	struct llist_head	msg_list;
 	int			nmsgs;
+	int			dummy;
 };
 
 static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit)
@@ -285,8 +300,31 @@ static int osmux_xfrm_encode_amr(struct osmux_batch *batch,
 	return 0;
 }
 
+static void osmux_encode_dummy(struct osmux_batch *batch, uint32_t batch_factor,
+			       struct osmux_input_state *state)
+{
+	struct osmux_hdr *osmuxh;
+	/* TODO: This should be configurable at some point. */
+	uint32_t payload_size = osmux_ft_dummy_size(AMR_FT_3, batch_factor) -
+				sizeof(struct osmux_hdr);
+
+	osmuxh = (struct osmux_hdr *)state->out_msg->tail;
+	osmuxh->ft = OSMUX_FT_DUMMY;
+	osmuxh->ctr = batch_factor - 1;
+	osmuxh->amr_f = 0;
+	osmuxh->amr_q= 0;
+	osmuxh->seq = 0;
+	osmuxh->circuit_id = state->ccid;
+	osmuxh->amr_cmr = 0;
+	osmuxh->amr_ft = AMR_FT_3;
+	msgb_put(state->out_msg, sizeof(struct osmux_hdr));
+
+	memset(state->out_msg->tail, 0xff, payload_size);
+	msgb_put(state->out_msg, payload_size);
+}
+
 static struct msgb *osmux_build_batch(struct osmux_batch *batch,
-				      uint32_t batch_size)
+				      uint32_t batch_size, uint32_t batch_factor)
 {
 	struct msgb *batch_msg;
 	struct osmux_circuit *circuit;
@@ -304,6 +342,15 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 	llist_for_each_entry(circuit, &batch->circuit_list, head) {
 		struct msgb *cur, *tmp;
 		int ctr = 0;
+
+		if (circuit->dummy) {
+			struct osmux_input_state state = {
+				.out_msg	= batch_msg,
+				.ccid		= circuit->ccid,
+			};
+			osmux_encode_dummy(batch, batch_factor, &state);
+			continue;
+		}
 
 		llist_for_each_entry_safe(cur, tmp, &circuit->msg_list, list) {
 			struct osmux_input_state state = {
@@ -348,7 +395,7 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 #ifdef DEBUG_MSG
 	LOGP(DLMIB, LOGL_DEBUG, "invoking delivery function\n");
 #endif
-	batch_msg = osmux_build_batch(batch, h->batch_size);
+	batch_msg = osmux_build_batch(batch, h->batch_size, h->batch_factor);
 
 	h->stats.output_osmux_msgs++;
 	h->stats.output_osmux_bytes += batch_msg->len;
@@ -356,6 +403,11 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 	h->deliver(batch_msg, h->data);
 	osmo_timer_del(&batch->timer);
 	batch->remaining_bytes = h->batch_size;
+
+	if (batch->dummy) {
+		osmo_timer_schedule(&batch->timer, 0,
+				    h->batch_factor * DELTA_RTP_MSG);
+	}
 }
 
 static void osmux_batch_timer_expired(void *data)
@@ -462,7 +514,8 @@ osmux_batch_find_circuit(struct osmux_batch *batch, int ccid)
 }
 
 static struct osmux_circuit *
-osmux_batch_add_circuit(struct osmux_batch *batch, int ccid)
+osmux_batch_add_circuit(struct osmux_batch *batch, int ccid, int dummy,
+			int batch_factor)
 {
 	struct osmux_circuit *circuit;
 
@@ -482,6 +535,13 @@ osmux_batch_add_circuit(struct osmux_batch *batch, int ccid)
 	INIT_LLIST_HEAD(&circuit->msg_list);
 	llist_add_tail(&circuit->head, &batch->circuit_list);
 
+	if (dummy) {
+		circuit->dummy = dummy;
+		batch->dummy++;
+		if (!osmo_timer_pending(&batch->timer))
+			osmo_timer_schedule(&batch->timer, 0,
+					    batch_factor * DELTA_RTP_MSG);
+	}
 	return circuit;
 }
 
@@ -493,6 +553,8 @@ static void osmux_batch_del_circuit(struct osmux_batch *batch, int ccid)
 	if (circuit == NULL)
 		return;
 
+	if (circuit->dummy)
+		batch->dummy--;
 	llist_del(&circuit->head);
 	talloc_free(circuit);
 }
@@ -503,51 +565,48 @@ osmux_batch_add(struct osmux_batch *batch, int batch_factor, struct msgb *msg,
 {
 	int bytes = 0, amr_payload_len;
 	struct osmux_circuit *circuit;
+	struct msgb *cur;
 
 	circuit = osmux_batch_find_circuit(batch, ccid);
+	if (!circuit)
+		return -1;
 
+	/* We've seen the first RTP message, disable dummy padding */
+	if (circuit->dummy) {
+		circuit->dummy = 0;
+		batch->dummy--;
+	}
 	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
 	if (amr_payload_len < 0)
 		return -1;
 
 	/* First check if there is room for this message in the batch */
 	bytes += amr_payload_len;
-	if (!circuit || circuit->nmsgs == 0)
+	if (circuit->nmsgs == 0)
 		bytes += sizeof(struct osmux_hdr);
 
 	/* No room, sorry. You'll have to retry */
 	if (bytes > batch->remaining_bytes)
 		return 1;
 
-	if (circuit) {
-		struct msgb *cur;
-
-		/* Extra validation: check if this message already exists,
-		 * should not happen but make sure we don't propagate
-		 * duplicated messages.
-		 */
-		llist_for_each_entry(cur, &circuit->msg_list, list) {
-			struct rtp_hdr *rtph2 = osmo_rtp_get_hdr(cur);
-			if (rtph2 == NULL)
-				return -1;
-
-			/* Already exists message with this sequence, skip */
-			if (rtph2->sequence == rtph->sequence) {
-				LOGP(DLMIB, LOGL_ERROR, "already exists "
-					"message with seq=%u, skip it\n",
-					rtph->sequence);
-				return -1;
-			}
-		}
-		/* Handle RTP packet loss scenario */
-		osmux_replay_lost_packets(circuit, rtph);
-
-	} else {
-		/* This is the first message with that ssrc we've seen */
-		circuit = osmux_batch_add_circuit(batch, ccid);
-		if (!circuit)
+	/* Extra validation: check if this message already exists, should not
+	 * happen but make sure we don't propagate duplicated messages.
+	 */
+	llist_for_each_entry(cur, &circuit->msg_list, list) {
+		struct rtp_hdr *rtph2 = osmo_rtp_get_hdr(cur);
+		if (rtph2 == NULL)
 			return -1;
+
+		/* Already exists message with this sequence, skip */
+		if (rtph2->sequence == rtph->sequence) {
+			LOGP(DLMIB, LOGL_ERROR, "already exists "
+				"message with seq=%u, skip it\n",
+				rtph->sequence);
+			return -1;
+		}
 	}
+	/* Handle RTP packet loss scenario */
+	osmux_replay_lost_packets(circuit, rtph);
 
 	/* This batch is full, force batch delivery */
 	if (osmux_batch_enqueue(msg, circuit) < 0)
@@ -653,6 +712,14 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	h->internal_data = (void *)batch;
 
 	LOGP(DLMIB, LOGL_DEBUG, "initialized osmux input converter\n");
+}
+
+int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
+				  int dummy)
+{
+	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
+
+	return osmux_batch_add_circuit(batch, ccid, dummy, h->batch_factor) ? 0 : -1;
 }
 
 void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid)
