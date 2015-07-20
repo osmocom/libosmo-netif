@@ -135,6 +135,13 @@ int main(void)
 	/* If the test takes longer than 10 seconds, abort it */
 	alarm(10);
 
+	for (i = 0; i < 2; i++)
+		osmux_xfrm_input_open_circuit(&h_input, i, 0);
+
+	/* Add two circuits with dummy padding */
+	osmux_xfrm_input_open_circuit(&h_input, 2, 1);
+	osmux_xfrm_input_open_circuit(&h_input, 3, 1);
+
 	for (i=1; i<64; i++) {
 		msg = msgb_alloc(1500, "test");
 		if (!msg)
@@ -178,6 +185,12 @@ int main(void)
 			k = 0;
 		}
 	}
+
+	for (i = 0; i < 4; i++)
+		osmux_xfrm_input_close_circuit(&h_input, i);
+
+	osmux_xfrm_input_fini(&h_input);
+
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;
 }
