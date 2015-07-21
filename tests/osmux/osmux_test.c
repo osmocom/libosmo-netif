@@ -122,7 +122,7 @@ static void osmux_test_loop(int ccid)
 	uint16_t seq;
 	int i, j, k = 0;
 
-	for (i = 1; i < 64; i++) {
+	for (i = 1; i < 65; i++) {
 		msg = msgb_alloc(1500, "test");
 		if (!msg)
 			exit(EXIT_FAILURE);
