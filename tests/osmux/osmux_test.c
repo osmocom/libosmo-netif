@@ -191,6 +191,10 @@ int main(void)
 	osmux_xfrm_input_open_circuit(&h_input, 2, 1);
 	osmux_xfrm_input_open_circuit(&h_input, 3, 1);
 
+	/* Wait 10 times to make sure dummy padding timer works fine */
+	for (i = 0; i < 10; i++)
+		osmo_select_main(0);
+
 	/* Start pushing voice data to circuits 0 and 1 */
 	osmux_test_loop(0);
 	/* ... now start pushing voice data to circuits 2 and 3. This circuits
