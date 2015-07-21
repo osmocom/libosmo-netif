@@ -78,6 +78,7 @@ static void tx_cb(struct msgb *msg, void *data)
 	}
 
 	rtp_pkts--;
+	msgb_free(msg);
 }
 
 static struct osmux_out_handle h_output;
@@ -98,6 +99,7 @@ static void osmux_deliver(struct msgb *batch_msg, void *data)
 		osmux_xfrm_output(osmuxh, &h_output, &list);
 		osmux_tx_sched(&list, tx_cb, NULL);
 	}
+	msgb_free(batch_msg);
 }
 
 struct osmux_in_handle h_input = {
