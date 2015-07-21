@@ -112,13 +112,62 @@ static void sigalarm_handler(int foo)
 	exit(EXIT_FAILURE);
 }
 
-int main(void)
+static void osmux_test_loop(int ccid)
 {
 	struct msgb *msg;
 	char buf[1024];
 	struct rtp_hdr *rtph = (struct rtp_hdr *)rtp_pkt;
 	uint16_t seq;
 	int i, j, k = 0;
+
+	for (i = 1; i < 64; i++) {
+		msg = msgb_alloc(1500, "test");
+		if (!msg)
+			exit(EXIT_FAILURE);
+
+		memcpy(msg->data, rtp_pkt, sizeof(rtp_pkt));
+		msgb_put(msg, sizeof(rtp_pkt));
+
+		seq = ntohs(rtph->sequence);
+		seq++;
+		rtph->sequence = htons(seq);
+
+		osmo_rtp_snprintf(buf, sizeof(buf), msg);
+		fprintf(stderr, "adding to ccid=%u %s\n", (i % 2) + ccid, buf);
+		rtp_pkts++;
+
+		k++;
+		/* Fan out RTP packets between two circuit IDs to test
+		 * multi-batch support. Mind that this approach implicitly add
+		 * gaps between two messages to test the osmux replaying
+		 * feature.
+		 */
+		osmux_xfrm_input(&h_input, msg, (i % 2) + ccid);
+
+		if (i % 4 == 0) {
+			gettimeofday(&last, NULL);
+
+			/* After four RTP messages, squash them into the OSMUX
+			 * batch and call the routine to deliver it.
+			 */
+			osmux_xfrm_input_deliver(&h_input);
+
+			/* The first two RTP message (one per circuit ID batch)
+			 * are delivered immediately, wait until the three RTP
+			 * messages that are extracted from OSMUX has been
+			 * delivered.
+			 */
+			for (j = 0; j < k-2; j++)
+				osmo_select_main(0);
+
+			k = 0;
+		}
+	}
+}
+
+int main(void)
+{
+	int i;
 
 	if (signal(SIGALRM, sigalarm_handler) == SIG_ERR) {
 		perror("signal");
@@ -142,49 +191,8 @@ int main(void)
 	osmux_xfrm_input_open_circuit(&h_input, 2, 1);
 	osmux_xfrm_input_open_circuit(&h_input, 3, 1);
 
-	for (i=1; i<64; i++) {
-		msg = msgb_alloc(1500, "test");
-		if (!msg)
-			return 0;
-
-		memcpy(msg->data, rtp_pkt, sizeof(rtp_pkt));
-		msgb_put(msg, sizeof(rtp_pkt));
-
-		seq = ntohs(rtph->sequence);
-		seq++;
-		rtph->sequence = htons(seq);
-
-		osmo_rtp_snprintf(buf, sizeof(buf), msg);
-		fprintf(stderr, "adding to ccid=%u %s\n", i % 2, buf);
-		rtp_pkts++;
-
-		k++;
-		/* Fan out RTP packets between two circuit IDs to test
-		 * multi-batch support. Mind that this approach implicitly add
-		 * gaps between two messages to test the osmux replaying
-		 * feature.
-		 */
-		osmux_xfrm_input(&h_input, msg, i % 2);
-
-		if (i % 4 == 0) {
-			gettimeofday(&last, NULL);
-
-			/* After four RTP messages, squash them into the OSMUX
-			 * batch and call the routine to deliver it.
-			 */
-			osmux_xfrm_input_deliver(&h_input);
-
-			/* The first two RTP message (one per circuit ID batch)
-			 * are delivered immediately, wait until the three RTP
-			 * messages that are extracted from OSMUX has been
-			 * delivered.
-			 */
-			for (j=0; j<k-2; j++)
-				osmo_select_main(0);
-
-			k = 0;
-		}
-	}
+	/* Start pushing voice data to circuits 0 and 1 */
+	osmux_test_loop(0);
 
 	for (i = 0; i < 4; i++)
 		osmux_xfrm_input_close_circuit(&h_input, i);
