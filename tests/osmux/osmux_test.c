@@ -193,6 +193,10 @@ int main(void)
 
 	/* Start pushing voice data to circuits 0 and 1 */
 	osmux_test_loop(0);
+	/* ... now start pushing voice data to circuits 2 and 3. This circuits
+	 * comes with dummy padding enabled.
+	 */
+	osmux_test_loop(2);
 
 	for (i = 0; i < 4; i++)
 		osmux_xfrm_input_close_circuit(&h_input, i);
