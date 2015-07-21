@@ -205,6 +205,13 @@ int main(void)
 	for (i = 0; i < 4; i++)
 		osmux_xfrm_input_close_circuit(&h_input, i);
 
+	/* Reopen with two circuits and retest */
+	osmux_xfrm_input_open_circuit(&h_input, 0, 0);
+	osmux_xfrm_input_open_circuit(&h_input, 1, 1);
+	osmux_test_loop(0);
+	osmux_xfrm_input_close_circuit(&h_input, 0);
+	osmux_xfrm_input_close_circuit(&h_input, 1);
+
 	osmux_xfrm_input_fini(&h_input);
 
 	fprintf(stdout, "OK: Test passed\n");
