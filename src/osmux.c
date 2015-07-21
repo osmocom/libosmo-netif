@@ -39,18 +39,6 @@
 
 static void *osmux_ctx;
 
-struct osmux_hdr *osmux_get_hdr(struct msgb *msg)
-{
-	struct osmux_hdr *osmuxh = (struct osmux_hdr *)msg->data;
-
-	if (msg->len < sizeof(struct osmux_hdr)) {
-		DEBUGPC(DLMUX, "received OSMUX frame too short (len = %d)\n",
-			msg->len);
-		return NULL;
-	}
-	return osmuxh;
-}
-
 static uint32_t osmux_get_payload_len(struct osmux_hdr *osmuxh)
 {
 	return osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1);

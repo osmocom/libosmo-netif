@@ -70,8 +70,6 @@ struct osmux_out_handle {
 	uint32_t rtp_ssrc;
 };
 
-struct osmux_hdr *osmux_get_hdr(struct msgb *msg);
-
 static inline uint8_t *osmux_get_payload(struct osmux_hdr *osmuxh)
 {
 	return (uint8_t *)osmuxh + sizeof(struct osmux_hdr);
