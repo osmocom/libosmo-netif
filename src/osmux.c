@@ -186,7 +186,7 @@ struct osmux_batch {
 	unsigned int		remaining_bytes;
 	uint8_t			seq;
 	uint32_t		nmsgs;
-	int			dummy;
+	int			ndummy;
 };
 
 struct osmux_circuit {
@@ -392,7 +392,7 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 	osmo_timer_del(&batch->timer);
 	batch->remaining_bytes = h->batch_size;
 
-	if (batch->dummy) {
+	if (batch->ndummy) {
 		osmo_timer_schedule(&batch->timer, 0,
 				    h->batch_factor * DELTA_RTP_MSG);
 	}
@@ -525,7 +525,7 @@ osmux_batch_add_circuit(struct osmux_batch *batch, int ccid, int dummy,
 
 	if (dummy) {
 		circuit->dummy = dummy;
-		batch->dummy++;
+		batch->ndummy++;
 		if (!osmo_timer_pending(&batch->timer))
 			osmo_timer_schedule(&batch->timer, 0,
 					    batch_factor * DELTA_RTP_MSG);
@@ -542,7 +542,7 @@ static void osmux_batch_del_circuit(struct osmux_batch *batch, int ccid)
 		return;
 
 	if (circuit->dummy)
-		batch->dummy--;
+		batch->ndummy--;
 	llist_del(&circuit->head);
 	talloc_free(circuit);
 }
@@ -562,7 +562,7 @@ osmux_batch_add(struct osmux_batch *batch, int batch_factor, struct msgb *msg,
 	/* We've seen the first RTP message, disable dummy padding */
 	if (circuit->dummy) {
 		circuit->dummy = 0;
-		batch->dummy--;
+		batch->ndummy--;
 	}
 	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
 	if (amr_payload_len < 0)
