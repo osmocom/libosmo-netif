@@ -1,3 +1,9 @@
+libosmo-netif (0.0.6) unstable; urgency=medium
+
+  * Drop libosmovty dependency.
+
+ -- Holger Hans Peter Freyther <holger@moiji-mobile.com>  Tue, 03 Nov 2015 09:36:32 +0100
+
 libosmo-netif (0.0.5) unstable; urgency=medium
 
   * New upstream release.
