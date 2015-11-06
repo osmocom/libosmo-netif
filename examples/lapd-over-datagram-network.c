@@ -129,7 +129,7 @@ void lapd_rx_cb(struct osmo_dlsap_prim *dp, uint8_t tei, uint8_t sapi,
 
 int main(int argc, char *argv[])
 {
-	int teip;
+	struct lapd_tei *teip;
 
 	tall_test = talloc_named_const(NULL, 1, "lapd_test");
 
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 	}
 
 	teip = lapd_tei_alloc(lapd, tei);
-	if (teip == 0) {
+	if (teip == NULL) {
 		LOGP(DLAPDTEST, LOGL_ERROR, "cannot assign TEI\n");
 		exit(EXIT_FAILURE);
 	}
