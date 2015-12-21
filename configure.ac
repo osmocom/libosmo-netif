@@ -40,6 +40,13 @@ PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 0.3.0)
 dnl FIXME: We depend on libosmoabis by now until we can move LAPD code here
 PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.0.7)
 PKG_CHECK_MODULES(ORTP, ortp >= 0.15.0)
+AC_CHECK_LIB([sctp], [sctp_send], [
+		AC_DEFINE(HAVE_LIBSCTP, 1, [Define 1 to enable SCTP support])
+		AC_SUBST(HAVE_LIBSCTP, [1])
+		LIBS="-lsctp $LIBS"
+	     ], [
+		AC_MSG_ERROR([libsctp not found])
+	     ])
 
 AC_CHECK_HEADERS(dahdi/user.h,,AC_MSG_WARN(DAHDI input driver will not be built))
 

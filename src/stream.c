@@ -20,6 +20,29 @@
 
 #include <osmocom/netif/stream.h>
 
+#include "config.h"
+
+#ifdef HAVE_LIBSCTP
+#include <netinet/sctp.h>
+#endif
+
+static int sctp_sock_activate_events(int fd)
+{
+#ifdef HAVE_LIBSCTP
+	struct sctp_event_subscribe event;
+	int rc;
+
+	/* subscribe for all events */
+	memset((uint8_t *)&event, 1, sizeof(event));
+	rc = setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS,
+			&event, sizeof(event));
+
+	return rc;
+#else
+	return -1;
+#endif
+}
+
 /*
  * Client side.
  */
@@ -40,6 +63,7 @@ struct osmo_stream_cli {
 	enum osmo_stream_cli_state	state;
 	const char			*addr;
 	uint16_t			port;
+	uint16_t			proto;
 	int (*connect_cb)(struct osmo_stream_cli *srv);
 	int (*read_cb)(struct osmo_stream_cli *srv);
 	int (*write_cb)(struct osmo_stream_cli *srv);
@@ -80,6 +104,9 @@ static void osmo_stream_cli_read(struct osmo_stream_cli *cli)
 
 static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 {
+#ifdef HAVE_LIBSCTP
+	struct sctp_sndrcvinfo sinfo;
+#endif
 	struct msgb *msg;
 	struct llist_head *lh;
 	int ret;
@@ -99,7 +126,20 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 		return 0;
 	}
 
-	ret = send(cli->ofd.fd, msg->data, msg->len, 0);
+	switch (cli->proto) {
+#ifdef HAVE_LIBSCTP
+	case IPPROTO_SCTP:
+		sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
+		sinfo.sinfo_stream = htonl(msgb_sctp_stream(msg));
+		ret = sctp_send(cli->ofd.fd, msg->data, msgb_length(msg),
+				&sinfo, MSG_NOSIGNAL);
+		break;
+#endif
+	case IPPROTO_TCP:
+	default:
+		ret = send(cli->ofd.fd, msg->data, msg->len, 0);
+		break;
+	}
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ENOTCONN) {
 			osmo_stream_cli_reconnect(cli);
@@ -126,6 +166,8 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 		ofd->when &= ~BSC_FD_WRITE;
 		LOGP(DLINP, LOGL_DEBUG, "connection done.\n");
 		cli->state = STREAM_CLI_STATE_CONNECTED;
+		if (cli->proto == IPPROTO_SCTP)
+			sctp_sock_activate_events(ofd->fd);
 		if (cli->connect_cb)
 			cli->connect_cb(cli);
 		break;
@@ -155,6 +197,7 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 	if (!cli)
 		return NULL;
 
+	cli->proto = IPPROTO_TCP;
 	cli->ofd.fd = -1;
 	cli->ofd.when |= BSC_FD_READ | BSC_FD_WRITE;
 	cli->ofd.priv_nr = 0;	/* XXX */
@@ -180,6 +223,13 @@ void
 osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port)
 {
 	cli->port = port;
+	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+}
+
+void
+osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
+{
+	cli->proto = proto;
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
@@ -235,9 +285,9 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 
 	cli->flags &= ~OSMO_STREAM_CLI_F_RECONF;
 
-	ret = osmo_sock_init(AF_INET, SOCK_STREAM, IPPROTO_TCP,
+	ret = osmo_sock_init(AF_INET, SOCK_STREAM, cli->proto,
 			     cli->addr, cli->port,
-			     OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_NONBLOCK);
+			     OSMO_SOCK_F_CONNECT);
 	if (ret < 0) {
 		if (errno != EINPROGRESS)
 			return ret;
@@ -303,6 +353,7 @@ struct osmo_stream_srv_link {
         struct osmo_fd                  ofd;
         const char                      *addr;
         uint16_t                        port;
+        uint16_t                        proto;
         int (*accept_cb)(struct osmo_stream_srv_link *srv, int fd);
         void                            *data;
 	int				flags;
@@ -324,6 +375,9 @@ static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 	LOGP(DLINP, LOGL_DEBUG, "accept()ed new link from %s to port %u\n",
 		inet_ntoa(sa.sin_addr), link->port);
 
+	if (link->proto == IPPROTO_SCTP)
+		sctp_sock_activate_events(ret);
+
 	if (link->accept_cb)
 		link->accept_cb(link, ret);
 
@@ -338,6 +392,7 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	if (!link)
 		return NULL;
 
+	link->proto = IPPROTO_TCP;
 	link->ofd.fd = -1;
 	link->ofd.when |= BSC_FD_READ | BSC_FD_WRITE;
 	link->ofd.cb = osmo_stream_srv_fd_cb;
@@ -357,6 +412,14 @@ void osmo_stream_srv_link_set_port(struct osmo_stream_srv_link *link,
 				      uint16_t port)
 {
 	link->port = port;
+	link->flags |= OSMO_STREAM_SRV_F_RECONF;
+}
+
+void
+osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link,
+			  uint16_t proto)
+{
+	link->proto = proto;
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
 }
 
@@ -400,7 +463,7 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 
 	link->flags &= ~OSMO_STREAM_SRV_F_RECONF;
 
-	ret = osmo_sock_init(AF_INET, SOCK_STREAM, IPPROTO_TCP,
+	ret = osmo_sock_init(AF_INET, SOCK_STREAM, link->proto,
 			     link->addr, link->port, OSMO_SOCK_F_BIND);
 	if (ret < 0)
 		return ret;
@@ -440,6 +503,9 @@ static void osmo_stream_srv_read(struct osmo_stream_srv *conn)
 
 static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 {
+#ifdef HAVE_LIBSCTP
+	struct sctp_sndrcvinfo sinfo;
+#endif
 	struct msgb *msg;
 	struct llist_head *lh;
 	int ret;
@@ -454,7 +520,20 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	llist_del(lh);
 	msg = llist_entry(lh, struct msgb, list);
 
-	ret = send(conn->ofd.fd, msg->data, msg->len, 0);
+	switch (conn->srv->proto) {
+#ifdef HAVE_LIBSCTP
+	case IPPROTO_SCTP:
+		sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
+		sinfo.sinfo_stream = htonl(msgb_sctp_stream(msg));
+		ret = sctp_send(conn->ofd.fd, msg->data, msgb_length(msg),
+				&sinfo, MSG_NOSIGNAL);
+		break;
+#endif
+	case IPPROTO_TCP:
+	default:
+		ret = send(conn->ofd.fd, msg->data, msg->len, 0);
+		break;
+	}
 	if (ret < 0) {
 		LOGP(DLINP, LOGL_ERROR, "error to send\n");
 	}

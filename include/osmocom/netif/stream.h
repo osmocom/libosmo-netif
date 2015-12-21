@@ -1,6 +1,9 @@
 #ifndef _OSMO_STREAM_H_
 #define _OSMO_STREAM_H_
 
+#define msgb_sctp_ppid(msg)             (msg)->cb[3]
+#define msgb_sctp_stream(msg)           (msg)->cb[4]
+
 struct osmo_stream_srv_link;
 
 struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx);
@@ -8,6 +11,7 @@ void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link);
 
 void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link, const char *addr);
 void osmo_stream_srv_link_set_port(struct osmo_stream_srv_link *link, uint16_t port);
+void osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link, uint16_t proto);
 void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link, int (*accept_cb)(struct osmo_stream_srv_link *link, int fd));
 void osmo_stream_srv_link_set_data(struct osmo_stream_srv_link *link, void *data);
 void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link);
@@ -33,6 +37,7 @@ struct osmo_stream_cli;
 
 void osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr);
 void osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port);
+void osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto);
 void osmo_stream_cli_set_data(struct osmo_stream_cli *cli, void *data);
 void osmo_stream_cli_set_reconnect_timeout(struct osmo_stream_cli *cli, int timeout);
 void *osmo_stream_cli_get_data(struct osmo_stream_cli *cli);
