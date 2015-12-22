@@ -49,6 +49,7 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx);
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli);
 
 int osmo_stream_cli_open(struct osmo_stream_cli *cli);
+int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect);
 void osmo_stream_cli_close(struct osmo_stream_cli *cli);
 
 void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg);

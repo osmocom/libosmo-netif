@@ -275,7 +275,7 @@ void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 	talloc_free(cli);
 }
 
-int osmo_stream_cli_open(struct osmo_stream_cli *cli)
+int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 {
 	int ret;
 
@@ -289,8 +289,14 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 			     cli->addr, cli->port,
 			     OSMO_SOCK_F_CONNECT);
 	if (ret < 0) {
-		if (errno != EINPROGRESS)
-			return ret;
+		if (errno != EINPROGRESS) {
+			if (reconnect) {
+				osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
+				cli->state = STREAM_CLI_STATE_CONNECTING;
+				return 0;
+			} else
+				return ret;
+		}
 	}
 	cli->ofd.fd = ret;
 	if (osmo_fd_register(&cli->ofd) < 0) {
@@ -298,6 +304,12 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		return -EIO;
 	}
 	return 0;
+}
+
+
+int osmo_stream_cli_open(struct osmo_stream_cli *cli)
+{
+	return osmo_stream_cli_open2(cli, 0);
 }
 
 static void cli_timer_cb(void *data)
@@ -308,7 +320,7 @@ static void cli_timer_cb(void *data)
 
 	switch(cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
-		osmo_stream_cli_open(cli);
+		osmo_stream_cli_open2(cli, 1);
 	        break;
 	default:
 		break;
