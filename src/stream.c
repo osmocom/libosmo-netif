@@ -205,7 +205,7 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 	cli->ofd.data = cli;
 	cli->state = STREAM_CLI_STATE_CONNECTING;
 	cli->timer.cb = cli_timer_cb;
-	cli->timer.data = link;
+	cli->timer.data = cli;
 	cli->reconnect_timeout = 5;	/* default is 5 seconds. */
 	INIT_LLIST_HEAD(&cli->tx_queue);
 
