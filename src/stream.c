@@ -272,7 +272,7 @@ osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
 
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 {
-	talloc_free(link);
+	talloc_free(cli);
 }
 
 int osmo_stream_cli_open(struct osmo_stream_cli *cli)
