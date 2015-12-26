@@ -45,7 +45,9 @@ old_LIBS=$LIBS
 AC_SEARCH_LIBS([sctp_send], [sctp], [
 	AC_DEFINE(HAVE_LIBSCTP, 1, [Define 1 to enable SCTP support])
 	AC_SUBST(HAVE_LIBSCTP, [1])
-	AC_SUBST(LIBSCTP_LIBS, [-l$ac_lib])
+	if test -n "$ac_lib"; then
+		AC_SUBST(LIBSCTP_LIBS, [-l$ac_lib])
+	fi
 	], [
 	AC_MSG_ERROR([sctp_send not found in searched libs])])
 LIBS=$old_LIBS
