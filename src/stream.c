@@ -641,7 +641,7 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 {
 	int ret;
 
-	ret = recv(conn->ofd.fd, msg->data, msg->data_len, 0);
+	ret = recv(conn->ofd.fd, msgb_data(msg), msgb_tailroom(msg), 0);
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ECONNRESET) {
 			LOGP(DLINP, LOGL_ERROR,
