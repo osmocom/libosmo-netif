@@ -639,9 +639,65 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 {
+#ifdef HAVE_LIBSCTP
+	struct sctp_sndrcvinfo sinfo;
+	int flags = 0;
+#endif
 	int ret;
 
-	ret = recv(conn->ofd.fd, msgb_data(msg), msgb_tailroom(msg), 0);
+	if (!msg)
+		return -EINVAL;
+
+	switch (conn->srv->proto) {
+#ifdef HAVE_LIBSCTP
+	case IPPROTO_SCTP:
+		ret = sctp_recvmsg(conn->ofd.fd, msgb_data(msg), msgb_tailroom(msg),
+				NULL, NULL, &sinfo, &flags);
+		if (flags & MSG_NOTIFICATION) {
+			union sctp_notification *notif = (union sctp_notification *) msgb_data(msg);
+			LOGP(DLINP, LOGL_DEBUG, "NOTIFICATION %u flags=0x%x\n", notif->sn_header.sn_type, notif->sn_header.sn_flags);
+			switch (notif->sn_header.sn_type) {
+			case SCTP_ASSOC_CHANGE:
+				LOGP(DLINP, LOGL_DEBUG, "===> ASSOC CHANGE:");
+				switch (notif->sn_assoc_change.sac_state) {
+				case SCTP_COMM_UP:
+					LOGPC(DLINP, LOGL_DEBUG, " UP\n");
+					break;
+				case SCTP_COMM_LOST:
+					LOGPC(DLINP, LOGL_DEBUG, " LOST\n");
+					break;
+				case SCTP_RESTART:
+					LOGPC(DLINP, LOGL_DEBUG, " RESTART\n");
+					break;
+				case SCTP_SHUTDOWN_COMP:
+					LOGPC(DLINP, LOGL_DEBUG, " SHUTDOWN COMP\n");
+					break;
+				case SCTP_CANT_STR_ASSOC:
+					LOGPC(DLINP, LOGL_DEBUG, " CANT STR ASSOC\n");
+					break;
+				}
+				break;
+			case SCTP_PEER_ADDR_CHANGE:
+				LOGP(DLINP, LOGL_DEBUG, "===> PEER ADDR CHANGE\n");
+				break;
+			case SCTP_SHUTDOWN_EVENT:
+				LOGP(DLINP, LOGL_DEBUG, "===> SHUTDOWN EVT\n");
+				/* Handle this like a regular disconnect */
+				return 0;
+				break;
+			}
+			return -EAGAIN;
+		}
+		msgb_sctp_ppid(msg) = ntohl(sinfo.sinfo_ppid);
+		msgb_sctp_stream(msg) = ntohl(sinfo.sinfo_stream);
+		break;
+#endif
+	case IPPROTO_TCP:
+	default:
+		ret = recv(conn->ofd.fd, msgb_data(msg), msgb_tailroom(msg), 0);
+		break;
+	}
+
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ECONNRESET) {
 			LOGP(DLINP, LOGL_ERROR,
