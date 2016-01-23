@@ -80,7 +80,7 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
 		return 0;
 	}
-	ptr = msgb_put(msg, strlen(buf));
+	ptr = msgb_put(msg, ret);
 	memcpy(ptr, buf, ret);
 
 	osmo_stream_cli_send(conn, msg);
