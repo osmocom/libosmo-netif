@@ -533,14 +533,8 @@ osmux_batch_add_circuit(struct osmux_batch *batch, int ccid, int dummy,
 	return circuit;
 }
 
-static void osmux_batch_del_circuit(struct osmux_batch *batch, int ccid)
+static void osmux_batch_del_circuit(struct osmux_batch *batch, struct osmux_circuit *circuit)
 {
-	struct osmux_circuit *circuit;
-
-	circuit = osmux_batch_find_circuit(batch, ccid);
-	if (circuit == NULL)
-		return;
-
 	if (circuit->dummy)
 		batch->ndummy--;
 	llist_del(&circuit->head);
@@ -713,8 +707,13 @@ int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
 void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid)
 {
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
+	struct osmux_circuit *circuit;
 
-	osmux_batch_del_circuit(batch, ccid);
+	circuit = osmux_batch_find_circuit(batch, ccid);
+	if (circuit == NULL)
+		return;
+
+	osmux_batch_del_circuit(batch, circuit);
 }
 
 void osmux_xfrm_input_fini(struct osmux_in_handle *h)
@@ -722,10 +721,9 @@ void osmux_xfrm_input_fini(struct osmux_in_handle *h)
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 	struct osmux_circuit *circuit, *next;
 
-	llist_for_each_entry_safe(circuit, next, &batch->circuit_list, head) {
-		llist_del(&circuit->head);
-		talloc_free(circuit);
-	}
+	llist_for_each_entry_safe(circuit, next, &batch->circuit_list, head)
+		osmux_batch_del_circuit(batch, circuit);
+
 	osmo_timer_del(&batch->timer);
 	talloc_free(batch);
 }
