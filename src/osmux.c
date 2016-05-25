@@ -225,6 +225,16 @@ static void osmux_batch_dequeue(struct msgb *msg, struct osmux_circuit *circuit)
 	circuit->nmsgs--;
 }
 
+static void osmux_circuit_del_msgs(struct osmux_batch *batch, struct osmux_circuit *circuit)
+{
+	struct msgb *cur, *tmp;
+	llist_for_each_entry_safe(cur, tmp, &circuit->msg_list, list) {
+		osmux_batch_dequeue(cur, circuit);
+		msgb_free(cur);
+		batch->nmsgs--;
+	}
+}
+
 struct osmux_input_state {
 	struct msgb	*out_msg;
 	struct msgb	*msg;
@@ -538,6 +548,7 @@ static void osmux_batch_del_circuit(struct osmux_batch *batch, struct osmux_circ
 	if (circuit->dummy)
 		batch->ndummy--;
 	llist_del(&circuit->head);
+	osmux_circuit_del_msgs(batch, circuit);
 	talloc_free(circuit);
 }
 
