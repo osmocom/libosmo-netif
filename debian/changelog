@@ -1,3 +1,9 @@
+libosmo-netif (0.0.6.1) UNRELEASED; urgency=medium
+
+  * Bugfix release for OS#1733
+
+ -- Holger Hans Peter Freyther <holger@moiji-mobile.com>  Thu, 26 May 2016 14:14:24 +0200
+
 libosmo-netif (0.0.6) unstable; urgency=medium
 
   * Drop libosmovty dependency.
