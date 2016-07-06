@@ -27,6 +27,7 @@ libtool
 
 .tarball-version
 .version
+.dirstamp
 
 tests/atconfig
 tests/package.m4
