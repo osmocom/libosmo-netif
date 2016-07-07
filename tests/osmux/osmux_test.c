@@ -8,6 +8,8 @@
  * (at your option) any later version.
  */
 
+#define OSMUX_TEST_USE_TIMING 0
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -15,7 +17,9 @@
 #include <string.h>
 #include <signal.h>
 #include <arpa/inet.h>
+#if OSMUX_TEST_USE_TIMING
 #include <sys/time.h>
+#endif
 
 #include <osmocom/core/select.h>
 #include <osmocom/core/application.h>
@@ -51,11 +55,14 @@ static uint8_t rtp_pkt[] = {
 };
 
 static int rtp_pkts;
+#if OSMUX_TEST_USE_TIMING
 static struct timeval last;
+#endif
 
 static void tx_cb(struct msgb *msg, void *data)
 {
 	char buf[4096];
+#if OSMUX_TEST_USE_TIMING
 	struct timeval now, diff;
 
 	gettimeofday(&now, NULL);
@@ -68,6 +75,7 @@ static void tx_cb(struct msgb *msg, void *data)
 			(unsigned int)diff.tv_usec);
 		exit(EXIT_FAILURE);
 	}
+#endif
 
 	osmo_rtp_snprintf(buf, sizeof(buf), msg);
 	fprintf(stderr, "extracted packet: %s\n", buf);
@@ -149,7 +157,9 @@ static void osmux_test_loop(int ccid)
 		osmux_xfrm_input(&h_input, msg, (i % 2) + ccid);
 
 		if (i % 4 == 0) {
+#if OSMUX_TEST_USE_TIMING
 			gettimeofday(&last, NULL);
+#endif
 
 			/* After four RTP messages, squash them into the OSMUX
 			 * batch and call the routine to deliver it.
