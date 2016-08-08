@@ -50,6 +50,7 @@ AC_SEARCH_LIBS([sctp_send], [sctp], [
 	], [
 	AC_MSG_ERROR([sctp_send not found in searched libs])])
 LIBS=$old_LIBS
+AC_CHECK_HEADERS(netinet/sctp.h,,AC_MSG_ERROR(netinet/sctp.h not found))
 
 AC_CHECK_HEADERS(dahdi/user.h,,AC_MSG_WARN(DAHDI input driver will not be built))
 
