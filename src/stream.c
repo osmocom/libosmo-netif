@@ -26,6 +26,14 @@
 #include <netinet/sctp.h>
 #endif
 
+/*
+ * Platforms that don't have MSG_NOSIGNAL (which disables SIGPIPE)
+ * usually have SO_NOSIGPIPE (set via setsockopt).
+ */
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 static int sctp_sock_activate_events(int fd)
 {
 #ifdef HAVE_LIBSCTP
@@ -167,8 +175,16 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 		ofd->when &= ~BSC_FD_WRITE;
 		LOGP(DLINP, LOGL_DEBUG, "connection done.\n");
 		cli->state = STREAM_CLI_STATE_CONNECTED;
-		if (cli->proto == IPPROTO_SCTP)
+		if (cli->proto == IPPROTO_SCTP) {
+#ifdef SO_NOSIGPIPE
+			int val = 1;
+
+			ret = setsockopt(ofd->fd, SOL_SOCKET, SO_NOSIGPIPE, (void*)&val, sizeof(val));
+			if (ret < 0)
+				LOGP(DLINP, LOGL_DEBUG, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
+#endif
 			sctp_sock_activate_events(ofd->fd);
+		}
 		if (cli->connect_cb)
 			cli->connect_cb(cli);
 		break;
