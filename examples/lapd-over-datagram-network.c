@@ -35,7 +35,7 @@ const struct log_info lapd_test_log_info = {
 
 static struct osmo_dgram *conn;
 static struct lapd_instance *lapd;
-static int sapi = 63, tei = 0;
+static int tei = 0;
 
 void sighandler(int foo)
 {
