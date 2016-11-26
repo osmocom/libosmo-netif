@@ -230,7 +230,7 @@ int osmo_rs232_open(struct osmo_rs232 *r)
 	if (rc < 0) {
 		close(bfd->fd);
 		LOGP(DLINP, LOGL_ERROR, "rs232: could not register FD: %s\n",
-			strerror(rc));
+			strerror(-rc));
 		return rc;
 	}
 
