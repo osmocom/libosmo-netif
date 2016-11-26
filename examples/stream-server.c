@@ -93,6 +93,8 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 	int ret;
 
 	ret = read(STDIN_FILENO, buf, sizeof(buf));
+	if (ret < 1)
+		return 0;
 
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "read %d byte from keyboard\n", ret);
 
@@ -106,8 +108,8 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
 		return 0;
 	}
-	ptr = msgb_put(msg, strlen(buf));
-	memcpy(ptr, buf, strlen(buf));
+	ptr = msgb_put(msg, ret);
+	memcpy(ptr, buf, ret);
 	osmo_stream_srv_send(conn, msg);
 
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "message of %d bytes sent\n", msg->len);
