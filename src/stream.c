@@ -45,6 +45,9 @@ static int sctp_sock_activate_events(int fd)
 	rc = setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS,
 			&event, sizeof(event));
 
+	if (rc < 0)
+		LOGP(DLINP, LOGL_ERROR, "coudldn't activate SCTP events "
+		     "on FD %u\n", fd);
 	return rc;
 #else
 	return -1;
