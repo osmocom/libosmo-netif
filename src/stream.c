@@ -308,16 +308,9 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	ret = osmo_sock_init(AF_INET, SOCK_STREAM, cli->proto,
 			     cli->addr, cli->port,
 			     OSMO_SOCK_F_CONNECT);
-	if (ret < 0) {
-		if (errno != EINPROGRESS) {
-			if (reconnect) {
-				osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
-				cli->state = STREAM_CLI_STATE_CONNECTING;
-				return 0;
-			} else
-				return ret;
-		}
-	}
+	if (ret < 0)
+		return ret;
+
 	cli->ofd.fd = ret;
 	if (osmo_fd_register(&cli->ofd) < 0) {
 		close(ret);
