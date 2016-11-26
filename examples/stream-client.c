@@ -72,8 +72,9 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 	int ret;
 
 	ret = read(STDIN_FILENO, buf, sizeof(buf));
-
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "read %d byte from keyboard\n", ret);
+	if (ret < 0)
+		return ret;
 
 	msg = msgb_alloc(1024, "STREAMCLIENT/test");
 	if (msg == NULL) {
