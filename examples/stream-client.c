@@ -93,6 +93,7 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 int main(void)
 {
 	struct osmo_fd *kbd_ofd;
+	int rc;
 
 	tall_test = talloc_named_const(NULL, 1, "osmo_stream_cli_test");
 
@@ -127,7 +128,11 @@ int main(void)
 	kbd_ofd->when = BSC_FD_READ;
 	kbd_ofd->data = conn;
 	kbd_ofd->cb = kbd_cb;
-	osmo_fd_register(kbd_ofd);
+	rc = osmo_fd_register(kbd_ofd);
+	if (rc < 0) {
+		LOGP(DSTREAMTEST, LOGL_ERROR, "FD Register\n");
+		exit(EXIT_FAILURE);
+	}
 
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "Entering main loop\n");
 
