@@ -529,6 +529,7 @@ struct osmo_stream_srv_link {
 static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 {
 	int ret;
+	int sock_fd;
 	struct sockaddr_in sa;
 	socklen_t sa_len = sizeof(sa);
 	struct osmo_stream_srv_link *link = ofd->data;
@@ -541,17 +542,33 @@ static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 	}
 	LOGP(DLINP, LOGL_DEBUG, "accept()ed new link from %s to port %u\n",
 		inet_ntoa(sa.sin_addr), link->port);
+	sock_fd = ret;
 
-	if (link->proto == IPPROTO_SCTP)
-		sctp_sock_activate_events(ret);
+	if (link->proto == IPPROTO_SCTP) {
+		ret = sctp_sock_activate_events(sock_fd);
+		if (ret < 0)
+			goto error_close_socket;
+	}
 
-	if (link->flags & OSMO_STREAM_SRV_F_NODELAY)
-		setsockopt_nodelay(ret, link->proto, 1);
+	if (link->flags & OSMO_STREAM_SRV_F_NODELAY) {
+		ret = setsockopt_nodelay(ret, link->proto, 1);
+		if (ret < 0)
+			goto error_close_socket;
+	}
 
-	if (link->accept_cb)
-		link->accept_cb(link, ret);
+	if (!link->accept_cb) {
+		ret = -ENOTSUP;
+		goto error_close_socket;
+	}
 
+	ret = link->accept_cb(link, sock_fd);
+	if (ret)
+		goto error_close_socket;
 	return 0;
+
+error_close_socket:
+	close(sock_fd);
+	return ret;
 }
 
 /*! \brief Create an Osmocom Stream Server Link
