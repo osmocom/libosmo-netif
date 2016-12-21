@@ -2,24 +2,50 @@ Source: libosmo-netif
 Section: libs
 Priority: optional
 Maintainer: Holger Hans Peter Freyther <holger@moiji-mobile.com>
-Build-Depends: debhelper (>= 9), autotools-dev, autoconf, automake, libtool, dh-autoreconf, libdpkg-perl, git, libosmocore-dev, libosmo-abis-dev, pkg-config, libsctp-dev
+Build-Depends: debhelper (>= 9),
+               autotools-dev,
+               autoconf,
+               automake,
+               libtool,
+               dh-autoreconf,
+               libdpkg-perl,
+               git,
+               libosmocore-dev,
+               libosmo-abis-dev,
+               pkg-config,
+               libsctp-dev,
+               libortp-dev
 Standards-Version: 3.9.6
-Vcs-Git: git://git.osmocom.org/libosmo-netif.git
 Vcs-Browser: http://git.osmocom.org/gitweb?p=libosmo-netif.git;a=summary
+Vcs-Git: git://git.osmocom.org/libosmo-netif.git
+Homepage: https://projects.osmocom.org/projects/libosmo-netif
 
 Package: libosmonetif2
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Multi-Arch: same
-Description: Library containing common/shared code regarding network interface
+Description: Common/shared code regarding network interface for OpenBSC
+ The libosmo-netif library is one of the libraries needed by the
+ OpenBSC GSM infrastructure software. This library in particular implements
+ the shared code for network interfaces.
 
 Package: libosmo-netif-dev
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libosmocore, libosmonetif2 (= ${binary:Version})
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         libosmocore-dev,
+         libosmocore,
+         libosmonetif3 (= ${binary:Version})
 Multi-Arch: same
 Description: Development headers for Osmocom network interface
+ The libosmo-netif library is one of the libraries needed by the
+ OpenBSC GSM infrastructure software. This library in particular implements
+ the shared code for network interfaces.
+ .
+ This package contains the development files needed for developing with
+ the libosmo-netif library.
 
 Package: libosmo-netif-dbg
 Section: debug
@@ -27,4 +53,9 @@ Architecture: any
 Priority: extra
 Depends: libosmonetif2 (= ${binary:Version}), ${misc:Depends}
 Multi-Arch: same
-Description: Debug symbols for Osmocom network interface
+Description: Debug symbols for Osmocom network interface library
+ The libosmo-netif library is one of the libraries needed by the
+ OpenBSC GSM infrastructure software. This library in particular implements
+ the shared code for network interfaces.
+ .
+ This package contains the debug symbols for the library.
