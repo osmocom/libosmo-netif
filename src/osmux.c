@@ -394,7 +394,8 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 	LOGP(DLMIB, LOGL_DEBUG, "invoking delivery function\n");
 #endif
 	batch_msg = osmux_build_batch(batch, h->batch_size, h->batch_factor);
-
+	if (!batch_msg)
+		return;
 	h->stats.output_osmux_msgs++;
 	h->stats.output_osmux_bytes += batch_msg->len;
 
