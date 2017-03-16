@@ -6,7 +6,7 @@ SUBDIRS = include src examples tests
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libosmo-netif.pc
 
-EXTRA_DIST = .version
+EXTRA_DIST = .version README.md
 
 BUILT_SOURCES = $(top_srcdir)/.version
 $(top_srcdir)/.version:
