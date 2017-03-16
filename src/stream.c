@@ -101,8 +101,11 @@ static void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 
 void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 {
+	if (cli->ofd.fd == -1)
+		return;
 	osmo_fd_unregister(&cli->ofd);
 	close(cli->ofd.fd);
+	cli->ofd.fd = -1;
 }
 
 static void osmo_stream_cli_read(struct osmo_stream_cli *cli)
@@ -506,8 +509,11 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 
 void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 {
+	if (link->ofd.fd == -1)
+		return;
 	osmo_fd_unregister(&link->ofd);
 	close(link->ofd.fd);
+	link->ofd.fd = -1;
 }
 
 struct osmo_stream_srv {
