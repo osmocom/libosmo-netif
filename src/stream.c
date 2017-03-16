@@ -308,8 +308,11 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	ret = osmo_sock_init(AF_INET, SOCK_STREAM, cli->proto,
 			     cli->addr, cli->port,
 			     OSMO_SOCK_F_CONNECT);
-	if (ret < 0)
+	if (ret < 0) {
+		if (reconnect && errno == ECONNREFUSED)
+			osmo_stream_cli_reconnect(cli);
 		return ret;
+	}
 
 	cli->ofd.fd = ret;
 	if (osmo_fd_register(&cli->ofd) < 0) {
