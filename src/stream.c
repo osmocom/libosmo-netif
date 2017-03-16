@@ -295,6 +295,7 @@ osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
 
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 {
+	osmo_timer_del(&cli->timer);
 	talloc_free(cli);
 }
 
