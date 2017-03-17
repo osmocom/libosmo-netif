@@ -10,7 +10,7 @@ Homepage
 --------
 
 The official homepage of the project is
-https://osmocom.org/projects/libosmo-netif
+<https://osmocom.org/projects/libosmo-netif>
 
 GIT Repository
 --------------
@@ -19,7 +19,7 @@ You can clone from the official libosmo-netif.git repository using
 
 	git clone git://git.osmocom.org/libosmo-netif.git
 
-There is a cgit interface at http://git.osmocom.org/libosmo-netif/
+There is a cgit interface at <http://git.osmocom.org/libosmo-netif/>
 
 Documentation
 -------------
@@ -32,7 +32,7 @@ Mailing List
 
 Discussions related to libosmo-netif are happening on the
 openbsc@lists.osmocom.org mailing list, please see
-https://lists.osmocom.org/mailman/listinfo/openbsc for subscription
+<https://lists.osmocom.org/mailman/listinfo/openbsc> for subscription
 options and the list archive.
 
 Please observe the [Osmocom Mailing List
@@ -43,12 +43,12 @@ Contributing
 ------------
 
 Our coding standards are described at
-https://osmocom.org/projects/cellular-infrastructure/wiki/Coding_standards
+<https://osmocom.org/projects/cellular-infrastructure/wiki/Coding_standards>
 
 We us a gerrit based patch submission/review process for managing
 contributions.  Please see
-https://osmocom.org/projects/cellular-infrastructure/wiki/Gerrit for
+<https://osmocom.org/projects/cellular-infrastructure/wiki/Gerrit> for
 more details
 
 The current patch queue for libosmo-netif can be seen at
-https://gerrit.osmocom.org/#/q/project:libosmo-netif+status:open
+<https://gerrit.osmocom.org/#/q/project:libosmo-netif+status:open>
