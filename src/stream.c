@@ -85,7 +85,7 @@ struct osmo_stream_cli {
 
 void osmo_stream_cli_close(struct osmo_stream_cli *cli);
 
-static void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
+void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 {
 	if (cli->reconnect_timeout < 0) {
 		LOGP(DLINP, LOGL_DEBUG, "not reconnecting, disabled.\n");

@@ -44,6 +44,7 @@ void *osmo_stream_cli_get_data(struct osmo_stream_cli *cli);
 struct osmo_fd *osmo_stream_cli_get_ofd(struct osmo_stream_cli *cli);
 void osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli, int (*connect_cb)(struct osmo_stream_cli *cli));
 void osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli, int (*read_cb)(struct osmo_stream_cli *cli));
+void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli);
 
 struct osmo_stream_cli *osmo_stream_cli_create(void *ctx);
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli);
