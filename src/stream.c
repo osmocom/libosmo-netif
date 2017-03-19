@@ -340,6 +340,7 @@ static void cli_timer_cb(void *data)
 
 	switch(cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
+		cli->ofd.when |= BSC_FD_READ | BSC_FD_WRITE;
 		osmo_stream_cli_open2(cli, 1);
 	        break;
 	default:
