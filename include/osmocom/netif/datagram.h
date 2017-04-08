@@ -8,6 +8,8 @@ void osmo_dgram_tx_destroy(struct osmo_dgram_tx *conn);
 
 void osmo_dgram_tx_set_addr(struct osmo_dgram_tx *conn, const char *addr);
 void osmo_dgram_tx_set_port(struct osmo_dgram_tx *conn, uint16_t port);
+void osmo_dgram_tx_set_local_addr(struct osmo_dgram_tx *conn, const char *addr);
+void osmo_dgram_tx_set_local_port(struct osmo_dgram_tx *conn, uint16_t port);
 void osmo_dgram_tx_set_data(struct osmo_dgram_tx *conn, void *data);
 
 int osmo_dgram_tx_open(struct osmo_dgram_tx *conn);

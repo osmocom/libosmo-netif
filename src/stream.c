@@ -12,6 +12,7 @@
 
 #include <osmocom/core/timer.h>
 #include <osmocom/core/select.h>
+#include <osmocom/core/utils.h>
 #include <osmocom/gsm/tlv.h>
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
@@ -82,6 +83,7 @@ struct osmo_stream_cli {
 	enum osmo_stream_cli_state	state;
 	const char			*addr;
 	uint16_t			port;
+	char				*local_addr;
 	uint16_t			local_port;
 	uint16_t			proto;
 	int (*connect_cb)(struct osmo_stream_cli *srv);
@@ -277,7 +279,7 @@ osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port)
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
-/*! \brief Set the local port number for the socket
+/*! \brief Set the local port number for the socket (to be bound to)
  *  \param[in] cli Stream Client to modify
  *  \param[in] port Local port number
  */
@@ -285,6 +287,17 @@ void
 osmo_stream_cli_set_local_port(struct osmo_stream_cli *cli, uint16_t port)
 {
 	cli->local_port = port;
+	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+}
+
+/*! \brief Set the local address for the socket (to be bound to)
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] port Local host name
+ */
+void
+osmo_stream_cli_set_local_addr(struct osmo_stream_cli *cli, const char *addr)
+{
+	osmo_talloc_replace_string(cli, &cli->local_addr, addr);
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
@@ -376,9 +389,10 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 
 	cli->flags &= ~OSMO_STREAM_CLI_F_RECONF;
 
-	ret = osmo_sock_init(AF_INET, SOCK_STREAM, cli->proto,
-			     cli->addr, cli->port,
-			     OSMO_SOCK_F_CONNECT);
+	ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
+			      cli->local_addr, cli->local_port,
+			      cli->addr, cli->port,
+			      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND);
 	if (ret < 0) {
 		if (reconnect && errno == ECONNREFUSED)
 			osmo_stream_cli_reconnect(cli);

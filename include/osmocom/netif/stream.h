@@ -48,6 +48,8 @@ struct osmo_stream_cli;
 void osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr);
 void osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port);
 void osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto);
+void osmo_stream_cli_set_local_addr(struct osmo_stream_cli *cli, const char *addr);
+void osmo_stream_cli_set_local_port(struct osmo_stream_cli *cli, uint16_t port);
 void osmo_stream_cli_set_data(struct osmo_stream_cli *cli, void *data);
 void osmo_stream_cli_set_reconnect_timeout(struct osmo_stream_cli *cli, int timeout);
 void *osmo_stream_cli_get_data(struct osmo_stream_cli *cli);

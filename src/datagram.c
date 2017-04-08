@@ -12,6 +12,7 @@
 
 #include <osmocom/core/linuxlist.h>
 #include <osmocom/core/select.h>
+#include <osmocom/core/utils.h>
 #include <osmocom/gsm/tlv.h>
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
@@ -40,6 +41,8 @@ struct osmo_dgram_tx {
 	struct llist_head		tx_queue;
 	const char			*addr;
 	uint16_t			port;
+	char				*local_addr;
+	uint16_t			local_port;
 	int (*write_cb)(struct osmo_dgram_tx *conn);
 	void				*data;
 	unsigned int			flags;
@@ -140,6 +143,26 @@ osmo_dgram_tx_set_port(struct osmo_dgram_tx *conn,
 	conn->flags |= OSMO_DGRAM_CLI_F_RECONF;
 }
 
+/*! \brief Set the local address from which we transmit
+ *  \param[in] conn Datagram Transmitter to modify
+ *  \param[in] addr Local IP address */
+void
+osmo_dgram_tx_set_local_addr(struct osmo_dgram_tx *conn, const char *addr)
+{
+	osmo_talloc_replace_string(conn, &conn->local_addr, addr);
+	conn->flags |= OSMO_DGRAM_CLI_F_RECONF;
+}
+
+/*! \brief Set the local port from which we transmit
+ *  \param[in] conn Datagram Transmitter to modify
+ *  \param[in] port Local Port Number */
+void
+osmo_dgram_tx_set_local_port(struct osmo_dgram_tx *conn, uint16_t port)
+{
+	conn->local_port = port;
+	conn->flags |= OSMO_DGRAM_CLI_F_RECONF;
+}
+
 /*! \brief Set application private data of the datagram transmitter
  *  \param[in] conn Datagram Transmitter to modify
  *  \param[in] data User-specific data (available in call-back functions) */
@@ -169,9 +192,9 @@ int osmo_dgram_tx_open(struct osmo_dgram_tx *conn)
 
 	conn->flags &= ~OSMO_DGRAM_CLI_F_RECONF;
 
-	ret = osmo_sock_init(AF_INET, SOCK_DGRAM, IPPROTO_UDP,
-			     conn->addr, conn->port,
-			     OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_NONBLOCK);
+	ret = osmo_sock_init2(AF_INET, SOCK_DGRAM, IPPROTO_UDP,
+			      conn->local_addr, conn->local_port, conn->addr, conn->port,
+			      OSMO_SOCK_F_BIND|OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_NONBLOCK);
 	if (ret < 0)
 		return ret;
 
