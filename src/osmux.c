@@ -23,6 +23,15 @@
 
 #include <arpa/inet.h>
 
+/*! \addtogroup osmux Osmocom Multiplex Protocol
+ *  @{
+ */
+
+/*! \file osmux.c
+ *  \brief Osmocom multiplex protocol helpers
+ */
+
+
 /* This allows you to debug timing reconstruction in the output path */
 #if 0
 #define DEBUG_TIMING		0
@@ -921,3 +930,5 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 
 	return offset;
 }
+
+/*! @} */

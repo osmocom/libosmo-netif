@@ -3,6 +3,14 @@
 
 #include <osmocom/core/endian.h>
 
+/*! \addtogroup osmux
+ *  @{
+ */
+
+/*! \file osmux.h
+ *  Osmocom multiplex protocol helpers
+ */
+
 /* OSmux header:
  *
  *	ft (3 bits):		0=signalling, 1=voice, 2=dummy
@@ -94,5 +102,7 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h, stru
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg);
 
 void osmux_tx_sched(struct llist_head *list, void (*tx_cb)(struct msgb *msg, void *data), void *data);
+
+/*! @} */
 
 #endif
