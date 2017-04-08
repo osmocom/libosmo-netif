@@ -81,7 +81,7 @@ struct osmo_stream_cli {
 	struct llist_head		tx_queue;
 	struct osmo_timer_list		timer;
 	enum osmo_stream_cli_state	state;
-	const char			*addr;
+	char				*addr;
 	uint16_t			port;
 	char				*local_addr;
 	uint16_t			local_port;
@@ -264,7 +264,7 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 void
 osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr)
 {
-	cli->addr = talloc_strdup(cli, addr);
+	osmo_talloc_replace_string(cli, &cli->addr, addr);
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
@@ -474,7 +474,7 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 
 struct osmo_stream_srv_link {
         struct osmo_fd                  ofd;
-        const char                      *addr;
+        char                            *addr;
         uint16_t                        port;
         uint16_t                        proto;
         int (*accept_cb)(struct osmo_stream_srv_link *srv, int fd);
@@ -537,7 +537,7 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link,
 				      const char *addr)
 {
-	link->addr = talloc_strdup(link, addr);
+	osmo_talloc_replace_string(link, &link->addr, addr);
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
 }
 

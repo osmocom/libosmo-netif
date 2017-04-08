@@ -39,7 +39,7 @@
 struct osmo_dgram_tx {
 	struct osmo_fd			ofd;
 	struct llist_head		tx_queue;
-	const char			*addr;
+	char				*addr;
 	uint16_t			port;
 	char				*local_addr;
 	uint16_t			local_port;
@@ -125,10 +125,7 @@ void
 osmo_dgram_tx_set_addr(struct osmo_dgram_tx *conn,
 				const char *addr)
 {
-	if (conn->addr != NULL)
-		talloc_free((void *)conn->addr);
-
-	conn->addr = talloc_strdup(conn, addr);
+	osmo_talloc_replace_string(conn, &conn->addr, addr);
 	conn->flags |= OSMO_DGRAM_CLI_F_RECONF;
 }
 
@@ -224,7 +221,7 @@ void osmo_dgram_tx_send(struct osmo_dgram_tx *conn,
 
 struct osmo_dgram_rx {
         struct osmo_fd                  ofd;
-        const char                      *addr;
+        char                            *addr;
         uint16_t                        port;
 	int (*cb)(struct osmo_dgram_rx *conn);
         void                            *data;
@@ -296,10 +293,7 @@ struct osmo_dgram_rx *osmo_dgram_rx_create(void *crx)
 void osmo_dgram_rx_set_addr(struct osmo_dgram_rx *conn,
 				     const char *addr)
 {
-	if (conn->addr != NULL)
-		talloc_free((void *)conn->addr);
-
-	conn->addr = talloc_strdup(conn, addr);
+	osmo_talloc_replace_string(conn, &conn->addr, addr);
 	conn->flags |= OSMO_DGRAM_RX_F_RECONF;
 }
 
