@@ -367,10 +367,11 @@ osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
 	cli->read_cb = read_cb;
 }
 
-/*! \brief Destroy a Osmocom stream client
+/*! \brief Destroy a Osmocom stream client (includes close)
  *  \param[in] cli Stream Client to destroy */
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 {
+	osmo_stream_cli_close(cli);
 	osmo_timer_del(&cli->timer);
 	talloc_free(cli);
 }
@@ -402,6 +403,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	cli->ofd.fd = ret;
 	if (osmo_fd_register(&cli->ofd) < 0) {
 		close(ret);
+		cli->ofd.fd = -1;
 		return -EIO;
 	}
 	return 0;
@@ -601,11 +603,11 @@ void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link,
 	link->accept_cb = accept_cb;
 }
 
-/*! \brief Destroy the stream server link. Releases Memory.
- *  Caller must make sure to osmo_stream_srv_link_close() before calling
+/*! \brief Destroy the stream server link. Closes + Releases Memory.
  *  \param[in] link Stream Server Link */
 void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link)
 {
+	osmo_stream_srv_link_close(link);
 	talloc_free(link);
 }
 
@@ -630,6 +632,7 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 	link->ofd.fd = ret;
 	if (osmo_fd_register(&link->ofd) < 0) {
 		close(ret);
+		link->ofd.fd = -1;
 		return -EIO;
 	}
 	return 0;

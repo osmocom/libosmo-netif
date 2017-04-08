@@ -54,8 +54,11 @@ struct osmo_dgram_tx {
  *  abstraction and close the socket */
 void osmo_dgram_tx_close(struct osmo_dgram_tx *conn)
 {
+	if (conn->ofd.fd == -1)
+		return;
 	osmo_fd_unregister(&conn->ofd);
 	close(conn->ofd.fd);
+	conn->ofd.fd = -1;
 }
 
 static int osmo_dgram_tx_write(struct osmo_dgram_tx *conn)
@@ -173,6 +176,7 @@ osmo_dgram_tx_set_data(struct osmo_dgram_tx *conn, void *data)
  *  \param[in] conn Datagram Transmitter to destroy */
 void osmo_dgram_tx_destroy(struct osmo_dgram_tx *conn)
 {
+	osmo_dgram_tx_close(conn);
 	talloc_free(conn);
 }
 
@@ -198,6 +202,7 @@ int osmo_dgram_tx_open(struct osmo_dgram_tx *conn)
 	conn->ofd.fd = ret;
 	if (osmo_fd_register(&conn->ofd) < 0) {
 		close(ret);
+		conn->ofd.fd = -1;
 		return -EIO;
 	}
 	return 0;
@@ -317,10 +322,10 @@ void osmo_dgram_rx_set_read_cb(struct osmo_dgram_rx *conn,
 }
 
 /*! \brief Destroy the datagram receiver. Releases Memory.
- *  Caller must make sure to osmo_dgram_rx_close() before calling
  *  \param[in] conn Datagram Receiver */
 void osmo_dgram_rx_destroy(struct osmo_dgram_rx *conn)
 {
+	osmo_dgram_rx_close(conn);
 	talloc_free(conn);
 }
 
@@ -345,6 +350,7 @@ int osmo_dgram_rx_open(struct osmo_dgram_rx *conn)
 	conn->ofd.fd = ret;
 	if (osmo_fd_register(&conn->ofd) < 0) {
 		close(ret);
+		conn->ofd.fd = -1;
 		return -EIO;
 	}
 	return 0;
@@ -356,8 +362,11 @@ int osmo_dgram_rx_open(struct osmo_dgram_rx *conn)
  *  \param[in] conn Stream Server Link to close */
 void osmo_dgram_rx_close(struct osmo_dgram_rx *conn)
 {
+	if (conn->ofd.fd == -1)
+		return;
 	osmo_fd_unregister(&conn->ofd);
 	close(conn->ofd.fd);
+	conn->ofd.fd = -1;
 }
 
 /*
