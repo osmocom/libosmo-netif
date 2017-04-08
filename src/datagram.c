@@ -20,6 +20,15 @@
 
 #include <osmocom/netif/datagram.h>
 
+/*! \addtogroup datagram Osmocom Datagram Socket
+ *  @{
+ */
+
+/*! \file datagram.c
+ *  \brief Osmocom datagram socket helpers
+ */
+
+
 /*
  * Client side.
  */
@@ -36,6 +45,10 @@ struct osmo_dgram_tx {
 	unsigned int			flags;
 };
 
+/*! \brief Close an Osmocom Datagram Transmitter
+ *  \param[in] conn Osmocom Datagram Transmitter to be closed
+ *  We unregister the socket fd from the osmocom select() loop
+ *  abstraction and close the socket */
 void osmo_dgram_tx_close(struct osmo_dgram_tx *conn)
 {
 	osmo_fd_unregister(&conn->ofd);
@@ -78,6 +91,11 @@ static int osmo_dgram_tx_fd_cb(struct osmo_fd *ofd, unsigned int what)
         return 0;
 }
 
+/*! \brief Create an Osmocom datagram transmitter
+ *  \param[in] ctx talloc context from which to allocate memory
+ *  This function allocates a new \ref osmo_dgram_tx and initializes
+ *  it with default values
+ *  \returns Osmocom Datagram Transmitter; NULL on error */
 struct osmo_dgram_tx *osmo_dgram_tx_create(void *crx)
 {
 	struct osmo_dgram_tx *conn;
@@ -96,6 +114,10 @@ struct osmo_dgram_tx *osmo_dgram_tx_create(void *crx)
 	return conn;
 }
 
+
+/*! \brief Set the remote address to which we transmit
+ *  \param[in] conn Datagram Transmitter to modify
+ *  \param[in] addr Remote IP address */
 void
 osmo_dgram_tx_set_addr(struct osmo_dgram_tx *conn,
 				const char *addr)
@@ -107,6 +129,9 @@ osmo_dgram_tx_set_addr(struct osmo_dgram_tx *conn,
 	conn->flags |= OSMO_DGRAM_CLI_F_RECONF;
 }
 
+/*! \brief Set the remote port to which we transmit
+ *  \param[in] conn Datagram Transmitter to modify
+ *  \param[in] port Remote Port Number */
 void
 osmo_dgram_tx_set_port(struct osmo_dgram_tx *conn,
 				uint16_t port)
@@ -115,17 +140,25 @@ osmo_dgram_tx_set_port(struct osmo_dgram_tx *conn,
 	conn->flags |= OSMO_DGRAM_CLI_F_RECONF;
 }
 
+/*! \brief Set application private data of the datagram transmitter
+ *  \param[in] conn Datagram Transmitter to modify
+ *  \param[in] data User-specific data (available in call-back functions) */
 void
 osmo_dgram_tx_set_data(struct osmo_dgram_tx *conn, void *data)
 {
 	conn->data = data;
 }
 
+/*! \brief Destroy a Osmocom datagram transmitter
+ *  \param[in] conn Datagram Transmitter to destroy */
 void osmo_dgram_tx_destroy(struct osmo_dgram_tx *conn)
 {
 	talloc_free(conn);
 }
 
+/*! \brief Open connection of an Osmocom datagram transmitter
+ *  \param[in] conn Stream Client to connect
+ *  \returns 0 on success; negative in case of error */
 int osmo_dgram_tx_open(struct osmo_dgram_tx *conn)
 {
 	int ret;
@@ -150,6 +183,9 @@ int osmo_dgram_tx_open(struct osmo_dgram_tx *conn)
 	return 0;
 }
 
+/*! \brief Enqueue data to be sent via an Osmocom datagram transmitter
+ *  \param[in] conn Datagram Transmitter through which we want to send
+ *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_dgram_tx_send(struct osmo_dgram_tx *conn,
 				 struct msgb *msg)
 {
@@ -172,6 +208,10 @@ struct osmo_dgram_rx {
 	unsigned int			flags;
 };
 
+/*! \brief Receive data via Osmocom datagram receiver
+ *  \param[in] conn Datagram Receiver from which to receive
+ *  \param msg pre-allocate message buffer to which received data is appended
+ *  \returns number of bytes read, negative on error. */
 int osmo_dgram_rx_recv(struct osmo_dgram_rx *conn,
 				struct msgb *msg)
 {
@@ -206,6 +246,11 @@ static int osmo_dgram_rx_cb(struct osmo_fd *ofd, unsigned int what)
 	return 0;
 }
 
+/*! \brief Create an Osmocom datagram receiver
+ *  \param[in] ctx talloc context from which to allocate memory
+ *  This function allocates a new \ref osmo_dgram_rx and initializes
+ *  it with default values
+ *  \returns Datagram Receiver; NULL on error */
 struct osmo_dgram_rx *osmo_dgram_rx_create(void *crx)
 {
 	struct osmo_dgram_rx *conn;
@@ -222,6 +267,9 @@ struct osmo_dgram_rx *osmo_dgram_rx_create(void *crx)
 	return conn;
 }
 
+/*! \brief Set the local address to which we bind
+ *  \param[in] conn Datagram Receiver to modify
+ *  \param[in] addr Local IP address */
 void osmo_dgram_rx_set_addr(struct osmo_dgram_rx *conn,
 				     const char *addr)
 {
@@ -232,6 +280,9 @@ void osmo_dgram_rx_set_addr(struct osmo_dgram_rx *conn,
 	conn->flags |= OSMO_DGRAM_RX_F_RECONF;
 }
 
+/*! \brief Set the local port to which we bind
+ *  \param[in] conn Datagram Receiver to modify
+ *  \param[in] port Local port number */
 void osmo_dgram_rx_set_port(struct osmo_dgram_rx *conn,
 				     uint16_t port)
 {
@@ -239,17 +290,26 @@ void osmo_dgram_rx_set_port(struct osmo_dgram_rx *conn,
 	conn->flags |= OSMO_DGRAM_RX_F_RECONF;
 }
 
+/*! \brief Set the read() call-back of the datagram receiver
+ *  \param[in] conn Datagram Receiver to modify
+ *  \param[in] read_cb Call-back function executed after read() */
 void osmo_dgram_rx_set_read_cb(struct osmo_dgram_rx *conn,
 	int (*read_cb)(struct osmo_dgram_rx *conn))
 {
 	conn->cb = read_cb;
 }
 
+/*! \brief Destroy the datagram receiver. Releases Memory.
+ *  Caller must make sure to osmo_dgram_rx_close() before calling
+ *  \param[in] conn Datagram Receiver */
 void osmo_dgram_rx_destroy(struct osmo_dgram_rx *conn)
 {
 	talloc_free(conn);
 }
 
+/*! \brief Open the datagram receiver.  This actually initializes the
+ *  underlying socket and binds it to the configured ip/port
+ *  \param[in] conn Datagram Receiver to open */
 int osmo_dgram_rx_open(struct osmo_dgram_rx *conn)
 {
 	int ret;
@@ -273,6 +333,10 @@ int osmo_dgram_rx_open(struct osmo_dgram_rx *conn)
 	return 0;
 }
 
+
+/*! \brief Close the datagram receiver and unregister from select loop
+ *  Does not destroy the datagram receiver, merely closes it!
+ *  \param[in] conn Stream Server Link to close */
 void osmo_dgram_rx_close(struct osmo_dgram_rx *conn)
 {
 	osmo_fd_unregister(&conn->ofd);
@@ -301,6 +365,13 @@ dgram_rx_cb(struct osmo_dgram_rx *rx)
 	return 0;
 }
 
+
+/*! \brief Create an Osmocom datagram transceiver (bidirectional)
+ *  \param[in] ctx talloc context from which to allocate memory
+ *  This function allocates a new \ref osmo_dgram and initializes
+ *  it with default values.  Internally, the Transceiver is based on a
+ *  tuple of transmitter (\ref osmo_dgram_tx) and receiver (\ref osmo_dgram_rx)
+ *  \returns Osmocom Datagram Transceiver; NULL on error */
 struct osmo_dgram *osmo_dgram_create(void *crx)
 {
 	struct osmo_dgram *conn;
@@ -325,52 +396,78 @@ struct osmo_dgram *osmo_dgram_create(void *crx)
 	return conn;
 }
 
+/*! \brief Destroy a Osmocom datagram transceiver
+ *  \param[in] conn Datagram Transceiver to destroy */
 void osmo_dgram_destroy(struct osmo_dgram *conn)
 {
 	osmo_dgram_rx_destroy(conn->rx);
 	osmo_dgram_tx_destroy(conn->tx);
 }
 
+/*! \brief Set the local address to which we bind
+ *  \param[in] conn Datagram Transceiver to modify
+ *  \param[in] addr Local IP address */
 void
 osmo_dgram_set_local_addr(struct osmo_dgram *conn, const char *addr)
 {
 	osmo_dgram_rx_set_addr(conn->rx, addr);
 }
 
+/*! \brief Set the remote address to which we transmit/connect
+ *  \param[in] conn Datagram Transceiver to modify
+ *  \param[in] addr Remote IP address */
 void
 osmo_dgram_set_remote_addr(struct osmo_dgram *conn, const char *addr)
 {
 	osmo_dgram_tx_set_addr(conn->tx, addr);
 }
 
+/*! \brief Set the local port to which we bind
+ *  \param[in] conn Datagram Transceiver to modify
+ *  \param[in] port Local Port Number */
 void
 osmo_dgram_set_local_port(struct osmo_dgram *conn, uint16_t port)
 {
 	osmo_dgram_rx_set_port(conn->rx, port);
 }
 
+/*! \brief Set the remote port to which we transmit
+ *  \param[in] conn Datagram Transceiver to modify
+ *  \param[in] port Remote Port Number */
 void
 osmo_dgram_set_remote_port(struct osmo_dgram *conn, uint16_t port)
 {
 	osmo_dgram_tx_set_port(conn->tx, port);
 }
 
+/*! \brief Set the read() call-back of the datagram receiver
+ *  \param[in] conn Datagram Receiver to modify
+ *  \param[in] read_cb Call-back function executed after read() */
 void osmo_dgram_set_read_cb(struct osmo_dgram *conn,
 			    int (*read_cb)(struct osmo_dgram *conn))
 {
 	conn->read_cb = read_cb;
 }
 
+/*! \brief Set application private data of the datagram transmitter
+ *  \param[in] conn Datagram Transmitter to modify
+ *  \param[in] data User-specific data (available in call-back functions) */
 void osmo_dgram_set_data(struct osmo_dgram *conn, void *data)
 {
 	conn->data = data;
 }
 
+/*! \brief Get application private data of the datagram transceiver
+ *  \param[in] conn Datagram Transceiver
+ *  \returns Application private data, as set by \ref osmo_dgram_set_data() */
 void *osmo_dgram_get_data(struct osmo_dgram *conn)
 {
 	return conn->data;
 }
 
+/*! \brief Open the datagram transceiver.  This actually initializes the
+ * underlying sockets and binds/connects them to the configured ips/ports
+ *  \param[in] conn Datagram Transceiver to open */
 int osmo_dgram_open(struct osmo_dgram *conn)
 {
 	int ret;
@@ -387,18 +484,31 @@ int osmo_dgram_open(struct osmo_dgram *conn)
 	return ret;
 }
 
+/*! \brief Close an Osmocom Datagram Transceiver
+ *  \param[in] conn Osmocom Datagram Transceiver to be closed
+ *  We unregister the socket fds from the osmocom select() loop
+ *  and close them. */
 void osmo_dgram_close(struct osmo_dgram *conn)
 {
 	osmo_dgram_rx_close(conn->rx);
 	osmo_dgram_tx_close(conn->tx);
 }
 
+/*! \brief Enqueue data to be sent via an Osmocom datagram transceiver
+ *  \param[in] conn Datagram Transceiver through which we want to send
+ *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_dgram_send(struct osmo_dgram *conn, struct msgb *msg)
 {
 	osmo_dgram_tx_send(conn->tx, msg);
 }
 
+/*! \brief Receive data via Osmocom datagram transceiver
+ *  \param[in] conn Datagram Transceiver from which to receive
+ *  \param msg pre-allocate message buffer to which received data is appended
+ *  \returns number of bytes read, negative on error. */
 int osmo_dgram_recv(struct osmo_dgram *conn, struct msgb *msg)
 {
 	return osmo_dgram_rx_recv(conn->rx, msg);
 }
+
+/*! @} */

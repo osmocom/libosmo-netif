@@ -13,3 +13,28 @@ $(top_srcdir)/.version:
 	echo $(VERSION) > $@-t && mv $@-t $@
 dist-hook:
 	echo $(VERSION) > $(distdir)/.tarball-version
+
+
+if HAVE_DOXYGEN
+
+html_DATA = $(top_builddir)/doc/html.tar
+
+$(html_DATA): $(top_builddir)/doc/html/index.html
+	cd $(top_builddir)/doc && tar cf html.tar html
+
+$(top_builddir)/doc/html/index.html: $(SOURCES) Doxyfile
+	@rm -rf doc
+	mkdir -p doc
+	$(DOXYGEN) Doxyfile
+
+install-data-hook:
+	cd $(DESTDIR)$(htmldir) && tar xf html.tar && rm -f html.tar
+
+uninstall-hook:
+	rm -rf $(DESTDIR)$(htmldir)
+
+DX_CLEAN = doc/html/search/* doc/{html,latex}/* doc/html.tar doc/doxygen_sqlite3.db doc/*.tag
+
+endif
+
+MOSTLYCLEANFILES = $(DX_CLEAN)

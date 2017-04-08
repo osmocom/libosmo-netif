@@ -63,6 +63,9 @@ LIBS=$old_LIBS
 
 AC_CHECK_HEADERS(dahdi/user.h,,AC_MSG_WARN(DAHDI input driver will not be built))
 
+AC_PATH_PROG(DOXYGEN,doxygen,false)
+AM_CONDITIONAL(HAVE_DOXYGEN, test $DOXYGEN != false)
+
 AC_OUTPUT(
 	libosmo-netif.pc
 	include/Makefile
@@ -75,4 +78,5 @@ AC_OUTPUT(
 	examples/Makefile
 	examples/channel/Makefile
 	tests/Makefile
+	Doxyfile
 	Makefile)

@@ -1,9 +1,16 @@
 #ifndef _OSMO_STREAM_H_
 #define _OSMO_STREAM_H_
 
+/*! \addtogroup stream
+ *  @{
+ */
+
+/*! \brief Access the SCTP PPID from the msgb control buffer */
 #define msgb_sctp_ppid(msg)             (msg)->cb[3]
+/*! \brief Access the SCTP Stream ID from the msgb control buffer */
 #define msgb_sctp_stream(msg)           (msg)->cb[4]
 
+/*! \brief Osmocom Stream Server Link: A server socket listening/accepting */
 struct osmo_stream_srv_link;
 
 struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx);
@@ -20,6 +27,8 @@ struct osmo_fd *osmo_stream_srv_link_get_ofd(struct osmo_stream_srv_link *link);
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link);
 void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link);
 
+/*! \brief Osmocom Stream Server: Single connection accept()ed via \ref
+ * osmo_stream_srv_link */
 struct osmo_stream_srv;
 
 struct osmo_stream_srv *osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd, int (*cb)(struct osmo_stream_srv *conn), int (*closed_cb)(struct osmo_stream_srv *conn), void *data);
@@ -33,6 +42,7 @@ void osmo_stream_srv_set_data(struct osmo_stream_srv *conn, void *data);
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg);
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg);
 
+/*! \brief Osmocom Stream Client: Single client connection */
 struct osmo_stream_cli;
 
 void osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr);
@@ -55,5 +65,7 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli);
 
 void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg);
 int osmo_stream_cli_recv(struct osmo_stream_cli *conn, struct msgb *msg);
+
+/*! @} */
 
 #endif

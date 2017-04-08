@@ -26,6 +26,14 @@
 #include <netinet/sctp.h>
 #endif
 
+/*! \addtogroup stream Osmocom Stream Socket
+ *  @{
+ */
+
+/*! \file stream.c
+ *  \brief Osmocom stream socket helpers
+ */
+
 /*
  * Platforms that don't have MSG_NOSIGNAL (which disables SIGPIPE)
  * usually have SO_NOSIGPIPE (set via setsockopt).
@@ -74,6 +82,7 @@ struct osmo_stream_cli {
 	enum osmo_stream_cli_state	state;
 	const char			*addr;
 	uint16_t			port;
+	uint16_t			local_port;
 	uint16_t			proto;
 	int (*connect_cb)(struct osmo_stream_cli *srv);
 	int (*read_cb)(struct osmo_stream_cli *srv);
@@ -85,6 +94,9 @@ struct osmo_stream_cli {
 
 void osmo_stream_cli_close(struct osmo_stream_cli *cli);
 
+/*! \brief Re-connect an Osmocom Stream Client
+ *  If re-connection is enabled for this client, we close any existing
+ *  connection (if any) and schedule a re-connect timer */
 void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 {
 	if (cli->reconnect_timeout < 0) {
@@ -99,6 +111,10 @@ void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 	cli->state = STREAM_CLI_STATE_CONNECTING;
 }
 
+/*! \brief Close an Osmocom Stream Client
+ *  \param[in] cli Osmocom Stream Client to be closed
+ *  We unregister the socket fd from the osmocom select() loop
+ *  abstraction and close the socket */
 void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 {
 	if (cli->ofd.fd == -1)
@@ -212,6 +228,10 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 
 static void cli_timer_cb(void *data);
 
+/*! \brief Create an Osmocom stream client
+ *  \param[in] ctx talloc context from which to allocate memory
+ *  This function allocates a new \ref osmo_stream_cli and initializes
+ *  it with default values (5s reconnect timer, TCP protocol) */
 struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 {
 	struct osmo_stream_cli *cli;
@@ -235,6 +255,10 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 	return cli;
 }
 
+/*! \brief Set the remote address to which we connect
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] addr Remote IP address
+ */
 void
 osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr)
 {
@@ -242,6 +266,10 @@ osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr)
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
+/*! \brief Set the remote port number to which we connect
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] port Remote port number
+ */
 void
 osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port)
 {
@@ -249,6 +277,21 @@ osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port)
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
+/*! \brief Set the local port number for the socket
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] port Local port number
+ */
+void
+osmo_stream_cli_set_local_port(struct osmo_stream_cli *cli, uint16_t port)
+{
+	cli->local_port = port;
+	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+}
+
+/*! \brief Set the protocol for the stream client socket
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] proto Protocol (like IPPROTO_TCP (default), IPPROTO_SCTP, ...)
+ */
 void
 osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
 {
@@ -256,29 +299,44 @@ osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
+/*! \brief Set the reconnect time of the stream client socket
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] timeout Re-connect timeout in seconds */
 void
 osmo_stream_cli_set_reconnect_timeout(struct osmo_stream_cli *cli, int timeout)
 {
 	cli->reconnect_timeout = timeout;
 }
 
+/*! \brief Set application private data of the stream client socket
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] data User-specific data (available in call-back functions) */
 void
 osmo_stream_cli_set_data(struct osmo_stream_cli *cli, void *data)
 {
 	cli->data = data;
 }
 
+/*! \brief Get application private data of the stream client socket
+ *  \param[in] cli Stream Client to modif
+ *  \returns Application private data, as set by \ref osmo_stream_cli_set_data() */
 void *osmo_stream_cli_get_data(struct osmo_stream_cli *cli)
 {
 	return cli->data;
 }
 
+/*! \brief Get Osmocom File Descriptor of the stream client socket
+ *  \param[in] cli Stream Client to modif
+ *  \returns Pointer to \ref osmo_fd */
 struct osmo_fd *
 osmo_stream_cli_get_ofd(struct osmo_stream_cli *cli)
 {
 	return &cli->ofd;
 }
 
+/*! \brief Set the call-back function called on connect of the stream client socket
+ *  \param[in] cli Stream Client to modif
+ *  \param[in] connect_cb Call-back function to be called upon connect */
 void
 osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli,
 	int (*connect_cb)(struct osmo_stream_cli *cli))
@@ -286,6 +344,9 @@ osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli,
 	cli->connect_cb = connect_cb;
 }
 
+/*! \brief Set the call-back function called to read from the stream client socket
+ *  \param[in] cli Stream Client to modif
+ *  \param[in] read_cb Call-back function to be called when we want to read */
 void
 osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
 			    int (*read_cb)(struct osmo_stream_cli *cli))
@@ -293,12 +354,18 @@ osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
 	cli->read_cb = read_cb;
 }
 
+/*! \brief Destroy a Osmocom stream client
+ *  \param[in] cli Stream Client to destroy */
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 {
 	osmo_timer_del(&cli->timer);
 	talloc_free(cli);
 }
 
+/*! \brief Open connection of an Osmocom stream client
+ *  \param[in] cli Stream Client to connect
+ *  \param[in] reconect 1 if we should not automatically reconnect
+ */
 int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 {
 	int ret;
@@ -327,6 +394,8 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 }
 
 
+/*! \brief Open connection of an Osmocom stream client
+ *  \param[in] cli Stream Client to connect */
 int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 {
 	return osmo_stream_cli_open2(cli, 0);
@@ -348,12 +417,19 @@ static void cli_timer_cb(void *data)
 	}
 }
 
+/*! \brief Enqueue data to be sent via an Osmocom stream client
+ *  \param[in] cli Stream Client through which we want to send
+ *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 {
 	msgb_enqueue(&cli->tx_queue, msg);
 	cli->ofd.when |= BSC_FD_WRITE;
 }
 
+/*! \brief Receive data via an Osmocom stream client
+ *  \param[in] cli Stream Client through which we want to send
+ *  \param msg pre-allocate message buffer to which received data is appended
+ *  \returns number of bytes read; <=0 in case of error */
 int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 {
 	int ret;
@@ -417,6 +493,12 @@ static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 	return 0;
 }
 
+/*! \brief Create an Osmocom Stream Server Link
+ *  A Stream Server Link is the listen()+accept() "parent" to individual
+ *  Stream Servers
+ *  \param[in] ctx talloc allocation context
+ *  \returns Stream Server Link with default values (TCP)
+ */
 struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 {
 	struct osmo_stream_srv_link *link;
@@ -434,6 +516,10 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	return link;
 }
 
+/*! \brief Set the local address to which we bind
+ *  \param[in] link Stream Server Link to modify
+ *  \param[in] addr Local IP address
+ */
 void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link,
 				      const char *addr)
 {
@@ -441,6 +527,10 @@ void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link,
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
 }
 
+/*! \brief Set the local port number to which we bind
+ *  \param[in] link Stream Server Link to modify
+ *  \param[in] port Local port number
+ */
 void osmo_stream_srv_link_set_port(struct osmo_stream_srv_link *link,
 				      uint16_t port)
 {
@@ -448,6 +538,10 @@ void osmo_stream_srv_link_set_port(struct osmo_stream_srv_link *link,
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
 }
 
+/*! \brief Set the protocol for the stream server link
+ *  \param[in] link Stream Server Link to modify
+ *  \param[in] proto Protocol (like IPPROTO_TCP (default), IPPROTO_SCTP, ...)
+ */
 void
 osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link,
 			  uint16_t proto)
@@ -456,6 +550,9 @@ osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link,
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
 }
 
+/*! \brief Set application private data of the stream server link
+ *  \param[in] link Stream Server Link to modify
+ *  \param[in] data User-specific data (available in call-back functions) */
 void
 osmo_stream_srv_link_set_data(struct osmo_stream_srv_link *link,
 				 void *data)
@@ -463,17 +560,26 @@ osmo_stream_srv_link_set_data(struct osmo_stream_srv_link *link,
 	link->data = data;
 }
 
+/*! \brief Get application private data of the stream server link
+ *  \param[in] link Stream Server Link to modify
+ *  \returns Application private data, as set by \ref osmo_stream_cli_set_data() */
 void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link)
 {
 	return link->data;
 }
 
+/*! \brief Get Osmocom File Descriptor of the stream server link
+ *  \param[in] link Stream Server Link
+ *  \returns Pointer to \ref osmo_fd */
 struct osmo_fd *
 osmo_stream_srv_link_get_ofd(struct osmo_stream_srv_link *link)
 {
 	return &link->ofd;
 }
 
+/*! \brief Set the accept() call-back of the stream server link
+ *  \param[in] link Stream Server Link
+ *  \param[in] accept_cb Call-back function executed upon accept() */
 void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link,
 	int (*accept_cb)(struct osmo_stream_srv_link *link, int fd))
 
@@ -481,11 +587,17 @@ void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link,
 	link->accept_cb = accept_cb;
 }
 
+/*! \brief Destroy the stream server link. Releases Memory.
+ *  Caller must make sure to osmo_stream_srv_link_close() before calling
+ *  \param[in] link Stream Server Link */
 void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link)
 {
 	talloc_free(link);
 }
 
+/*! \brief Open the stream server link.  This actually initializes the
+ *  underlying socket and binds it to the configured ip/port
+ *  \param[in] link Stream Server Link to open */
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 {
 	int ret;
@@ -509,6 +621,9 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 	return 0;
 }
 
+/*! \brief Close the stream server link and unregister from select loop
+ *  Does not destroy the server link, merely closes it!
+ *  \param[in] link Stream Server Link to close */
 void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 {
 	if (link->ofd.fd == -1)
@@ -590,6 +705,10 @@ static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
 	return 0;
 }
 
+/*! \brief Create a Stream Server inside the specified link
+ *  \param[in] ctx talloc allocation context from which to allocate
+ *  \param[in] link Stream Server Link to which we belong
+ *  \returns Stream Server in case of success; NULL on error */
 struct osmo_stream_srv *
 osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	int fd,
@@ -622,6 +741,9 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	return conn;
 }
 
+/*! \brief Set application private data of the stream server
+ *  \param[in] conn Stream Server to modify
+ *  \param[in] data User-specific data (available in call-back functions) */
 void
 osmo_stream_srv_set_data(struct osmo_stream_srv *conn,
 				 void *data)
@@ -629,22 +751,35 @@ osmo_stream_srv_set_data(struct osmo_stream_srv *conn,
 	conn->data = data;
 }
 
-void *osmo_stream_srv_get_data(struct osmo_stream_srv *link)
+/*! \brief Get application private data of the stream server
+ *  \param[in] conn Stream Server
+ *  \returns Application private data, as set by \ref osmo_stream_srv_set_data() */
+void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn)
 {
-	return link->data;
+	return conn->data;
 }
 
+/*! \brief Get Osmocom File Descriptor of the stream server
+ *  \param[in] conn Stream Server
+ *  \returns Pointer to \ref osmo_fd */
 struct osmo_fd *
-osmo_stream_srv_get_ofd(struct osmo_stream_srv *link)
+osmo_stream_srv_get_ofd(struct osmo_stream_srv *conn)
 {
-	return &link->ofd;
+	return &conn->ofd;
 }
 
+/*! \brief Get the master (Link) from a Stream Server
+ *  \param[in] conn Stream Server of which we want to know the Link
+ *  \returns Link through which the given Stream Server is established */
 struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *conn)
 {
 	return conn->srv;
 }
 
+/*! \brief Destroy given Stream Server
+ *  This function closes the Stream Server socket, unregisters from
+ *  select loop and de-allocates associated memory.
+ *  \param[in] conn Stream Server to be destroyed */
 void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 {
 	close(conn->ofd.fd);
@@ -654,12 +789,20 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 	talloc_free(conn);
 }
 
+/*! \brief Enqueue data to be sent via an Osmocom stream server
+ *  \param[in] conn Stream Server through which we want to send
+ *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 {
 	msgb_enqueue(&conn->tx_queue, msg);
 	conn->ofd.when |= BSC_FD_WRITE;
 }
 
+/*! \brief Receive data via Osmocom stream server
+ *  \param[in] conn Stream Server from which to receive
+ *  \param msg pre-allocate message buffer to which received data is appended
+ *  \returns number of bytes read, negative on error.
+ */
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 {
 #ifdef HAVE_LIBSCTP
@@ -735,3 +878,5 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 	LOGP(DLINP, LOGL_DEBUG, "received %d bytes from client\n", ret);
 	return ret;
 }
+
+/*! @} */

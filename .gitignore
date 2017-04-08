@@ -49,3 +49,5 @@ examples/rtp-udp-test-client
 examples/rtp-udp-test-server
 examples/stream-client
 examples/stream-server
+
+Doxyfile
