@@ -3,7 +3,7 @@
 
 struct osmo_dgram_tx;
 
-struct osmo_dgram_tx *osmo_dgram_tx_create(void *crx);
+struct osmo_dgram_tx *osmo_dgram_tx_create(void *ctx);
 void osmo_dgram_tx_destroy(struct osmo_dgram_tx *conn);
 
 void osmo_dgram_tx_set_addr(struct osmo_dgram_tx *conn, const char *addr);
@@ -19,7 +19,7 @@ void osmo_dgram_tx_send(struct osmo_dgram_tx *conn, struct msgb *msg);
 
 struct osmo_dgram_rx;
 
-struct osmo_dgram_rx *osmo_dgram_rx_create(void *crx);
+struct osmo_dgram_rx *osmo_dgram_rx_create(void *ctx);
 
 void osmo_dgram_rx_set_addr(struct osmo_dgram_rx *conn, const char *addr);
 void osmo_dgram_rx_set_port(struct osmo_dgram_rx *conn, uint16_t port);
@@ -33,7 +33,7 @@ int osmo_dgram_rx_recv(struct osmo_dgram_rx *conn, struct msgb *msg);
 
 struct osmo_dgram;
 
-struct osmo_dgram *osmo_dgram_create(void *crx);
+struct osmo_dgram *osmo_dgram_create(void *ctx);
 void osmo_dgram_destroy(struct osmo_dgram *conn);
 
 int osmo_dgram_open(struct osmo_dgram *conn);

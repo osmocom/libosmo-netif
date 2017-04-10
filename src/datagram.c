@@ -102,11 +102,11 @@ static int osmo_dgram_tx_fd_cb(struct osmo_fd *ofd, unsigned int what)
  *  This function allocates a new \ref osmo_dgram_tx and initializes
  *  it with default values
  *  \returns Osmocom Datagram Transmitter; NULL on error */
-struct osmo_dgram_tx *osmo_dgram_tx_create(void *crx)
+struct osmo_dgram_tx *osmo_dgram_tx_create(void *ctx)
 {
 	struct osmo_dgram_tx *conn;
 
-	conn = talloc_zero(crx, struct osmo_dgram_tx);
+	conn = talloc_zero(ctx, struct osmo_dgram_tx);
 	if (!conn)
 		return NULL;
 
@@ -276,11 +276,11 @@ static int osmo_dgram_rx_cb(struct osmo_fd *ofd, unsigned int what)
  *  This function allocates a new \ref osmo_dgram_rx and initializes
  *  it with default values
  *  \returns Datagram Receiver; NULL on error */
-struct osmo_dgram_rx *osmo_dgram_rx_create(void *crx)
+struct osmo_dgram_rx *osmo_dgram_rx_create(void *ctx)
 {
 	struct osmo_dgram_rx *conn;
 
-	conn = talloc_zero(crx, struct osmo_dgram_rx);
+	conn = talloc_zero(ctx, struct osmo_dgram_rx);
 	if (!conn)
 		return NULL;
 
@@ -398,22 +398,22 @@ dgram_rx_cb(struct osmo_dgram_rx *rx)
  *  it with default values.  Internally, the Transceiver is based on a
  *  tuple of transmitter (\ref osmo_dgram_tx) and receiver (\ref osmo_dgram_rx)
  *  \returns Osmocom Datagram Transceiver; NULL on error */
-struct osmo_dgram *osmo_dgram_create(void *crx)
+struct osmo_dgram *osmo_dgram_create(void *ctx)
 {
 	struct osmo_dgram *conn;
 
-	conn = talloc_zero(crx, struct osmo_dgram);
+	conn = talloc_zero(ctx, struct osmo_dgram);
 	if (!conn)
 		return NULL;
 
-	conn->rx= osmo_dgram_rx_create(crx);
+	conn->rx= osmo_dgram_rx_create(ctx);
 	if (conn->rx == NULL)
 		return NULL;
 
 	osmo_dgram_rx_set_read_cb(conn->rx, dgram_rx_cb);
 	conn->rx->data = conn;
 
-	conn->tx = osmo_dgram_tx_create(crx);
+	conn->tx = osmo_dgram_tx_create(ctx);
 	if (conn->tx == NULL) {
 		osmo_dgram_rx_destroy(conn->rx);
 		return NULL;
