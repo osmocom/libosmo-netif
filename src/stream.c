@@ -9,6 +9,7 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 
 #include <osmocom/core/timer.h>
 #include <osmocom/core/select.h>
@@ -63,6 +64,27 @@ static int sctp_sock_activate_events(int fd)
 #endif
 }
 
+static int setsockopt_nodelay(int fd, int proto, int on)
+{
+	int rc;
+
+	switch (proto) {
+	case IPPROTO_SCTP:
+		rc = setsockopt(fd, IPPROTO_SCTP, SCTP_NODELAY, &on, sizeof(on));
+		break;
+	case IPPROTO_TCP:
+		rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+		break;
+	default:
+		rc = -1;
+		LOGP(DLINP, LOGL_ERROR, "Unknown protocol %u, cannot set NODELAY\n",
+		     proto);
+		break;
+	}
+	return rc;
+}
+
+
 /*
  * Client side.
  */
@@ -75,6 +97,7 @@ enum osmo_stream_cli_state {
 };
 
 #define OSMO_STREAM_CLI_F_RECONF	(1 << 0)
+#define OSMO_STREAM_CLI_F_NODELAY	(1 << 1)
 
 struct osmo_stream_cli {
 	struct osmo_fd			ofd;
@@ -400,6 +423,9 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 		return ret;
 	}
 
+	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY)
+		setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
+
 	cli->ofd.fd = ret;
 	if (osmo_fd_register(&cli->ofd) < 0) {
 		close(ret);
@@ -409,6 +435,21 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	return 0;
 }
 
+/*! \brief Set the NODELAY socket option to avoid Nagle-like behavior
+ *  Setting this to nodelay=true will automatically set the NODELAY
+ *  socket option on any socket established via \ref osmo_stream_cli_open
+ *  or any re-connect.  You have to set this _before_ opening the
+ *  socket.
+ *  \param[in] cli Stream client whose sockets are to be configured
+ *  \param[in] nodelay whether to set (true) NODELAY before connect()
+ */
+void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay)
+{
+	if (nodelay)
+		cli->flags |= OSMO_STREAM_CLI_F_NODELAY;
+	else
+		cli->flags &= ~OSMO_STREAM_CLI_F_NODELAY;
+}
 
 /*! \brief Open connection of an Osmocom stream client
  *  \param[in] cli Stream Client to connect */
@@ -473,6 +514,7 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
  */
 
 #define OSMO_STREAM_SRV_F_RECONF	(1 << 0)
+#define OSMO_STREAM_SRV_F_NODELAY	(1 << 1)
 
 struct osmo_stream_srv_link {
         struct osmo_fd                  ofd;
@@ -503,6 +545,9 @@ static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 	if (link->proto == IPPROTO_SCTP)
 		sctp_sock_activate_events(ret);
 
+	if (link->flags & OSMO_STREAM_SRV_F_NODELAY)
+		setsockopt_nodelay(ret, link->proto, 1);
+
 	if (link->accept_cb)
 		link->accept_cb(link, ret);
 
@@ -530,6 +575,21 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	link->ofd.data = link;
 
 	return link;
+}
+
+/*! \brief Set the NODELAY socket option to avoid Nagle-like behavior
+ *  Setting this to nodelay=true will automatically set the NODELAY
+ *  socket option on any socket established via this server link, before
+ *  calling the accept_cb()
+ *  \param[in] link server link whose sockets are to be configured
+ *  \param[in] nodelay whether to set (true) NODELAY after accept
+ */
+void osmo_stream_srv_link_set_nodelay(struct osmo_stream_srv_link *link, bool nodelay)
+{
+	if (nodelay)
+		link->flags |= OSMO_STREAM_SRV_F_NODELAY;
+	else
+		link->flags &= ~OSMO_STREAM_SRV_F_NODELAY;
 }
 
 /*! \brief Set the local address to which we bind

@@ -16,6 +16,7 @@ struct osmo_stream_srv_link;
 struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx);
 void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link);
 
+void osmo_stream_srv_link_set_nodelay(struct osmo_stream_srv_link *link, bool nodelay);
 void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link, const char *addr);
 void osmo_stream_srv_link_set_port(struct osmo_stream_srv_link *link, uint16_t port);
 void osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link, uint16_t proto);
@@ -45,6 +46,7 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg);
 /*! \brief Osmocom Stream Client: Single client connection */
 struct osmo_stream_cli;
 
+void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay);
 void osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr);
 void osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port);
 void osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto);
