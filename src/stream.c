@@ -185,7 +185,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 #ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
 		memset(&sinfo, 0, sizeof(sinfo));
-		sinfo.sinfo_ppid = htons(msgb_sctp_ppid(msg));
+		sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
 		sinfo.sinfo_stream = msgb_sctp_stream(msg);
 		ret = sctp_send(cli->ofd.fd, msg->data, msgb_length(msg),
 				&sinfo, MSG_NOSIGNAL);
@@ -752,7 +752,7 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 #ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
 		memset(&sinfo, 0, sizeof(sinfo));
-		sinfo.sinfo_ppid = htons(msgb_sctp_ppid(msg));
+		sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
 		sinfo.sinfo_stream = msgb_sctp_stream(msg);
 		ret = sctp_send(conn->ofd.fd, msg->data, msgb_length(msg),
 				&sinfo, MSG_NOSIGNAL);
@@ -931,7 +931,7 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 			}
 			return -EAGAIN;
 		}
-		msgb_sctp_ppid(msg) = ntohs(sinfo.sinfo_ppid);
+		msgb_sctp_ppid(msg) = ntohl(sinfo.sinfo_ppid);
 		msgb_sctp_stream(msg) = sinfo.sinfo_stream;
 		break;
 #endif
