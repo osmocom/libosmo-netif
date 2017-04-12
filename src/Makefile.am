@@ -18,6 +18,7 @@ libosmonetif_la_SOURCES = amr.c			\
 			  datagram.c		\
 			  ipa.c			\
 			  ipa_unit.c		\
+			  jibuf.c		\
 			  osmux.c		\
 			  rs232.c		\
 			  rtp.c			\

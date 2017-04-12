@@ -1,10 +1,13 @@
 AM_CFLAGS = -Wall -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS) -g
 AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS)
 
-check_PROGRAMS = osmux/osmux_test
+check_PROGRAMS = osmux/osmux_test jibuf/jibuf_test
 
 osmux_osmux_test_SOURCES = osmux/osmux_test.c
 osmux_osmux_test_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
+
+jibuf_jibuf_test_SOURCES = jibuf/jibuf_test.c
+jibuf_jibuf_test_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
 
 # The `:;' works around a Bash 3.2 bug when the output is not writeable.
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac
@@ -25,7 +28,8 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	     } >'$(srcdir)/package.m4'
 
 EXTRA_DIST = testsuite.at $(srcdir)/package.m4 $(TESTSUITE)		\
-	     osmux/osmux_test.ok
+	     osmux/osmux_test.ok \
+	     jibuf/jibuf_test.ok
 
 DISTCLEANFILES = atconfig
 

@@ -6,3 +6,9 @@ AT_KEYWORDS([osmux_test])
 cat $abs_srcdir/osmux/osmux_test.ok > expout
 AT_CHECK([$abs_top_builddir/tests/osmux/osmux_test], [0], [expout], [ignore])
 AT_CLEANUP
+
+AT_SETUP([jibuf_test])
+AT_KEYWORDS([jibuf_test])
+cat $abs_srcdir/jibuf/jibuf_test.ok > expout
+AT_CHECK([$abs_top_builddir/tests/jibuf/jibuf_test], [0], [expout], [ignore])
+AT_CLEANUP

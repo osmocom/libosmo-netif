@@ -1,0 +1,351 @@
+===test_normal===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.060000}, mono={0.060000}: clock_override_add
+sys={0.060000}, mono={0.060000}: first select, first dequed
+sys={0.060000}, mono={0.060000}: dequeue: seq=33 ts=560 LATEST
+sys={0.080000}, mono={0.080000}: clock_override_add
+sys={0.080000}, mono={0.080000}: second select, one packet should be dequeued
+sys={0.080000}, mono={0.080000}: dequeue: seq=34 ts=720 LATEST
+sys={0.120000}, mono={0.120000}: clock_override_add
+sys={0.120000}, mono={0.120000}: third select, two more dequed
+sys={0.120000}, mono={0.120000}: dequeue: seq=35 ts=880 INTERMEDIATE
+sys={0.120000}, mono={0.120000}: dequeue: seq=36 ts=1040 LATEST
+===test_delete_nonempty===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.060000}, mono={0.060000}: clock_override_add
+sys={0.060000}, mono={0.060000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={0.060000}, mono={0.060000}: dequeue: seq=34 ts=720 INTERMEDIATE
+sys={0.060000}, mono={0.060000}: dequeue: seq=35 ts=880 INTERMEDIATE
+sys={0.060000}, mono={0.060000}: dequeue: seq=36 ts=1040 LATEST
+===test_packet_lost===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: packet lost: 2nd
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: packet lost: 3rd
+sys={0.060000}, mono={0.060000}: clock_override_add
+sys={0.060000}, mono={0.060000}: packet lost: 4th
+sys={0.080000}, mono={0.080000}: clock_override_add
+sys={0.080000}, mono={0.080000}: enqueue 5th packet
+sys={0.140000}, mono={0.140000}: clock_override_add
+sys={0.140000}, mono={0.140000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={0.140000}, mono={0.140000}: dequeue: seq=34 ts=720 LATEST
+===test_packet_drop===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: enqueue 2nd packet
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: enqueue 3rd packet
+sys={0.060000}, mono={0.060000}: clock_override_add
+sys={0.060000}, mono={0.060000}: enqueue 4th packet
+sys={0.060000}, mono={0.060000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={0.160000}, mono={0.160000}: clock_override_add
+sys={0.160000}, mono={0.160000}: next packet should be dropped, too late
+sys={0.160000}, mono={0.160000}: next packet should be enqueued
+sys={0.160000}, mono={0.160000}: dequeue: seq=34 ts=720 INTERMEDIATE
+sys={0.160000}, mono={0.160000}: dequeue: seq=35 ts=880 INTERMEDIATE
+sys={0.160000}, mono={0.160000}: dequeue: seq=36 ts=1040 INTERMEDIATE
+sys={0.160000}, mono={0.160000}: dequeue: seq=38 ts=1360 LATEST
+===test_packet_out_of_order===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: enqueue 3rd packet
+sys={0.040000}, mono={0.040000}: enqueue 2nd packet
+sys={0.100000}, mono={0.100000}: clock_override_add
+sys={0.100000}, mono={0.100000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={0.100000}, mono={0.100000}: dequeue: seq=34 ts=720 INTERMEDIATE
+sys={0.100000}, mono={0.100000}: dequeue: seq=35 ts=880 LATEST
+===test_start_2nd_packet===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: 1st packet is not yet enqueued
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: 2nd packet is enqueuded as first
+sys={0.040000}, mono={0.040000}: 1st packet is enqueuded as second, should be enqueued with preference
+sys={0.080000}, mono={0.080000}: clock_override_add
+sys={0.080000}, mono={0.080000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={0.100000}, mono={0.100000}: clock_override_add
+sys={0.100000}, mono={0.100000}: dequeue: seq=34 ts=720 LATEST
+===test_buffer_threshold_change===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: enqueue 2nd packet
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: enqueue 3rd packet
+sys={0.060000}, mono={0.060000}: clock_override_add
+sys={0.060000}, mono={0.060000}: enqueue 4th packet
+sys={0.060000}, mono={0.060000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={0.160000}, mono={0.160000}: clock_override_add
+sys={0.160000}, mono={0.160000}: next packet should be dropped, too late
+sys={0.180000}, mono={0.180000}: clock_override_add
+sys={0.180000}, mono={0.180000}: next packet is dropped, but buffer is increased
+sys={0.200000}, mono={0.200000}: clock_override_add
+sys={0.200000}, mono={0.200000}: next packet is enqueued since the buffer increased
+sys={0.200000}, mono={0.200000}: dequeue: seq=34 ts=720 INTERMEDIATE
+sys={0.200000}, mono={0.200000}: dequeue: seq=35 ts=880 INTERMEDIATE
+sys={0.200000}, mono={0.200000}: dequeue: seq=36 ts=1040 INTERMEDIATE
+sys={0.200000}, mono={0.200000}: dequeue: seq=39 ts=1520 LATEST
+sys={0.200000}, mono={0.200000}: Enqueue late packets
+sys={0.200000}, mono={0.200000}: Run perfectly for a while, buffer should decrease
+sys={0.220000}, mono={0.220000}: clock_override_add
+sys={0.220000}, mono={0.220000}: dequeue: seq=40 ts=1680 INTERMEDIATE
+sys={0.240000}, mono={0.240000}: clock_override_add
+sys={0.240000}, mono={0.240000}: dequeue: seq=41 ts=1840 INTERMEDIATE
+sys={0.260000}, mono={0.260000}: clock_override_add
+sys={0.260000}, mono={0.260000}: dequeue: seq=42 ts=2000 INTERMEDIATE
+sys={0.280000}, mono={0.280000}: clock_override_add
+sys={0.280000}, mono={0.280000}: dequeue: seq=43 ts=2160 INTERMEDIATE
+sys={0.300000}, mono={0.300000}: clock_override_add
+sys={0.300000}, mono={0.300000}: dequeue: seq=44 ts=2320 INTERMEDIATE
+sys={0.320000}, mono={0.320000}: clock_override_add
+sys={0.320000}, mono={0.320000}: dequeue: seq=45 ts=2480 INTERMEDIATE
+sys={0.340000}, mono={0.340000}: clock_override_add
+sys={0.340000}, mono={0.340000}: dequeue: seq=46 ts=2640 INTERMEDIATE
+sys={0.360000}, mono={0.360000}: clock_override_add
+sys={0.360000}, mono={0.360000}: dequeue: seq=47 ts=2800 INTERMEDIATE
+sys={0.380000}, mono={0.380000}: clock_override_add
+sys={0.380000}, mono={0.380000}: dequeue: seq=48 ts=2960 INTERMEDIATE
+sys={0.400000}, mono={0.400000}: clock_override_add
+sys={0.400000}, mono={0.400000}: dequeue: seq=49 ts=3120 INTERMEDIATE
+sys={0.420000}, mono={0.420000}: clock_override_add
+sys={0.420000}, mono={0.420000}: dequeue: seq=50 ts=3280 INTERMEDIATE
+sys={0.440000}, mono={0.440000}: clock_override_add
+sys={0.440000}, mono={0.440000}: dequeue: seq=51 ts=3440 INTERMEDIATE
+sys={0.460000}, mono={0.460000}: clock_override_add
+sys={0.460000}, mono={0.460000}: dequeue: seq=52 ts=3600 INTERMEDIATE
+sys={0.480000}, mono={0.480000}: clock_override_add
+sys={0.480000}, mono={0.480000}: dequeue: seq=53 ts=3760 INTERMEDIATE
+sys={0.500000}, mono={0.500000}: clock_override_add
+sys={0.500000}, mono={0.500000}: dequeue: seq=54 ts=3920 INTERMEDIATE
+sys={0.520000}, mono={0.520000}: clock_override_add
+sys={0.520000}, mono={0.520000}: dequeue: seq=55 ts=4080 INTERMEDIATE
+sys={0.540000}, mono={0.540000}: clock_override_add
+sys={0.540000}, mono={0.540000}: dequeue: seq=56 ts=4240 INTERMEDIATE
+sys={0.560000}, mono={0.560000}: clock_override_add
+sys={0.560000}, mono={0.560000}: dequeue: seq=57 ts=4400 INTERMEDIATE
+sys={0.580000}, mono={0.580000}: clock_override_add
+sys={0.580000}, mono={0.580000}: dequeue: seq=58 ts=4560 INTERMEDIATE
+sys={0.600000}, mono={0.600000}: clock_override_add
+sys={0.600000}, mono={0.600000}: dequeue: seq=59 ts=4720 INTERMEDIATE
+sys={0.620000}, mono={0.620000}: clock_override_add
+sys={0.620000}, mono={0.620000}: dequeue: seq=60 ts=4880 INTERMEDIATE
+sys={0.640000}, mono={0.640000}: clock_override_add
+sys={0.640000}, mono={0.640000}: dequeue: seq=61 ts=5040 INTERMEDIATE
+sys={0.660000}, mono={0.660000}: clock_override_add
+sys={0.660000}, mono={0.660000}: dequeue: seq=62 ts=5200 INTERMEDIATE
+sys={0.680000}, mono={0.680000}: clock_override_add
+sys={0.680000}, mono={0.680000}: dequeue: seq=63 ts=5360 INTERMEDIATE
+sys={0.700000}, mono={0.700000}: clock_override_add
+sys={0.700000}, mono={0.700000}: dequeue: seq=64 ts=5520 INTERMEDIATE
+sys={0.720000}, mono={0.720000}: clock_override_add
+sys={0.720000}, mono={0.720000}: dequeue: seq=65 ts=5680 INTERMEDIATE
+sys={0.740000}, mono={0.740000}: clock_override_add
+sys={0.740000}, mono={0.740000}: dequeue: seq=66 ts=5840 INTERMEDIATE
+sys={0.760000}, mono={0.760000}: clock_override_add
+sys={0.760000}, mono={0.760000}: dequeue: seq=67 ts=6000 INTERMEDIATE
+sys={0.780000}, mono={0.780000}: clock_override_add
+sys={0.780000}, mono={0.780000}: dequeue: seq=68 ts=6160 INTERMEDIATE
+sys={0.800000}, mono={0.800000}: clock_override_add
+sys={0.800000}, mono={0.800000}: dequeue: seq=69 ts=6320 INTERMEDIATE
+sys={0.820000}, mono={0.820000}: clock_override_add
+sys={0.820000}, mono={0.820000}: dequeue: seq=70 ts=6480 INTERMEDIATE
+sys={0.840000}, mono={0.840000}: clock_override_add
+sys={0.840000}, mono={0.840000}: dequeue: seq=71 ts=6640 INTERMEDIATE
+sys={0.860000}, mono={0.860000}: clock_override_add
+sys={0.860000}, mono={0.860000}: dequeue: seq=72 ts=6800 INTERMEDIATE
+sys={0.880000}, mono={0.880000}: clock_override_add
+sys={0.880000}, mono={0.880000}: dequeue: seq=73 ts=6960 INTERMEDIATE
+sys={0.900000}, mono={0.900000}: clock_override_add
+sys={0.900000}, mono={0.900000}: dequeue: seq=74 ts=7120 INTERMEDIATE
+sys={0.920000}, mono={0.920000}: clock_override_add
+sys={0.920000}, mono={0.920000}: dequeue: seq=75 ts=7280 INTERMEDIATE
+sys={0.940000}, mono={0.940000}: clock_override_add
+sys={0.940000}, mono={0.940000}: dequeue: seq=76 ts=7440 INTERMEDIATE
+sys={0.960000}, mono={0.960000}: clock_override_add
+sys={0.960000}, mono={0.960000}: dequeue: seq=77 ts=7600 INTERMEDIATE
+sys={0.980000}, mono={0.980000}: clock_override_add
+sys={0.980000}, mono={0.980000}: dequeue: seq=78 ts=7760 INTERMEDIATE
+sys={1.000000}, mono={1.000000}: clock_override_add
+sys={1.000000}, mono={1.000000}: dequeue: seq=79 ts=7920 INTERMEDIATE
+sys={1.020000}, mono={1.020000}: clock_override_add
+sys={1.020000}, mono={1.020000}: dequeue: seq=80 ts=8080 INTERMEDIATE
+sys={1.040000}, mono={1.040000}: clock_override_add
+sys={1.040000}, mono={1.040000}: dequeue: seq=81 ts=8240 INTERMEDIATE
+sys={1.060000}, mono={1.060000}: clock_override_add
+sys={1.060000}, mono={1.060000}: dequeue: seq=82 ts=8400 INTERMEDIATE
+sys={1.080000}, mono={1.080000}: clock_override_add
+sys={1.080000}, mono={1.080000}: dequeue: seq=83 ts=8560 INTERMEDIATE
+sys={1.100000}, mono={1.100000}: clock_override_add
+sys={1.100000}, mono={1.100000}: dequeue: seq=84 ts=8720 INTERMEDIATE
+sys={1.120000}, mono={1.120000}: clock_override_add
+sys={1.120000}, mono={1.120000}: dequeue: seq=85 ts=8880 INTERMEDIATE
+sys={1.140000}, mono={1.140000}: clock_override_add
+sys={1.140000}, mono={1.140000}: dequeue: seq=86 ts=9040 INTERMEDIATE
+sys={1.160000}, mono={1.160000}: clock_override_add
+sys={1.160000}, mono={1.160000}: dequeue: seq=87 ts=9200 INTERMEDIATE
+sys={1.180000}, mono={1.180000}: clock_override_add
+sys={1.180000}, mono={1.180000}: dequeue: seq=88 ts=9360 INTERMEDIATE
+sys={1.200000}, mono={1.200000}: clock_override_add
+sys={1.200000}, mono={1.200000}: dequeue: seq=89 ts=9520 INTERMEDIATE
+sys={1.220000}, mono={1.220000}: clock_override_add
+sys={1.220000}, mono={1.220000}: dequeue: seq=90 ts=9680 INTERMEDIATE
+sys={1.240000}, mono={1.240000}: clock_override_add
+sys={1.240000}, mono={1.240000}: dequeue: seq=91 ts=9840 INTERMEDIATE
+sys={1.260000}, mono={1.260000}: clock_override_add
+sys={1.260000}, mono={1.260000}: dequeue: seq=92 ts=10000 INTERMEDIATE
+sys={1.280000}, mono={1.280000}: clock_override_add
+sys={1.280000}, mono={1.280000}: dequeue: seq=93 ts=10160 INTERMEDIATE
+sys={1.300000}, mono={1.300000}: clock_override_add
+sys={1.300000}, mono={1.300000}: dequeue: seq=94 ts=10320 INTERMEDIATE
+sys={1.320000}, mono={1.320000}: clock_override_add
+sys={1.320000}, mono={1.320000}: dequeue: seq=95 ts=10480 INTERMEDIATE
+sys={1.340000}, mono={1.340000}: clock_override_add
+sys={1.340000}, mono={1.340000}: dequeue: seq=96 ts=10640 INTERMEDIATE
+sys={1.360000}, mono={1.360000}: clock_override_add
+sys={1.360000}, mono={1.360000}: dequeue: seq=97 ts=10800 INTERMEDIATE
+sys={1.380000}, mono={1.380000}: clock_override_add
+sys={1.380000}, mono={1.380000}: dequeue: seq=98 ts=10960 INTERMEDIATE
+sys={1.400000}, mono={1.400000}: clock_override_add
+sys={1.400000}, mono={1.400000}: dequeue: seq=99 ts=11120 INTERMEDIATE
+sys={1.420000}, mono={1.420000}: clock_override_add
+sys={1.420000}, mono={1.420000}: dequeue: seq=100 ts=11280 INTERMEDIATE
+sys={1.440000}, mono={1.440000}: clock_override_add
+sys={1.440000}, mono={1.440000}: dequeue: seq=101 ts=11440 INTERMEDIATE
+sys={1.460000}, mono={1.460000}: clock_override_add
+sys={1.460000}, mono={1.460000}: dequeue: seq=102 ts=11600 INTERMEDIATE
+sys={1.480000}, mono={1.480000}: clock_override_add
+sys={1.480000}, mono={1.480000}: dequeue: seq=103 ts=11760 INTERMEDIATE
+sys={1.500000}, mono={1.500000}: clock_override_add
+sys={1.500000}, mono={1.500000}: dequeue: seq=104 ts=11920 INTERMEDIATE
+sys={1.520000}, mono={1.520000}: clock_override_add
+sys={1.520000}, mono={1.520000}: dequeue: seq=105 ts=12080 INTERMEDIATE
+sys={1.540000}, mono={1.540000}: clock_override_add
+sys={1.540000}, mono={1.540000}: dequeue: seq=106 ts=12240 INTERMEDIATE
+sys={1.560000}, mono={1.560000}: clock_override_add
+sys={1.560000}, mono={1.560000}: dequeue: seq=107 ts=12400 INTERMEDIATE
+sys={1.580000}, mono={1.580000}: clock_override_add
+sys={1.580000}, mono={1.580000}: dequeue: seq=108 ts=12560 INTERMEDIATE
+sys={1.600000}, mono={1.600000}: clock_override_add
+sys={1.600000}, mono={1.600000}: dequeue: seq=109 ts=12720 INTERMEDIATE
+sys={1.620000}, mono={1.620000}: clock_override_add
+sys={1.620000}, mono={1.620000}: dequeue: seq=110 ts=12880 INTERMEDIATE
+sys={1.640000}, mono={1.640000}: clock_override_add
+sys={1.640000}, mono={1.640000}: dequeue: seq=111 ts=13040 INTERMEDIATE
+sys={1.660000}, mono={1.660000}: clock_override_add
+sys={1.660000}, mono={1.660000}: dequeue: seq=112 ts=13200 INTERMEDIATE
+sys={1.680000}, mono={1.680000}: clock_override_add
+sys={1.680000}, mono={1.680000}: dequeue: seq=113 ts=13360 INTERMEDIATE
+sys={1.700000}, mono={1.700000}: clock_override_add
+sys={1.700000}, mono={1.700000}: dequeue: seq=114 ts=13520 INTERMEDIATE
+sys={1.720000}, mono={1.720000}: clock_override_add
+sys={1.720000}, mono={1.720000}: dequeue: seq=115 ts=13680 INTERMEDIATE
+sys={1.740000}, mono={1.740000}: clock_override_add
+sys={1.740000}, mono={1.740000}: dequeue: seq=116 ts=13840 INTERMEDIATE
+sys={1.760000}, mono={1.760000}: clock_override_add
+sys={1.760000}, mono={1.760000}: dequeue: seq=117 ts=14000 INTERMEDIATE
+sys={1.780000}, mono={1.780000}: clock_override_add
+sys={1.780000}, mono={1.780000}: dequeue: seq=118 ts=14160 INTERMEDIATE
+sys={1.800000}, mono={1.800000}: clock_override_add
+sys={1.800000}, mono={1.800000}: dequeue: seq=119 ts=14320 INTERMEDIATE
+sys={1.820000}, mono={1.820000}: clock_override_add
+sys={1.820000}, mono={1.820000}: dequeue: seq=120 ts=14480 INTERMEDIATE
+sys={1.840000}, mono={1.840000}: clock_override_add
+sys={1.840000}, mono={1.840000}: dequeue: seq=121 ts=14640 INTERMEDIATE
+sys={1.860000}, mono={1.860000}: clock_override_add
+sys={1.860000}, mono={1.860000}: dequeue: seq=122 ts=14800 INTERMEDIATE
+sys={1.880000}, mono={1.880000}: clock_override_add
+sys={1.880000}, mono={1.880000}: dequeue: seq=123 ts=14960 INTERMEDIATE
+sys={1.900000}, mono={1.900000}: clock_override_add
+sys={1.900000}, mono={1.900000}: dequeue: seq=124 ts=15120 INTERMEDIATE
+sys={1.920000}, mono={1.920000}: clock_override_add
+sys={1.920000}, mono={1.920000}: dequeue: seq=125 ts=15280 INTERMEDIATE
+sys={1.940000}, mono={1.940000}: clock_override_add
+sys={1.940000}, mono={1.940000}: dequeue: seq=126 ts=15440 INTERMEDIATE
+sys={1.960000}, mono={1.960000}: clock_override_add
+sys={1.960000}, mono={1.960000}: dequeue: seq=127 ts=15600 INTERMEDIATE
+sys={1.980000}, mono={1.980000}: clock_override_add
+sys={1.980000}, mono={1.980000}: dequeue: seq=128 ts=15760 INTERMEDIATE
+sys={2.000000}, mono={2.000000}: clock_override_add
+sys={2.000000}, mono={2.000000}: dequeue: seq=129 ts=15920 INTERMEDIATE
+sys={2.020000}, mono={2.020000}: clock_override_add
+sys={2.020000}, mono={2.020000}: dequeue: seq=130 ts=16080 INTERMEDIATE
+sys={2.040000}, mono={2.040000}: clock_override_add
+sys={2.040000}, mono={2.040000}: dequeue: seq=131 ts=16240 INTERMEDIATE
+sys={2.060000}, mono={2.060000}: clock_override_add
+sys={2.060000}, mono={2.060000}: dequeue: seq=132 ts=16400 INTERMEDIATE
+sys={2.080000}, mono={2.080000}: clock_override_add
+sys={2.080000}, mono={2.080000}: dequeue: seq=133 ts=16560 INTERMEDIATE
+sys={2.100000}, mono={2.100000}: clock_override_add
+sys={2.100000}, mono={2.100000}: dequeue: seq=134 ts=16720 INTERMEDIATE
+sys={2.120000}, mono={2.120000}: clock_override_add
+sys={2.120000}, mono={2.120000}: dequeue: seq=135 ts=16880 INTERMEDIATE
+sys={2.140000}, mono={2.140000}: clock_override_add
+sys={2.140000}, mono={2.140000}: dequeue: seq=136 ts=17040 INTERMEDIATE
+sys={2.160000}, mono={2.160000}: clock_override_add
+sys={2.160000}, mono={2.160000}: dequeue: seq=137 ts=17200 INTERMEDIATE
+sys={2.180000}, mono={2.180000}: clock_override_add
+sys={2.180000}, mono={2.180000}: dequeue: seq=138 ts=17360 INTERMEDIATE
+sys={2.200000}, mono={2.200000}: clock_override_add
+sys={2.200000}, mono={2.200000}: dequeue: seq=139 ts=17520 INTERMEDIATE
+sys={2.200000}, mono={2.200000}: Done, checking threshold and cleaning
+sys={2.270000}, mono={2.270000}: clock_override_add
+sys={2.270000}, mono={2.270000}: dequeue: seq=140 ts=17680 INTERMEDIATE
+sys={2.270000}, mono={2.270000}: dequeue: seq=141 ts=17840 INTERMEDIATE
+sys={2.270000}, mono={2.270000}: dequeue: seq=142 ts=18000 INTERMEDIATE
+sys={2.270000}, mono={2.270000}: dequeue: seq=143 ts=18160 LATEST
+===test_seq_wraparound===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet (seq=65534)
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: enqueue 2nd packet (seq=65535)
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: enqueue 3rd packet (seq=0, wraparound)
+sys={0.060000}, mono={0.060000}: clock_override_add
+sys={0.060000}, mono={0.060000}: enqueue 4th packet (seq=1)
+sys={0.080000}, mono={0.080000}: clock_override_add
+sys={0.080000}, mono={0.080000}: enqueue 5th packet (seq=2)
+sys={0.080000}, mono={0.080000}: dequeue 1st packet (seq=65534)
+sys={0.080000}, mono={0.080000}: dequeue: seq=65534 ts=560 INTERMEDIATE
+sys={0.100000}, mono={0.100000}: clock_override_add
+sys={0.100000}, mono={0.100000}: dequeue 2nd packet (seq=65535)
+sys={0.100000}, mono={0.100000}: dequeue: seq=65535 ts=720 INTERMEDIATE
+sys={0.120000}, mono={0.120000}: clock_override_add
+sys={0.120000}, mono={0.120000}: dequeue 3rd packet (seq=0, wraparound)
+sys={0.120000}, mono={0.120000}: dequeue: seq=0 ts=880 INTERMEDIATE
+sys={0.140000}, mono={0.140000}: clock_override_add
+sys={0.140000}, mono={0.140000}: dequeue 4th packet (seq=1)
+sys={0.140000}, mono={0.140000}: dequeue: seq=1 ts=1040 INTERMEDIATE
+sys={0.160000}, mono={0.160000}: clock_override_add
+sys={0.160000}, mono={0.160000}: dequeue 5th packet (seq=2)
+sys={0.160000}, mono={0.160000}: dequeue: seq=2 ts=1200 LATEST
+===test_timestamp_wraparound===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet (ts=4294966990)
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: enqueue 2nd packet (ts=4294967150)
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: enqueue 3rd packet (ts=14, wraparound)
+sys={0.060000}, mono={0.060000}: clock_override_add
+sys={0.060000}, mono={0.060000}: enqueue 4th packet (ts=174)
+sys={0.080000}, mono={0.080000}: clock_override_add
+sys={0.080000}, mono={0.080000}: enqueue 5th packet (ts=334)
+sys={0.080000}, mono={0.080000}: dequeue 1st packet (ts=4294966990)
+sys={0.080000}, mono={0.080000}: dequeue: seq=33 ts=4294966990 INTERMEDIATE
+sys={0.100000}, mono={0.100000}: clock_override_add
+sys={0.100000}, mono={0.100000}: dequeue 2nd packet (ts=4294967150)
+sys={0.100000}, mono={0.100000}: dequeue: seq=34 ts=4294967150 INTERMEDIATE
+sys={0.120000}, mono={0.120000}: clock_override_add
+sys={0.120000}, mono={0.120000}: dequeue 3rd packet (ts=14, wraparound)
+sys={0.120000}, mono={0.120000}: dequeue: seq=35 ts=14 INTERMEDIATE
+sys={0.140000}, mono={0.140000}: clock_override_add
+sys={0.140000}, mono={0.140000}: dequeue 4th packet (ts=174)
+sys={0.140000}, mono={0.140000}: dequeue: seq=36 ts=174 INTERMEDIATE
+sys={0.160000}, mono={0.160000}: clock_override_add
+sys={0.160000}, mono={0.160000}: dequeue 5th packet (ts=334)
+sys={0.160000}, mono={0.160000}: dequeue: seq=37 ts=334 LATEST
+OK: Test passed
