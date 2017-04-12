@@ -206,12 +206,13 @@ struct osmux_circuit {
 	int			dummy;
 };
 
-static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit)
+static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit,
+				uint8_t batch_factor)
 {
 	/* Too many messages per batch, discard it. The counter field of the
 	 * osmux header is just 3 bits long, so make sure it doesn't overflow.
 	 */
-	if (circuit->nmsgs >= 8) {
+	if (circuit->nmsgs >= batch_factor || circuit->nmsgs >= 8) {
 		struct rtp_hdr *rtph;
 
 		rtph = osmo_rtp_get_hdr(msg);
@@ -454,7 +455,7 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 }
 
 static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
-				      struct rtp_hdr *cur_rtph)
+				      struct rtp_hdr *cur_rtph, int batch_factor)
 {
 	int16_t diff;
 	struct msgb *last;
@@ -500,7 +501,7 @@ static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
 					DELTA_RTP_TIMESTAMP);
 
 		/* No more room in this batch, skip padding with more clones */
-		if (osmux_batch_enqueue(clone, circuit) < 0) {
+		if (osmux_batch_enqueue(clone, circuit, batch_factor) < 0) {
 			msgb_free(clone);
 			break;
 		}
@@ -609,10 +610,10 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 		}
 	}
 	/* Handle RTP packet loss scenario */
-	osmux_replay_lost_packets(circuit, rtph);
+	osmux_replay_lost_packets(circuit, rtph, batch_factor);
 
 	/* This batch is full, force batch delivery */
-	if (osmux_batch_enqueue(msg, circuit) < 0)
+	if (osmux_batch_enqueue(msg, circuit, batch_factor) < 0)
 		return 1;
 
 #ifdef DEBUG_MSG
