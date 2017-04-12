@@ -1,6 +1,8 @@
 #ifndef _OSMO_STREAM_H_
 #define _OSMO_STREAM_H_
 
+#include <stdbool.h>
+
 /*! \addtogroup stream
  *  @{
  */
