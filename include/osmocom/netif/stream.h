@@ -2,6 +2,7 @@
 #define _OSMO_STREAM_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /*! \addtogroup stream
  *  @{
