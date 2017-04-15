@@ -2,6 +2,7 @@
 #define _OSMO_NETIF_IPA_H_
 
 #include <osmocom/gsm/protocol/ipaccess.h>
+#include <osmocom/gsm/ipa.h>
 
 /* This is like 'struct ipaccess_head' in libosmocore, but 'ipa_head' is
  * actually the more apropriate name, so rather than making more code
@@ -21,19 +22,6 @@ struct msgb *osmo_ipa_msg_alloc(int headroom);
 void osmo_ipa_msg_push_header(struct msgb *msg, uint8_t proto);
 
 int osmo_ipa_process_msg(struct msgb *msg);
-
-struct ipaccess_unit {
-	uint16_t site_id;
-	uint16_t bts_id;
-	uint16_t trx_id;
-	char *unit_name;
-	char *equipvers;
-	char *swversion;
-	uint8_t mac_addr[6];
-	char *location1;
-	char *location2;
-	char *serno;
-};
 
 struct osmo_fd;
 struct tlv_parsed;
