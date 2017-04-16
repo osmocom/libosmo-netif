@@ -551,7 +551,7 @@ static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 	}
 
 	if (link->flags & OSMO_STREAM_SRV_F_NODELAY) {
-		ret = setsockopt_nodelay(ret, link->proto, 1);
+		ret = setsockopt_nodelay(sock_fd, link->proto, 1);
 		if (ret < 0)
 			goto error_close_socket;
 	}
