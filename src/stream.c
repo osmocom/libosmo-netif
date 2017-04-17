@@ -50,8 +50,17 @@ static int sctp_sock_activate_events(int fd)
 	struct sctp_event_subscribe event;
 	int rc;
 
-	/* subscribe for all events */
-	memset((uint8_t *)&event, 1, sizeof(event));
+	/* subscribe for all relevant events */
+	memset((uint8_t *)&event, 0, sizeof(event));
+	event.sctp_data_io_event = 1;
+	event.sctp_association_event = 1;
+	event.sctp_address_event = 1;
+	event.sctp_address_event = 1;
+	event.sctp_send_failure_event = 1;
+	event.sctp_peer_error_event = 1;
+	event.sctp_shutdown_event = 1;
+	/* IMPORTANT: Do NOT enable sender_dry_event here, see
+	 * https://bugzilla.redhat.com/show_bug.cgi?id=1442784 */
 	rc = setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS,
 			&event, sizeof(event));
 
