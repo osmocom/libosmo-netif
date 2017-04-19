@@ -12,6 +12,7 @@ struct osmo_pcap {
 	pcap_t			*h;
 	struct osmo_timer_list	timer;
 	struct timeval		last;
+	struct msgb 		*deliver_msg;
 };
 
 pcap_t *osmo_pcap_test_open(const char *pcapfile);

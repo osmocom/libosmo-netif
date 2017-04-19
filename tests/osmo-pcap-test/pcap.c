@@ -39,7 +39,8 @@ struct osmo_pcap_test_stats {
 } osmo_pcap_test_stats;
 
 static int
-osmo_pcap_process_packet(const uint8_t *pkt, uint32_t pktlen,
+osmo_pcap_process_packet(struct msgb **msgptr,
+			 const uint8_t *pkt, uint32_t pktlen,
 			 struct osmo_pcap_proto_l2l3 *l3h,
 			 struct osmo_pcap_proto_l4 *l4h,
 			 int (*cb)(struct msgb *msgb))
@@ -56,7 +57,7 @@ osmo_pcap_process_packet(const uint8_t *pkt, uint32_t pktlen,
 	/* This packet contains no data, skip it. */
 	if (l4h->l4pkt_no_data(pkt + l3hdr_len + ETH_HLEN)) {
 		osmo_pcap_test_stats.skip++;
-		return 0;
+		return -1;
 	}
 
 	/* get application layer data. */
@@ -72,11 +73,9 @@ osmo_pcap_process_packet(const uint8_t *pkt, uint32_t pktlen,
 	memcpy(msgb->data, pkt, pktlen);
 	msgb_put(msgb, pktlen);
 
-	ret = cb(msgb);
+	*msgptr = msgb;
 
-	osmo_pcap_test_stats.processed++;
-
-	return ret;
+	return 0;
 }
 
 pcap_t *osmo_pcap_test_open(const char *pcapfile)
@@ -109,6 +108,12 @@ osmo_pcap_test_run(struct osmo_pcap *p, uint8_t pnum, int (*cb)(struct msgb *msg
 	struct timeval res;
 	uint8_t l4protonum;
 
+	if (p->deliver_msg) {
+		if (cb(p->deliver_msg) == 0)
+			osmo_pcap_test_stats.processed++;
+		p->deliver_msg = 0;
+	}
+
 retry:
 	pkt = pcap_next(p->h, &pcaph);
 	if (pkt == NULL)
@@ -140,7 +145,7 @@ retry:
 		memcpy(&p->last, &pcaph.ts, sizeof(struct timeval));
 
 	/* retry with next packet if this has been skipped. */
-	if (osmo_pcap_process_packet(pkt, pcaph.caplen, l3h, l4h, cb) < 0)
+	if (osmo_pcap_process_packet(&p->deliver_msg, pkt, pcaph.caplen, l3h, l4h, cb) < 0)
 		goto retry;
 
 	/* calculate waiting time */
