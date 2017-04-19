@@ -115,6 +115,14 @@ static void llist_add_sorted(struct msgb *msg, struct llist_head *msg_list)
 
 }
 
+static bool msg_get_marker(struct msgb *msg)
+{
+	/* TODO: make it more generic as a callback so that different types of
+	 * pkts can be used ? */
+	struct rtp_hdr *rtph = osmo_rtp_get_hdr(msg);
+	return rtph->marker;
+}
+
 static uint16_t msg_get_sequence(struct msgb *msg)
 {
 	struct rtp_hdr *rtph = osmo_rtp_get_hdr(msg);
@@ -275,7 +283,11 @@ int osmo_jibuf_enqueue(struct osmo_jibuf *jb, struct msgb *msg)
 
 	clock_gettime_timeval(CLOCK_MONOTONIC, &jb->last_enqueue_time);
 
-	if (!jb->started) {
+	/* If packet contains a mark -> start of talkspurt.
+	 * A lot of packets may have been suppressed by the sender before it,
+	 * so let's take it as a reference
+	 */
+	if (!jb->started || msg_get_marker(msg)) {
 		jb->started = true;
 		msg_set_as_reference(jb, msg);
 		rel_delay = 0;
@@ -310,10 +322,10 @@ int osmo_jibuf_enqueue(struct osmo_jibuf *jb, struct msgb *msg)
 	timeradd(&jb->last_enqueue_time, &delay_ts, &sched_ts);
 
 	LOGP(DLJIBUF, LOGL_DEBUG, "enqueuing packet seq=%"PRIu16" rel=%d delay=%d" \
-		" thres=%d {%lu.%06lu -> %lu.%06lu}\n",
+		" thres=%d {%lu.%06lu -> %lu.%06lu} %s\n",
 		msg_get_sequence(msg), rel_delay, delay, jb->threshold_delay,
 		jb->last_enqueue_time.tv_sec, jb->last_enqueue_time.tv_usec,
-		sched_ts.tv_sec, sched_ts.tv_usec);
+		sched_ts.tv_sec, sched_ts.tv_usec, msg_get_marker(msg)? "M" : "");
 
 	/* Add scheduled dequeue time in msg->cb so we can check it later */
 	unsigned long *old_cb = talloc_memdup(jb->talloc_ctx, msg->cb, sizeof(msg->cb));

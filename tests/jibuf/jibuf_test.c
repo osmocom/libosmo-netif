@@ -568,6 +568,56 @@ static void test_timestamp_wraparound(void)
 	osmo_jibuf_delete(jb);
 }
 
+static void test_rtp_marker(void)
+{
+	int min_delay = 60;
+	struct msgb *msg;
+	struct rtp_hdr *rtph;
+
+	printf("===test_rtp_marker===\n");
+
+	clock_override_enable(true);
+	clock_override_set(0, 0);
+	rtp_init(32, 400);
+	jb = osmo_jibuf_alloc(NULL);
+	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
+	osmo_jibuf_set_min_delay(jb, min_delay);
+	osmo_jibuf_set_max_delay(jb, 200);
+
+	/* First rtp at t=0, should be scheduled in min_delay time */
+	clock_debug("enqueue 1st packet");
+	ENQUEUE_NEXT(jb);
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	clock_debug("enqueue 2nd packet");
+	ENQUEUE_NEXT(jb);
+	clock_override_add(0, min_delay*1000);
+	clock_debug("2 packets dequeued");
+	osmo_select_main(0);
+
+	clock_override_add(0, 40*1000);
+	 /* We are at t=120, next non-marked (consecutive seq) packet arriving at
+	  * this time should be dropped, but since marker establishes new ref,
+	  * it will be accepted as well an ext paket */
+	clock_debug("enqueue late pkt with marker=1, will be enqueued");
+	msg = rtp_next();
+	rtph = osmo_rtp_get_hdr(msg);
+	rtph->marker = 1;
+	OSMO_ASSERT(osmo_jibuf_enqueue(jb, msg) == 0);
+
+	clock_debug("enqueue late pkt after pkt with marker=1, will be enqueued");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	ENQUEUE_NEXT(jb);
+
+	clock_debug("2 packets dequeued");
+	clock_override_add(0, min_delay*1000);
+	osmo_select_main(0);
+
+	/* t=120, 4 enqueued, 4 dequeued.*/
+	OSMO_ASSERT(osmo_jibuf_empty(jb));
+
+	osmo_jibuf_delete(jb);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -592,6 +642,7 @@ int main(int argc, char **argv)
 	test_buffer_threshold_change();
 	test_seq_wraparound();
 	test_timestamp_wraparound();
+	test_rtp_marker();
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;

@@ -218,7 +218,9 @@ void dequeue_cb(struct msgb *msg, void *data)
 	gettimeofday(&pinfo->postqueue.ts, NULL);
 	pinfo->postqueue.timestamp = htonl(rtph->timestamp);
 
-	if (postqueue_started) {
+	/* If pkt->marker -> init of talkspurt, there may be missing packets before,
+	 * better to start calculating the jitter from here */
+	if (postqueue_started && !rtph->marker) {
 		/* In random test mode we now the sender time, so we get real
 		 * jitter results using it */
 		if(opt_test_rand) {
@@ -269,7 +271,9 @@ void pkt_arrived_cb(void *data)
 	gettimeofday(&pinfo->prequeue.ts, NULL);
 	pinfo->prequeue.timestamp = htonl(rtph->timestamp);
 
-	if (prequeue_started) {
+	/* If pkt->marker -> init of talkspurt, there may be missing packets before,
+	 * better to start calculating the jitter from here */
+	if (prequeue_started && !rtph->marker) {
 		/* In random test mode we now the sender time, so we get real
 		 * jitter results using it */
 		if(opt_test_rand) {

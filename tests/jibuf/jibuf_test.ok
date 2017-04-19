@@ -348,4 +348,21 @@ sys={0.140000}, mono={0.140000}: dequeue: seq=36 ts=174 INTERMEDIATE
 sys={0.160000}, mono={0.160000}: clock_override_add
 sys={0.160000}, mono={0.160000}: dequeue 5th packet (ts=334)
 sys={0.160000}, mono={0.160000}: dequeue: seq=37 ts=334 LATEST
+===test_rtp_marker===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: enqueue 2nd packet
+sys={0.080000}, mono={0.080000}: clock_override_add
+sys={0.080000}, mono={0.080000}: 2 packets dequeued
+sys={0.080000}, mono={0.080000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={0.080000}, mono={0.080000}: dequeue: seq=34 ts=720 LATEST
+sys={0.120000}, mono={0.120000}: clock_override_add
+sys={0.120000}, mono={0.120000}: enqueue late pkt with marker=1, will be enqueued
+sys={0.120000}, mono={0.120000}: enqueue late pkt after pkt with marker=1, will be enqueued
+sys={0.140000}, mono={0.140000}: clock_override_add
+sys={0.140000}, mono={0.140000}: 2 packets dequeued
+sys={0.200000}, mono={0.200000}: clock_override_add
+sys={0.200000}, mono={0.200000}: dequeue: seq=35 ts=880 INTERMEDIATE
+sys={0.200000}, mono={0.200000}: dequeue: seq=36 ts=1040 LATEST
 OK: Test passed
