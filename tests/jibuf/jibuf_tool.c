@@ -29,6 +29,7 @@
 #include <osmocom/core/linuxlist.h>
 #include <osmocom/netif/jibuf.h>
 #include <osmocom/netif/rtp.h>
+#include <osmocom/netif/osmux.h>
 
 #include "osmo-pcap-test/osmo_pcap.h"
 
@@ -57,6 +58,7 @@ struct rtp_pkt_info_cb {
 static bool opt_test_rand;
 static bool opt_debug_human;
 static bool opt_debug_table;
+static bool opt_osmux;
 static char* opt_pcap_file;
 /* ----------------------------- */
 
@@ -106,6 +108,8 @@ static uint32_t packets_too_much_jitter;
 /* Used for test pcap: */
 static struct osmo_pcap osmo_pcap;
 static bool pcap_finished;
+static struct osmux_out_handle pcap_osmux_h;
+static struct llist_head osmux_list;
 /* ----------------------------- */
 
 static void sigalarm_handler(int foo)
@@ -399,9 +403,33 @@ static int pcap_generate_pkt_cb(struct msgb *msg)
 	return 0;
 }
 
+void glue_cb(struct msgb *msg, void *data)
+{
+	pcap_generate_pkt_cb(msg);
+}
+
+int pcap_read_osmux(struct msgb *msg)
+{
+	struct osmux_hdr *osmuxh;
+
+	/* This code below belongs to the osmux receiver */
+	while((osmuxh = osmux_xfrm_output_pull(msg)) != NULL) {
+		osmux_xfrm_output(osmuxh, &pcap_osmux_h, &osmux_list);
+		osmux_tx_sched(&osmux_list, glue_cb, NULL);
+	}
+	msgb_free(msg);
+	return 0;
+}
+
 void pcap_pkt_timer_cb(void *data)
 {
-	if (osmo_pcap_test_run(&osmo_pcap, IPPROTO_UDP, pcap_generate_pkt_cb) < 0) {
+	int (*mycb)(struct msgb *msgb);
+	if(opt_osmux)
+		mycb = pcap_read_osmux;
+	else
+		mycb = pcap_generate_pkt_cb;
+
+	if (osmo_pcap_test_run(&osmo_pcap, IPPROTO_UDP, mycb) < 0) {
 		osmo_pcap_stats_printf();
 		osmo_pcap_test_close(osmo_pcap.h);
 		pcap_finished=true;
@@ -466,6 +494,11 @@ void pcap_test() {
 
 	osmo_pcap.timer.cb = pcap_pkt_timer_cb;
 
+	if(opt_osmux) {
+		INIT_LLIST_HEAD(&osmux_list);
+		osmux_xfrm_output_init(&pcap_osmux_h, 0);
+	}
+
 	jb = osmo_jibuf_alloc(NULL);
 	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
 	osmo_jibuf_set_min_delay(jb, 60);
@@ -484,10 +517,11 @@ void pcap_test() {
 
 static void print_help(void)
 {
-	printf("jibuf_test [-r] [-p pcap] [-d] [-g]\n");
+	printf("jibuf_test [-r] [-p pcap] [-o] [-d] [-g]\n");
 	printf(" -h Print this help message\n");
 	printf(" -r Run test with randomly generated jitter\n");
 	printf(" -p Run test with specified pcap file\n");
+	printf(" -o The pcap contains OSMUX packets isntead of RTP\n");
 	printf(" -d Enable packet trace debug suitable for humans\n");
 	printf(" -t Enable packet trace debug suitable for gnuplot\n");
 }
@@ -496,7 +530,7 @@ static int parse_options(int argc, char **argv)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "hdtrp:")) != -1) {
+	while ((opt = getopt(argc, argv, "hdtrop:")) != -1) {
 		switch (opt) {
 		case 'h':
 			print_help();
@@ -509,6 +543,9 @@ static int parse_options(int argc, char **argv)
 			break;
 		case 'r':
 			opt_test_rand = true;
+			break;
+		case 'o':
+			opt_osmux = true;
 			break;
 		case 'p':
 			opt_pcap_file = strdup(optarg);
