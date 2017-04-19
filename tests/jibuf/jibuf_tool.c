@@ -20,6 +20,7 @@
 #include <signal.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include <getopt.h>
 
 #include <osmocom/core/select.h>
 #include <osmocom/core/application.h>
@@ -29,50 +30,14 @@
 #include <osmocom/netif/jibuf.h>
 #include <osmocom/netif/rtp.h>
 
-/* Logging related stuff */
-#define INT2IDX(x)   (-1*(x)-1)
-struct log_info_cat jibuf_test_cat[] = {
-	[INT2IDX(DLJIBUF)] = {
-		.name = "DLJIBUF",
-		.description = "Osmocom Jitter Buffer",
-		.enabled = 1, .loglevel = LOGL_DEBUG,
-		},
-};
-const struct log_info jibuf_test_log_info = {
-	.filter_fn = NULL,
-	.cat = jibuf_test_cat,
-	.num_cat = ARRAY_SIZE(jibuf_test_cat),
-};
+#include "osmo-pcap-test/osmo_pcap.h"
 
-/* RTP packet with AMR payload */
-static uint8_t rtp_pkt[] = {
-	0x80, 0x62, 0x3f, 0xcc, 0x00, 0x01, 0xa7, 0x6f, /* RTP */
-	0x07, 0x09, 0x00, 0x62, 0x20, 0x14, 0xff, 0xd4, /* AMR */
-	0xf9, 0xff, 0xfb, 0xe7, 0xeb, 0xf9, 0x9f, 0xf8,
-	0xf2, 0x26, 0x33, 0x65, 0x54,
-};
-
-static void sigalarm_handler(int foo)
-{
-	printf("FAIL: test did not run successfully\n");
-	exit(EXIT_FAILURE);
-}
-
-#define SAMPLES_PER_PKT	160
-#define RTP_FREQ_MS 20
-#define RTP_PKTS_PER_SEC (1000/RTP_FREQ_MS)
-#define NET_DELAY_MS 	300
-#define GENERATED_JITTER_MS 160
-#define NUM_PACKETS_TO_SEND 1000
-
-#define TRACE_PACKE_DEBUG 0
-#define TRACE_PACKET_GNUPLOT 1
-#define TRACE_PACKET_TEST_JITTER 0
 
 struct checkpoint {
 	struct timeval ts;
 	int transit;
 	double jitter;
+	uint32_t timestamp;
 };
 
 struct rtp_pkt_info {
@@ -88,14 +53,66 @@ struct rtp_pkt_info_cb {
 	struct rtp_pkt_info *data;
 };
 
-struct osmo_jibuf *jb;
-uint16_t rtp_first_seq;
-uint16_t rtp_next_seq;
-uint32_t rtp_next_ts;
-uint32_t packets_sent;
-uint32_t packets_received;
-uint32_t packets_dropped;
-uint32_t packets_too_much_jitter;
+/* Option parameters to the program */
+static bool opt_test_rand;
+static bool opt_debug_human;
+static bool opt_debug_table;
+static char* opt_pcap_file;
+/* ----------------------------- */
+
+/* Logging related stuff */
+#define INT2IDX(x)   (-1*(x)-1)
+struct log_info_cat jibuf_test_cat[] = {
+	[INT2IDX(DLJIBUF)] = {
+		.name = "DLJIBUF",
+		.description = "Osmocom Jitter Buffer",
+		.enabled = 1, .loglevel = LOGL_DEBUG,
+		},
+};
+const struct log_info jibuf_test_log_info = {
+	.filter_fn = NULL,
+	.cat = jibuf_test_cat,
+	.num_cat = ARRAY_SIZE(jibuf_test_cat),
+};
+/* ----------------------------- */
+
+/* Used for test random: */
+#define SAMPLES_PER_PKT	160
+#define RTP_FREQ_MS 20
+#define RTP_PKTS_PER_SEC (1000/RTP_FREQ_MS)
+#define NET_DELAY_MS 	300
+#define GENERATED_JITTER_MS 160
+#define NUM_PACKETS_TO_SEND 1000
+
+/* RTP packet with AMR payload */
+static uint8_t rtp_pkt[] = {
+	0x80, 0x62, 0x3f, 0xcc, 0x00, 0x01, 0xa7, 0x6f, /* RTP */
+	0x07, 0x09, 0x00, 0x62, 0x20, 0x14, 0xff, 0xd4, /* AMR */
+	0xf9, 0xff, 0xfb, 0xe7, 0xeb, 0xf9, 0x9f, 0xf8,
+	0xf2, 0x26, 0x33, 0x65, 0x54,
+};
+
+static struct osmo_jibuf *jb;
+static uint16_t rtp_first_seq;
+static uint16_t rtp_next_seq;
+static uint32_t rtp_next_ts;
+static struct timeval tx_prev_time;
+static uint32_t packets_sent;
+static uint32_t packets_received;
+static uint32_t packets_dropped;
+static uint32_t packets_too_much_jitter;
+/* ----------------------------- */
+
+/* Used for test pcap: */
+static struct osmo_pcap osmo_pcap;
+static bool pcap_finished;
+/* ----------------------------- */
+
+static void sigalarm_handler(int foo)
+{
+	printf("FAIL: test did not run successfully\n");
+	exit(EXIT_FAILURE);
+}
 
 struct rtp_pkt_info *msgb_get_pinfo(struct msgb* msg)
 {
@@ -108,14 +125,16 @@ static uint32_t timeval2ms(const struct timeval *ts)
 	return ts->tv_sec * 1000 + ts->tv_usec / 1000;
 }
 
-int calc_relative_transmit_time(struct timeval *tx_0, struct timeval *tx_f,
-				struct timeval *rx_0, struct timeval *rx_f)
+int32_t calc_rel_transmit_time(uint32_t tx_0, uint32_t tx_f, uint32_t rx_0, uint32_t rx_f, bool tx_is_samples, bool pre)
 {
-	struct timeval txdiff, rxdiff, diff;
-	timersub(rx_f, rx_0, &rxdiff);
-	timersub(tx_f, tx_0, &txdiff);
-	timersub(&rxdiff, &txdiff, &diff);
-	return timeval2ms(&diff);
+	int32_t rxdiff, txdiff, res;
+	rxdiff = (rx_f - rx_0);
+	txdiff = (tx_f - tx_0);
+	if(tx_is_samples)
+		txdiff = txdiff * RTP_FREQ_MS/SAMPLES_PER_PKT;
+	res = rxdiff - txdiff;
+	//fprintf(stderr, "%s: (%u - %u) - (%u - %u) = %d - %d (%d) = %d\n", (pre ? "pre" : "post"), rx_f, rx_0, tx_f, tx_0, rxdiff, txdiff, (tx_f - tx_0), res);
+	return res;
 }
 
 void trace_pkt(struct msgb *msg, char* info) {
@@ -126,7 +145,7 @@ void trace_pkt(struct msgb *msg, char* info) {
 	gettimeofday(&now, NULL);
 	timersub(&now, &pinfo->tx_time, &total_delay);
 
-#if TRACE_PACKET_DEBUG
+	if (opt_debug_human) {
 	uint32_t total_delay_ms = timeval2ms(&total_delay);
 	LOGP(DLJIBUF, LOGL_DEBUG, "%s: seq=%"PRIu16" ts=%"PRIu32" (%ld.%06ld) tx_delay=%"PRIu32 \
 		" end_delay=%"PRIu32" pre_trans=%d pre_jitter=%f post_trans=%d post_jitter=%f\n",
@@ -135,9 +154,21 @@ void trace_pkt(struct msgb *msg, char* info) {
 		pinfo->tx_delay, total_delay_ms,
 		pinfo->prequeue.transit, pinfo->prequeue.jitter,
 		pinfo->postqueue.transit, pinfo->postqueue.jitter);
-#endif
 
-#if TRACE_PACKET_GNUPLOT
+	if (pinfo->prequeue.jitter < pinfo->postqueue.jitter)
+	LOGP(DLJIBUF, LOGL_ERROR, "JITTER HIGHER THAN REF: seq=%"PRIu16" ts=%"PRIu32 \
+		" (%ld.%06ld) tx_delay=%"PRIu32" end_delay=%"PRIu32 \
+		" pre_trans=%d pre_jitter=%f post_trans=%d post_jitter=%f dropped=%"PRIu32 \
+		" buffer=%"PRIu32"\n",
+		ntohs(rtph->sequence), ntohl(rtph->timestamp),
+		pinfo->tx_time.tv_sec, pinfo->tx_time.tv_usec,
+		pinfo->tx_delay, total_delay_ms,
+		pinfo->prequeue.transit, pinfo->prequeue.jitter,
+		pinfo->postqueue.transit, pinfo->postqueue.jitter,
+		packets_dropped, jb->threshold_delay);
+	}
+
+	if (opt_debug_table) {
 	/* Used as input for gplot: "gnuplot -p jitter.plt -"" */
 	uint32_t tx_time_ms = timeval2ms(&pinfo->tx_time);
 	uint32_t prequeue_time_ms = timeval2ms(&pinfo->prequeue.ts);
@@ -148,7 +179,7 @@ void trace_pkt(struct msgb *msg, char* info) {
 		pinfo->prequeue.transit, pinfo->postqueue.transit,
 		pinfo->prequeue.jitter, pinfo->postqueue.jitter,
 		packets_dropped, jb->threshold_delay);
-#endif
+	}
 }
 
 void pkt_add_result(struct msgb *msg, bool dropped)
@@ -162,21 +193,8 @@ void pkt_add_result(struct msgb *msg, bool dropped)
 		packets_received++;
 		trace_pkt(msg,"received");
 
-		if (pinfo->prequeue.jitter < pinfo->postqueue.jitter) {
+		if (pinfo->prequeue.jitter < pinfo->postqueue.jitter)
 			packets_too_much_jitter++;
-#if TRACE_PACKET_TEST_JITTER
-			LOGP(DLJIBUF, LOGL_ERROR, "JITTER HIGHER THAN REF: %s seq=%"PRIu16" ts=%"PRIu32 \
-				" (%ld.%06ld) tx_delay=%"PRIu32" end_delay=%"PRIu32 \
-				" pre_trans=%d pre_jitter=%f post_trans=%d post_jitter=%f dropped=%"PRIu32 \
-				" buffer=%"PRIu32"\n",
-				info, ntohs(rtph->sequence), ntohl(rtph->timestamp),
-				pinfo->tx_time.tv_sec, pinfo->tx_time.tv_usec,
-				pinfo->tx_delay, total_delay_ms,
-				pinfo->prequeue.transit, pinfo->prequeue.jitter,
-				pinfo->postqueue.transit, pinfo->postqueue.jitter,
-				packets_dropped, jb->threshold_delay);
-#endif
-		}
 	}
 }
 
@@ -185,14 +203,30 @@ void dequeue_cb(struct msgb *msg, void *data)
 	static struct checkpoint postqueue_prev;
 	static bool postqueue_started = false;
 
+	bool tx_is_samples;
+	struct rtp_hdr *rtph = osmo_rtp_get_hdr(msg);
 	struct rtp_pkt_info *pinfo = msgb_get_pinfo(msg);
 
+	uint32_t tx1, tx0, rx0, rx1;
+
 	gettimeofday(&pinfo->postqueue.ts, NULL);
+	pinfo->postqueue.timestamp = htonl(rtph->timestamp);
 
 	if (postqueue_started) {
-		pinfo->postqueue.transit = calc_relative_transmit_time(
-					&pinfo->tx_prev_time, &pinfo->tx_time,
-					&postqueue_prev.ts, &pinfo->postqueue.ts);
+		/* In random test mode we now the sender time, so we get real
+		 * jitter results using it */
+		if(opt_test_rand) {
+			tx0 = timeval2ms(&pinfo->tx_prev_time);
+			tx1 = timeval2ms(&pinfo->tx_time);
+			tx_is_samples = false;
+		} else {
+			tx0 = postqueue_prev.timestamp;
+			tx1 = pinfo->postqueue.timestamp;
+			tx_is_samples = true;
+		}
+		rx0 = timeval2ms(&postqueue_prev.ts);
+		rx1 = timeval2ms(&pinfo->postqueue.ts);
+		pinfo->postqueue.transit = calc_rel_transmit_time(tx0, tx1, rx0, rx1, tx_is_samples, 0);
 
 		uint32_t abs_transit = pinfo->postqueue.transit *
 					( pinfo->postqueue.transit >= 0 ? 1 : -1 );
@@ -218,15 +252,32 @@ void pkt_arrived_cb(void *data)
 	static struct checkpoint prequeue_prev;
 	static bool prequeue_started = false;
 
+	bool tx_is_samples;
 	struct msgb *msg = (struct msgb*) data;
+	struct rtp_hdr *rtph = osmo_rtp_get_hdr(msg);
 	struct rtp_pkt_info *pinfo = msgb_get_pinfo(msg);
 
+
+	uint32_t tx1, tx0, rx0, rx1;
+
 	gettimeofday(&pinfo->prequeue.ts, NULL);
+	pinfo->prequeue.timestamp = htonl(rtph->timestamp);
 
 	if (prequeue_started) {
-		pinfo->prequeue.transit = calc_relative_transmit_time(
-					&pinfo->tx_prev_time, &pinfo->tx_time,
-					&prequeue_prev.ts, &pinfo->prequeue.ts);
+		/* In random test mode we now the sender time, so we get real
+		 * jitter results using it */
+		if(opt_test_rand) {
+			tx0 = timeval2ms(&pinfo->tx_prev_time);
+			tx1 = timeval2ms(&pinfo->tx_time);
+			tx_is_samples = false;
+		} else {
+			tx0 = prequeue_prev.timestamp;
+			tx1 = pinfo->prequeue.timestamp;
+			tx_is_samples = true;
+		}
+		rx0 = timeval2ms(&prequeue_prev.ts);
+		rx1 = timeval2ms(&pinfo->prequeue.ts);
+		pinfo->prequeue.transit = calc_rel_transmit_time(tx0, tx1, rx0, rx1, tx_is_samples, 1);
 
 		uint32_t abs_transit = pinfo->prequeue.transit *
 					( pinfo->prequeue.transit >= 0 ? 1 : -1 );
@@ -250,9 +301,15 @@ void pkt_arrived_cb(void *data)
 	}
 }
 
+struct rtp_pkt_info * msgb_allocate_pinfo(struct msgb *msg)
+{
+	struct rtp_pkt_info_cb *cb = (struct rtp_pkt_info_cb *)&((msg)->cb[0]);
+	cb->data = (struct rtp_pkt_info *) talloc_zero(msg, struct rtp_pkt_info);
+	return cb->data;
+}
+
 void rand_send_rtp_packet()
 {
-	static struct timeval tx_prev_time;
 
 	struct rtp_pkt_info *pinfo;
 	struct rtp_hdr *rtph;
@@ -282,9 +339,7 @@ void rand_send_rtp_packet()
 	rtph->timestamp = htonl(rtp_next_ts);
 	rtp_next_ts += SAMPLES_PER_PKT;
 
-	pinfo = talloc_zero(msg, struct rtp_pkt_info);
-	struct rtp_pkt_info_cb *cb = (struct rtp_pkt_info_cb *)&((msg)->cb[0]);
-	cb->data = pinfo;
+	pinfo = msgb_allocate_pinfo(msg);
 
 	gettimeofday(&pinfo->tx_time, NULL);
 	pinfo->tx_prev_time = tx_prev_time;
@@ -300,9 +355,9 @@ void rand_send_rtp_packet()
 	osmo_timer_schedule(&pinfo->timer, 0, pinfo->tx_delay * 1000);
 }
 
-void generate_pkt_cb(void *data)
+void rand_generate_pkt_cb(void *data)
 {
-	static struct osmo_timer_list enqueue_timer = {.cb = generate_pkt_cb, .data = NULL};
+	static struct osmo_timer_list enqueue_timer = {.cb = rand_generate_pkt_cb, .data = NULL};
 	static struct timeval last_generated;
 
 	struct timeval time_rate = { .tv_sec = 0, .tv_usec = RTP_FREQ_MS * 1000};
@@ -322,37 +377,56 @@ void generate_pkt_cb(void *data)
 	}
 }
 
-void check_results()
+
+static int pcap_generate_pkt_cb(struct msgb *msg)
+{
+	struct rtp_pkt_info *pinfo;
+	/* Set fake prev_time for 1st packet. Otherwise transit calculations for first
+	 * packet can be really weird if they not arrive in order */
+	if (!packets_sent) {
+		struct timeval now, time_rate = { .tv_sec = 0, .tv_usec = RTP_FREQ_MS * 1000};
+		gettimeofday(&now, NULL);
+		timersub(&now, &time_rate, &tx_prev_time);
+	}
+
+	pinfo = msgb_allocate_pinfo(msg);
+	gettimeofday(&pinfo->tx_time, NULL);
+	pinfo->tx_prev_time = tx_prev_time;
+
+	tx_prev_time = pinfo->tx_time;
+	packets_sent++;
+	pkt_arrived_cb(msg);
+	return 0;
+}
+
+void pcap_pkt_timer_cb(void *data)
+{
+	if (osmo_pcap_test_run(&osmo_pcap, IPPROTO_UDP, pcap_generate_pkt_cb) < 0) {
+		osmo_pcap_stats_printf();
+		osmo_pcap_test_close(osmo_pcap.h);
+		pcap_finished=true;
+	}
+}
+
+void rand_test_check()
 {
 	uint32_t drop_threshold = NUM_PACKETS_TO_SEND * 5 / 100;
 	if (packets_dropped > drop_threshold) {
 		fprintf(stdout, "Too many dropped packets (%"PRIu32" > %"PRIu32")\n",
 				packets_dropped, drop_threshold);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	uint32_t jitter_high_threshold = NUM_PACKETS_TO_SEND * 8 / 100;
 	if (packets_too_much_jitter > jitter_high_threshold) {
 		fprintf(stdout, "Too many packets with higher jitter (%"PRIu32" > %"PRIu32")\n",
 				packets_too_much_jitter, jitter_high_threshold);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 }
 
-int main(void)
+void rand_test()
 {
-
-	if (signal(SIGALRM, sigalarm_handler) == SIG_ERR) {
-		perror("signal");
-		exit(EXIT_FAILURE);
-	}
-
-	/* This test doesn't use it, but jibuf requires it internally. */
-	osmo_init_logging(&jibuf_test_log_info);
-	log_set_category_filter(osmo_stderr_target, DLMIB, 1, LOGL_ERROR);
-	log_set_print_filename(osmo_stderr_target, 0);
-	log_set_log_level(osmo_stderr_target, LOGL_INFO);
-
 	srandom(time(NULL));
 	rtp_first_seq = (uint16_t) random();
 	rtp_next_seq = rtp_first_seq;
@@ -364,7 +438,8 @@ int main(void)
 
 	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
 
-	generate_pkt_cb(NULL);
+	/* first run */
+	rand_generate_pkt_cb(NULL);
 
 	/* If the test takes longer than twice the time needed to generate the packets
 	 plus 10 seconds, abort it */
@@ -375,7 +450,106 @@ int main(void)
 
 	osmo_jibuf_delete(jb);
 
-	check_results();
+	rand_test_check();
+}
+
+void pcap_test_check() {
+
+}
+
+void pcap_test() {
+	osmo_pcap_init();
+
+	osmo_pcap.h = osmo_pcap_test_open(opt_pcap_file);
+	if (osmo_pcap.h == NULL)
+		exit(EXIT_FAILURE);
+
+	osmo_pcap.timer.cb = pcap_pkt_timer_cb;
+
+	jb = osmo_jibuf_alloc(NULL);
+	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
+	osmo_jibuf_set_min_delay(jb, 60);
+	osmo_jibuf_set_max_delay(jb, 500);
+
+	/* first run */
+	pcap_pkt_timer_cb(NULL);
+
+	while(!pcap_finished || !osmo_jibuf_empty(jb))
+		osmo_select_main(0);
+
+	osmo_jibuf_delete(jb);
+
+	pcap_test_check();
+}
+
+static void print_help(void)
+{
+	printf("jibuf_test [-r] [-p pcap] [-d] [-g]\n");
+	printf(" -h Print this help message\n");
+	printf(" -r Run test with randomly generated jitter\n");
+	printf(" -p Run test with specified pcap file\n");
+	printf(" -d Enable packet trace debug suitable for humans\n");
+	printf(" -t Enable packet trace debug suitable for gnuplot\n");
+}
+
+static int parse_options(int argc, char **argv)
+{
+	int opt;
+
+	while ((opt = getopt(argc, argv, "hdtrp:")) != -1) {
+		switch (opt) {
+		case 'h':
+			print_help();
+			return -1;
+		case 'd':
+			opt_debug_human = true;
+			break;
+		case 't':
+			opt_debug_table = true;
+			break;
+		case 'r':
+			opt_test_rand = true;
+			break;
+		case 'p':
+			opt_pcap_file = strdup(optarg);
+			break;
+		default:
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+int main(int argc, char **argv)
+{
+
+	if (signal(SIGALRM, sigalarm_handler) == SIG_ERR) {
+		perror("signal");
+		exit(EXIT_FAILURE);
+	}
+
+	if(parse_options(argc, argv) < 0)
+		exit(EXIT_FAILURE);
+
+	osmo_init_logging(&jibuf_test_log_info);
+	log_set_print_filename(osmo_stderr_target, 0);
+	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
+
+	if(opt_debug_human && !opt_debug_table)
+		log_set_category_filter(osmo_stderr_target, DLMIB, 1, LOGL_DEBUG);
+
+	if(opt_pcap_file && opt_test_rand) {
+		print_help();
+		exit(EXIT_FAILURE);
+	}
+
+
+	if(opt_pcap_file)
+		pcap_test();
+
+	if(opt_test_rand)
+		rand_test();
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;

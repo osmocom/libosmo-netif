@@ -2,6 +2,9 @@ AM_CFLAGS = -Wall -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS) -g
 AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS)
 
 check_PROGRAMS = osmux/osmux_test jibuf/jibuf_test jibuf/jibuf_tool
+check_HEADERS = \
+		osmo-pcap-test/osmo_pcap.h \
+		osmo-pcap-test/proto.h
 
 osmux_osmux_test_SOURCES = osmux/osmux_test.c
 osmux_osmux_test_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
@@ -9,8 +12,20 @@ osmux_osmux_test_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
 jibuf_jibuf_test_SOURCES = jibuf/jibuf_test.c
 jibuf_jibuf_test_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
 
-jibuf_jibuf_tool_SOURCES = jibuf/jibuf_tool.c
-jibuf_jibuf_tool_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
+jibuf_jibuf_tool_SOURCES = \
+	jibuf/jibuf_tool.c \
+	osmo-pcap-test/proto.c \
+	osmo-pcap-test/l2_eth.c \
+	osmo-pcap-test/l2_sll.c \
+	osmo-pcap-test/l3_ipv4.c \
+	osmo-pcap-test/l4_tcp.c \
+	osmo-pcap-test/l4_udp.c \
+	osmo-pcap-test/pcap.c
+
+jibuf_jibuf_tool_LDADD = \
+	$(LIBOSMOCORE_LIBS) \
+	$(top_builddir)/src/libosmonetif.la \
+	-lpcap
 
 # The `:;' works around a Bash 3.2 bug when the output is not writeable.
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac
