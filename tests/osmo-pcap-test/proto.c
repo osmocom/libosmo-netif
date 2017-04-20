@@ -15,28 +15,46 @@
 #include <osmocom/core/linuxlist.h>
 #include "proto.h"
 
-static LLIST_HEAD(l2l3_proto_list);
+static LLIST_HEAD(l2_proto_list);
+static LLIST_HEAD(l3_proto_list);
 static LLIST_HEAD(l4_proto_list);
+#include <stdio.h>
 
-struct osmo_pcap_proto_l2l3 *osmo_pcap_proto_l2l3_find(const uint8_t *pkt)
+struct osmo_pcap_proto_l2 *osmo_pcap_proto_l2_find(unsigned int pcap_linktype)
 {
-	const struct ethhdr *eh = (const struct ethhdr *)pkt;
-	struct osmo_pcap_proto_l2l3 *cur;
+	struct osmo_pcap_proto_l2 *cur;
 
-	llist_for_each_entry(cur, &l2l3_proto_list, head) {
-		if (ntohs(cur->l2protonum) == eh->h_proto)
+	llist_for_each_entry(cur, &l2_proto_list, head) {
+		if (cur->l2protonum == pcap_linktype)
 			return cur;
 	}
 	return NULL;
 }
 
-void osmo_pcap_proto_l2l3_register(struct osmo_pcap_proto_l2l3 *h)
+void osmo_pcap_proto_l2_register(struct osmo_pcap_proto_l2 *h)
 {
-	llist_add(&h->head, &l2l3_proto_list);
+	llist_add(&h->head, &l2_proto_list);
+}
+
+
+struct osmo_pcap_proto_l3 *osmo_pcap_proto_l3_find(unsigned int l3protocol)
+{
+	struct osmo_pcap_proto_l3 *cur;
+
+	llist_for_each_entry(cur, &l3_proto_list, head) {
+		if (ntohs(cur->l3protonum) == l3protocol)
+			return cur;
+	}
+	return NULL;
+}
+
+void osmo_pcap_proto_l3_register(struct osmo_pcap_proto_l3 *h)
+{
+	llist_add(&h->head, &l3_proto_list);
 }
 
 struct osmo_pcap_proto_l4 *
-osmo_pcap_proto_l4_find(const uint8_t *pkt, unsigned int l4protocol)
+osmo_pcap_proto_l4_find(unsigned int l4protocol)
 {
 	struct osmo_pcap_proto_l4 *cur;
 

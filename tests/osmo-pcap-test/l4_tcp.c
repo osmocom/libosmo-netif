@@ -13,14 +13,14 @@
 
 #include "proto.h"
 
-static int l4_tcp_pkt_hdr_len(const uint8_t *pkt)
+static unsigned int l4_tcp_pkt_hdr_len(const uint8_t *pkt)
 {
 	const struct tcphdr *tcph = (const struct tcphdr *)pkt;
 
 	return tcph->doff << 2;
 }
 
-static int l4_tcp_pkt_no_data(const uint8_t *pkt)
+static unsigned int l4_tcp_pkt_no_data(const uint8_t *pkt)
 {
 	const struct tcphdr *tcph = (const struct tcphdr *)pkt;
 	return tcph->syn || tcph->fin || tcph->rst || !tcph->psh;

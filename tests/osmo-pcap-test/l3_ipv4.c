@@ -16,29 +16,27 @@
 
 #define PRINT_CMP(...)
 
-static int l3_ipv4_pkt_l4proto_num(const uint8_t *pkt)
+static unsigned int l3_ipv4_pkt_l4proto_num(const uint8_t *pkt)
 {
 	const struct iphdr *iph = (const struct iphdr *)pkt;
 
 	return iph->protocol;
 }
 
-static int l3_ipv4_pkt_l3hdr_len(const uint8_t *pkt)
+static unsigned int l3_ipv4_pkt_l3hdr_len(const uint8_t *pkt)
 {
 	const struct iphdr *iph = (const struct iphdr *)pkt;
 
 	return iph->ihl << 2;
 }
 
-static struct osmo_pcap_proto_l2l3 ipv4 = {
-	.l2protonum	= ETH_P_IP,
+static struct osmo_pcap_proto_l3 ipv4 = {
 	.l3protonum	= AF_INET,
-	.l2hdr_len	= ETH_HLEN,
 	.l3pkt_hdr_len	= l3_ipv4_pkt_l3hdr_len,
 	.l4pkt_proto	= l3_ipv4_pkt_l4proto_num,
 };
 
-void l2l3_ipv4_init(void)
+void l3_ipv4_init(void)
 {
-	osmo_pcap_proto_l2l3_register(&ipv4);
+	osmo_pcap_proto_l3_register(&ipv4);
 }

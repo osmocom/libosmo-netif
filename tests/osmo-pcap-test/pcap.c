@@ -34,6 +34,7 @@ struct osmo_pcap_test_stats {
 	uint32_t pkts;
 	uint32_t skip;
 	uint32_t processed;
+	uint32_t unsupported_l2;
 	uint32_t unsupported_l3;
 	uint32_t unsupported_l4;
 } osmo_pcap_test_stats;
@@ -41,21 +42,22 @@ struct osmo_pcap_test_stats {
 static int
 osmo_pcap_process_packet(struct msgb **msgptr,
 			 const uint8_t *pkt, uint32_t pktlen,
-			 struct osmo_pcap_proto_l2l3 *l3h,
+			 struct osmo_pcap_proto_l2 *l2h,
+			 struct osmo_pcap_proto_l3 *l3h,
 			 struct osmo_pcap_proto_l4 *l4h,
 			 int (*cb)(struct msgb *msgb))
 {
-	unsigned int l3hdr_len, skip_hdr_len;
+	unsigned int l2hdr_len, l3hdr_len, skip_hdr_len;
 	struct msgb *msgb;
-	int ret;
 
 	/* skip layer 2, 3 and 4 headers */
-	l3hdr_len = l3h->l3pkt_hdr_len(pkt + ETH_HLEN);
-	skip_hdr_len = l3h->l2hdr_len + l3hdr_len +
-			l4h->l4pkt_hdr_len(pkt + ETH_HLEN + l3hdr_len);
+	l2hdr_len = l2h->l2pkt_hdr_len(pkt);
+	l3hdr_len = l3h->l3pkt_hdr_len(pkt + l2hdr_len);
+	skip_hdr_len = l2hdr_len + l3hdr_len +
+			l4h->l4pkt_hdr_len(pkt + l2hdr_len + l3hdr_len);
 
 	/* This packet contains no data, skip it. */
-	if (l4h->l4pkt_no_data(pkt + l3hdr_len + ETH_HLEN)) {
+	if (l4h->l4pkt_no_data(pkt + l2hdr_len + l3hdr_len)) {
 		osmo_pcap_test_stats.skip++;
 		return -1;
 	}
@@ -101,10 +103,11 @@ void osmo_pcap_test_close(pcap_t *handle)
 int
 osmo_pcap_test_run(struct osmo_pcap *p, uint8_t pnum, int (*cb)(struct msgb *msgb))
 {
-	struct osmo_pcap_proto_l2l3 *l3h;
+	struct osmo_pcap_proto_l2 *l2h;
+	struct osmo_pcap_proto_l3 *l3h;
 	struct osmo_pcap_proto_l4 *l4h;
 	struct pcap_pkthdr pcaph;
-	const u_char *pkt;
+	const u_char *l2pkt, *l3pkt;
 	struct timeval res;
 	uint8_t l4protonum;
 
@@ -115,26 +118,34 @@ osmo_pcap_test_run(struct osmo_pcap *p, uint8_t pnum, int (*cb)(struct msgb *msg
 	}
 
 retry:
-	pkt = pcap_next(p->h, &pcaph);
-	if (pkt == NULL)
+	l2pkt = pcap_next(p->h, &pcaph);
+	if (l2pkt == NULL)
 		return -1;
 
 	osmo_pcap_test_stats.pkts++;
 
-	l3h = osmo_pcap_proto_l2l3_find(pkt);
+	int linktype = pcap_datalink(p->h);
+	l2h = osmo_pcap_proto_l2_find(linktype);
+	if (l2h == NULL) {
+		osmo_pcap_test_stats.unsupported_l2++;
+		goto retry;
+	}
+
+	l3h = osmo_pcap_proto_l3_find(l2h->l3pkt_proto(l2pkt));
 	if (l3h == NULL) {
 		osmo_pcap_test_stats.unsupported_l3++;
 		goto retry;
 	}
-	l4protonum = l3h->l4pkt_proto(pkt + ETH_HLEN);
 
+	l3pkt = l2pkt + l2h->l2pkt_hdr_len(l2pkt);
+	l4protonum = l3h->l4pkt_proto(l3pkt);
 	/* filter l4 protocols we are not interested in */
 	if (l4protonum != pnum) {
 		osmo_pcap_test_stats.skip++;
 		goto retry;
 	}
 
-	l4h = osmo_pcap_proto_l4_find(pkt, l4protonum);
+	l4h = osmo_pcap_proto_l4_find(l4protonum);
 	if (l4h == NULL) {
 		osmo_pcap_test_stats.unsupported_l4++;
 		goto retry;
@@ -145,7 +156,7 @@ retry:
 		memcpy(&p->last, &pcaph.ts, sizeof(struct timeval));
 
 	/* retry with next packet if this has been skipped. */
-	if (osmo_pcap_process_packet(&p->deliver_msg, pkt, pcaph.caplen, l3h, l4h, cb) < 0)
+	if (osmo_pcap_process_packet(&p->deliver_msg, l2pkt, pcaph.caplen, l2h, l3h, l4h, cb) < 0)
 		goto retry;
 
 	/* calculate waiting time */
@@ -161,19 +172,22 @@ retry:
 
 void osmo_pcap_stats_printf(void)
 {
-	printf("pkts=%d processed=%d skip=%d "
+	printf("pkts=%d processed=%d skip=%d unsupported_l2=%d "
 		"unsupported_l3=%d unsupported_l4=%d\n",
 		osmo_pcap_test_stats.pkts,
 		osmo_pcap_test_stats.processed,
 		osmo_pcap_test_stats.skip,
+		osmo_pcap_test_stats.unsupported_l2,
 		osmo_pcap_test_stats.unsupported_l3,
 		osmo_pcap_test_stats.unsupported_l4);
 }
 
 void osmo_pcap_init(void)
 {
-	/* Initialization of supported layer 3 and 4 protocols here. */
-	l2l3_ipv4_init();
+	/* Initialization of supported layer 2, 3 and 4 protocols here. */
+	l2_eth_init();
+	l2_sll_init();
+	l3_ipv4_init();
 	l4_tcp_init();
 	l4_udp_init();
 }

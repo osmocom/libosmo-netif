@@ -13,12 +13,12 @@
 
 #include "proto.h"
 
-static int l4_udp_pkt_hdr_len(const uint8_t *pkt)
+static unsigned int l4_udp_pkt_hdr_len(const uint8_t *pkt)
 {
 	return sizeof(struct udphdr);
 }
 
-static int l4_udp_pkt_no_data(const uint8_t *pkt)
+static unsigned int l4_udp_pkt_no_data(const uint8_t *pkt)
 {
 	/* UDP has no control packets. */
 	return 0;
