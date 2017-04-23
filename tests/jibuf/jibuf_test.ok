@@ -365,4 +365,48 @@ sys={0.140000}, mono={0.140000}: 2 packets dequeued
 sys={0.200000}, mono={0.200000}: clock_override_add
 sys={0.200000}, mono={0.200000}: dequeue: seq=35 ts=880 INTERMEDIATE
 sys={0.200000}, mono={0.200000}: dequeue: seq=36 ts=1040 LATEST
+===test_rtp_out_of_sync(1600, 5, 800, 1)===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet (seq=33, ts=560)
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: enqueue 2nd packet (seq=34, ts=720)
+sys={1.620000}, mono={1.620000}: clock_override_add
+sys={1.620000}, mono={1.620000}: 2 packets dequeued
+sys={1.620000}, mono={1.620000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={1.620000}, mono={1.620000}: dequeue: seq=34 ts=720 LATEST
+sys={1.620000}, mono={1.620000}: enqueue late pkt with possible sync change
+sys={1.620000}, mono={1.620000}: enqueue late pkt after possible resync
+sys={1.640000}, mono={1.640000}: clock_override_add
+===test_rtp_out_of_sync(1600, 6, 800, 0)===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet (seq=33, ts=560)
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: enqueue 2nd packet (seq=34, ts=720)
+sys={1.620000}, mono={1.620000}: clock_override_add
+sys={1.620000}, mono={1.620000}: 2 packets dequeued
+sys={1.620000}, mono={1.620000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={1.620000}, mono={1.620000}: dequeue: seq=34 ts=720 LATEST
+sys={1.620000}, mono={1.620000}: enqueue late pkt with possible sync change
+sys={1.620000}, mono={1.620000}: enqueue late pkt after possible resync
+sys={1.640000}, mono={1.640000}: clock_override_add
+sys={1.640000}, mono={1.640000}: 2 packets dequeued
+sys={1.700000}, mono={1.700000}: clock_override_add
+sys={1.700000}, mono={1.700000}: dequeue: seq=40 ts=1520 INTERMEDIATE
+sys={1.700000}, mono={1.700000}: dequeue: seq=41 ts=1680 LATEST
+===test_rtp_out_of_sync(1600, 5, 803, 0)===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet (seq=33, ts=560)
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: enqueue 2nd packet (seq=34, ts=720)
+sys={1.620000}, mono={1.620000}: clock_override_add
+sys={1.620000}, mono={1.620000}: 2 packets dequeued
+sys={1.620000}, mono={1.620000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={1.620000}, mono={1.620000}: dequeue: seq=34 ts=720 LATEST
+sys={1.620000}, mono={1.620000}: enqueue late pkt with possible sync change
+sys={1.620000}, mono={1.620000}: enqueue late pkt after possible resync
+sys={1.640000}, mono={1.640000}: clock_override_add
+sys={1.640000}, mono={1.640000}: 2 packets dequeued
+sys={1.700000}, mono={1.700000}: clock_override_add
+sys={1.700000}, mono={1.700000}: dequeue: seq=39 ts=1523 INTERMEDIATE
+sys={1.700000}, mono={1.700000}: dequeue: seq=40 ts=1683 LATEST
 OK: Test passed

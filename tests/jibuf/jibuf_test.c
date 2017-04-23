@@ -618,6 +618,72 @@ static void test_rtp_marker(void)
 	osmo_jibuf_delete(jb);
 }
 
+void test_rtp_out_of_sync(unsigned int time_inc_ms, uint16_t seq_nosync_inc, uint32_t ts_nosync_inc, bool expect_drop)
+{
+	int min_delay = 60;
+	struct msgb *msg;
+	int rc;
+
+	printf("===test_rtp_out_of_sync(%u, %"PRIu16", %"PRIu32", %d)===\n",
+		time_inc_ms, seq_nosync_inc, ts_nosync_inc, expect_drop);
+
+	clock_override_enable(true);
+	clock_override_set(0, 0);
+	rtp_init(32, 400);
+	jb = osmo_jibuf_alloc(NULL);
+	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
+	osmo_jibuf_set_min_delay(jb, min_delay);
+	osmo_jibuf_set_max_delay(jb, 200);
+
+	/* First rtp at t=0, should be scheduled in min_delay time */
+	clock_debug("enqueue 1st packet (seq=33, ts=560)");
+	ENQUEUE_NEXT(jb);
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	clock_debug("enqueue 2nd packet (seq=34, ts=720)");
+	ENQUEUE_NEXT(jb);
+
+	clock_override_add(0, time_inc_ms*1000);
+	clock_debug("2 packets dequeued");
+	osmo_select_main(0);
+
+	 /* We are at t=20+time_inc_ms, next pkt would normally be dropped since it is
+	  * pretty late, but since seq and timestamp are out of sync, which
+	  * means the sender had some clock issues, the jibuf is going to take
+	  * this new tuple as reference and accept it.
+	*/
+	clock_debug("enqueue late pkt with possible sync change");
+	rtp_init(rtp_next_seq + seq_nosync_inc, rtp_next_ts + ts_nosync_inc);
+	msg = rtp_new(rtp_next_seq, rtp_next_ts);
+	rc = osmo_jibuf_enqueue(jb, msg);
+	if (expect_drop) {
+		OSMO_ASSERT(rc < 0);
+		msgb_free(msg);
+	} else {
+		OSMO_ASSERT(rc == 0);
+	}
+
+	clock_debug("enqueue late pkt after possible resync");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	rc = osmo_jibuf_enqueue(jb, msg);
+	if (expect_drop) {
+		OSMO_ASSERT(rc < 0);
+		msgb_free(msg);
+	} else {
+		OSMO_ASSERT(rc == 0);
+	}
+
+	if (!expect_drop) {
+		clock_debug("2 packets dequeued");
+		clock_override_add(0, min_delay*1000);
+		osmo_select_main(0);
+	}
+
+	OSMO_ASSERT(osmo_jibuf_empty(jb));
+
+	osmo_jibuf_delete(jb);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -643,6 +709,9 @@ int main(int argc, char **argv)
 	test_seq_wraparound();
 	test_timestamp_wraparound();
 	test_rtp_marker();
+	test_rtp_out_of_sync(80*TIME_RTP_PKT_MS, 5, 5*SAMPLES_PER_PKT, true);
+	test_rtp_out_of_sync(80*TIME_RTP_PKT_MS, 6, 5*SAMPLES_PER_PKT, false);
+	test_rtp_out_of_sync(80*TIME_RTP_PKT_MS, 5, 5*SAMPLES_PER_PKT + 3, false);
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;

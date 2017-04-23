@@ -36,6 +36,7 @@
 
 /* Sampling rate (in Hz) */
 /* TODO: SAMPLE RATE can be guessed from rtp.p_type */
+#define SAMPLES_PER_PKT 160
 #define SAMPLE_RATE 8000
 
 /* TUNABLE PARAMETERS: */
@@ -149,6 +150,27 @@ static int calc_pkt_rel_delay(struct osmo_jibuf *jb, struct msgb *msg)
 	uint32_t current_tx_ts = msg_get_timestamp(msg);
 
 	return samples2ms((current_tx_ts - jb->ref_tx_ts)) - (current_rx_ts - jb->ref_rx_ts);
+}
+
+static bool msg_is_in_sequence(struct osmo_jibuf *jb, struct msgb *msg)
+{
+	uint32_t current_tx_ts = msg_get_timestamp(msg);
+	uint16_t current_seq = msg_get_sequence(msg);
+	return (current_tx_ts - jb->ref_tx_ts) == (current_seq - jb->ref_tx_seq)*SAMPLES_PER_PKT;
+}
+
+/* If packet contains a mark -> start of talkspurt.
+ * A lot of packets may have been suppressed by the sender before it,
+ * so let's take it as a reference
+ * If packet timestamp is not aligned with sequence
+ * number, then we are most probaly starting a talkspurt */
+static bool msg_is_syncpoint(struct osmo_jibuf *jb, struct msgb* msg)
+{
+	bool res = msg_get_marker(msg) || !msg_is_in_sequence(jb, msg);
+	if(res)
+		LOGP(DLMIB, LOGL_DEBUG, "syncpoint: %"PRIu16": marker=%d in_seq=%d\n",
+			msg_get_sequence(msg), msg_get_marker(msg), msg_is_in_sequence(jb, msg));
+	return res;
 }
 
 static void msg_set_as_reference(struct osmo_jibuf *jb, struct msgb *msg)
@@ -283,11 +305,8 @@ int osmo_jibuf_enqueue(struct osmo_jibuf *jb, struct msgb *msg)
 
 	clock_gettime_timeval(CLOCK_MONOTONIC, &jb->last_enqueue_time);
 
-	/* If packet contains a mark -> start of talkspurt.
-	 * A lot of packets may have been suppressed by the sender before it,
-	 * so let's take it as a reference
-	 */
-	if (!jb->started || msg_get_marker(msg)) {
+	/* Check if it's time to sync, ie. start of talkspurt */
+	if (!jb->started || msg_is_syncpoint(jb, msg)) {
 		jb->started = true;
 		msg_set_as_reference(jb, msg);
 		rel_delay = 0;

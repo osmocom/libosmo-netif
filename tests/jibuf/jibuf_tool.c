@@ -39,6 +39,7 @@ struct checkpoint {
 	int transit;
 	double jitter;
 	uint32_t timestamp;
+	uint16_t seq;
 };
 
 struct rtp_pkt_info {
@@ -131,6 +132,16 @@ static uint32_t timeval2ms(const struct timeval *ts)
 	return ts->tv_sec * 1000 + ts->tv_usec / 1000;
 }
 
+bool pkt_is_syncpoint(struct msgb* msg, uint16_t prev_seq, uint32_t prev_timestamp)
+{
+	struct rtp_hdr *rtph = osmo_rtp_get_hdr(msg);
+
+	uint16_t current_seq = ntohs(rtph->sequence);
+	uint32_t current_tx_ts = ntohl(rtph->timestamp);
+	bool insync = (current_tx_ts - prev_timestamp) == (current_seq - prev_seq)*SAMPLES_PER_PKT;
+	return !insync || rtph->marker;
+}
+
 int32_t calc_rel_transmit_time(uint32_t tx_0, uint32_t tx_f, uint32_t rx_0, uint32_t rx_f, bool tx_is_samples, bool pre)
 {
 	int32_t rxdiff, txdiff, res;
@@ -220,7 +231,7 @@ void dequeue_cb(struct msgb *msg, void *data)
 
 	/* If pkt->marker -> init of talkspurt, there may be missing packets before,
 	 * better to start calculating the jitter from here */
-	if (postqueue_started && !rtph->marker) {
+	if (postqueue_started && !pkt_is_syncpoint(msg, postqueue_prev.seq, postqueue_prev.timestamp)) {
 		/* In random test mode we now the sender time, so we get real
 		 * jitter results using it */
 		if(opt_test_rand) {
@@ -248,6 +259,7 @@ void dequeue_cb(struct msgb *msg, void *data)
 	}
 
 	postqueue_prev = pinfo->postqueue;
+	postqueue_prev.seq = htons(rtph->sequence);
 
 	pkt_add_result(msg, false);
 
@@ -273,7 +285,7 @@ void pkt_arrived_cb(void *data)
 
 	/* If pkt->marker -> init of talkspurt, there may be missing packets before,
 	 * better to start calculating the jitter from here */
-	if (prequeue_started && !rtph->marker) {
+	if (prequeue_started && !pkt_is_syncpoint(msg, prequeue_prev.seq, prequeue_prev.timestamp)) {
 		/* In random test mode we now the sender time, so we get real
 		 * jitter results using it */
 		if(opt_test_rand) {
@@ -301,6 +313,7 @@ void pkt_arrived_cb(void *data)
 	}
 
 	prequeue_prev = pinfo->prequeue;
+	prequeue_prev.seq = htons(rtph->sequence);
 
 	int n = osmo_jibuf_enqueue(jb, msg);
 
