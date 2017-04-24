@@ -42,8 +42,9 @@
 #define DEBUG_MSG		0
 #endif
 
-/* delta time between two RTP messages */
-#define DELTA_RTP_MSG		16000
+/* delta time between two RTP messages (in microseconds) */
+#define DELTA_RTP_MSG		20000
+/* delta time between two RTP messages (in samples, 8kHz) */
 #define DELTA_RTP_TIMESTAMP	160
 
 static void *osmux_ctx;
