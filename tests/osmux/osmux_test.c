@@ -55,6 +55,7 @@ static uint8_t rtp_pkt[] = {
 };
 
 static int rtp_pkts;
+static int mark_pkts;
 #if OSMUX_TEST_USE_TIMING
 static struct timeval last;
 #endif
@@ -62,6 +63,7 @@ static struct timeval last;
 static void tx_cb(struct msgb *msg, void *data)
 {
 	char buf[4096];
+	struct rtp_hdr *rtph = (struct rtp_hdr *)msg->data;
 #if OSMUX_TEST_USE_TIMING
 	struct timeval now, diff;
 
@@ -87,6 +89,8 @@ static void tx_cb(struct msgb *msg, void *data)
 		exit(EXIT_FAILURE);
 	}
 
+	if (rtph->marker)
+		mark_pkts--;
 	rtp_pkts--;
 	msgb_free(msg);
 }
@@ -122,6 +126,48 @@ static void sigalarm_handler(int foo)
 {
 	printf("FAIL: test did not run successfully\n");
 	exit(EXIT_FAILURE);
+}
+
+static void osmux_test_marker(int ccid) {
+	struct msgb *msg;
+	struct rtp_hdr *rtph = (struct rtp_hdr *)rtp_pkt;
+	struct rtp_hdr *cpy_rtph;
+	uint16_t seq;
+	int i, j;
+
+	for (i = 0; i < 64; i++) {
+
+		seq = ntohs(rtph->sequence);
+		seq++;
+		rtph->sequence = htons(seq);
+
+		for (j=0; j<4; j++) {
+			msg = msgb_alloc(1500, "test");
+			if (!msg)
+				exit(EXIT_FAILURE);
+
+			memcpy(msg->data, rtp_pkt, sizeof(rtp_pkt));
+			cpy_rtph = (struct rtp_hdr *) msgb_put(msg, sizeof(rtp_pkt));
+
+			if ((i+j) % 7 == 0) {
+				cpy_rtph->marker = 1;
+				mark_pkts++;
+			}
+
+			rtp_pkts++;
+			while (osmux_xfrm_input(&h_input, msg, j + ccid) > 0) {
+				osmux_xfrm_input_deliver(&h_input);
+			}
+		}
+	}
+
+	while (rtp_pkts)
+		osmo_select_main(0);
+
+	if (mark_pkts) {
+		fprintf(stdout, "RTP M bit (marker) mismatch! %d\n", mark_pkts);
+		exit(EXIT_FAILURE);
+	}
 }
 
 static void osmux_test_loop(int ccid)
@@ -177,6 +223,11 @@ static void osmux_test_loop(int ccid)
 			k = 0;
 		}
 	}
+
+	if (mark_pkts) {
+		fprintf(stdout, "RTP M bit (marker) mismatch! %d\n", mark_pkts);
+		exit(EXIT_FAILURE);
+	}
 }
 
 int main(void)
@@ -192,11 +243,23 @@ int main(void)
 	osmo_init_logging(&osmux_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
-	osmux_xfrm_input_init(&h_input);
 	osmux_xfrm_output_init(&h_output, 0x7000000);
 
 	/* If the test takes longer than 10 seconds, abort it */
 	alarm(10);
+
+#if !OSMUX_TEST_USE_TIMING
+	/* Check if marker bit features work correctly */
+	osmux_xfrm_input_init(&h_input);
+	for (i = 0; i < 4; i++)
+		osmux_xfrm_input_open_circuit(&h_input, i, 0);
+	osmux_test_marker(0);
+	for (i = 0; i < 4; i++)
+		osmux_xfrm_input_close_circuit(&h_input, i);
+	osmux_xfrm_input_fini(&h_input);
+#endif
+
+	osmux_xfrm_input_init(&h_input);
 
 	for (i = 0; i < 2; i++)
 		osmux_xfrm_input_open_circuit(&h_input, i, 0);

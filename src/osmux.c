@@ -105,8 +105,8 @@ next:
 }
 
 static struct msgb *
-osmux_rebuild_rtp(struct osmux_out_handle *h,
-		  struct osmux_hdr *osmuxh, void *payload, int payload_len)
+osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
+		  void *payload, int payload_len, bool first_pkt)
 {
 	struct msgb *out_msg;
 	struct rtp_hdr *rtph;
@@ -129,6 +129,8 @@ osmux_rebuild_rtp(struct osmux_out_handle *h,
 	rtph->timestamp = htonl(h->rtp_timestamp);
 	rtph->sequence = htons(h->rtp_seq);
 	rtph->ssrc = htonl(h->rtp_ssrc);
+	/* rtp packet with the marker bit is always warranted to be the first one */
+	rtph->marker = first_pkt && osmuxh->rtp_m;
 
 	msgb_put(out_msg, sizeof(struct rtp_hdr));
 
@@ -166,7 +168,7 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 		msg = osmux_rebuild_rtp(h, osmuxh,
 					osmux_get_payload(osmuxh) +
 					i * osmo_amr_bytes(osmuxh->amr_ft),
-					osmo_amr_bytes(osmuxh->amr_ft));
+					osmo_amr_bytes(osmuxh->amr_ft), !i);
 		if (msg == NULL)
 			continue;
 
@@ -264,6 +266,7 @@ static int osmux_batch_put(struct osmux_batch *batch,
 		osmuxh = (struct osmux_hdr *)state->out_msg->tail;
 		osmuxh->ft = OSMUX_FT_VOICE_AMR;
 		osmuxh->ctr = 0;
+		osmuxh->rtp_m = osmuxh->rtp_m || state->rtph->marker;
 		osmuxh->amr_f = state->amrh->f;
 		osmuxh->amr_q= state->amrh->q;
 		osmuxh->seq = batch->seq++;
@@ -592,6 +595,13 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 	/* No room, sorry. You'll have to retry */
 	if (bytes > batch->remaining_bytes)
 		return 1;
+
+	/* Init of talkspurt (RTP M marker bit) needs to be in the first AMR slot
+	 * of the OSMUX packet, enforce sending previous batch if required:
+	 */
+	if (rtph->marker && circuit->nmsgs != 0)
+		return 1;
+
 
 	/* Extra validation: check if this message already exists, should not
 	 * happen but make sure we don't propagate duplicated messages.

@@ -13,7 +13,8 @@
 
 /* OSmux header:
  *
- *	ft (3 bits):		0=signalling, 1=voice, 2=dummy
+ *	rtp_m (1 bit):		RTP M field (RFC3550, RFC4867)
+ *	ft (2 bits):		0=signalling, 1=voice, 2=dummy
  *	ctr (3 bits):		Number of batched AMR payloads (starting 0)
  *	amr_f (1 bit):		AMR F field (RFC3267)
  *	amr_q (1 bit): 		AMR Q field (RFC3267)
@@ -29,7 +30,8 @@
 
 struct osmux_hdr {
 #if OSMO_IS_BIG_ENDIAN
-	uint8_t ft:3,
+	uint8_t rtp_m:1,
+		ft:2,
 		ctr:3,
 		amr_f:1,
 		amr_q:1;
@@ -37,7 +39,8 @@ struct osmux_hdr {
 	uint8_t amr_q:1,
 		amr_f:1,
 		ctr:3,
-		ft:3;
+		ft:2,
+		rtp_m:1;
 #endif
 	uint8_t seq;
 #define OSMUX_CID_MAX		255	/* determined by circuit_id */
