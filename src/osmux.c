@@ -53,7 +53,7 @@ static uint32_t osmux_get_payload_len(struct osmux_hdr *osmuxh)
 	return osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1);
 }
 
-static uint32_t osmux_ft_dummy_size(uint8_t amr_ft, uint32_t batch_factor)
+static uint32_t osmux_ft_dummy_size(uint8_t amr_ft, uint8_t batch_factor)
 {
 	return sizeof(struct osmux_hdr) + (osmo_amr_bytes(amr_ft) * batch_factor);
 }
@@ -307,7 +307,7 @@ static int osmux_xfrm_encode_amr(struct osmux_batch *batch,
 	return 0;
 }
 
-static void osmux_encode_dummy(struct osmux_batch *batch, uint32_t batch_factor,
+static void osmux_encode_dummy(struct osmux_batch *batch, uint8_t batch_factor,
 			       struct osmux_input_state *state)
 {
 	struct osmux_hdr *osmuxh;
@@ -331,7 +331,7 @@ static void osmux_encode_dummy(struct osmux_batch *batch, uint32_t batch_factor,
 }
 
 static struct msgb *osmux_build_batch(struct osmux_batch *batch,
-				      uint32_t batch_size, uint32_t batch_factor)
+				      uint32_t batch_size, uint8_t batch_factor)
 {
 	struct msgb *batch_msg;
 	struct osmux_circuit *circuit;
@@ -523,7 +523,7 @@ osmux_batch_find_circuit(struct osmux_batch *batch, int ccid)
 
 static struct osmux_circuit *
 osmux_batch_add_circuit(struct osmux_batch *batch, int ccid, int dummy,
-			int batch_factor)
+			uint8_t batch_factor)
 {
 	struct osmux_circuit *circuit;
 
@@ -563,7 +563,7 @@ static void osmux_batch_del_circuit(struct osmux_batch *batch, struct osmux_circ
 }
 
 static int
-osmux_batch_add(struct osmux_batch *batch, int batch_factor, struct msgb *msg,
+osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *msg,
 		struct rtp_hdr *rtph, int ccid)
 {
 	int bytes = 0, amr_payload_len;
