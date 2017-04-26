@@ -26,6 +26,7 @@
 #include <osmocom/core/logging.h>
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/linuxlist.h>
+#include <osmocom/core/timer.h>
 #include <osmocom/netif/osmux.h>
 #include <osmocom/netif/rtp.h>
 
@@ -54,6 +55,8 @@ static uint8_t rtp_pkt[] = {
 	0xf2, 0x26, 0x33, 0x65, 0x54,
 };
 
+#define PKT_TIME_USEC 20*1000
+
 static int rtp_pkts;
 static int mark_pkts;
 #if OSMUX_TEST_USE_TIMING
@@ -67,7 +70,7 @@ static void tx_cb(struct msgb *msg, void *data)
 #if OSMUX_TEST_USE_TIMING
 	struct timeval now, diff;
 
-	gettimeofday(&now, NULL);
+	osmo_gettimeofday(&now, NULL);
 	timersub(&now, &last, &diff);
 	last = now;
 
@@ -159,10 +162,17 @@ static void osmux_test_marker(int ccid) {
 				osmux_xfrm_input_deliver(&h_input);
 			}
 		}
+#if !OSMUX_TEST_USE_TIMING
+		osmo_gettimeofday_override_add(0, PKT_TIME_USEC);
+#endif
 	}
 
-	while (rtp_pkts)
+	while (rtp_pkts) {
+#if !OSMUX_TEST_USE_TIMING
+		osmo_gettimeofday_override_add(1, 0);
+#endif
 		osmo_select_main(0);
+	}
 
 	if (mark_pkts) {
 		fprintf(stdout, "RTP M bit (marker) mismatch! %d\n", mark_pkts);
@@ -204,7 +214,7 @@ static void osmux_test_loop(int ccid)
 
 		if (i % 4 == 0) {
 #if OSMUX_TEST_USE_TIMING
-			gettimeofday(&last, NULL);
+			osmo_gettimeofday(&last, NULL);
 #endif
 
 			/* After four RTP messages, squash them into the OSMUX
@@ -217,8 +227,12 @@ static void osmux_test_loop(int ccid)
 			 * messages that are extracted from OSMUX has been
 			 * delivered.
 			 */
-			for (j = 0; j < k-2; j++)
+			for (j = 0; j < k-2; j++) {
 				osmo_select_main(0);
+#if !OSMUX_TEST_USE_TIMING
+				osmo_gettimeofday_override_add(0, PKT_TIME_USEC);
+#endif
+			}
 
 			k = 0;
 		}
@@ -238,6 +252,12 @@ int main(void)
 		perror("signal");
 		exit(EXIT_FAILURE);
 	}
+
+#if !OSMUX_TEST_USE_TIMING
+	/* This test uses fake time to speedup the run, unless we want to manually
+	 * test time specific stuff */
+	osmo_gettimeofday_override = true;
+#endif
 
 	/* This test doesn't use it, but osmux requires it internally. */
 	osmo_init_logging(&osmux_test_log_info);

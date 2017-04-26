@@ -777,7 +777,7 @@ static void osmux_tx_cb(void *data)
 #ifdef DEBUG_TIMING
 	struct timeval now, diff;
 
-	gettimeofday(&now, NULL);
+	osmo_gettimeofday(&now, NULL);
 	timersub(&now, &h->start, &diff);
 	timersub(&diff,&h->when, &diff);
 	LOGP(DLMIB, LOGL_DEBUG, "we are lagging %lu.%.6lu in scheduled "
@@ -806,7 +806,7 @@ osmux_tx(struct msgb *msg, struct timeval *when,
 	h->timer.data = h;
 
 #ifdef DEBUG_TIMING
-	gettimeofday(&h->start, NULL);
+	osmo_gettimeofday(&h->start, NULL);
 	h->when.tv_sec = when->tv_sec;
 	h->when.tv_usec = when->tv_usec;
 #endif
