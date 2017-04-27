@@ -431,17 +431,23 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 			osmo_stream_cli_reconnect(cli);
 		return ret;
 	}
-
-	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY)
-		setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
-
 	cli->ofd.fd = ret;
-	if (osmo_fd_register(&cli->ofd) < 0) {
-		close(ret);
-		cli->ofd.fd = -1;
-		return -EIO;
+
+	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
+		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
+		if (ret < 0)
+			goto error_close_socket;
 	}
+
+	if (osmo_fd_register(&cli->ofd) < 0)
+		goto error_close_socket;
+
 	return 0;
+
+error_close_socket:
+	close(ret);
+	cli->ofd.fd = -1;
+	return -EIO;
 }
 
 /*! \brief Set the NODELAY socket option to avoid Nagle-like behavior
