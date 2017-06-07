@@ -721,8 +721,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 
 	INIT_LLIST_HEAD(&batch->circuit_list);
 	batch->remaining_bytes = h->batch_size;
-	batch->timer.cb = osmux_batch_timer_expired;
-	batch->timer.data = h;
+	osmo_timer_setup(&batch->timer, osmux_batch_timer_expired, h);
 
 	h->internal_data = (void *)batch;
 
@@ -803,8 +802,7 @@ osmux_tx(struct msgb *msg, struct timeval *when,
 	h->msg = msg;
 	h->tx_cb = tx_cb;
 	h->data = data;
-	h->timer.cb = osmux_tx_cb;
-	h->timer.data = h;
+	osmo_timer_setup(&h->timer, osmux_tx_cb, h);
 
 #ifdef DEBUG_TIMING
 	osmo_gettimeofday(&h->start, NULL);

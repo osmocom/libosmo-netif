@@ -234,10 +234,9 @@ int osmo_rs232_open(struct osmo_rs232 *r)
 		return rc;
 	}
 
-	if (r->cfg.delay_us) {
-		r->tx_timer.cb = rs232_tx_timer_cb;
-		r->tx_timer.data = r;
-	}
+	if (r->cfg.delay_us)
+		osmo_timer_setup(&r->tx_timer, rs232_tx_timer_cb, r);
+
 	return 0;
 }
 
