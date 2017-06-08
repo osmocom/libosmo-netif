@@ -60,6 +60,8 @@ static bool opt_debug_human;
 static bool opt_debug_table;
 static bool opt_osmux;
 static char* opt_pcap_file;
+uint32_t opt_buffer_min = 60;
+uint32_t opt_buffer_max = 500;
 /* ----------------------------- */
 
 /* Logging related stuff */
@@ -501,8 +503,8 @@ void pcap_test() {
 
 	jb = osmo_jibuf_alloc(NULL);
 	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
-	osmo_jibuf_set_min_delay(jb, 60);
-	osmo_jibuf_set_max_delay(jb, 500);
+	osmo_jibuf_set_min_delay(jb, opt_buffer_min);
+	osmo_jibuf_set_max_delay(jb, opt_buffer_max);
 
 	/* first run */
 	pcap_pkt_timer_cb(NULL);
@@ -517,20 +519,22 @@ void pcap_test() {
 
 static void print_help(void)
 {
-	printf("jibuf_test [-r] [-p pcap] [-o] [-d] [-g]\n");
+	printf("jibuf_test [-r] [-p pcap] [-o] [-d] [-g] [-m ms] [-M ms]\n");
 	printf(" -h Print this help message\n");
 	printf(" -r Run test with randomly generated jitter\n");
 	printf(" -p Run test with specified pcap file\n");
 	printf(" -o The pcap contains OSMUX packets isntead of RTP\n");
 	printf(" -d Enable packet trace debug suitable for humans\n");
 	printf(" -t Enable packet trace debug suitable for gnuplot\n");
+	printf(" -m Minimum buffer size for the jitter-buffer, in ms (only used in -p mode)\n");
+	printf(" -M Maximum buffer size for the jitter-buffer, in ms (only used in -p mode)\n");
 }
 
 static int parse_options(int argc, char **argv)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "hdtrop:")) != -1) {
+	while ((opt = getopt(argc, argv, "hdtrop:m:M:")) != -1) {
 		switch (opt) {
 		case 'h':
 			print_help();
@@ -549,6 +553,12 @@ static int parse_options(int argc, char **argv)
 			break;
 		case 'p':
 			opt_pcap_file = strdup(optarg);
+			break;
+		case 'm':
+			opt_buffer_min = (uint32_t) atoi(optarg);
+			break;
+		case 'M':
+			opt_buffer_max = (uint32_t) atoi(optarg);
 			break;
 		default:
 			return -1;
