@@ -60,6 +60,9 @@
 #define JIBUF_BUFFER_INC_STEP 20
 #define JIBUF_BUFFER_DEC_STEP 5
 
+/* weight of each new packet in calculation of clock skew */
+#define JIBUF_SKEW_WEIGHT ((double)1/32)
+
 struct osmo_jibuf_msgb_cb {
 	struct timeval ts;
 	unsigned long *old_cb;
@@ -178,6 +181,7 @@ static void msg_set_as_reference(struct osmo_jibuf *jb, struct msgb *msg)
 	jb->ref_rx_ts = timeval2ms(&jb->last_enqueue_time);
 	jb->ref_tx_ts = msg_get_timestamp(msg);
 	jb->ref_tx_seq = msg_get_sequence(msg);
+	jb->skew_us = 0;
 
 	LOGP(DLJIBUF, LOGL_DEBUG, "New reference (seq=%"PRIu16" rx=%"PRIu32 \
 		" tx=%"PRIu32")\n", jb->ref_tx_seq, jb->ref_rx_ts, jb->ref_tx_ts);
@@ -216,6 +220,14 @@ static void timer_expired(void *data)
 	/* XXX: maybe  try to tune the threshold based on the calculated output jitter? */
 	/* XXX: try to find holes in the list and create fake pkts to improve the
 		 jitter when packets do not arrive on time */
+}
+
+static void recalc_clock_skew(struct osmo_jibuf *jb, int32_t rel_delay)
+{
+	if(!jb->skew_enabled)
+		return;
+
+	jb->skew_us = (int32_t) (rel_delay * 1000 * JIBUF_SKEW_WEIGHT + jb->skew_us * (1.0 - JIBUF_SKEW_WEIGHT));
 }
 
 static void recalc_threshold_delay(struct osmo_jibuf *jb)
@@ -312,6 +324,7 @@ int osmo_jibuf_enqueue(struct osmo_jibuf *jb, struct msgb *msg)
 		rel_delay = 0;
 	} else {
 		rel_delay = calc_pkt_rel_delay(jb, msg);
+		recalc_clock_skew(jb, rel_delay);
 	}
 
 	/* Avoid time skew with sender (or drop-everything state),
@@ -319,7 +332,7 @@ int osmo_jibuf_enqueue(struct osmo_jibuf *jb, struct msgb *msg)
 	//if ((int)(msg_get_sequence(msg) - jb->ref_tx_seq) > JIBUF_REFERENCE_TS_FREQ)
 	//	msg_set_as_reference(jb, msg);
 
-	delay = jb->threshold_delay + rel_delay;
+	delay = jb->threshold_delay + rel_delay - jb->skew_us/1000;
 
 	/* packet too late, let's drop it and incr buffer size if encouraged */
 	if (delay < 0) {
@@ -341,8 +354,8 @@ int osmo_jibuf_enqueue(struct osmo_jibuf *jb, struct msgb *msg)
 	timeradd(&jb->last_enqueue_time, &delay_ts, &sched_ts);
 
 	LOGP(DLJIBUF, LOGL_DEBUG, "enqueuing packet seq=%"PRIu16" rel=%d delay=%d" \
-		" thres=%d {%lu.%06lu -> %lu.%06lu} %s\n",
-		msg_get_sequence(msg), rel_delay, delay, jb->threshold_delay,
+		" skew=%d thres=%d {%lu.%06lu -> %lu.%06lu} %s\n",
+		msg_get_sequence(msg), rel_delay, delay, jb->skew_us, jb->threshold_delay,
 		jb->last_enqueue_time.tv_sec, jb->last_enqueue_time.tv_usec,
 		sched_ts.tv_sec, sched_ts.tv_usec, msg_get_marker(msg)? "M" : "");
 
@@ -395,6 +408,18 @@ void osmo_jibuf_set_max_delay(struct osmo_jibuf *jb, uint32_t max_delay)
 {
 	jb->max_delay = max_delay ? max_delay : JIBUF_DEFAULT_MAX_DELAY_MS;
 	jb->threshold_delay = OSMO_MIN(jb->max_delay, jb->threshold_delay);
+}
+
+/*! \brief Toggle use of skew detection and compensation mechanism
+ *  \param[in] jb jitter buffer instance
+ *  \param[in] enable Whether to enable or not (default) the skew estimation and compensation mechanism
+ *
+ * When this function is called, the estimated skew is reset.
+ */
+void osmo_jibuf_enable_skew_compensation(struct osmo_jibuf *jb, bool enable)
+{
+	jb->skew_enabled = enable;
+	jb->skew_us = 0;
 }
 
 /*! \brief Set dequeue callback for the jitter buffer

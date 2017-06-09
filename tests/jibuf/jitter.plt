@@ -33,6 +33,7 @@ if (pcap) {
         '/tmp/bla' using 4:8 with linespoints title 'post.jitter' axes x1y1, \
         '/tmp/bla' using 3:9 with linespoints title 'pre.dropped' axes x1y1, \
         '/tmp/bla' using 3:10 with linespoints title 'pre.buffer' axes x1y1, \
+        '/tmp/bla' using 3:11 with linespoints title 'pre.skew' axes x1y1, \
         '/tmp/bla' using 4:((column(4)-column(2))) with linespoints title 'post.delay' axes x1y1
 
 } else {
@@ -43,6 +44,7 @@ if (pcap) {
         '/tmp/bla' using 4:8 with linespoints title 'post.jitter' axes x1y1, \
         '/tmp/bla' using 3:9 with linespoints title 'pre.dropped' axes x1y1, \
         '/tmp/bla' using 3:10 with linespoints title 'pre.buffer' axes x1y1, \
+        '/tmp/bla' using 3:11 with linespoints title 'pre.skew' axes x1y1, \
         '/tmp/bla' using 3:((column(3)-column(2))) with linespoints title 'pre.delay' axes x1y1, \
         '/tmp/bla' using 4:((column(4)-column(2))) with linespoints title 'post.delay' axes x1y1
 }

@@ -127,13 +127,14 @@ static void clock_override_set(long sec, long usec)
 	clock_debug("clock_override_set");
 }
 
-static void clock_override_add(long sec, long usec)
+static void clock_override_add_debug(long sec, long usec, bool dbg)
 {
 	osmo_gettimeofday_override_add(sec, usec);
 	osmo_clock_override_add(CLOCK_MONOTONIC, sec, usec*1000);
-	clock_debug("clock_override_add");
+	if (dbg)
+		clock_debug("clock_override_add");
 }
-
+#define clock_override_add(sec, usec) clock_override_add_debug(sec, usec, true)
 
 static void dequeue_cb(struct msgb *msg, void *data)
 {
@@ -684,6 +685,48 @@ void test_rtp_out_of_sync(unsigned int time_inc_ms, uint16_t seq_nosync_inc, uin
 	osmo_jibuf_delete(jb);
 }
 
+
+void test_skew(unsigned int skew_inc_us, bool skew_compensation) {
+	int min_delay = 40;
+	unsigned int dropped = 0;
+	struct msgb *msg;
+	int i;
+	char buf[250];
+
+	printf("===test_skew(%u, %d)===\n", skew_inc_us, skew_compensation);
+
+	clock_override_enable(true);
+	clock_override_set(0, 0);
+	rtp_init(32, 400);
+	jb = osmo_jibuf_alloc(NULL);
+	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
+	osmo_jibuf_set_min_delay(jb, min_delay);
+	/*set buffer static, otherwise will grow with drops and enqueue some more packets: */
+	osmo_jibuf_set_max_delay(jb, min_delay);
+	osmo_jibuf_enable_skew_compensation(jb, skew_compensation);
+
+	/* If no skew compensation is used, jitterbuffer should start dropping
+	 * packets (all too late) after around min_delay*1000/skew_inc_us packets. */
+	for (i = 0; i<min_delay*1000/skew_inc_us + 50; i++) {
+		snprintf(buf, sizeof(buf), "enqueue packet %d (accum_skew_us = %u)", i, skew_inc_us*i);
+		clock_debug(buf);
+		msg = rtp_next();
+		if (osmo_jibuf_enqueue(jb, msg) < 0) {
+			dropped++;
+			msgb_free(msg);
+		}
+		clock_override_add_debug(0, TIME_RTP_PKT_MS*1000 + skew_inc_us, false);
+	}
+
+	if (skew_compensation) {
+		OSMO_ASSERT(!dropped);
+		OSMO_ASSERT(jb->skew_us);
+	} else {
+		OSMO_ASSERT(dropped);
+		OSMO_ASSERT(!jb->skew_us);
+	}
+}
+
 int main(int argc, char **argv)
 {
 
@@ -712,6 +755,8 @@ int main(int argc, char **argv)
 	test_rtp_out_of_sync(80*TIME_RTP_PKT_MS, 5, 5*SAMPLES_PER_PKT, true);
 	test_rtp_out_of_sync(80*TIME_RTP_PKT_MS, 6, 5*SAMPLES_PER_PKT, false);
 	test_rtp_out_of_sync(80*TIME_RTP_PKT_MS, 5, 5*SAMPLES_PER_PKT + 3, false);
+	test_skew(100, false);
+	test_skew(100, true);
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;

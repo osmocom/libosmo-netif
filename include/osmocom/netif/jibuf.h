@@ -40,6 +40,9 @@ struct osmo_jibuf {
 	struct timeval last_enqueue_time;
 	struct timeval next_dequeue_time;
 
+	bool skew_enabled;
+	int32_t skew_us; /* src clock skew, in usec */
+
 	struct {
 		uint32_t total_enqueued;
 		uint64_t total_dropped;
@@ -57,6 +60,8 @@ bool osmo_jibuf_empty(struct osmo_jibuf *jb);
 
 void osmo_jibuf_set_min_delay(struct osmo_jibuf *jb, uint32_t min_delay);
 void osmo_jibuf_set_max_delay(struct osmo_jibuf *jb, uint32_t max_delay);
+
+void osmo_jibuf_enable_skew_compensation(struct osmo_jibuf *jb, bool enable);
 
 void osmo_jibuf_set_dequeue_cb(struct osmo_jibuf *jb, osmo_jibuf_dequeue_cb dequeue_cb, void* cb_data);
 

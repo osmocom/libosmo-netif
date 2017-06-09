@@ -47,6 +47,7 @@ struct rtp_pkt_info {
 	struct timeval tx_prev_time;
 	struct timeval tx_time;
 	uint32_t tx_delay;
+	int32_t skew_us;
 	struct checkpoint prequeue;
 	struct checkpoint postqueue;
 };
@@ -60,6 +61,7 @@ static bool opt_test_rand;
 static bool opt_debug_human;
 static bool opt_debug_table;
 static bool opt_osmux;
+static bool opt_skew;
 static char* opt_pcap_file;
 uint32_t opt_buffer_min = 60;
 uint32_t opt_buffer_max = 500;
@@ -165,12 +167,12 @@ void trace_pkt(struct msgb *msg, char* info) {
 	if (opt_debug_human) {
 	uint32_t total_delay_ms = timeval2ms(&total_delay);
 	LOGP(DLJIBUF, LOGL_DEBUG, "%s: seq=%"PRIu16" ts=%"PRIu32" (%ld.%06ld) tx_delay=%"PRIu32 \
-		" end_delay=%"PRIu32" pre_trans=%d pre_jitter=%f post_trans=%d post_jitter=%f\n",
+		" end_delay=%"PRIu32" pre_trans=%d pre_jitter=%f post_trans=%d post_jitter=%f skew=%"PRId32"\n",
 		info, ntohs(rtph->sequence), ntohl(rtph->timestamp),
 		pinfo->tx_time.tv_sec, pinfo->tx_time.tv_usec,
 		pinfo->tx_delay, total_delay_ms,
 		pinfo->prequeue.transit, pinfo->prequeue.jitter,
-		pinfo->postqueue.transit, pinfo->postqueue.jitter);
+		pinfo->postqueue.transit, pinfo->postqueue.jitter, pinfo->skew_us);
 
 	if (pinfo->prequeue.jitter < pinfo->postqueue.jitter)
 	LOGP(DLJIBUF, LOGL_ERROR, "JITTER HIGHER THAN REF: seq=%"PRIu16" ts=%"PRIu32 \
@@ -190,12 +192,12 @@ void trace_pkt(struct msgb *msg, char* info) {
 	uint32_t tx_time_ms = timeval2ms(&pinfo->tx_time);
 	uint32_t prequeue_time_ms = timeval2ms(&pinfo->prequeue.ts);
 	uint32_t postqueue_time_ms = timeval2ms(&pinfo->postqueue.ts);
-	fprintf(stderr, "%"PRIu16"\t%"PRIu32"\t%"PRIu32"\t%"PRIu32"\t%d\t%d\t%f\t%f\t%"PRIu32"\t%"PRIu32"\n",
+	fprintf(stderr, "%"PRIu16"\t%"PRIu32"\t%"PRIu32"\t%"PRIu32"\t%d\t%d\t%f\t%f\t%"PRIu32"\t%"PRIu32"\t%f\n",
 		ntohs(rtph->sequence), tx_time_ms,
 		prequeue_time_ms, postqueue_time_ms,
 		pinfo->prequeue.transit, pinfo->postqueue.transit,
 		pinfo->prequeue.jitter, pinfo->postqueue.jitter,
-		packets_dropped, jb->threshold_delay);
+		packets_dropped, jb->threshold_delay, (double)jb->skew_us/1000.0);
 	}
 }
 
@@ -316,6 +318,10 @@ void pkt_arrived_cb(void *data)
 	prequeue_prev.seq = htons(rtph->sequence);
 
 	int n = osmo_jibuf_enqueue(jb, msg);
+
+	/* skew has been updated with this new packet. We pick the updated one
+	 * as it's the one applied to this packet. */
+	pinfo->skew_us = jb->skew_us;
 
 	if (n<0) {
 		pkt_add_result(msg, true);
@@ -482,7 +488,7 @@ void rand_test()
 
 	osmo_jibuf_set_min_delay(jb, GENERATED_JITTER_MS - RTP_FREQ_MS);
 	osmo_jibuf_set_max_delay(jb, GENERATED_JITTER_MS + RTP_FREQ_MS*2);
-
+	osmo_jibuf_enable_skew_compensation(jb, opt_skew);
 	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
 
 	/* first run */
@@ -522,6 +528,7 @@ void pcap_test() {
 	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
 	osmo_jibuf_set_min_delay(jb, opt_buffer_min);
 	osmo_jibuf_set_max_delay(jb, opt_buffer_max);
+	osmo_jibuf_enable_skew_compensation(jb, opt_skew);
 
 	/* first run */
 	pcap_pkt_timer_cb(NULL);
@@ -536,13 +543,14 @@ void pcap_test() {
 
 static void print_help(void)
 {
-	printf("jibuf_test [-r] [-p pcap] [-o] [-d] [-g] [-m ms] [-M ms]\n");
+	printf("jibuf_test [-r] [-p pcap] [-o] [-d] [-g] [-s] [-m ms] [-M ms]\n");
 	printf(" -h Print this help message\n");
 	printf(" -r Run test with randomly generated jitter\n");
 	printf(" -p Run test with specified pcap file\n");
 	printf(" -o The pcap contains OSMUX packets isntead of RTP\n");
 	printf(" -d Enable packet trace debug suitable for humans\n");
 	printf(" -t Enable packet trace debug suitable for gnuplot\n");
+	printf(" -s Enable skew estimation and compensation algorithm on the jitter-buffer\n");
 	printf(" -m Minimum buffer size for the jitter-buffer, in ms (only used in -p mode)\n");
 	printf(" -M Maximum buffer size for the jitter-buffer, in ms (only used in -p mode)\n");
 }
@@ -551,7 +559,7 @@ static int parse_options(int argc, char **argv)
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "hdtrop:m:M:")) != -1) {
+	while ((opt = getopt(argc, argv, "hdtrosp:m:M:")) != -1) {
 		switch (opt) {
 		case 'h':
 			print_help();
@@ -567,6 +575,9 @@ static int parse_options(int argc, char **argv)
 			break;
 		case 'o':
 			opt_osmux = true;
+			break;
+		case 's':
+			opt_skew = true;
 			break;
 		case 'p':
 			opt_pcap_file = strdup(optarg);
