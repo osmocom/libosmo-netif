@@ -63,8 +63,14 @@ LIBS=$old_LIBS
 
 AC_CHECK_HEADERS(dahdi/user.h,,AC_MSG_WARN(DAHDI input driver will not be built))
 
+AC_ARG_ENABLE(doxygen,
+	[AS_HELP_STRING(
+		[--disable-doxygen],
+		[Disable generation of documentation using doxygen],
+	)],
+	[doxygen=$enableval], [doxygen="yes"])
 AC_PATH_PROG(DOXYGEN,doxygen,false)
-AM_CONDITIONAL(HAVE_DOXYGEN, test $DOXYGEN != false)
+AM_CONDITIONAL(HAVE_DOXYGEN, test $DOXYGEN != false && test "x$doxygen" = "xyes")
 
 AC_OUTPUT(
 	libosmo-netif.pc
