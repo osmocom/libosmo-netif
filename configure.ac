@@ -27,6 +27,9 @@ PKG_PROG_PKG_CONFIG([0.20])
 
 AC_CONFIG_MACRO_DIR([m4])
 
+CFLAGS="$CFLAGS -Wall"
+CPPFLAGS="$CPPFLAGS -Wall"
+
 dnl checks for header files
 AC_HEADER_STDC
 AC_CHECK_HEADERS(execinfo.h sys/select.h sys/socket.h syslog.h ctype.h)
