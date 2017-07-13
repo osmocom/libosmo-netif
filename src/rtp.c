@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <string.h>	/* for memcpy. */
 #include <arpa/inet.h>	/* for ntohs. */
+#include <inttypes.h>
 
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/msgb.h>
@@ -44,7 +45,7 @@ void osmo_rtp_handle_free(struct osmo_rtp_handle *h)
 
 int osmo_rtp_handle_tx_set_sequence(struct osmo_rtp_handle *h, uint16_t seq)
 {
-	DEBUGP(DLMUX, "%s (handle=%p, seq=%hu)\n", __FUNCTION__, h, seq);
+	DEBUGP(DLMUX, "%s (handle=%p, seq=%"PRIu16")\n", __FUNCTION__, h, seq);
 
 	h->tx.sequence = seq;
 
@@ -53,7 +54,7 @@ int osmo_rtp_handle_tx_set_sequence(struct osmo_rtp_handle *h, uint16_t seq)
 
 int osmo_rtp_handle_tx_set_ssrc(struct osmo_rtp_handle *h, uint32_t ssrc)
 {
-	DEBUGP(DLMUX, "%s (handle=%p, seq=%hu)\n", __FUNCTION__, h, ssrc);
+	DEBUGP(DLMUX, "%s (handle=%p, seq=%"PRIu32")\n", __FUNCTION__, h, ssrc);
 
 	h->tx.ssrc = ssrc;
 	return 0;
@@ -61,7 +62,7 @@ int osmo_rtp_handle_tx_set_ssrc(struct osmo_rtp_handle *h, uint32_t ssrc)
 
 int osmo_rtp_handle_tx_set_timestamp(struct osmo_rtp_handle *h, uint32_t timestamp)
 {
-	DEBUGP(DLMUX, "%s (handle=%p, ts=%hu)\n", __FUNCTION__, h, timestamp);
+	DEBUGP(DLMUX, "%s (handle=%p, ts=%"PRIu32")\n", __FUNCTION__, h, timestamp);
 
 	h->tx.timestamp = timestamp;
 	return 0;
