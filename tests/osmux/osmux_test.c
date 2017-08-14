@@ -102,7 +102,7 @@ static struct osmux_out_handle h_output;
 
 static void osmux_deliver(struct msgb *batch_msg, void *data)
 {
-	char buf[1024];
+	char buf[2048];
 	struct osmux_hdr *osmuxh;
 	LLIST_HEAD(list);
 

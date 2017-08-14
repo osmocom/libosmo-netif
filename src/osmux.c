@@ -877,12 +877,15 @@ static int osmux_snprintf_payload(char *buf, size_t size,
 	int ret, i;
 	int len = size, offset = 0;
 
+	ret = snprintf(buf+offset, len, "[ ");
+	SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+
 	for (i=0; i<payload_len; i++) {
 		ret = snprintf(buf+offset, len, "%02x ", payload[i]);
 		SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
 	}
 
-	ret = snprintf(buf+offset, len, "]");
+	ret = snprintf(buf+offset, len, "] ");
 	SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
 
 	return offset;
