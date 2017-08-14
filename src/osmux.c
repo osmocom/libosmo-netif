@@ -847,7 +847,7 @@ void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
 }
 
 #define SNPRINTF_BUFFER_SIZE(ret, size, len, offset)	\
-	size += ret;					\
+	size -= ret;					\
 	if (ret > len)					\
 		ret = len;				\
 	offset += ret;					\
