@@ -8,6 +8,8 @@ pkgconfig_DATA = libosmo-netif.pc
 
 EXTRA_DIST = .version README.md
 
+@RELMAKE@
+
 BUILT_SOURCES = $(top_srcdir)/.version
 $(top_srcdir)/.version:
 	echo $(VERSION) > $@-t && mv $@-t $@
