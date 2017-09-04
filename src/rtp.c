@@ -222,5 +222,5 @@ int osmo_rtp_snprintf(char *buf, size_t size, struct msgb *msg)
 	ret = snprintf(buf+offset, len, "]");
 	SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
 
-	return ret;
+	return offset;
 }
