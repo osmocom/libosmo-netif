@@ -65,8 +65,8 @@ static struct timeval last;
 
 static void tx_cb(struct msgb *msg, void *data)
 {
-	char buf[4096];
 	struct rtp_hdr *rtph = (struct rtp_hdr *)msg->data;
+	char buf[4096];
 #if OSMUX_TEST_USE_TIMING
 	struct timeval now, diff;
 
@@ -102,9 +102,9 @@ static struct osmux_out_handle h_output;
 
 static void osmux_deliver(struct msgb *batch_msg, void *data)
 {
-	char buf[2048];
 	struct osmux_hdr *osmuxh;
 	LLIST_HEAD(list);
+	char buf[2048];
 
 	osmux_snprintf(buf, sizeof(buf), batch_msg);
 	fprintf(stderr, "OSMUX message (len=%d) %s\n", batch_msg->len, buf);
@@ -182,11 +182,11 @@ static void osmux_test_marker(int ccid) {
 
 static void osmux_test_loop(int ccid)
 {
-	struct msgb *msg;
-	char buf[1024];
 	struct rtp_hdr *rtph = (struct rtp_hdr *)rtp_pkt;
-	uint16_t seq;
+	struct msgb *msg;
 	int i, j, k = 0;
+	char buf[1024];
+	uint16_t seq;
 
 	for (i = 1; i < 65; i++) {
 		msg = msgb_alloc(1500, "test");

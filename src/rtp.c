@@ -185,19 +185,20 @@ osmo_rtp_build(struct osmo_rtp_handle *h, uint8_t payload_type,
 	return msg;
 }
 
-#define SNPRINTF_BUFFER_SIZE(ret, size, len, offset)	\
-	size += ret;					\
-	if (ret > len)					\
-		ret = len;				\
+#define SNPRINTF_BUFFER_SIZE(ret, remain, offset)	\
+	if (ret < 0)					\
+		ret = 0;				\
 	offset += ret;					\
-	len -= ret;
+	if (ret > remain)				\
+		ret = remain;				\
+	remain -= ret;
 
 int osmo_rtp_snprintf(char *buf, size_t size, struct msgb *msg)
 {
+	unsigned int remain = size, offset = 0;
 	struct rtp_hdr *rtph;
-	int ret, i;
 	uint8_t *payload;
-	unsigned int len = size, offset = 0;
+	int ret, i;
 
 	rtph = osmo_rtp_get_hdr(msg);
 	if (rtph == NULL)
@@ -205,22 +206,22 @@ int osmo_rtp_snprintf(char *buf, size_t size, struct msgb *msg)
 
 	payload = (uint8_t *)rtph + sizeof(struct rtp_hdr);
 
-	ret = snprintf(buf, len, "RTP ver=%01u ssrc=%u type=%02u "
+	ret = snprintf(buf, remain, "RTP ver=%01u ssrc=%u type=%02u "
 			"marker=%01u ext=%01u csrc_count=%01u "
 			"sequence=%u timestamp=%u [", rtph->version,
 			ntohl(rtph->ssrc), rtph->payload_type,
 			rtph->marker, rtph->extension,
 			rtph->csrc_count, ntohs(rtph->sequence),
 			ntohl(rtph->timestamp));
-	SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 	for (i=0; i<msg->len - sizeof(struct rtp_hdr); i++) {
-		ret = snprintf(buf+offset, len, "%02x ", payload[i]);
-		SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+		ret = snprintf(buf + offset, remain, "%02x ", payload[i]);
+		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 	}
 
-	ret = snprintf(buf+offset, len, "]");
-	SNPRINTF_BUFFER_SIZE(ret, size, len, offset);
+	ret = snprintf(buf + offset, remain, "]");
+	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
 	return offset;
 }
