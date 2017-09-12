@@ -902,6 +902,9 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 	int msg_len = msg->len;
 	int ret;
 
+	if (size)
+		buf[0] = '\0';
+
 	while (msg_len > 0) {
 		if (msg_len < sizeof(struct osmux_hdr)) {
 			LOGP(DLMIB, LOGL_ERROR,

@@ -200,6 +200,9 @@ int osmo_rtp_snprintf(char *buf, size_t size, struct msgb *msg)
 	uint8_t *payload;
 	int ret, i;
 
+	if (size)
+		buf[0] = '\0';
+
 	rtph = osmo_rtp_get_hdr(msg);
 	if (rtph == NULL)
 		return -1;
