@@ -35,7 +35,7 @@
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
 #include <osmocom/core/talloc.h>
-#include <osmocom/abis/e1_input.h>
+#include <osmocom/core/timer.h>
 
 struct osmo_rs232 {
 	struct osmo_fd		ofd;
