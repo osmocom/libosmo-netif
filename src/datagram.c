@@ -244,7 +244,7 @@ int osmo_dgram_rx_recv(struct osmo_dgram_rx *conn,
 
 	ret = recv(conn->ofd.fd, msg->data, msg->data_len, 0);
 	if (ret < 0) {
-		LOGP(DLINP, LOGL_ERROR, "error receiving data from tx\n");
+		LOGP(DLINP, LOGL_ERROR, "error receiving data from tx: %s\n", strerror(errno));
 		return ret;
 	}
 	msgb_put(msg, ret);
