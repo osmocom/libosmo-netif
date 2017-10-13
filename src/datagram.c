@@ -236,14 +236,14 @@ struct osmo_dgram_rx {
 /*! \brief Receive data via Osmocom datagram receiver
  *  \param[in] conn Datagram Receiver from which to receive
  *  \param msg pre-allocate message buffer to which received data is appended
- *  \returns number of bytes read, negative on error. */
+ *  \returns number of bytes read (might be 0 for empty UDP packet), negative on error. */
 int osmo_dgram_rx_recv(struct osmo_dgram_rx *conn,
 				struct msgb *msg)
 {
 	int ret;
 
 	ret = recv(conn->ofd.fd, msg->data, msg->data_len, 0);
-	if (ret <= 0) {
+	if (ret < 0) {
 		LOGP(DLINP, LOGL_ERROR, "error receiving data from tx\n");
 		return ret;
 	}
