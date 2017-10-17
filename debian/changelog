@@ -1,4 +1,10 @@
-libosmo-netif (0.0.7) UNRELEASED; urgency=medium
+libosmo-netif (0.0.8) unstable; urgency=medium
+
+  * Make a new release: sync git tag with version.
+
+ -- Max Suraev <msuraev@sysmocom.de>  Tue, 17 Oct 2017 15:06:33 +0200
+
+libosmo-netif (0.0.7) unstable; urgency=medium
 
   * Move forward toward a new release.
 
