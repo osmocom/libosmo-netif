@@ -892,7 +892,16 @@ static int osmux_snprintf_payload(char *buf, size_t size,
 	return offset;
 }
 
-
+/*! Print osmux header fields and payload from msg into buffer buf.
+ *  \param[out] buf buffer to store the output into
+ *  \param[in] len length of buf in bytes
+ *  \param[in] msgb message buffer containing one or more osmux frames
+ *  \returns the number of characters printed (excluding the null byte used to end output to strings).
+ *
+ * If the output was truncated due to this limit, then the return value is the number of characters
+ * (excluding the terminating null byte) which would have been written to the final string if enough
+ * space had been available.
+ */
 int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 {
 	unsigned int remain = size;
