@@ -896,10 +896,11 @@ static int osmux_snprintf_payload(char *buf, size_t size,
 int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 {
 	unsigned int remain = size;
-	int this_len, msg_off = 0;
+	unsigned int msg_off = 0;
 	struct osmux_hdr *osmuxh;
 	unsigned int offset = 0;
 	int msg_len = msg->len;
+	uint32_t payload_len;
 	int ret;
 
 	if (size)
@@ -914,20 +915,21 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 		}
 		osmuxh = (struct osmux_hdr *)((uint8_t *)msg->data + msg_off);
 
+		ret = osmux_snprintf_header(buf + offset, remain, osmuxh);
+		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
+
+		msg_off += sizeof(struct osmux_hdr);
+		msg_len -= sizeof(struct osmux_hdr);
+
 		if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
 			LOGP(DLMIB, LOGL_ERROR, "Bad AMR FT %d, skipping\n",
 			     osmuxh->amr_ft);
 			return -1;
 		}
 
-		ret = osmux_snprintf_header(buf + offset, remain, osmuxh);
-		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
+		payload_len = osmux_get_payload_len(osmuxh);
 
-		this_len = sizeof(struct osmux_hdr) +
-			   osmux_get_payload_len(osmuxh);
-		msg_off += this_len;
-
-		if (msg_len < this_len) {
+		if (msg_len < payload_len) {
 			LOGP(DLMIB, LOGL_ERROR,
 			     "No room for OSMUX payload: only %d bytes\n",
 			     msg_len);
@@ -936,10 +938,11 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 
 		ret = osmux_snprintf_payload(buf + offset, remain,
 					     osmux_get_payload(osmuxh),
-					     osmux_get_payload_len(osmuxh));
+					     payload_len);
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
-		msg_len -= this_len;
+		msg_off += payload_len;
+		msg_len -= payload_len;
 	}
 
 	return offset;
