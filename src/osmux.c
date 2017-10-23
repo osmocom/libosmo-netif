@@ -921,30 +921,44 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 		msg_off += sizeof(struct osmux_hdr);
 		msg_len -= sizeof(struct osmux_hdr);
 
-		if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
-			LOGP(DLMIB, LOGL_ERROR, "Bad AMR FT %d, skipping\n",
-			     osmuxh->amr_ft);
+		switch (osmuxh->ft) {
+		case OSMUX_FT_SIGNAL:
+			ret = snprintf(buf + offset, remain, "[signal]");
+			SNPRINTF_BUFFER_SIZE(ret, remain, offset);
+			return -1;
+		case OSMUX_FT_DUMMY:
+		case OSMUX_FT_VOICE_AMR:
+			if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
+				LOGP(DLMIB, LOGL_ERROR, "Bad AMR FT %d, skipping\n",
+				     osmuxh->amr_ft);
+				return -1;
+			}
+
+			payload_len = osmux_get_payload_len(osmuxh);
+
+			if (msg_len < payload_len) {
+				LOGP(DLMIB, LOGL_ERROR,
+				     "No room for OSMUX payload: only %d bytes\n",
+				     msg_len);
+				return -1;
+			}
+
+			if (osmuxh->ft == OSMUX_FT_VOICE_AMR) {
+				ret = osmux_snprintf_payload(buf + offset, remain,
+							     osmux_get_payload(osmuxh),
+							     payload_len);
+				SNPRINTF_BUFFER_SIZE(ret, remain, offset);
+			}
+
+			msg_off += payload_len;
+			msg_len -= payload_len;
+			break;
+		default:
+			LOGP(DLMIB, LOGL_ERROR, "Unknown OSMUX ft value %d\n",
+			     osmuxh->ft);
 			return -1;
 		}
-
-		payload_len = osmux_get_payload_len(osmuxh);
-
-		if (msg_len < payload_len) {
-			LOGP(DLMIB, LOGL_ERROR,
-			     "No room for OSMUX payload: only %d bytes\n",
-			     msg_len);
-			return -1;
-		}
-
-		ret = osmux_snprintf_payload(buf + offset, remain,
-					     osmux_get_payload(osmuxh),
-					     payload_len);
-		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
-
-		msg_off += payload_len;
-		msg_len -= payload_len;
 	}
-
 	return offset;
 }
 
