@@ -21,7 +21,7 @@ Vcs-Browser: http://git.osmocom.org/gitweb?p=libosmo-netif.git;a=summary
 Vcs-Git: git://git.osmocom.org/libosmo-netif.git
 Homepage: https://projects.osmocom.org/projects/libosmo-netif
 
-Package: libosmonetif3
+Package: libosmonetif4
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -39,7 +39,7 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          libosmocore-dev,
          libosmocore,
-         libosmonetif3 (= ${binary:Version})
+         libosmonetif4 (= ${binary:Version})
 Multi-Arch: same
 Description: Development headers for Osmocom network interface
  The libosmo-netif library is one of the libraries needed by the
@@ -53,7 +53,7 @@ Package: libosmo-netif-doc
 Architecture: all
 Section: doc
 Depends: ${misc:Depends},
-         libosmonetif3,
+         libosmonetif4,
          libjs-jquery
 Description: Documentation for the Osmo network interface library
  The libosmo-netif library is one of the libraries needed by the
@@ -66,7 +66,7 @@ Package: libosmo-netif-dbg
 Section: debug
 Architecture: any
 Priority: extra
-Depends: libosmonetif3 (= ${binary:Version}), ${misc:Depends}
+Depends: libosmonetif4 (= ${binary:Version}), ${misc:Depends}
 Multi-Arch: same
 Description: Debug symbols for Osmocom network interface library
  The libosmo-netif library is one of the libraries needed by the
