@@ -30,6 +30,11 @@
 
 /*! \addtogroup stream Osmocom Stream Socket
  *  @{
+ *
+ *  This code is intended to abstract any use of stream-type sockets,
+ *  such as TCP and SCTP.  It offers both server and client side
+ *  implementations, fully integrated with the libosmocore select loop
+ *  abstraction.
  */
 
 /*! \file stream.c

@@ -23,6 +23,11 @@
 
 /*! \addtogroup datagram Osmocom Datagram Socket
  *  @{
+ *
+ *  This code is intended to abstract any use of datagram type sockets,
+ *  such as UDP.  It offers both transmitter and receiver side
+ *  implementations, fully integrated with the libosmocore select loop
+ *  abstraction.
  */
 
 /*! \file datagram.c

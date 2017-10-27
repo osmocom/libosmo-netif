@@ -25,6 +25,15 @@
 
 /*! \addtogroup osmux Osmocom Multiplex Protocol
  *  @{
+ *
+ *  This code implements a variety of utility functions related to the
+ *  OSMUX user-plane multiplexing protocol, an efficient alternative to
+ *  plain UDP/RTP streams for voice transport in back-haul of cellular
+ *  networks.
+ *
+ *  For information about the OSMUX protocol design, please see the
+ *  OSMUX reference manual at
+ *  http://ftp.osmocom.org/docs/latest/osmux-reference.pdf
  */
 
 /*! \file osmux.c
