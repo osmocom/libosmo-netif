@@ -1,3 +1,9 @@
+libosmo-netif (0.1.1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Harald Welte <lafore@gnumonks.org>  Sat, 28 Oct 2017 12:41:34 +0200
+
 libosmo-netif (0.1.0) unstable; urgency=medium
 
   [ Holger Hans Peter Freyther ]
