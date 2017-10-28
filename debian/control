@@ -35,8 +35,7 @@ Description: Common/shared code regarding network interface for OpenBSC
 Package: libosmo-netif-dev
 Section: libdevel
 Architecture: any
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
+Depends: ${misc:Depends},
          libosmocore-dev,
          libosmocore,
          libosmonetif4 (= ${binary:Version})
