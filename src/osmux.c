@@ -1,6 +1,9 @@
 /*
- * (C) 2012 by Pablo Neira Ayuso <pablo@gnumonks.org>
+ * (C) 2012-2017 by Pablo Neira Ayuso <pablo@gnumonks.org>
  * (C) 2012 by On Waves ehf <http://www.on-waves.com>
+ * (C) 2015-2017 by sysmocom - s.f.m.c. GmbH
+ *
+ * SPDX-License-Identifier: GPL-2.0+
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
