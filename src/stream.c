@@ -735,9 +735,13 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 {
 	int ret;
 
-	/* we are reconfiguring this socket, close existing first. */
-	if ((link->flags & OSMO_STREAM_SRV_F_RECONF) && link->ofd.fd >= 0)
+	if (link->ofd.fd >= 0) {
+		/* No reconfigure needed for existing socket, we are fine */
+		if (!(link->flags & OSMO_STREAM_SRV_F_RECONF))
+			return 0;
+		/* we are reconfiguring this socket, close existing first. */
 		osmo_stream_srv_link_close(link);
+	}
 
 	link->flags &= ~OSMO_STREAM_SRV_F_RECONF;
 
