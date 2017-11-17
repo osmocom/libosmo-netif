@@ -31,6 +31,18 @@ PKG_PROG_PKG_CONFIG([0.20])
 
 AC_CONFIG_MACRO_DIR([m4])
 
+AC_ARG_ENABLE(sanitize,
+	[AS_HELP_STRING(
+		[--enable-sanitize],
+		[Compile with address sanitizer enabled],
+	)],
+	[sanitize=$enableval], [sanitize="no"])
+if test x"$sanitize" = x"yes"
+then
+	CFLAGS="$CFLAGS -fsanitize=address -fsanitize=undefined"
+	CPPFLAGS="$CPPFLAGS -fsanitize=address -fsanitize=undefined"
+fi
+
 CFLAGS="$CFLAGS -Wall"
 CPPFLAGS="$CPPFLAGS -Wall"
 
