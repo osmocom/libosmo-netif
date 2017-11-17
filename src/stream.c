@@ -430,6 +430,7 @@ void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 {
 	osmo_stream_cli_close(cli);
 	osmo_timer_del(&cli->timer);
+	msgb_queue_free(&cli->tx_queue);
 	talloc_free(cli);
 }
 
@@ -924,6 +925,7 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 	osmo_fd_unregister(&conn->ofd);
 	if (conn->closed_cb)
 		conn->closed_cb(conn);
+	msgb_queue_free(&conn->tx_queue);
 	talloc_free(conn);
 }
 
