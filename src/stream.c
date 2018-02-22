@@ -778,6 +778,7 @@ struct osmo_stream_srv {
         struct llist_head               tx_queue;
         int (*closed_cb)(struct osmo_stream_srv *peer);
         int (*cb)(struct osmo_stream_srv *peer);
+        void (*txflushed_cb)(struct osmo_stream_srv *conn, void *data);
         void                            *data;
 };
 
@@ -804,6 +805,8 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 
 	if (llist_empty(&conn->tx_queue)) {
 		conn->ofd.when &= ~BSC_FD_WRITE;
+		if (conn->txflushed_cb)
+			conn->txflushed_cb(conn, conn->data);
 		return;
 	}
 	lh = conn->tx_queue.next;
@@ -878,6 +881,15 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 		return NULL;
 	}
 	return conn;
+}
+
+/*! \brief Set a callback which will be called once the stream's TX queue has been flushed.
+ *  \param[in] conn Stream Server to set the callback on
+ *  \param[in] data User-specific data (available in call-back functions) */
+void
+osmo_stream_srv_set_txflushed_cb(struct osmo_stream_srv *conn, void (*txflushed_cb)(struct osmo_stream_srv *conn, void *data))
+{
+	conn->txflushed_cb = txflushed_cb;
 }
 
 /*! \brief Set application private data of the stream server
