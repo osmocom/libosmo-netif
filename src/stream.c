@@ -237,6 +237,10 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 		}
 		LOGP(DLINP, LOGL_ERROR, "error to send\n");
 	}
+
+	if (msgb_length(msg) == 0)
+		osmo_stream_cli_destroy(cli);
+
 	msgb_free(msg);
 	return 0;
 }
@@ -828,6 +832,10 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	if (ret < 0) {
 		LOGP(DLINP, LOGL_ERROR, "error to send\n");
 	}
+
+	if (msgb_length(msg) == 0)
+		osmo_stream_srv_destroy(conn);
+
 	msgb_free(msg);
 }
 
@@ -931,7 +939,8 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 
 /*! \brief Enqueue data to be sent via an Osmocom stream server
  *  \param[in] conn Stream Server through which we want to send
- *  \param[in] msg Message buffer to enqueue in transmit queue */
+ *  \param[in] msg Message buffer to enqueue in transmit queue. If this buffer has zero length,
+ *  the corresponding connection will be destroyed. */
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 {
 	msgb_enqueue(&conn->tx_queue, msg);
