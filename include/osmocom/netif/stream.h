@@ -8,6 +8,18 @@
  *  @{
  */
 
+/*! \brief Access flags field in the msgb control buffer */
+#define msgb_netif_flags(msg)             (msg)->cb[0]
+
+/*! \brief Message buffer flag: Destroy a stream after sending this message. */
+#define MSGB_NETIF_FLAG_TX_STREAM_DESTROY    0x00000001
+
+/*! \brief Mark a message buffer as the final message to be transmitted on a stream.
+ * The stream will be destroyed after this message has been sent, i.e. either
+ * osmo_stream_cli_destroy() or osmo_stream_srv_destroy() will be called on the
+ * corresponding connection. */
+void msgb_netif_destroy_conn_after_tx(struct msgb *msg);
+
 /*! \brief Access the SCTP PPID from the msgb control buffer */
 #define msgb_sctp_ppid(msg)             (msg)->cb[3]
 /*! \brief Access the SCTP Stream ID from the msgb control buffer */

@@ -119,6 +119,10 @@ static int setsockopt_nodelay(int fd, int proto, int on)
 	return rc;
 }
 
+void msgb_netif_destroy_conn_after_tx(struct msgb *msg)
+{
+	msgb_netif_flags(msg) |= MSGB_NETIF_FLAG_TX_STREAM_DESTROY;
+}
 
 /*
  * Client side.
@@ -237,6 +241,10 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 		}
 		LOGP(DLINP, LOGL_ERROR, "error to send\n");
 	}
+
+	if (msgb_netif_flags(msg) & MSGB_NETIF_FLAG_TX_STREAM_DESTROY)
+		osmo_stream_cli_destroy(cli);
+
 	msgb_free(msg);
 	return 0;
 }
@@ -828,6 +836,10 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	if (ret < 0) {
 		LOGP(DLINP, LOGL_ERROR, "error to send\n");
 	}
+
+	if (msgb_netif_flags(msg) & MSGB_NETIF_FLAG_TX_STREAM_DESTROY)
+		osmo_stream_srv_destroy(conn);
+
 	msgb_free(msg);
 }
 
