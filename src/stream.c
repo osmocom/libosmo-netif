@@ -772,6 +772,8 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 	link->ofd.fd = -1;
 }
 
+#define OSMO_STREAM_SRV_F_FLUSH_DESTROY	(1 << 0)
+
 struct osmo_stream_srv {
 	struct osmo_stream_srv_link	*srv;
         struct osmo_fd                  ofd;
@@ -779,11 +781,17 @@ struct osmo_stream_srv {
         int (*closed_cb)(struct osmo_stream_srv *peer);
         int (*cb)(struct osmo_stream_srv *peer);
         void                            *data;
+	int				flags;
 };
 
 static void osmo_stream_srv_read(struct osmo_stream_srv *conn)
 {
 	LOGP(DLINP, LOGL_DEBUG, "message received\n");
+
+	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
+		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring received message\n");
+		return;
+	}
 
 	if (conn->cb)
 		conn->cb(conn);
@@ -829,6 +837,9 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 		LOGP(DLINP, LOGL_ERROR, "error to send\n");
 	}
 	msgb_free(msg);
+
+	if (llist_empty(&conn->tx_queue) && (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY))
+		osmo_stream_srv_destroy(conn);
 }
 
 static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
@@ -880,6 +891,16 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	return conn;
 }
 
+/*! \brief Prepare to send out all pending messages on the connection's Tx queue
+ *  and then automatically destroy the stream with osmo_stream_srv_destroy().
+ *  This function disables queuing of new messages on the connection and also
+ *  disables reception of new messages on the connection.
+ *  \param[in] conn Stream Server to modify */
+void osmo_stream_srv_set_flush_and_destroy(struct osmo_stream_srv *conn)
+{
+	conn->flags |= OSMO_STREAM_SRV_F_FLUSH_DESTROY;
+}
+
 /*! \brief Set application private data of the stream server
  *  \param[in] conn Stream Server to modify
  *  \param[in] data User-specific data (available in call-back functions) */
@@ -917,7 +938,9 @@ struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *
 
 /*! \brief Destroy given Stream Server
  *  This function closes the Stream Server socket, unregisters from
- *  select loop and de-allocates associated memory.
+ *  select loop, invokes the connection's closed_cb() callback to allow API
+ *  users to clean up any associated state they have for this connection,
+ *  and then de-allocates associated memory.
  *  \param[in] conn Stream Server to be destroyed */
 void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 {
@@ -934,6 +957,11 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
  *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 {
+	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
+		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring new outgoing message\n");
+		return;
+	}
+
 	msgb_enqueue(&conn->tx_queue, msg);
 	conn->ofd.when |= BSC_FD_WRITE;
 }

@@ -41,6 +41,7 @@ struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *
 struct osmo_fd *osmo_stream_srv_get_ofd(struct osmo_stream_srv *srv);
 void osmo_stream_srv_destroy(struct osmo_stream_srv *conn);
 
+void osmo_stream_srv_set_flush_and_destroy(struct osmo_stream_srv *conn);
 void osmo_stream_srv_set_data(struct osmo_stream_srv *conn, void *data);
 
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg);
