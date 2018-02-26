@@ -3,6 +3,7 @@
 
 #include <pcap.h>
 #include <osmocom/core/timer.h>
+#include <time.h>
 
 struct msgb;
 
@@ -11,7 +12,8 @@ void osmo_pcap_init(void);
 struct osmo_pcap {
 	pcap_t			*h;
 	struct osmo_timer_list	timer;
-	struct timeval		last;
+	struct timespec		start_sys;
+	struct timeval		start_pcap;
 	struct msgb 		*deliver_msg;
 };
 
