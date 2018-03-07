@@ -89,12 +89,12 @@ next:
 							   osmuxh->ctr + 1));
 			goto next;
 		default:
-			LOGP(DLMIB, LOGL_ERROR, "Discarding unsupported Osmux FT %d\n",
+			LOGP(DLMUX, LOGL_ERROR, "Discarding unsupported Osmux FT %d\n",
 			     osmuxh->ft);
 			return NULL;
 		}
 		if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
-			LOGP(DLMIB, LOGL_ERROR, "Discarding bad AMR FT %d\n",
+			LOGP(DLMUX, LOGL_ERROR, "Discarding bad AMR FT %d\n",
 			     osmuxh->amr_ft);
 			return NULL;
 		}
@@ -103,14 +103,14 @@ next:
 			sizeof(struct osmux_hdr);
 
 		if (len > msg->len) {
-			LOGP(DLMIB, LOGL_ERROR, "Discarding malformed "
+			LOGP(DLMUX, LOGL_ERROR, "Discarding malformed "
 						"OSMUX message\n");
 			return NULL;
 		}
 
 		msgb_pull(msg, len);
 	} else if (msg->len > 0) {
-		LOGP(DLMIB, LOGL_ERROR,
+		LOGP(DLMUX, LOGL_ERROR,
 			"remaining %d bytes, broken osmuxhdr?\n", msg->len);
 	}
 
@@ -195,7 +195,7 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 
 			osmo_rtp_snprintf(buf, sizeof(buf), msg);
 			buf[sizeof(buf)-1] = '\0';
-			LOGP(DLMIB, LOGL_DEBUG, "to BTS: %s\n", buf);
+			LOGP(DLMUX, LOGL_DEBUG, "to BTS: %s\n", buf);
 		}
 #endif
 		llist_add_tail(&msg->list, list);
@@ -234,7 +234,7 @@ static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit,
 		if (rtph == NULL)
 			return -1;
 
-		LOGP(DLMIB, LOGL_ERROR, "too many messages for this RTP "
+		LOGP(DLMUX, LOGL_ERROR, "too many messages for this RTP "
 					"ssrc=%u\n", rtph->ssrc);
 		return -1;
 	}
@@ -292,7 +292,7 @@ static int osmux_batch_put(struct osmux_batch *batch,
 		batch->osmuxh = osmuxh;
 	} else {
 		if (batch->osmuxh->ctr == 0x7) {
-			LOGP(DLMIB, LOGL_ERROR, "cannot add msg=%p, "
+			LOGP(DLMUX, LOGL_ERROR, "cannot add msg=%p, "
 			     "too many messages for this RTP ssrc=%u\n",
 			     state->msg, state->rtph->ssrc);
 			return 0;
@@ -354,12 +354,12 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 	struct osmux_circuit *circuit;
 
 #ifdef DEBUG_MSG
-	LOGP(DLMIB, LOGL_DEBUG, "Now building batch\n");
+	LOGP(DLMUX, LOGL_DEBUG, "Now building batch\n");
 #endif
 
 	batch_msg = msgb_alloc(batch_size, "osmux");
 	if (batch_msg == NULL) {
-		LOGP(DLMIB, LOGL_ERROR, "Not enough memory\n");
+		LOGP(DLMUX, LOGL_ERROR, "Not enough memory\n");
 		return NULL;
 	}
 
@@ -387,7 +387,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 
 			osmo_rtp_snprintf(buf, sizeof(buf), cur);
 			buf[sizeof(buf)-1] = '\0';
-			LOGP(DLMIB, LOGL_DEBUG, "to BSC-NAT: %s\n", buf);
+			LOGP(DLMUX, LOGL_DEBUG, "to BSC-NAT: %s\n", buf);
 #endif
 
 			state.rtph = osmo_rtp_get_hdr(cur);
@@ -396,7 +396,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 
 			if (ctr == 0) {
 #ifdef DEBUG_MSG
-				LOGP(DLMIB, LOGL_DEBUG, "add osmux header\n");
+				LOGP(DLMUX, LOGL_DEBUG, "add osmux header\n");
 #endif
 				state.add_osmux_hdr = 1;
 			}
@@ -417,7 +417,7 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
 
 #ifdef DEBUG_MSG
-	LOGP(DLMIB, LOGL_DEBUG, "invoking delivery function\n");
+	LOGP(DLMUX, LOGL_DEBUG, "invoking delivery function\n");
 #endif
 	batch_msg = osmux_build_batch(batch, h->batch_size, h->batch_factor);
 	if (!batch_msg)
@@ -440,7 +440,7 @@ static void osmux_batch_timer_expired(void *data)
 	struct osmux_in_handle *h = data;
 
 #ifdef DEBUG_MSG
-	LOGP(DLMIB, LOGL_DEBUG, "osmux_batch_timer_expired\n");
+	LOGP(DLMUX, LOGL_DEBUG, "osmux_batch_timer_expired\n");
 #endif
 	osmux_xfrm_input_deliver(h);
 }
@@ -462,7 +462,7 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 
 	/* The AMR payload does not fit with what we expect */
 	if (osmo_amr_bytes(amrh->ft) != amr_payload_len) {
-		LOGP(DLMIB, LOGL_ERROR,
+		LOGP(DLMUX, LOGL_ERROR,
 		     "Bad AMR frame, expected %zd bytes, got %d bytes\n",
 		     osmo_amr_bytes(amrh->ft), amr_len);
 		return -1;
@@ -522,7 +522,7 @@ static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
 			break;
 		}
 
-		LOGP(DLMIB, LOGL_ERROR, "adding cloned RTP\n");
+		LOGP(DLMUX, LOGL_ERROR, "adding cloned RTP\n");
 	}
 }
 
@@ -546,13 +546,13 @@ osmux_batch_add_circuit(struct osmux_batch *batch, int ccid, int dummy,
 
 	circuit = osmux_batch_find_circuit(batch, ccid);
 	if (circuit != NULL) {
-		LOGP(DLMIB, LOGL_ERROR, "circuit %u already exists!\n", ccid);
+		LOGP(DLMUX, LOGL_ERROR, "circuit %u already exists!\n", ccid);
 		return NULL;
 	}
 
 	circuit = talloc_zero(osmux_ctx, struct osmux_circuit);
 	if (circuit == NULL) {
-		LOGP(DLMIB, LOGL_ERROR, "OOM on circuit %u\n", ccid);
+		LOGP(DLMUX, LOGL_ERROR, "OOM on circuit %u\n", ccid);
 		return NULL;
 	}
 
@@ -626,7 +626,7 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 
 		/* Already exists message with this sequence, skip */
 		if (rtph2->sequence == rtph->sequence) {
-			LOGP(DLMIB, LOGL_ERROR, "already exists "
+			LOGP(DLMUX, LOGL_ERROR, "already exists "
 				"message with seq=%u, skip it\n",
 				rtph->sequence);
 			return -1;
@@ -640,7 +640,7 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 		return 1;
 
 #ifdef DEBUG_MSG
-	LOGP(DLMIB, LOGL_DEBUG, "adding msg with ssrc=%u to batch\n",
+	LOGP(DLMUX, LOGL_DEBUG, "adding msg with ssrc=%u to batch\n",
 		rtph->ssrc);
 #endif
 
@@ -649,7 +649,7 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 
 	if (batch->nmsgs == 0) {
 #ifdef DEBUG_MSG
-		LOGP(DLMIB, LOGL_DEBUG, "osmux start timer batch\n");
+		LOGP(DLMUX, LOGL_DEBUG, "osmux start timer batch\n");
 #endif
 		osmo_timer_schedule(&batch->timer, 0,
 				    batch_factor * DELTA_RTP_MSG);
@@ -737,7 +737,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 
 	h->internal_data = (void *)batch;
 
-	LOGP(DLMIB, LOGL_DEBUG, "initialized osmux input converter\n");
+	LOGP(DLMUX, LOGL_DEBUG, "initialized osmux input converter\n");
 }
 
 int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
@@ -792,7 +792,7 @@ static void osmux_tx_cb(void *data)
 	osmo_gettimeofday(&now, NULL);
 	timersub(&now, &h->start, &diff);
 	timersub(&diff,&h->when, &diff);
-	LOGP(DLMIB, LOGL_DEBUG, "we are lagging %lu.%.6lu in scheduled "
+	LOGP(DLMUX, LOGL_DEBUG, "we are lagging %lu.%.6lu in scheduled "
 		"transmissions\n", diff.tv_sec, diff.tv_usec);
 #endif
 
@@ -842,7 +842,7 @@ osmux_tx_sched(struct llist_head *list,
 	llist_for_each_entry_safe(cur, tmp, list, list) {
 
 #ifdef DEBUG_MSG
-		LOGP(DLMIB, LOGL_DEBUG, "scheduled transmision in %lu.%6lu "
+		LOGP(DLMUX, LOGL_DEBUG, "scheduled transmision in %lu.%6lu "
 			"seconds, msg=%p\n", when.tv_sec, when.tv_usec, cur);
 #endif
 		llist_del(&cur->list);
@@ -929,7 +929,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 
 	while (msg_len > 0) {
 		if (msg_len < sizeof(struct osmux_hdr)) {
-			LOGP(DLMIB, LOGL_ERROR,
+			LOGP(DLMUX, LOGL_ERROR,
 			     "No room for OSMUX header: only %d bytes\n",
 			     msg_len);
 			return -1;
@@ -950,7 +950,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 		case OSMUX_FT_DUMMY:
 		case OSMUX_FT_VOICE_AMR:
 			if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
-				LOGP(DLMIB, LOGL_ERROR, "Bad AMR FT %d, skipping\n",
+				LOGP(DLMUX, LOGL_ERROR, "Bad AMR FT %d, skipping\n",
 				     osmuxh->amr_ft);
 				return -1;
 			}
@@ -958,7 +958,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 			payload_len = osmux_get_payload_len(osmuxh);
 
 			if (msg_len < payload_len) {
-				LOGP(DLMIB, LOGL_ERROR,
+				LOGP(DLMUX, LOGL_ERROR,
 				     "No room for OSMUX payload: only %d bytes\n",
 				     msg_len);
 				return -1;
@@ -975,7 +975,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 			msg_len -= payload_len;
 			break;
 		default:
-			LOGP(DLMIB, LOGL_ERROR, "Unknown OSMUX ft value %d\n",
+			LOGP(DLMUX, LOGL_ERROR, "Unknown OSMUX ft value %d\n",
 			     osmuxh->ft);
 			return -1;
 		}
