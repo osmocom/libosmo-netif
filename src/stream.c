@@ -453,7 +453,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 			      cli->addr, cli->port,
 			      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND);
 	if (ret < 0) {
-		if (reconnect && errno == ECONNREFUSED)
+		if (reconnect)
 			osmo_stream_cli_reconnect(cli);
 		return ret;
 	}
