@@ -85,8 +85,13 @@ next:
 		case OSMUX_FT_VOICE_AMR:
 			break;
 		case OSMUX_FT_DUMMY:
-			msgb_pull(msg, osmux_ft_dummy_size(osmuxh->amr_ft,
-							   osmuxh->ctr + 1));
+			len = osmux_ft_dummy_size(osmuxh->amr_ft, osmuxh->ctr + 1);
+			if (msgb_length(msg) < len) {
+				LOGP(DLMUX, LOGL_ERROR, "Discarding bad Dummy FT: %s\n",
+					osmo_hexdump(msg->data, msgb_length(msg)));
+				return NULL;
+			}
+			msgb_pull(msg, len);
 			goto next;
 		default:
 			LOGP(DLMUX, LOGL_ERROR, "Discarding unsupported Osmux FT %d\n",
@@ -102,9 +107,10 @@ next:
 		len = osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1) +
 			sizeof(struct osmux_hdr);
 
-		if (len > msg->len) {
-			LOGP(DLMUX, LOGL_ERROR, "Discarding malformed "
-						"OSMUX message\n");
+		if (msgb_length(msg) < len) {
+			LOGP(DLMUX, LOGL_ERROR,
+				"Discarding malformed OSMUX message: %s\n",
+				osmo_hexdump(msg->data, msgb_length(msg)));
 			return NULL;
 		}
 
