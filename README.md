@@ -1,4 +1,4 @@
-libosmo-netif- Osmocom network interface interface library
+libosmo-netif- Osmocom network interface library
 ==========================================================
 
 This repository contains a C-language library that form the
