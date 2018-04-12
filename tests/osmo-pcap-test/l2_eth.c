@@ -12,7 +12,7 @@
 #include <arpa/inet.h>
 #include <netinet/ip.h>
 #include <linux/if_ether.h>
-#include <pcap/dlt.h>
+#include <pcap/bpf.h>
 
 #include "proto.h"
 
