@@ -260,7 +260,9 @@ int main(void)
 #endif
 
 	/* This test doesn't use it, but osmux requires it internally. */
-	osmo_init_logging(&osmux_test_log_info);
+	void *tall_ctx = talloc_named_const(NULL, 1, "Root context");
+	msgb_talloc_ctx_init(tall_ctx, 0);
+	osmo_init_logging2(tall_ctx, &osmux_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	osmux_xfrm_output_init(&h_output, 0x7000000);
