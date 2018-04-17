@@ -1,16 +1,20 @@
 AM_CFLAGS = -Wall -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS) -g
 AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS)
 
-check_PROGRAMS = osmux/osmux_test jibuf/jibuf_test jibuf/jibuf_tool
-check_HEADERS = \
-		osmo-pcap-test/osmo_pcap.h \
-		osmo-pcap-test/proto.h
+check_PROGRAMS = osmux/osmux_test jibuf/jibuf_test
+check_HEADERS =
 
 osmux_osmux_test_SOURCES = osmux/osmux_test.c
 osmux_osmux_test_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
 
 jibuf_jibuf_test_SOURCES = jibuf/jibuf_test.c
 jibuf_jibuf_test_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
+
+if HAVE_PCAP
+check_PROGRAMS += jibuf/jibuf_tool
+check_HEADERS += \
+		osmo-pcap-test/osmo_pcap.h \
+		osmo-pcap-test/proto.h
 
 jibuf_jibuf_tool_SOURCES = \
 	jibuf/jibuf_tool.c \
@@ -26,6 +30,7 @@ jibuf_jibuf_tool_LDADD = \
 	$(LIBOSMOCORE_LIBS) \
 	$(top_builddir)/src/libosmonetif.la \
 	-lpcap
+endif
 
 # The `:;' works around a Bash 3.2 bug when the output is not writeable.
 $(srcdir)/package.m4: $(top_srcdir)/configure.ac

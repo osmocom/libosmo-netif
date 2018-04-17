@@ -100,6 +100,10 @@ LIBS=$old_LIBS
 
 AC_CHECK_HEADERS(dahdi/user.h,,AC_MSG_WARN(DAHDI input driver will not be built))
 
+found_pcap=yes
+AC_CHECK_HEADERS(pcap.h,,found_pcap=no)
+AM_CONDITIONAL(HAVE_PCAP, test "$found_pcap" = yes)
+
 AC_ARG_ENABLE(doxygen,
 	[AS_HELP_STRING(
 		[--disable-doxygen],
