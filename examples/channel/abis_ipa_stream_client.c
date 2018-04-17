@@ -50,8 +50,8 @@ int main(void)
 	struct osmo_ipa_unit *unit;
 
 	tall_example = talloc_named_const(NULL, 1, "example");
-
-	osmo_init_logging(&example_log_info);
+	msgb_talloc_ctx_init(tall_example, 0);
+	osmo_init_logging2(tall_example, &example_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	/* initialize channel infrastructure. */

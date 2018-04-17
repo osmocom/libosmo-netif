@@ -160,8 +160,8 @@ int main(int argc, char *argv[])
 	num_msgs = atoi(argv[1]);
 
 	tall_test = talloc_named_const(NULL, 1, "osmo_stream_client_test");
-
-	osmo_init_logging(&osmo_stream_client_test_log_info);
+	msgb_talloc_ctx_init(tall_test, 0);
+	osmo_init_logging2(tall_test, &osmo_stream_client_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_NOTICE);
 
 	/*

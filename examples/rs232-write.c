@@ -350,8 +350,8 @@ int main(void)
 	int rc;
 
 	tall_test = talloc_named_const(NULL, 1, "osmo_rs232_test");
-
-	osmo_init_logging(&osmo_rs232_test_log_info);
+	msgb_talloc_ctx_init(tall_test, 0);
+	osmo_init_logging2(tall_test, &osmo_rs232_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_NOTICE);
 
 	r = osmo_rs232_create(tall_test);

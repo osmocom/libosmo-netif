@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
 	signal(SIGINT, sighandler);
 
 	tall_test = talloc_named_const(NULL, 1, "udp_rtp_test");
-
-	osmo_init_logging(&rtp_test_log_info);
+	msgb_talloc_ctx_init(tall_test, 0);
+	osmo_init_logging2(tall_test, &rtp_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	/*
