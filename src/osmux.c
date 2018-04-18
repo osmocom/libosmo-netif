@@ -16,6 +16,7 @@
 
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/timer.h>
+#include <osmocom/core/timer_compat.h>
 #include <osmocom/core/select.h>
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/logging.h>
@@ -127,9 +128,11 @@ static struct msgb *
 osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
 		  void *payload, int payload_len, bool first_pkt)
 {
-	struct msgb *out_msg;
+	struct msgb *prev_msg, *out_msg;
+	struct timespec *prev_ts, *out_ts;
 	struct rtp_hdr *rtph;
 	struct amr_hdr *amrh;
+	struct timespec delta = { .tv_sec = 0, .tv_nsec = DELTA_RTP_MSG*1000 };
 
 	out_msg = msgb_alloc(sizeof(struct rtp_hdr) +
 			     sizeof(struct amr_hdr) +
@@ -170,6 +173,15 @@ osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
 	h->rtp_seq++;
 	h->rtp_timestamp += DELTA_RTP_TIMESTAMP;
 
+	out_ts = ((struct timespec *)&((out_msg)->cb[0]));
+	if (first_pkt || llist_empty(&h->list)) {
+		osmo_clock_gettime(CLOCK_MONOTONIC, out_ts);
+	} else {
+		prev_msg = llist_last_entry(&h->list, struct msgb, list);
+		prev_ts = ((struct timespec *)&((prev_msg)->cb[0]));
+		timespecadd(prev_ts, &delta, out_ts);
+	}
+
 	return out_msg;
 }
 
@@ -207,6 +219,106 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 		llist_add_tail(&msg->list, list);
 	}
 	return i;
+}
+
+static void osmux_xfrm_output_trigger(void *data)
+{
+	struct osmux_out_handle *h = data;
+	struct timespec delay_ts, now;
+	struct msgb *msg, *next;
+
+	llist_for_each_entry_safe(msg, next, &h->list, list) {
+		osmo_clock_gettime(CLOCK_MONOTONIC, &now);
+		struct timespec *msg_ts = ((struct timespec *)&((msg)->cb[0]));
+		if (timespeccmp(msg_ts, &now, >)) {
+			timespecsub(msg_ts, &now, &delay_ts);
+			osmo_timer_schedule(&h->timer,
+				delay_ts.tv_sec, delay_ts.tv_nsec / 1000);
+			return;
+		}
+
+		/* Transmit the rtp packet */
+		llist_del(&msg->list);
+		if (h->tx_cb)
+			h->tx_cb(msg, h->data);
+		else
+			msgb_free(msg);
+	}
+}
+
+/*! \brief Generate RTP packets from osmux frame AMR payload set and schedule
+ *         them for transmission at appropiate time.
+ *  \param[in] h the osmux out handle handling a specific CID
+ *  \param[in] osmuxh Buffer pointing to osmux frame header structure and AMR payload
+ *  \return Number of generated RTP packets
+ *
+ * The osmux frame passed to this function must be of the type OSMUX_FT_VOICE_AMR.
+ * The generated RTP packets are kept into h's internal list and sent to the
+ * callback configured through osmux_xfrm_output_set_tx_cb when are ready to be
+ * transmitted according to schedule.
+ */
+int osmux_xfrm_output_sched(struct osmux_out_handle *h, struct osmux_hdr *osmuxh)
+{
+	struct timespec now, *msg_ts;
+	struct msgb *msg;
+	int i;
+	bool was_empty = llist_empty(&h->list);
+
+	if (!was_empty) {
+		/* If we received new data it means we are behind schedule and
+		 * we should flush all previous quickly */
+		osmo_clock_gettime(CLOCK_MONOTONIC, &now);
+		llist_for_each_entry(msg, &h->list, list) {
+			msg_ts = ((struct timespec *)&((msg)->cb[0]));
+			*msg_ts = now;
+		}
+		osmo_timer_schedule(&h->timer, 0, 0);
+	}
+
+	for (i=0; i<osmuxh->ctr+1; i++) {
+		struct rtp_hdr *rtph;
+
+		msg = osmux_rebuild_rtp(h, osmuxh,
+					osmux_get_payload(osmuxh) +
+					i * osmo_amr_bytes(osmuxh->amr_ft),
+					osmo_amr_bytes(osmuxh->amr_ft), !i);
+		if (msg == NULL)
+			continue;
+
+		rtph = osmo_rtp_get_hdr(msg);
+		if (rtph == NULL)
+			continue;
+
+		llist_add_tail(&msg->list, &h->list);
+	}
+	/* In case list is still empty after parsing messages, no need to rearm */
+	if(was_empty && !llist_empty(&h->list))
+		osmux_xfrm_output_trigger(h);
+	return i;
+}
+
+/*! \brief Flush all scheduled RTP packets still pending to be transmitted
+ *  \param[in] h the osmux out handle to flush
+ *
+ * This function will immediately call the transmit callback for all queued RTP
+ * packets, making sure the list ends up empty. It will also stop all internal
+ * timers to make sure the osmux_out_handle can be dropped or re-used by calling
+ * osmux_xfrm_output on it.
+ */
+void osmux_xfrm_output_flush(struct osmux_out_handle *h)
+{
+	struct msgb *msg, *next;
+
+	if (osmo_timer_pending(&h->timer))
+		osmo_timer_del(&h->timer);
+
+	llist_for_each_entry_safe(msg, next, &h->list, list) {
+		llist_del(&msg->list);
+		if (h->tx_cb)
+			h->tx_cb(msg, h->data);
+		else
+			msgb_free(msg);
+	}
 }
 
 struct osmux_batch {
@@ -746,6 +858,22 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	LOGP(DLMUX, LOGL_DEBUG, "initialized osmux input converter\n");
 }
 
+/*! \brief Set transmission callback to call when a generated RTP packet is to be transmitted
+ *  \param[in] h the osmux out handle handling a specific CID
+ *  \param[in] osmuxh Buffer pointing to osmux frame header structure and AMR payload
+ *  \return Number of generated RTP packets
+ *
+ * This Function sets the callback called by the interal timer set by
+ * osmux_xfrm_out_sched function.
+ */
+void osmux_xfrm_output_set_tx_cb(struct osmux_out_handle *h,
+				void (*tx_cb)(struct msgb *msg, void *data),
+				void *data)
+{
+	h->tx_cb = tx_cb;
+	h->data = data;
+}
+
 int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
 				  int dummy)
 {
@@ -862,6 +990,8 @@ void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
 	h->rtp_seq = (uint16_t)random();
 	h->rtp_timestamp = (uint32_t)random();
 	h->rtp_ssrc = rtp_ssrc;
+	INIT_LLIST_HEAD(&h->list);
+	osmo_timer_setup(&h->timer, osmux_xfrm_output_trigger, h);
 }
 
 #define SNPRINTF_BUFFER_SIZE(ret, remain, offset)	\

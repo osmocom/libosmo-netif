@@ -2,6 +2,7 @@
 #define _OSMUX_H_
 
 #include <osmocom/core/endian.h>
+#include <osmocom/core/timer.h>
 
 /*! \addtogroup osmux
  *  @{
@@ -79,6 +80,10 @@ struct osmux_out_handle {
 	uint16_t rtp_seq;
 	uint32_t rtp_timestamp;
 	uint32_t rtp_ssrc;
+	struct osmo_timer_list	timer;
+	struct llist_head list;
+	void (*tx_cb)(struct msgb *msg, void *data); /* Used defined rtp tx callback */
+	void *data; /* User defined opaque data structure */
 };
 
 static inline uint8_t *osmux_get_payload(struct osmux_hdr *osmuxh)
@@ -101,10 +106,13 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid);
 void osmux_xfrm_input_deliver(struct osmux_in_handle *h);
 
 void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc);
-int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h, struct llist_head *list);
+void osmux_xfrm_output_set_tx_cb(struct osmux_out_handle *h, void (*tx_cb)(struct msgb *msg, void *data), void *data);
+int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h, struct llist_head *list) OSMO_DEPRECATED("Use osmux_xfrm_output_sched() instead");
+int osmux_xfrm_output_sched(struct osmux_out_handle *h, struct osmux_hdr *osmuxh);
+void osmux_xfrm_output_flush(struct osmux_out_handle *h);
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg);
 
-void osmux_tx_sched(struct llist_head *list, void (*tx_cb)(struct msgb *msg, void *data), void *data);
+void osmux_tx_sched(struct llist_head *list, void (*tx_cb)(struct msgb *msg, void *data), void *data) OSMO_DEPRECATED("Use osmux_xfrm_output_set_tx_cb() instead");
 
 /*! @} */
 
