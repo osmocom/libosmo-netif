@@ -152,7 +152,8 @@ static void osmux_test_marker(int ccid) {
 			memcpy(msg->data, rtp_pkt, sizeof(rtp_pkt));
 			cpy_rtph = (struct rtp_hdr *) msgb_put(msg, sizeof(rtp_pkt));
 
-			if ((i+j) % 7 == 0) {
+			/* first condition guarantees that 1st packet per stream contains M bit set. */
+			if (i == 0 || (i+j) % 7 == 0) {
 				cpy_rtph->marker = 1;
 				mark_pkts++;
 			}
@@ -175,7 +176,7 @@ static void osmux_test_marker(int ccid) {
 	}
 
 	if (mark_pkts) {
-		fprintf(stdout, "RTP M bit (marker) mismatch! %d\n", mark_pkts);
+		fprintf(stdout, "osmux_test_marker: RTP M bit (marker) mismatch! %d\n", mark_pkts);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -183,6 +184,7 @@ static void osmux_test_marker(int ccid) {
 static void osmux_test_loop(int ccid)
 {
 	struct rtp_hdr *rtph = (struct rtp_hdr *)rtp_pkt;
+	struct rtp_hdr *cpy_rtph;
 	struct msgb *msg;
 	int i, j, k = 0;
 	char buf[1024];
@@ -194,11 +196,16 @@ static void osmux_test_loop(int ccid)
 			exit(EXIT_FAILURE);
 
 		memcpy(msg->data, rtp_pkt, sizeof(rtp_pkt));
-		msgb_put(msg, sizeof(rtp_pkt));
+		cpy_rtph = (struct rtp_hdr *) msgb_put(msg, sizeof(rtp_pkt));
 
 		seq = ntohs(rtph->sequence);
 		seq++;
 		rtph->sequence = htons(seq);
+		if (i < 3) {
+			/* Mark 1 rtp packet of each stream */
+			cpy_rtph->marker = 1;
+			mark_pkts++;
+		}
 
 		osmo_rtp_snprintf(buf, sizeof(buf), msg);
 		fprintf(stderr, "adding to ccid=%u %s\n", (i % 2) + ccid, buf);
@@ -239,7 +246,7 @@ static void osmux_test_loop(int ccid)
 	}
 
 	if (mark_pkts) {
-		fprintf(stdout, "RTP M bit (marker) mismatch! %d\n", mark_pkts);
+		fprintf(stdout, "osmux_test_loop: RTP M bit (marker) mismatch! %d\n", mark_pkts);
 		exit(EXIT_FAILURE);
 	}
 }

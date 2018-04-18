@@ -80,6 +80,7 @@ struct osmux_out_handle {
 	uint16_t rtp_seq;
 	uint32_t rtp_timestamp;
 	uint32_t rtp_ssrc;
+	uint8_t osmux_seq_ack; /* Latest received seq num */
 	struct osmo_timer_list	timer;
 	struct llist_head list;
 	void (*tx_cb)(struct msgb *msg, void *data); /* Used defined rtp tx callback */

@@ -151,8 +151,14 @@ osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
 	rtph->timestamp = htonl(h->rtp_timestamp);
 	rtph->sequence = htons(h->rtp_seq);
 	rtph->ssrc = htonl(h->rtp_ssrc);
-	/* rtp packet with the marker bit is always warranted to be the first one */
-	rtph->marker = first_pkt && osmuxh->rtp_m;
+	/* rtp packet with the marker bit is always guaranteed to be the first
+	 * one. We want to notify with marker in 2 scenarios:
+	 * 1- Sender told us through osmux frame rtp_m.
+	 * 2- Sntermediate osmux frame lost (seq gap), otherwise rtp receiver only sees
+	 *    steady increase of delay
+	 */
+	rtph->marker = first_pkt &&
+			(osmuxh->rtp_m || (osmuxh->seq != h->osmux_seq_ack + 1));
 
 	msgb_put(out_msg, sizeof(struct rtp_hdr));
 
@@ -218,6 +224,10 @@ int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
 #endif
 		llist_add_tail(&msg->list, list);
 	}
+
+	/* Update last seen seq number: */
+	h->osmux_seq_ack = osmuxh->seq;
+
 	return i;
 }
 
@@ -291,6 +301,10 @@ int osmux_xfrm_output_sched(struct osmux_out_handle *h, struct osmux_hdr *osmuxh
 
 		llist_add_tail(&msg->list, &h->list);
 	}
+
+	/* Update last seen seq number: */
+	h->osmux_seq_ack = osmuxh->seq;
+
 	/* In case list is still empty after parsing messages, no need to rearm */
 	if(was_empty && !llist_empty(&h->list))
 		osmux_xfrm_output_trigger(h);
