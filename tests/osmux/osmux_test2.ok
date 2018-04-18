@@ -1,0 +1,108 @@
+===test_output_consecutive===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: dequeue: seq=50 ts=500 enqueued=5
+sys={0.000000}, mono={0.000000}: first dequed before first select
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: second select, second dequed
+sys={0.020000}, mono={0.020000}: dequeue: seq=51 ts=660 enqueued=4
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: third select, third dequed
+sys={0.040000}, mono={0.040000}: dequeue: seq=52 ts=820 enqueued=3
+sys={0.060000}, mono={0.060000}: clock_override_add
+sys={0.060000}, mono={0.060000}: fourth select, fourth dequed
+sys={0.060000}, mono={0.060000}: dequeue: seq=53 ts=980 enqueued=2
+sys={0.080000}, mono={0.080000}: clock_override_add
+sys={0.080000}, mono={0.080000}: fifth select, fifth dequed
+sys={0.080000}, mono={0.080000}: dequeue: seq=54 ts=1140 enqueued=1
+sys={0.100000}, mono={0.100000}: clock_override_add
+sys={0.100000}, mono={0.100000}: sixth select, sixth dequed
+sys={0.100000}, mono={0.100000}: dequeue: seq=55 ts=1300 enqueued=0
+sys={0.100000}, mono={0.100000}: send second osmux frame
+sys={0.100000}, mono={0.100000}: dequeue: seq=56 ts=1460 enqueued=5
+sys={0.100000}, mono={0.100000}: first dequed before first select
+sys={0.120000}, mono={0.120000}: clock_override_add
+sys={0.120000}, mono={0.120000}: second select, second dequed
+sys={0.120000}, mono={0.120000}: dequeue: seq=57 ts=1620 enqueued=4
+sys={0.200000}, mono={0.200000}: clock_override_add
+sys={0.200000}, mono={0.200000}: third select, four packet should be dequeued
+sys={0.200000}, mono={0.200000}: dequeue: seq=58 ts=1780 enqueued=3
+sys={0.200000}, mono={0.200000}: dequeue: seq=59 ts=1940 enqueued=2
+sys={0.200000}, mono={0.200000}: dequeue: seq=60 ts=2100 enqueued=1
+sys={0.200000}, mono={0.200000}: dequeue: seq=61 ts=2260 enqueued=0
+sys={0.200000}, mono={0.200000}: calling flush on empty list, should do nothing
+===test_output_interleaved===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: dequeue: seq=50 ts=500 enqueued=5
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: select, 3 dequed, 3 still queued
+sys={0.040000}, mono={0.040000}: dequeue: seq=51 ts=660 enqueued=4
+sys={0.040000}, mono={0.040000}: dequeue: seq=52 ts=820 enqueued=3
+sys={0.040000}, mono={0.040000}: next frame arrives, 3 pending rtp packets are dequeued and first of new osmux frame too
+sys={0.040000}, mono={0.040000}: dequeue: seq=53 ts=980 enqueued=8
+sys={0.040000}, mono={0.040000}: dequeue: seq=54 ts=1140 enqueued=7
+sys={0.040000}, mono={0.040000}: dequeue: seq=55 ts=1300 enqueued=6
+sys={0.040000}, mono={0.040000}: dequeue: seq=56 ts=1460 enqueued=5
+sys={0.140000}, mono={0.140000}: clock_override_add
+sys={0.140000}, mono={0.140000}: calling select, then all should be out
+sys={0.140000}, mono={0.140000}: dequeue: seq=57 ts=1620 enqueued=4
+sys={0.140000}, mono={0.140000}: dequeue: seq=58 ts=1780 enqueued=3
+sys={0.140000}, mono={0.140000}: dequeue: seq=59 ts=1940 enqueued=2
+sys={0.140000}, mono={0.140000}: dequeue: seq=60 ts=2100 enqueued=1
+sys={0.140000}, mono={0.140000}: dequeue: seq=61 ts=2260 enqueued=0
+===test_output_2together===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: dequeue: seq=50 ts=500 enqueued=5
+sys={0.000000}, mono={0.000000}: calling select in between 2 osmux recv
+sys={0.000000}, mono={0.000000}: calling select after receiving 2nd osmux. Dequeue 1st osmux frame and 1st rtp from 2nd osmux frame.
+sys={0.000000}, mono={0.000000}: dequeue: seq=51 ts=660 enqueued=10
+sys={0.000000}, mono={0.000000}: dequeue: seq=52 ts=820 enqueued=9
+sys={0.000000}, mono={0.000000}: dequeue: seq=53 ts=980 enqueued=8
+sys={0.000000}, mono={0.000000}: dequeue: seq=54 ts=1140 enqueued=7
+sys={0.000000}, mono={0.000000}: dequeue: seq=55 ts=1300 enqueued=6
+sys={0.000000}, mono={0.000000}: dequeue: seq=56 ts=1460 enqueued=5
+sys={0.100000}, mono={0.100000}: clock_override_add
+sys={0.100000}, mono={0.100000}: select, all 5 remaining should be out
+sys={0.100000}, mono={0.100000}: dequeue: seq=57 ts=1620 enqueued=4
+sys={0.100000}, mono={0.100000}: dequeue: seq=58 ts=1780 enqueued=3
+sys={0.100000}, mono={0.100000}: dequeue: seq=59 ts=1940 enqueued=2
+sys={0.100000}, mono={0.100000}: dequeue: seq=60 ts=2100 enqueued=1
+sys={0.100000}, mono={0.100000}: dequeue: seq=61 ts=2260 enqueued=0
+===test_output_frame_lost===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: first osmux frame
+sys={0.000000}, mono={0.000000}: dequeue: seq=50 ts=500 enqueued=5
+sys={0.100000}, mono={0.100000}: clock_override_add
+sys={0.100000}, mono={0.100000}: dequeue: seq=51 ts=660 enqueued=4
+sys={0.100000}, mono={0.100000}: dequeue: seq=52 ts=820 enqueued=3
+sys={0.100000}, mono={0.100000}: dequeue: seq=53 ts=980 enqueued=2
+sys={0.100000}, mono={0.100000}: dequeue: seq=54 ts=1140 enqueued=1
+sys={0.100000}, mono={0.100000}: dequeue: seq=55 ts=1300 enqueued=0
+sys={0.100000}, mono={0.100000}: one osmux frame is now lost (seq++)
+sys={0.220000}, mono={0.220000}: clock_override_add
+sys={0.220000}, mono={0.220000}: 3rd osmux frame arrives
+sys={0.220000}, mono={0.220000}: dequeue: seq=56 ts=1460 enqueued=5
+sys={0.320000}, mono={0.320000}: clock_override_add
+sys={0.320000}, mono={0.320000}: dequeue: seq=57 ts=1620 enqueued=4
+sys={0.320000}, mono={0.320000}: dequeue: seq=58 ts=1780 enqueued=3
+sys={0.320000}, mono={0.320000}: dequeue: seq=59 ts=1940 enqueued=2
+sys={0.320000}, mono={0.320000}: dequeue: seq=60 ts=2100 enqueued=1
+sys={0.320000}, mono={0.320000}: dequeue: seq=61 ts=2260 enqueued=0
+===test_output_flush===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: first osmux frame
+sys={0.000000}, mono={0.000000}: dequeue: seq=50 ts=500 enqueued=5
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: dequeue: seq=51 ts=660 enqueued=4
+sys={0.040000}, mono={0.040000}: dequeue: seq=52 ts=820 enqueued=3
+sys={0.040000}, mono={0.040000}: 2nd osmux frame arrives
+sys={0.040000}, mono={0.040000}: flushing, all packet should be transmitted immediately
+sys={0.040000}, mono={0.040000}: dequeue: seq=53 ts=980 enqueued=8
+sys={0.040000}, mono={0.040000}: dequeue: seq=54 ts=1140 enqueued=7
+sys={0.040000}, mono={0.040000}: dequeue: seq=55 ts=1300 enqueued=6
+sys={0.040000}, mono={0.040000}: dequeue: seq=56 ts=1460 enqueued=5
+sys={0.040000}, mono={0.040000}: dequeue: seq=57 ts=1620 enqueued=4
+sys={0.040000}, mono={0.040000}: dequeue: seq=58 ts=1780 enqueued=3
+sys={0.040000}, mono={0.040000}: dequeue: seq=59 ts=1940 enqueued=2
+sys={0.040000}, mono={0.040000}: dequeue: seq=60 ts=2100 enqueued=1
+sys={0.040000}, mono={0.040000}: dequeue: seq=61 ts=2260 enqueued=0
+OK: Test passed
