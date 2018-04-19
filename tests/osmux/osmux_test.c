@@ -103,7 +103,6 @@ static struct osmux_out_handle h_output;
 static void osmux_deliver(struct msgb *batch_msg, void *data)
 {
 	struct osmux_hdr *osmuxh;
-	LLIST_HEAD(list);
 	char buf[2048];
 
 	osmux_snprintf(buf, sizeof(buf), batch_msg);
@@ -112,10 +111,8 @@ static void osmux_deliver(struct msgb *batch_msg, void *data)
 	/* For each OSMUX message, extract the RTP messages and put them
 	 * in a list. Then, reconstruct transmission timing.
 	 */
-	while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL) {
-		osmux_xfrm_output(osmuxh, &h_output, &list);
-		osmux_tx_sched(&list, tx_cb, NULL);
-	}
+	while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL)
+		osmux_xfrm_output_sched(&h_output, osmuxh);
 	msgb_free(batch_msg);
 }
 
@@ -273,6 +270,7 @@ int main(void)
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	osmux_xfrm_output_init(&h_output, 0x7000000);
+	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
 
 	/* If the test takes longer than 10 seconds, abort it */
 	alarm(10);

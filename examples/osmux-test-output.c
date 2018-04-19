@@ -88,7 +88,6 @@ int read_cb(struct osmo_dgram *conn)
 {
 	struct msgb *msg;
         struct osmux_hdr *osmuxh;
-	struct llist_head list;
 
 	LOGP(DOSMUX_TEST, LOGL_DEBUG, "received message from datagram\n");
 
@@ -107,10 +106,8 @@ int read_cb(struct osmo_dgram *conn)
 	LOGP(DOSMUX_TEST, LOGL_DEBUG, "received OSMUX message (len=%d) %s\n",
 		msg->len, buf);
 
-	while((osmuxh = osmux_xfrm_output_pull(msg)) != NULL) {
-		osmux_xfrm_output(osmuxh, &h_output, &list);
-		osmux_tx_sched(&list, tx_cb, NULL);
-	}
+	while((osmuxh = osmux_xfrm_output_pull(msg)) != NULL)
+		osmux_xfrm_output_sched(&h_output, osmuxh);
 
 	return 0;
 }
@@ -120,6 +117,7 @@ void sighandler(int foo)
 	LOGP(DOSMUX_TEST, LOGL_NOTICE, "closing OSMUX.\n");
 	osmo_dgram_close(conn);
 	osmo_dgram_destroy(conn);
+	osmux_xfrm_output_flush(&h_output);
 	osmo_rtp_handle_free(rtp);
 	amr_close();
 	exit(EXIT_SUCCESS);
@@ -158,7 +156,7 @@ int main(int argc, char *argv[])
 	 * initialize OSMUX handlers.
 	 */
 	osmux_xfrm_output_init(&h_output, random());
-
+	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
 	/*
 	 * initialize datagram server.
 	 */

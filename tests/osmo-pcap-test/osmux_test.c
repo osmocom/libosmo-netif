@@ -52,16 +52,12 @@ static void tx_cb(struct msgb *msg, void *data)
 static void deliver(struct msgb *batch_msg)
 {
 	struct osmux_hdr *osmuxh;
-	struct llist_head list;
 
 	printf("sending batch (len=%d) [emulated]\n", batch_msg->len);
 
 	/* This code below belongs to the osmux receiver */
-	while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL) {
-
-		osmux_xfrm_output(osmuxh, &h_output, &list);
-		osmux_tx_sched(&list, tx_cb, NULL);
-	}
+	while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL)
+		osmux_xfrm_output_sched(&h_output, osmuxh);
 	msgb_free(batch_msg);
 }
 
@@ -194,6 +190,7 @@ int main(int argc, char *argv[])
 
 	osmux_xfrm_input_init(&h_input);
 	osmux_xfrm_output_init(&h_output);
+	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
 
 	/* first run */
 	osmo_pcap_pkt_timer_cb(NULL);
