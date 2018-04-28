@@ -1001,6 +1001,7 @@ osmux_tx_sched(struct llist_head *list,
 
 void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
 {
+	memset(h, 0, sizeof(*h));
 	h->rtp_seq = (uint16_t)random();
 	h->rtp_timestamp = (uint32_t)random();
 	h->rtp_ssrc = rtp_ssrc;
