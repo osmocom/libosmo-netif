@@ -82,10 +82,10 @@ AC_SUBST(SYMBOL_VISIBILITY)
 dnl Generate the output
 AM_CONFIG_HEADER(config.h)
 
-PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 0.10.0)
-PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 0.10.0)
+PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 0.11.0)
+PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 0.11.0)
 dnl FIXME: We depend on libosmoabis by now until we can move LAPD code here
-PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.0.7)
+PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.5.0)
 
 old_LIBS=$LIBS
 AC_SEARCH_LIBS([sctp_send], [sctp], [

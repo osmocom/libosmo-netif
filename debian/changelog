@@ -1,3 +1,57 @@
+libosmo-netif (0.2.0) unstable; urgency=medium
+
+  [ Neels Hofmeyr ]
+  * jenkins: use osmo-clean-workspace.sh before and after build
+  * add --enable-sanitize config option
+  * gitignore: vim swp files
+  * osmo_stream_{cli,srv}_destroy: fix mem leak: empty msgb queue
+  * configure: add --enable-werror
+  * jenkins.sh: use --enable-werror configure flag, not CFLAGS
+
+  [ Harald Welte ]
+  * debian/control: Fix upstream-name
+  * debian/copyright: There are no AGPL licensed files left
+  * src/rs232.c: Fix accidential reference to GPLv3+ instead of GPLv2+
+  * Add SPDX-License-Identifier + Copyright statements
+  * debian/control: Fix Vcs-Browser
+  * osmux: Fix use of uninitialized memory in osmux_out_handle
+
+  [ Pau Espin Pedrol ]
+  * stream: Avoid re-creating and leaking socket when unneeded
+  * contrib: jenkins.sh: Disable building doxygen for deps
+  * test: osmo-pcap-test: Fix clock drift while replaying pcap file
+  * osmux: Use correct log category DLMUX
+  * stream.c: osmo_stream_cli_open2: Remove wrong assumption in reconnect decision
+  * tests: osmo-pcap-test: Fix pcap includes not found in old versions
+  * osmux: osmux_xfrm_output_pull: Improve checks and log of malformed packets
+  * jibuf: Add initial implementation of Jitter Buffer
+  * tests: jibuf_tool: Initial commit
+  * tests: jibuf_tool: Improve jibuf_test to read pcaps
+  * tests: jibuf_tool: Add OSMUX support
+  * tests: jibuf_tool: Add parameters to control size of buffer
+  * jibuf: Take RTP marker into account
+  * jibuf: re-sync clock out of sync timestamps
+  * tests: jibuf_tool: Add seq.plt
+  * jibuf: Estimate src clock skew
+  * tests: use osmo_init_logging2
+  * Build jibuf_tool based on libpcap availability
+  * examples: use osmo_init_logging2
+  * osmux: Add new API osmux_xfrm_output_sched to fix rtp generation issues
+  * tests: Add osmux2 testsuite
+  * osmux: Set Marker bit on osmux frame loss detected
+  * osmux: Move examples and tests to use new output APIs
+
+  [ Max ]
+  * Enable sanitize for CI tests
+
+  [ Stefan Sperling ]
+  * add support for flushing and destroying a server-side stream
+
+  [ Alexey ]
+  * Update README.md
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Thu, 03 May 2018 16:55:21 +0200
+
 libosmo-netif (0.1.1) unstable; urgency=medium
 
   * New upstream release.
