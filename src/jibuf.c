@@ -119,6 +119,35 @@ static void llist_add_sorted(struct msgb *msg, struct llist_head *msg_list)
 
 }
 
+static void enqueue_pkt(struct osmo_jibuf *jb, struct msgb  *msg, bool is_syncpoint)
+{
+	struct msgb *cur;
+	struct timeval *msg_ts;
+
+	if (!is_syncpoint) {
+		llist_add_sorted(msg, &jb->msg_list);
+		return;
+	}
+
+	/* syncpoints change the reference timings, and as such they can provoke
+	   out of order enqueuing of this packet and its followups with regards
+	   to the already stored packets which may be scheduled for later times.
+	   We thus need to adapt dequeue time for the already stored pkts to be
+	   dequeued before the syncpoint pkt. See OS#3262 for related scenarios.
+	*/
+
+	msg_ts = msgb_scheduled_ts(msg);
+
+	llist_for_each_entry(cur, &jb->msg_list, list) {
+		struct timeval *cur_ts = msgb_scheduled_ts(cur);
+		if (timercmp(msg_ts, cur_ts, <))
+			*cur_ts = *msg_ts;
+	}
+	/* syncpoint goes always to the end since we moved all older packets
+	   before it */
+	llist_add_tail(&msg->list, &jb->msg_list);
+}
+
 static bool msg_get_marker(struct msgb *msg)
 {
 	/* TODO: make it more generic as a callback so that different types of
@@ -314,11 +343,13 @@ int osmo_jibuf_enqueue(struct osmo_jibuf *jb, struct msgb *msg)
 {
 	int rel_delay, delay;
 	struct timeval delay_ts, sched_ts;
+	bool is_syncpoint;
 
 	clock_gettime_timeval(CLOCK_MONOTONIC, &jb->last_enqueue_time);
 
 	/* Check if it's time to sync, ie. start of talkspurt */
-	if (!jb->started || msg_is_syncpoint(jb, msg)) {
+	is_syncpoint = !jb->started || msg_is_syncpoint(jb, msg);
+	if (is_syncpoint) {
 		jb->started = true;
 		msg_set_as_reference(jb, msg);
 		rel_delay = 0;
@@ -365,8 +396,7 @@ int osmo_jibuf_enqueue(struct osmo_jibuf *jb, struct msgb *msg)
 	jbcb->ts = sched_ts;
 	jbcb->old_cb = old_cb;
 
-	llist_add_sorted(msg, &jb->msg_list);
-
+	enqueue_pkt(jb, msg, is_syncpoint);
 
 	/* See if updating the timer is needed: */
 	if (!osmo_timer_pending(&jb->timer) ||

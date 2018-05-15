@@ -673,8 +673,7 @@ static void test_rtp_marker_queue_order()
 	clock_override_add(0, min_delay*1000);
 	osmo_select_main(0);
 
-	/* This assert shows that packets are queued out of order in this case:*/
-	OSMO_ASSERT(!osmo_jibuf_empty(jb));
+	OSMO_ASSERT(osmo_jibuf_empty(jb));
 
 	osmo_jibuf_delete(jb);
 }
