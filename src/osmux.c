@@ -356,7 +356,7 @@ struct osmux_circuit {
 static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit,
 				uint8_t batch_factor)
 {
-	/* Too many messages per batch, discard it. The counter field of the
+	/* Validate amount of messages per batch. The counter field of the
 	 * osmux header is just 3 bits long, so make sure it doesn't overflow.
 	 */
 	if (circuit->nmsgs >= batch_factor || circuit->nmsgs >= 8) {
@@ -366,7 +366,7 @@ static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit,
 		if (rtph == NULL)
 			return -1;
 
-		LOGP(DLMUX, LOGL_ERROR, "too many messages for this RTP "
+		LOGP(DLMUX, LOGL_DEBUG, "Batch is full for RTP "
 					"ssrc=%u\n", rtph->ssrc);
 		return -1;
 	}
