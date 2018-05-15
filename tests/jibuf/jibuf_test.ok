@@ -365,6 +365,28 @@ sys={0.140000}, mono={0.140000}: 2 packets dequeued
 sys={0.200000}, mono={0.200000}: clock_override_add
 sys={0.200000}, mono={0.200000}: dequeue: seq=35 ts=880 INTERMEDIATE
 sys={0.200000}, mono={0.200000}: dequeue: seq=36 ts=1040 LATEST
+===test_rtp_marker_queue_order===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: enqueue 1st packet
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: enqueue 2nd packet
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: enqueue 3rd packet
+sys={0.060000}, mono={0.060000}: clock_override_add
+sys={0.060000}, mono={0.060000}: enqueue 3 packets instantly
+sys={0.060000}, mono={0.060000}: enqueue pkt with marker=1 instantly
+sys={0.060000}, mono={0.060000}: dequeue: seq=33 ts=560 INTERMEDIATE
+sys={0.080000}, mono={0.080000}: clock_override_add
+sys={0.080000}, mono={0.080000}: enqueue pkt after syncpoint
+sys={0.080000}, mono={0.080000}: all packets dequeued
+sys={0.140000}, mono={0.140000}: clock_override_add
+sys={0.140000}, mono={0.140000}: dequeue: seq=34 ts=720 INTERMEDIATE
+sys={0.140000}, mono={0.140000}: dequeue: seq=35 ts=880 INTERMEDIATE
+sys={0.140000}, mono={0.140000}: dequeue: seq=36 ts=1040 INTERMEDIATE
+sys={0.140000}, mono={0.140000}: dequeue: seq=39 ts=1520 INTERMEDIATE
+sys={0.140000}, mono={0.140000}: dequeue: seq=37 ts=1200 INTERMEDIATE
+sys={0.140000}, mono={0.140000}: dequeue: seq=40 ts=1680 LATEST
+sys={0.140000}, mono={0.140000}: dequeue: seq=38 ts=1360 INTERMEDIATE
 ===test_rtp_out_of_sync(1600, 5, 800, 1)===
 sys={0.000000}, mono={0.000000}: clock_override_set
 sys={0.000000}, mono={0.000000}: enqueue 1st packet (seq=33, ts=560)

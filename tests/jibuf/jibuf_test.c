@@ -619,6 +619,66 @@ static void test_rtp_marker(void)
 	osmo_jibuf_delete(jb);
 }
 
+/* This test aims at testing scenarios described in OS#3262, in which syncpoint
+   packets can provoke a situation in which packets are stored out-of-order in
+   the queue. */
+static void test_rtp_marker_queue_order()
+{
+	int min_delay = 60;
+	struct msgb *msg;
+	struct rtp_hdr *rtph;
+
+	printf("===test_rtp_marker_queue_order===\n");
+
+	clock_override_enable(true);
+	clock_override_set(0, 0);
+	rtp_init(32, 400);
+	jb = osmo_jibuf_alloc(NULL);
+	osmo_jibuf_set_dequeue_cb(jb, dequeue_cb, NULL);
+	osmo_jibuf_set_min_delay(jb, min_delay);
+	osmo_jibuf_set_max_delay(jb, 200);
+
+	/* First rtp at t=0, should be scheduled in min_delay time */
+	clock_debug("enqueue 1st packet");
+	ENQUEUE_NEXT(jb);
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	clock_debug("enqueue 2nd packet");
+	ENQUEUE_NEXT(jb);
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	clock_debug("enqueue 3rd packet");
+	ENQUEUE_NEXT(jb);
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+
+	/* We then emulate an scenario in which an Osmux queue in front of us
+	   receives a new frame before expected time, which means the packets in
+	   the osmux genreated rtp queue will be flushed and sent to jibuf
+	   directly. On top, the first packet of the new frame has the RTP
+	   Marker bit set. */
+	clock_debug("enqueue 3 packets instantly");
+	ENQUEUE_NEXT(jb); /* scheduled min_delay+0 */
+	ENQUEUE_NEXT(jb); /* a min_delay+TIME_RTP_PKT_MS */
+	ENQUEUE_NEXT(jb); /* scheduled min_delay+TIME_RTP_PKT_MS*2 */
+	clock_debug("enqueue pkt with marker=1 instantly");
+	msg = rtp_next();
+	rtph = osmo_rtp_get_hdr(msg);
+	rtph->marker = 1;
+	OSMO_ASSERT(osmo_jibuf_enqueue(jb, msg) == 0); /* syncpoint, scheduled in min_delay+0 */
+	osmo_select_main(0);
+
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	clock_debug("enqueue pkt after syncpoint");
+	ENQUEUE_NEXT(jb); /* scheduled min_delay+0 */
+
+	clock_debug("all packets dequeued");
+	clock_override_add(0, min_delay*1000);
+	osmo_select_main(0);
+
+	/* This assert shows that packets are queued out of order in this case:*/
+	OSMO_ASSERT(!osmo_jibuf_empty(jb));
+
+	osmo_jibuf_delete(jb);
+}
+
 static void test_rtp_out_of_sync(unsigned int time_inc_ms, uint16_t seq_nosync_inc, uint32_t ts_nosync_inc, bool expect_drop)
 {
 	int min_delay = 60;
@@ -754,6 +814,7 @@ int main(int argc, char **argv)
 	test_seq_wraparound();
 	test_timestamp_wraparound();
 	test_rtp_marker();
+	test_rtp_marker_queue_order();
 	test_rtp_out_of_sync(80*TIME_RTP_PKT_MS, 5, 5*SAMPLES_PER_PKT, true);
 	test_rtp_out_of_sync(80*TIME_RTP_PKT_MS, 6, 5*SAMPLES_PER_PKT, false);
 	test_rtp_out_of_sync(80*TIME_RTP_PKT_MS, 5, 5*SAMPLES_PER_PKT + 3, false);
