@@ -619,7 +619,7 @@ static void test_rtp_marker(void)
 	osmo_jibuf_delete(jb);
 }
 
-void test_rtp_out_of_sync(unsigned int time_inc_ms, uint16_t seq_nosync_inc, uint32_t ts_nosync_inc, bool expect_drop)
+static void test_rtp_out_of_sync(unsigned int time_inc_ms, uint16_t seq_nosync_inc, uint32_t ts_nosync_inc, bool expect_drop)
 {
 	int min_delay = 60;
 	struct msgb *msg;
@@ -686,7 +686,7 @@ void test_rtp_out_of_sync(unsigned int time_inc_ms, uint16_t seq_nosync_inc, uin
 }
 
 
-void test_skew(unsigned int skew_inc_us, bool skew_compensation) {
+static void test_skew(unsigned int skew_inc_us, bool skew_compensation) {
 	int min_delay = 40;
 	unsigned int dropped = 0;
 	struct msgb *msg;
