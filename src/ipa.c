@@ -31,7 +31,6 @@
 
 #include <osmocom/gsm/tlv.h>
 
-#include <osmocom/netif/channel.h>
 #include <osmocom/netif/ipa.h>
 #include <osmocom/netif/ipa_unit.h>
 

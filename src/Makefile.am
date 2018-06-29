@@ -6,15 +6,12 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)
 AM_CFLAGS= -fPIC -Wall $(LIBOSMOCORE_CFLAGS) $(LIBOSMOABIS_CFLAGS) $(COVERAGE_CFLAGS) $(LIBSCTP_CFLAGS)
 AM_LDFLAGS = $(COVERAGE_LDFLAGS)
 
-SUBDIRS = channel
-
 lib_LTLIBRARIES = libosmonetif.la
 
-libosmonetif_la_LIBADD = channel/abis/libosmonetif-abis.la $(LIBOSMOCORE_LIBS) $(LIBSCTP_LIBS)
+libosmonetif_la_LIBADD = $(LIBOSMOCORE_LIBS) $(LIBSCTP_LIBS)
 libosmonetif_la_LDFLAGS = -version-info $(LIBVERSION) -no-undefined
 
 libosmonetif_la_SOURCES = amr.c			\
-			  channel.c		\
 			  datagram.c		\
 			  ipa.c			\
 			  ipa_unit.c		\

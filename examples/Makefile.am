@@ -2,8 +2,6 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS=-Wall -g $(LIBOSMOCORE_CFLAGS) $(LIBOSMOGSM_CFLAGS) $(LIBOSMOABIS_CFLAGS) $(COVERAGE_CFLAGS)
 AM_LDFLAGS = $(COVERAGE_LDFLAGS)
 
-SUBDIRS = channel
-
 noinst_PROGRAMS = ipa-stream-client		\
 		  ipa-stream-server		\
 		  lapd-over-datagram-user	\

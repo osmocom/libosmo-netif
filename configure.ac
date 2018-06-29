@@ -118,12 +118,8 @@ AC_OUTPUT(
 	include/Makefile
 	include/osmocom/Makefile
 	include/osmocom/netif/Makefile
-	include/osmocom/netif/channel/Makefile
 	src/Makefile
-	src/channel/Makefile
-	src/channel/abis/Makefile
 	examples/Makefile
-	examples/channel/Makefile
 	tests/Makefile
 	Doxyfile
 	Makefile)

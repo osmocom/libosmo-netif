@@ -1,7 +1,4 @@
-SUBDIRS = channel
-
 osmonetif_HEADERS = amr.h		\
-		    channel.h		\
 		    datagram.h		\
 		    jibuf.h		\
 		    osmux.h		\
