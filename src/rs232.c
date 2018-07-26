@@ -141,8 +141,7 @@ struct osmo_rs232 *osmo_rs232_create(void *ctx)
 
 void osmo_rs232_set_serial_port(struct osmo_rs232 *r, char *serial_port)
 {
-	strncpy(r->cfg.serial_port, serial_port, PATH_MAX);
-	r->cfg.serial_port[PATH_MAX-1] = '\0';
+	osmo_strlcpy(r->cfg.serial_port, serial_port, PATH_MAX);
 }
 
 void osmo_rs232_set_baudrate(struct osmo_rs232 *r, int baudrate)
