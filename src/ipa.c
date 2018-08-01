@@ -130,35 +130,6 @@ int osmo_ipa_process_msg(struct msgb *msg)
 	return 0;
 }
 
-int osmo_ipa_idtag_parse(struct tlv_parsed *dec, unsigned char *buf, int len)
-{
-	uint8_t t_len;
-	uint8_t t_tag;
-	uint8_t *cur = buf;
-
-	memset(dec, 0, sizeof(*dec));
-
-	while (len >= 2) {
-		len -= 2;
-		t_len = *cur++;
-		t_tag = *cur++;
-
-		if (t_len > len + 1) {
-			LOGP(DLMI, LOGL_ERROR, "The tag does not fit: %d\n", t_len);
-			return -EINVAL;
-		}
-
-		DEBUGPC(DLMI, "%s='%s' ", ipaccess_idtag_name(t_tag), cur);
-
-		dec->lv[t_tag].len = t_len;
-		dec->lv[t_tag].val = cur;
-
-		cur += t_len;
-		len -= t_len;
-	}
-	return 0;
-}
-
 int osmo_ipa_parse_unitid(const char *str, struct ipaccess_unit *unit_data)
 {
 	unsigned long ul;
@@ -368,8 +339,7 @@ osmo_ipa_parse_msg_id_resp(struct msgb *msg, struct ipaccess_unit *unit_data)
 
 	DEBUGP(DLINP, "ID_RESP\n");
 	/* parse tags, search for Unit ID */
-	ret = osmo_ipa_idtag_parse(&tlvp, (uint8_t *)msg->l2h + 2,
-					msgb_l2len(msg)-2);
+	ret = ipa_ccm_id_resp_parse(&tlvp, (const uint8_t *)msg->l2h + 1, msgb_l2len(msg)-1);
 	if (ret < 0) {
 		LOGP(DLINP, LOGL_ERROR, "IPA response message "
 			"with malformed TLVs\n");

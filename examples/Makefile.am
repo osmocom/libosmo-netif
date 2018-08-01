@@ -46,10 +46,10 @@ stream_server_LDADD = $(top_builddir)/src/libosmonetif.la \
 		      $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS)
 
 rs232_read_SOURCES = rs232-read.c
-rs232_read_LDADD = $(top_builddir)/src/libosmonetif.la $(LIBOSMOCORE_LIBS)
+rs232_read_LDADD = $(top_builddir)/src/libosmonetif.la $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS)
 
 rs232_write_SOURCES = rs232-write.c
-rs232_write_LDADD = $(top_builddir)/src/libosmonetif.la $(LIBOSMOCORE_LIBS)
+rs232_write_LDADD = $(top_builddir)/src/libosmonetif.la $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS)
 
 rtp_udp_test_client_SOURCES = rtp-udp-test-client.c
 rtp_udp_test_client_LDADD = $(top_builddir)/src/libosmonetif.la \
