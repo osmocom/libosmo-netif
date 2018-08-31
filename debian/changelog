@@ -1,3 +1,10 @@
+libosmo-netif (0.3.0+ow1) unstable; urgency=medium
+  
+  * Release version for On-Waves
+  * From commit 7028d7387efc2e0fbac403de075c4c9c2d310f80 
+
+ -- Daniel Willmann <dwillmann@sysmocom.de>  Fri, 31 Aug 2018 17:50:56 +0200
+
 libosmo-netif (0.3.0) unstable; urgency=medium
 
   [ Pau Espin Pedrol ]
