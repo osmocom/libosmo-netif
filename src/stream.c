@@ -451,7 +451,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
 			      cli->local_addr, cli->local_port,
 			      cli->addr, cli->port,
-			      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND);
+			      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
 	if (ret < 0) {
 		if (reconnect)
 			osmo_stream_cli_reconnect(cli);

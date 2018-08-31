@@ -82,10 +82,10 @@ AC_SUBST(SYMBOL_VISIBILITY)
 dnl Generate the output
 AM_CONFIG_HEADER(config.h)
 
-PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 0.11.0)
-PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 0.11.0)
+PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 0.12.0)
+PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 0.12.0)
 dnl FIXME: We depend on libosmoabis by now until we can move LAPD code here
-PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.5.0)
+PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.5.1)
 
 old_LIBS=$LIBS
 AC_SEARCH_LIBS([sctp_send], [sctp], [
@@ -118,12 +118,8 @@ AC_OUTPUT(
 	include/Makefile
 	include/osmocom/Makefile
 	include/osmocom/netif/Makefile
-	include/osmocom/netif/channel/Makefile
 	src/Makefile
-	src/channel/Makefile
-	src/channel/abis/Makefile
 	examples/Makefile
-	examples/channel/Makefile
 	tests/Makefile
 	Doxyfile
 	Makefile)

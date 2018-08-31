@@ -322,7 +322,7 @@ void osmo_jibuf_delete(struct osmo_jibuf *jb)
 	struct msgb *msg, *tmp;
 	osmo_timer_del(&jb->timer);
 	llist_for_each_entry_safe(msg, tmp, &jb->msg_list, list)
-	dequeue_msg(jb, msg);
+		dequeue_msg(jb, msg);
 
 	talloc_free(jb);
 }

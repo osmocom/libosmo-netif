@@ -5,13 +5,13 @@ check_PROGRAMS = osmux/osmux_test osmux/osmux_test2 jibuf/jibuf_test
 check_HEADERS =
 
 osmux_osmux_test_SOURCES = osmux/osmux_test.c
-osmux_osmux_test_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
+osmux_osmux_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
 
 osmux_osmux_test2_SOURCES = osmux/osmux_test2.c
-osmux_osmux_test2_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
+osmux_osmux_test2_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
 
 jibuf_jibuf_test_SOURCES = jibuf/jibuf_test.c
-jibuf_jibuf_test_LDADD = $(LIBOSMOCORE_LIBS) $(top_builddir)/src/libosmonetif.la
+jibuf_jibuf_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
 
 if HAVE_PCAP
 check_PROGRAMS += jibuf/jibuf_tool
@@ -31,6 +31,7 @@ jibuf_jibuf_tool_SOURCES = \
 
 jibuf_jibuf_tool_LDADD = \
 	$(LIBOSMOCORE_LIBS) \
+	$(LIBOSMOGSM_LIBS) \
 	$(top_builddir)/src/libosmonetif.la \
 	-lpcap
 endif

@@ -1,4 +1,18 @@
-libosmo-netif (0.2.0+ow1) UNRELEASED; urgency=medium
+libosmo-netif (0.3.0) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * tests: jibuf_test: Set some functions as static
+  * tests: jibuf_test: Add scenario to show out-of-order bug
+  * jibuf: Fix out-of-order seq queue around syncpoints
+  * osmux: change log lvl of batch full to debug
+
+  [ Harald Welte ]
+  * remove "channel" layer
+  * stream.c: Use non-blocking connect in osmo_stream_cli
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Fri, 27 Jul 2018 18:31:42 +0200
+
+libosmo-netif (0.2.0+ow1) unstable; urgency=medium
 
   * Release new version for On-Waves
   * Commit 7839556ca950f02e2dda48f8e10dd68e90266926
