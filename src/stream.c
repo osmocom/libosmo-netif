@@ -784,19 +784,21 @@ struct osmo_stream_srv {
 	int				flags;
 };
 
-static void osmo_stream_srv_read(struct osmo_stream_srv *conn)
+static int osmo_stream_srv_read(struct osmo_stream_srv *conn)
 {
+	int rc = 0;
+
 	LOGP(DLINP, LOGL_DEBUG, "message received\n");
 
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
 		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring received message\n");
-		return;
+		return 0;
 	}
 
 	if (conn->cb)
-		conn->cb(conn);
+		rc = conn->cb(conn);
 
-	return;
+	return rc;
 }
 
 static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
@@ -845,14 +847,15 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
 {
 	struct osmo_stream_srv *conn = ofd->data;
+	int rc = 0;
 
 	LOGP(DLINP, LOGL_DEBUG, "connected read/write\n");
 	if (what & BSC_FD_READ)
-		osmo_stream_srv_read(conn);
-	if (what & BSC_FD_WRITE)
+		rc = osmo_stream_srv_read(conn);
+	if (rc != -EBADF && (what & BSC_FD_WRITE))
 		osmo_stream_srv_write(conn);
 
-	return 0;
+	return rc;
 }
 
 /*! \brief Create a Stream Server inside the specified link
