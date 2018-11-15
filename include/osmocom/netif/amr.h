@@ -58,9 +58,9 @@ struct amr_hdr {
 		cmr:4;
 	/* Table of Contents */
 	uint8_t pad2:2,
-		q:1,
-		ft:4,
-		f:1;
+		q:1,	/* OK (not damaged) at origin? */
+		ft:4,	/* coding mode */
+		f:1;	/* followed by another speech frame? */
 #endif
 } __attribute__((packed));
 
