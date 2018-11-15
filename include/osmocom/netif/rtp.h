@@ -13,12 +13,9 @@ struct rtp_hdr {
 	uint8_t  payload_type:7,
 		 marker:1;
 #elif OSMO_IS_BIG_ENDIAN
-	uint8_t  version:2,
-		 padding:1,
-		 extension:1,
-		 csrc_count:4;
-	uint8_t  marker:1,
-		 payload_type:7;
+/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
+	uint8_t  version:2, padding:1, extension:1, csrc_count:4;
+	uint8_t  marker:1, payload_type:7;
 #endif
 	uint16_t sequence;
 	uint32_t timestamp;

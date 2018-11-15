@@ -30,28 +30,25 @@
 #define OSMUX_FT_DUMMY		2
 
 struct osmux_hdr {
-#if OSMO_IS_BIG_ENDIAN
-	uint8_t rtp_m:1,
-		ft:2,
-		ctr:3,
-		amr_f:1,
-		amr_q:1;
-#elif OSMO_IS_LITTLE_ENDIAN
+#if OSMO_IS_LITTLE_ENDIAN
 	uint8_t amr_q:1,
 		amr_f:1,
 		ctr:3,
 		ft:2,
 		rtp_m:1;
+#elif OSMO_IS_BIG_ENDIAN
+/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
+	uint8_t rtp_m:1, ft:2, ctr:3, amr_f:1, amr_q:1;
 #endif
 	uint8_t seq;
 #define OSMUX_CID_MAX		255	/* determined by circuit_id */
 	uint8_t circuit_id;
-#if OSMO_IS_BIG_ENDIAN
-	uint8_t amr_ft:4,
-		amr_cmr:4;
-#elif OSMO_IS_LITTLE_ENDIAN
+#if OSMO_IS_LITTLE_ENDIAN
 	uint8_t amr_cmr:4,
 		amr_ft:4;
+#elif OSMO_IS_BIG_ENDIAN
+/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
+	uint8_t amr_ft:4, amr_cmr:4;
 #endif
 } __attribute__((packed));
 
