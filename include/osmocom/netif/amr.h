@@ -43,16 +43,7 @@
  */
 
 struct amr_hdr {
-#if OSMO_IS_BIG_ENDIAN
-	/* Payload Header */
-	uint8_t cmr:4,	/* Codec Mode Request */
-		pad1:4;
-	/* Table of Contents */
-	uint8_t f:1,	/* followed by another speech frame? */
-		ft:4,	/* coding mode */
-		q:1,	/* OK (not damaged) at origin? */
-		pad2:2;
-#elif OSMO_IS_LITTLE_ENDIAN
+#if OSMO_IS_LITTLE_ENDIAN
 	/* Payload Header */
 	uint8_t pad1:4,
 		cmr:4;	/* Codec Mode Request */
@@ -61,6 +52,10 @@ struct amr_hdr {
 		q:1,	/* OK (not damaged) at origin? */
 		ft:4,	/* coding mode */
 		f:1;	/* followed by another speech frame? */
+#elif OSMO_IS_BIG_ENDIAN
+/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
+	uint8_t cmr:4, pad1:4;
+	uint8_t f:1, ft:4, q:1, pad2:2;
 #endif
 } __attribute__((packed));
 
