@@ -1,3 +1,22 @@
+libosmo-netif (0.4.0) unstable; urgency=medium
+
+  [ Neels Hofmeyr ]
+  * fix strncpy bug in rs232.c
+  * logging: fix typo in stream.c
+
+  [ Harald Welte ]
+  * Migrate from osmo_ipa_idtag_parse() to ipa_ccm_id_resp_parse()
+  * link libosmo-netif against libosmogsm
+  * debian/rules: Don't overwrite .tarball-version
+
+  [ Pau Espin Pedrol ]
+  * jibuf: fix indentation in line inside conditional clause
+
+  [ Stefan Sperling ]
+  * detect freed connections in osmo_stream_srv_read()
+
+ -- Harald Welte <laforge@gnumonks.org>  Sat, 19 Jan 2019 22:28:01 +0100
+
 libosmo-netif (0.3.0) unstable; urgency=medium
 
   [ Pau Espin Pedrol ]
