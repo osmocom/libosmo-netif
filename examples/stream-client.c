@@ -45,19 +45,26 @@ static int connect_cb(struct osmo_stream_cli *conn)
 
 static int read_cb(struct osmo_stream_cli *conn)
 {
+	int bytes;
 	struct msgb *msg;
 
-	LOGP(DSTREAMTEST, LOGL_NOTICE, "received message from stream\n");
+	LOGP(DSTREAMTEST, LOGL_NOTICE, "receiving message from stream... ");
 
 	msg = msgb_alloc(1024, "STREAMCLIENT/test");
 	if (msg == NULL) {
-		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
+		LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
 		return 0;
 	}
-	if (osmo_stream_cli_recv(conn, msg) < 0) {
-		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot receive message\n");
+
+	bytes = osmo_stream_cli_recv(conn, msg);
+
+	if (bytes < 0) {
+		LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot receive message\n");
 		return 0;
 	}
+
+	LOGPC(DSTREAMTEST, LOGL_NOTICE, "got %d (%d) bytes: %s\n", bytes, msg->len, msgb_hexdump(msg));
+
 	msgb_free(msg);
 	return 0;
 }
@@ -86,7 +93,7 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 
 	osmo_stream_cli_send(conn, msg);
 
-	LOGP(DSTREAMTEST, LOGL_NOTICE, "message of %d bytes sent\n", msg->len);
+	LOGP(DSTREAMTEST, LOGL_NOTICE, "sent %d bytes message: %s\n", msg->len, msgb_hexdump(msg));
 
 	return 0;
 }
