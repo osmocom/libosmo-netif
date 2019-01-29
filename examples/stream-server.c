@@ -56,9 +56,12 @@ int read_cb(struct osmo_stream_srv *conn)
 
 	bytes = osmo_stream_srv_recv(conn, msg);
 
-	if (bytes < 0) {
-		LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot receive message: %s\n", strerror(-bytes));
-		return 0;
+	if (bytes <= 0) {
+		if (bytes < 0)
+			LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot receive message: %s\n", strerror(-bytes));
+		else
+			LOGPC(DSTREAMTEST, LOGL_ERROR, "client closed connection\n");
+		osmo_stream_srv_destroy(conn);
 	} else
 		LOGPC(DSTREAMTEST, LOGL_NOTICE, "got %d (%d) bytes: %s\n", bytes, msg->len, msgb_hexdump(msg));
 
