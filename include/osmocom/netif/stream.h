@@ -1,5 +1,4 @@
-#ifndef _OSMO_STREAM_H_
-#define _OSMO_STREAM_H_
+#pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -77,5 +76,3 @@ void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg);
 int osmo_stream_cli_recv(struct osmo_stream_cli *conn, struct msgb *msg);
 
 /*! @} */
-
-#endif
