@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <osmocom/core/msgb.h>
+
 /*! \addtogroup stream
  *  @{
  */
