@@ -53,3 +53,6 @@ Doxyfile
 /examples/udp-test-server
 
 .*.sw?
+jibuf_test
+jibuf_tool
+osmux_test2
