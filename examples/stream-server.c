@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <osmocom/core/select.h>
+#include <osmocom/core/socket.h>
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
@@ -77,6 +78,8 @@ static int close_cb(struct osmo_stream_srv *dummy)
 
 static int accept_cb(struct osmo_stream_srv_link *srv, int fd)
 {
+	char buf[OSMO_SOCK_NAME_MAXLEN];
+
 	if (conn != NULL) {
 		LOGP(DSTREAMTEST, LOGL_ERROR, "Sorry, this example only "
 			"support one client simultaneously\n");
@@ -90,6 +93,9 @@ static int accept_cb(struct osmo_stream_srv_link *srv, int fd)
 			"error while creating connection\n");
 		return -1;
 	}
+
+	osmo_sock_get_name_buf(buf, OSMO_SOCK_NAME_MAXLEN, fd);
+	LOGP(DSTREAMTEST, LOGL_NOTICE, "accepted client: %s\n", buf);
 
 	return 0;
 }
