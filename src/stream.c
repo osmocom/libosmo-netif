@@ -388,7 +388,7 @@ osmo_stream_cli_set_data(struct osmo_stream_cli *cli, void *data)
 }
 
 /*! \brief Get application private data of the stream client socket
- *  \param[in] cli Stream Client to modif
+ *  \param[in] cli Stream Client to modify
  *  \returns Application private data, as set by \ref osmo_stream_cli_set_data() */
 void *osmo_stream_cli_get_data(struct osmo_stream_cli *cli)
 {
@@ -396,7 +396,7 @@ void *osmo_stream_cli_get_data(struct osmo_stream_cli *cli)
 }
 
 /*! \brief Get Osmocom File Descriptor of the stream client socket
- *  \param[in] cli Stream Client to modif
+ *  \param[in] cli Stream Client to modify
  *  \returns Pointer to \ref osmo_fd */
 struct osmo_fd *
 osmo_stream_cli_get_ofd(struct osmo_stream_cli *cli)
@@ -405,7 +405,7 @@ osmo_stream_cli_get_ofd(struct osmo_stream_cli *cli)
 }
 
 /*! \brief Set the call-back function called on connect of the stream client socket
- *  \param[in] cli Stream Client to modif
+ *  \param[in] cli Stream Client to modify
  *  \param[in] connect_cb Call-back function to be called upon connect */
 void
 osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli,
@@ -415,7 +415,7 @@ osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli,
 }
 
 /*! \brief Set the call-back function called to read from the stream client socket
- *  \param[in] cli Stream Client to modif
+ *  \param[in] cli Stream Client to modify
  *  \param[in] read_cb Call-back function to be called when we want to read */
 void
 osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
