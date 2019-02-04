@@ -148,7 +148,7 @@ int main(void)
 
 	srv = osmo_stream_srv_link_create(tall_test);
 	if (srv == NULL) {
-		fprintf(stderr, "cannot create client\n");
+		fprintf(stderr, "cannot create server link\n");
 		exit(EXIT_FAILURE);
 	}
 	osmo_stream_srv_link_set_addr(srv, "127.0.0.1");
@@ -156,7 +156,7 @@ int main(void)
 	osmo_stream_srv_link_set_accept_cb(srv, accept_cb);
 
 	if (osmo_stream_srv_link_open(srv) < 0) {
-		fprintf(stderr, "cannot open client\n");
+		fprintf(stderr, "cannot open server link\n");
 		exit(EXIT_FAILURE);
 	}
 
