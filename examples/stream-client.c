@@ -39,7 +39,7 @@ void sighandler(int foo)
 
 static int connect_cb(struct osmo_stream_cli *conn)
 {
-	LOGP(DSTREAMTEST, LOGL_NOTICE, "connected\n");
+	LOGP(DSTREAMTEST, LOGL_NOTICE, "connected: %s\n", osmo_stream_cli_get_sockname(conn));
 	return 0;
 }
 

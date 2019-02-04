@@ -405,6 +405,18 @@ void *osmo_stream_cli_get_data(struct osmo_stream_cli *cli)
 	return cli->data;
 }
 
+/*! \brief Get the stream client socket description.
+ *  \param[in] cli Stream Client to examine
+ *  \returns Socket description or NULL in case of error */
+char *osmo_stream_cli_get_sockname(const struct osmo_stream_cli *cli)
+{
+	static char buf[OSMO_SOCK_NAME_MAXLEN];
+
+	osmo_sock_get_name_buf(buf, OSMO_SOCK_NAME_MAXLEN, cli->ofd.fd);
+
+	return buf;
+}
+
 /*! \brief Get Osmocom File Descriptor of the stream client socket
  *  \param[in] cli Stream Client to modify
  *  \returns Pointer to \ref osmo_fd */
@@ -709,6 +721,25 @@ osmo_stream_srv_link_set_data(struct osmo_stream_srv_link *link,
 void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link)
 {
 	return link->data;
+}
+
+/*! \brief Get description of the stream server link e. g. 127.0.0.1:1234
+ *  \param[in] link Stream Server Link to examine
+ *  \returns Link description or NULL in case of error */
+char *osmo_stream_srv_link_get_sockname(const struct osmo_stream_srv_link *link)
+{
+	static char buf[INET6_ADDRSTRLEN + 6];
+	int rc = osmo_sock_get_local_ip(link->ofd.fd, buf, INET6_ADDRSTRLEN);
+	if (rc < 0)
+		return NULL;
+
+	buf[strnlen(buf, INET6_ADDRSTRLEN + 6)] = ':';
+
+	rc = osmo_sock_get_local_ip_port(link->ofd.fd, buf + strnlen(buf, INET6_ADDRSTRLEN + 6), 6);
+	if (rc < 0)
+		return NULL;
+
+	return buf;
 }
 
 /*! \brief Get Osmocom File Descriptor of the stream server link

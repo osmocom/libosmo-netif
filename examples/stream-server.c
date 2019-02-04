@@ -171,7 +171,7 @@ int main(void)
 	kbd_ofd->cb = kbd_cb;
 	osmo_fd_register(kbd_ofd);
 
-	LOGP(DSTREAMTEST, LOGL_NOTICE, "Entering main loop\n");
+	LOGP(DSTREAMTEST, LOGL_NOTICE, "Entering main loop on %s\n", osmo_stream_srv_link_get_sockname(srv));
 
 	while(1) {
 		osmo_select_main(0);
