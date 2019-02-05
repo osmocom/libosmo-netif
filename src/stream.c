@@ -49,6 +49,9 @@
 #include <netinet/sctp.h>
 #endif
 
+#define LOGSCLI(cli, level, fmt, args...) \
+	LOGP(DLINP, level, "[%s] %s(): " fmt, get_value_string(stream_cli_state_names, (cli)->state), __func__, ## args)
+
 /*! \addtogroup stream Osmocom Stream Socket
  *  @{
  *
@@ -131,6 +134,13 @@ enum osmo_stream_cli_state {
         STREAM_CLI_STATE_MAX
 };
 
+static const struct value_string stream_cli_state_names[] = {
+	{ STREAM_CLI_STATE_NONE,       "      NONE" },
+	{ STREAM_CLI_STATE_CONNECTING, "CONNECTING" },
+	{ STREAM_CLI_STATE_CONNECTED,  " CONNECTED" },
+	{ 0, NULL }
+};
+
 #define OSMO_STREAM_CLI_F_RECONF	(1 << 0)
 #define OSMO_STREAM_CLI_F_NODELAY	(1 << 1)
 
@@ -160,12 +170,12 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli);
 void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 {
 	if (cli->reconnect_timeout < 0) {
-		LOGP(DLINP, LOGL_DEBUG, "not reconnecting, disabled.\n");
+		LOGSCLI(cli, LOGL_DEBUG, "not reconnecting, disabled.\n");
 		return;
 	}
-	LOGP(DLINP, LOGL_DEBUG, "connection closed\n");
+	LOGSCLI(cli, LOGL_DEBUG, "connection closed\n");
 	osmo_stream_cli_close(cli);
-	LOGP(DLINP, LOGL_DEBUG, "retrying in %d seconds...\n",
+	LOGSCLI(cli, LOGL_DEBUG, "retrying in %d seconds...\n",
 		cli->reconnect_timeout);
 	osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
 	cli->state = STREAM_CLI_STATE_CONNECTING;
@@ -186,7 +196,7 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 
 static void osmo_stream_cli_read(struct osmo_stream_cli *cli)
 {
-	LOGP(DLINP, LOGL_DEBUG, "message received\n");
+	LOGSCLI(cli, LOGL_DEBUG, "message received\n");
 
 	if (cli->read_cb)
 		cli->read_cb(cli);
@@ -201,7 +211,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	struct llist_head *lh;
 	int ret;
 
-	LOGP(DLINP, LOGL_DEBUG, "sending data\n");
+	LOGSCLI(cli, LOGL_DEBUG, "sending data\n");
 
 	if (llist_empty(&cli->tx_queue)) {
 		cli->ofd.when &= ~BSC_FD_WRITE;
@@ -212,7 +222,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	msg = llist_entry(lh, struct msgb, list);
 
 	if (cli->state == STREAM_CLI_STATE_CONNECTING) {
-		LOGP(DLINP, LOGL_ERROR, "not connected, dropping data!\n");
+		LOGSCLI(cli, LOGL_ERROR, "not connected, dropping data!\n");
 		return 0;
 	}
 
@@ -235,7 +245,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 		if (errno == EPIPE || errno == ENOTCONN) {
 			osmo_stream_cli_reconnect(cli);
 		}
-		LOGP(DLINP, LOGL_ERROR, "error to send\n");
+		LOGSCLI(cli, LOGL_ERROR, "error to send\n");
 	}
 	msgb_free(msg);
 	return 0;
@@ -255,7 +265,7 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 			return 0;
 		}
 		ofd->when &= ~BSC_FD_WRITE;
-		LOGP(DLINP, LOGL_DEBUG, "connection done.\n");
+		LOGSCLI(cli, LOGL_DEBUG, "connection done.\n");
 		cli->state = STREAM_CLI_STATE_CONNECTED;
 		if (cli->proto == IPPROTO_SCTP) {
 #ifdef SO_NOSIGPIPE
@@ -263,7 +273,7 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 
 			ret = setsockopt(ofd->fd, SOL_SOCKET, SO_NOSIGPIPE, (void*)&val, sizeof(val));
 			if (ret < 0)
-				LOGP(DLINP, LOGL_DEBUG, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
+				LOGSCLI(cli, LOGL_DEBUG, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
 #endif
 			sctp_sock_activate_events(ofd->fd);
 		}
@@ -272,11 +282,11 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
 		if (what & BSC_FD_READ) {
-			LOGP(DLINP, LOGL_DEBUG, "connected read\n");
+			LOGSCLI(cli, LOGL_DEBUG, "connected read\n");
 			osmo_stream_cli_read(cli);
 		}
 		if (what & BSC_FD_WRITE) {
-			LOGP(DLINP, LOGL_DEBUG, "connected write\n");
+			LOGSCLI(cli, LOGL_DEBUG, "connected write\n");
 			osmo_stream_cli_write(cli);
 		}
 		break;
@@ -503,7 +513,7 @@ static void cli_timer_cb(void *data)
 {
 	struct osmo_stream_cli *cli = data;
 
-	LOGP(DLINP, LOGL_DEBUG, "reconnecting.\n");
+	LOGSCLI(cli, LOGL_DEBUG, "reconnecting.\n");
 
 	switch(cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
@@ -535,18 +545,17 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 	ret = recv(cli->ofd.fd, msg->data, msg->data_len, 0);
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ECONNRESET) {
-			LOGP(DLINP, LOGL_ERROR,
-				"lost connection with srv\n");
+			LOGSCLI(cli, LOGL_ERROR, "lost connection with srv\n");
 		}
 		osmo_stream_cli_reconnect(cli);
 		return ret;
 	} else if (ret == 0) {
-		LOGP(DLINP, LOGL_ERROR, "connection closed with srv\n");
+		LOGSCLI(cli, LOGL_ERROR, "connection closed with srv\n");
 		osmo_stream_cli_reconnect(cli);
 		return ret;
 	}
 	msgb_put(msg, ret);
-	LOGP(DLINP, LOGL_DEBUG, "received %d bytes from srv\n", ret);
+	LOGSCLI(cli, LOGL_DEBUG, "received %d bytes from srv\n", ret);
 	return ret;
 }
 
