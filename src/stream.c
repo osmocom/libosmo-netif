@@ -169,12 +169,13 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli);
  *  connection (if any) and schedule a re-connect timer */
 void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 {
+	osmo_stream_cli_close(cli);
+
 	if (cli->reconnect_timeout < 0) {
 		LOGSCLI(cli, LOGL_DEBUG, "not reconnecting, disabled.\n");
 		return;
 	}
-	LOGSCLI(cli, LOGL_DEBUG, "connection closed\n");
-	osmo_stream_cli_close(cli);
+
 	LOGSCLI(cli, LOGL_DEBUG, "retrying in %d seconds...\n",
 		cli->reconnect_timeout);
 	osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
@@ -192,6 +193,11 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 	osmo_fd_unregister(&cli->ofd);
 	close(cli->ofd.fd);
 	cli->ofd.fd = -1;
+
+	if (cli->state == STREAM_CLI_STATE_CONNECTED)
+		LOGSCLI(cli, LOGL_DEBUG, "connection closed\n");
+
+	cli->state = STREAM_CLI_STATE_NONE;
 }
 
 static void osmo_stream_cli_read(struct osmo_stream_cli *cli)
