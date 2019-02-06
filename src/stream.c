@@ -166,8 +166,9 @@ struct osmo_stream_cli {
 void osmo_stream_cli_close(struct osmo_stream_cli *cli);
 
 /*! \brief Re-connect an Osmocom Stream Client
- *  If re-connection is enabled for this client, we close any existing
- *  connection (if any) and schedule a re-connect timer */
+ *  If re-connection is enabled for this client
+ *  (which is the case unless negative timeout was explicitly set via osmo_stream_cli_set_reconnect_timeout() call),
+ *  we close any existing connection (if any) and schedule a re-connect timer */
 void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 {
 	osmo_stream_cli_close(cli);
@@ -391,7 +392,7 @@ osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
 
 /*! \brief Set the reconnect time of the stream client socket
  *  \param[in] cli Stream Client to modify
- *  \param[in] timeout Re-connect timeout in seconds */
+ *  \param[in] timeout Re-connect timeout in seconds or negative value to disable auto-reconnection */
 void
 osmo_stream_cli_set_reconnect_timeout(struct osmo_stream_cli *cli, int timeout)
 {
@@ -475,7 +476,8 @@ void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 	talloc_free(cli);
 }
 
-/*! \brief Open connection of an Osmocom stream client
+/*! \brief DEPRECATED: use osmo_stream_cli_set_reconnect_timeout() or osmo_stream_cli_reconnect() instead!
+ * Open connection of an Osmocom stream client
  *  \param[in] cli Stream Client to connect
  *  \param[in] reconect 1 if we should not automatically reconnect
  */
@@ -534,10 +536,44 @@ void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay)
 }
 
 /*! \brief Open connection of an Osmocom stream client
+ *  By default the client will automatically reconnect after default timeout.
+ *  To disable this, use osmo_stream_cli_set_reconnect_timeout() before calling this function.
  *  \param[in] cli Stream Client to connect */
 int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 {
-	return osmo_stream_cli_open2(cli, 0);
+	int ret;
+
+	/* we are reconfiguring this socket, close existing first. */
+	if ((cli->flags & OSMO_STREAM_CLI_F_RECONF) && cli->ofd.fd >= 0)
+		osmo_stream_cli_close(cli);
+
+	cli->flags &= ~OSMO_STREAM_CLI_F_RECONF;
+
+	ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
+			      cli->local_addr, cli->local_port,
+			      cli->addr, cli->port,
+			      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+	if (ret < 0) {
+		osmo_stream_cli_reconnect(cli);
+		return ret;
+	}
+	cli->ofd.fd = ret;
+
+	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
+		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
+		if (ret < 0)
+			goto error_close_socket;
+	}
+
+	if (osmo_fd_register(&cli->ofd) < 0)
+		goto error_close_socket;
+
+	return 0;
+
+error_close_socket:
+	close(ret);
+	cli->ofd.fd = -1;
+	return -EIO;
 }
 
 static void cli_timer_cb(void *data)
@@ -549,7 +585,7 @@ static void cli_timer_cb(void *data)
 	switch(cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
 		cli->ofd.when |= BSC_FD_READ | BSC_FD_WRITE;
-		osmo_stream_cli_open2(cli, 1);
+		osmo_stream_cli_open(cli);
 	        break;
 	default:
 		break;

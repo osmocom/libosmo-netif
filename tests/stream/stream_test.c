@@ -126,6 +126,76 @@ static struct osmo_stream_cli *init_client_reconnection(struct osmo_stream_cli *
 	return cli;
 }
 
+/* Without explicit timeout set with osmo_stream_cli_set_reconnect_timeout() default value is used.
+static struct osmo_stream_cli *init_client_reconnection_broken1(struct osmo_stream_cli *cli, bool autoreconnect)
+{
+	if (osmo_stream_cli_open2(cli, autoreconnect) < 0) {
+		LOGCLI(cli, "unable to open client\n");
+		return NULL;
+	}
+
+	return cli;
+}
+That's why those those functions result in exact the same output despite inverse use of autoreconnect parameter.
+static struct osmo_stream_cli *init_client_reconnection_broken2(struct osmo_stream_cli *cli, bool autoreconnect)
+{
+	if (osmo_stream_cli_open2(cli, !autoreconnect) < 0) {
+		LOGCLI(cli, "unable to open client\n");
+		return NULL;
+	}
+
+	return cli;
+}
+
+Variant below are also equivalent to each other.
+static struct osmo_stream_cli *init_client_reconnection_broken1(struct osmo_stream_cli *cli, bool autoreconnect)
+{
+	osmo_stream_cli_set_reconnect_timeout(cli, (!autoreconnect) ? 2 : -1);
+	if (osmo_stream_cli_open2(cli, autoreconnect) < 0) {
+		LOGCLI(cli, "unable to open client\n");
+		return NULL;
+	}
+
+	return cli;
+}
+
+static struct osmo_stream_cli *init_client_reconnection_broken2(struct osmo_stream_cli *cli, bool autoreconnect)
+{
+	osmo_stream_cli_set_reconnect_timeout(cli, (!autoreconnect) ? 2 : -1);
+	if (osmo_stream_cli_open2(cli, !autoreconnect) < 0) {
+		LOGCLI(cli, "unable to open client\n");
+		return NULL;
+	}
+
+	return cli;
+}
+Note: the result differs from normal init_client_reconnection()
+*/
+
+/* Setting reconnection value explicitly as follows is equivalent to normal init_client_reconnection()
+static struct osmo_stream_cli *init_client_reconnection_broken1(struct osmo_stream_cli *cli, bool autoreconnect)
+{
+	osmo_stream_cli_set_reconnect_timeout(cli, autoreconnect ? 2 : -1);
+	if (osmo_stream_cli_open2(cli, autoreconnect) < 0) {
+		LOGCLI(cli, "unable to open client\n");
+		return NULL;
+	}
+
+	return cli;
+}
+
+static struct osmo_stream_cli *init_client_reconnection_broken2(struct osmo_stream_cli *cli, bool autoreconnect)
+{
+	osmo_stream_cli_set_reconnect_timeout(cli, autoreconnect ? 2 : -1);
+	if (osmo_stream_cli_open2(cli, !autoreconnect) < 0) {
+		LOGCLI(cli, "unable to open client\n");
+		return NULL;
+	}
+
+	return cli;
+}
+*/
+
 static struct osmo_stream_cli *make_client(void *ctx, const char *host, unsigned port, bool autoreconnect)
 {
 	struct osmo_stream_cli *cli = osmo_stream_cli_create(ctx);
@@ -141,6 +211,12 @@ static struct osmo_stream_cli *make_client(void *ctx, const char *host, unsigned
 	osmo_stream_cli_set_connect_cb(cli, connect_cb_cli);
 	osmo_stream_cli_set_read_cb(cli, read_cb_cli);
 
+	/* using
+	   return init_client_reconnection_broken1(cli, autoreconnect);
+	   or
+	   return init_client_reconnection_broken2(cli, autoreconnect);
+	   will result in exactly the same output which might or might not be the same as with
+	   init_client_reconnection() - see preceeding notes */
 	return init_client_reconnection(cli, autoreconnect);
 }
 
