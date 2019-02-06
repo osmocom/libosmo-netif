@@ -1,0 +1,51 @@
+Preparing stream server...
+Prepare autoreconnecting stream client...
+=======================================
+Client/Server entering autoreconnecting event loop...
+=======================================
+[NA] Client's connect_cb_cli(): callback triggered <initial>
+[NA] Client's connect_cb_cli(): sent 29 bytes message: 48 69 21 20 66 72 6f 6d 20 63 6f 6e 6e 65 63 74 20 63 61 6c 6c 62 61 63 6b 20 3a 2d 50 
+[NA|OK] Server's read_cb_srv(): callback triggered
+[NA|OK] Server's read_cb_srv(): received 29(29) bytes: 48 69 21 20 66 72 6f 6d 20 63 6f 6e 6e 65 63 74 20 63 61 6c 6c 62 61 63 6b 20 3a 2d 50 
+[NA|OK] Server's read_cb_srv(): sent 11 bytes message: 72 65 61 64 5f 63 62 5f 73 72 76 
+[OK|OK] Server's read_cb_srv(): keep initial client connection
+[NA] Client's read_cb_cli(): callback triggered
+[NA] Client's read_cb_cli(): received 11(11) bytes: 72 65 61 64 5f 63 62 5f 73 72 76 
+[NA] Client's read_cb_cli(): initial read, contacting server
+[OK] Client's read_cb_cli(): sent 29 bytes message: 44 6f 68 2c 20 72 65 73 70 6f 6e 64 69 6e 67 20 74 6f 20 73 65 72 76 65 72 20 3a 2d 44 
+[OK|OK] Server's read_cb_srv(): callback triggered
+[OK|OK] Server's read_cb_srv(): received 29(29) bytes: 44 6f 68 2c 20 72 65 73 70 6f 6e 64 69 6e 67 20 74 6f 20 73 65 72 76 65 72 20 3a 2d 44 
+[OK|OK] Server's read_cb_srv(): sent 11 bytes message: 72 65 61 64 5f 63 62 5f 73 72 76 
+[OK|OK] Server's read_cb_srv(): force client disconnect on subsequent call
+[OK] Client's read_cb_cli(): callback triggered
+[OK] Client's read_cb_cli(): 0-byte read, auto-reconnect will be triggered if enabled
+[OK] Client's connect_cb_cli(): callback triggered <reconnected>
+[OK] Client's connect_cb_cli(): closing connection
+[NA|OK] Server's read_cb_srv(): callback triggered
+[NA|OK] Server's read_cb_srv(): client have already closed connection
+Server requested test termination
+autoreconnecting test complete.
+
+Prepare non-reconnecting stream client...
+=======================================
+Client/Server entering non-reconnecting event loop...
+=======================================
+[NA] Client's connect_cb_cli(): callback triggered <initial>
+[NA] Client's connect_cb_cli(): sent 29 bytes message: 48 69 21 20 66 72 6f 6d 20 63 6f 6e 6e 65 63 74 20 63 61 6c 6c 62 61 63 6b 20 3a 2d 50 
+[NA|OK] Server's read_cb_srv(): callback triggered
+[NA|OK] Server's read_cb_srv(): received 29(29) bytes: 48 69 21 20 66 72 6f 6d 20 63 6f 6e 6e 65 63 74 20 63 61 6c 6c 62 61 63 6b 20 3a 2d 50 
+[NA|OK] Server's read_cb_srv(): sent 11 bytes message: 72 65 61 64 5f 63 62 5f 73 72 76 
+[OK|OK] Server's read_cb_srv(): keep initial client connection
+[NA] Client's read_cb_cli(): callback triggered
+[NA] Client's read_cb_cli(): received 11(11) bytes: 72 65 61 64 5f 63 62 5f 73 72 76 
+[NA] Client's read_cb_cli(): initial read, contacting server
+[OK] Client's read_cb_cli(): sent 29 bytes message: 44 6f 68 2c 20 72 65 73 70 6f 6e 64 69 6e 67 20 74 6f 20 73 65 72 76 65 72 20 3a 2d 44 
+[OK|OK] Server's read_cb_srv(): callback triggered
+[OK|OK] Server's read_cb_srv(): received 29(29) bytes: 44 6f 68 2c 20 72 65 73 70 6f 6e 64 69 6e 67 20 74 6f 20 73 65 72 76 65 72 20 3a 2d 44 
+[OK|OK] Server's read_cb_srv(): sent 11 bytes message: 72 65 61 64 5f 63 62 5f 73 72 76 
+[OK|OK] Server's read_cb_srv(): force client disconnect on subsequent call
+[OK] Client's read_cb_cli(): callback triggered
+[OK] Client's read_cb_cli(): 0-byte read, auto-reconnect will be triggered if enabled
+non-reconnecting test complete.
+
+Stream tests completed

@@ -1,6 +1,13 @@
 AT_INIT
 AT_BANNER([Regression tests.])
 
+AT_SETUP([stream_test])
+AT_KEYWORDS([stream_test])
+cat $abs_srcdir/stream/stream_test.ok > expout
+cat $abs_srcdir/stream/stream_test.err > experr
+AT_CHECK([$abs_top_builddir/tests/stream/stream_test], [0], [expout], [experr])
+AT_CLEANUP
+
 AT_SETUP([osmux_test])
 AT_KEYWORDS([osmux_test])
 cat $abs_srcdir/osmux/osmux_test.ok > expout
