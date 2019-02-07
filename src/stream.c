@@ -172,11 +172,11 @@ void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 	osmo_stream_cli_close(cli);
 
 	if (cli->reconnect_timeout < 0) {
-		LOGSCLI(cli, LOGL_DEBUG, "not reconnecting, disabled.\n");
+		LOGSCLI(cli, LOGL_INFO, "not reconnecting, disabled.\n");
 		return;
 	}
 
-	LOGSCLI(cli, LOGL_DEBUG, "retrying in %d seconds...\n",
+	LOGSCLI(cli, LOGL_INFO, "retrying in %d seconds...\n",
 		cli->reconnect_timeout);
 	osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
 	cli->state = STREAM_CLI_STATE_CONNECTING;
