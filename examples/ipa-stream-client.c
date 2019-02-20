@@ -54,6 +54,13 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
+static int disconnect_cb(struct osmo_stream_cli *conn)
+{
+	LOGP(DIPATEST, LOGL_NOTICE, "disconnected\n");
+
+	return 0;
+}
+
 static int connect_cb(struct osmo_stream_cli *conn)
 {
 	int *__num_msgs = osmo_stream_cli_get_data(conn);
@@ -176,6 +183,7 @@ int main(int argc, char *argv[])
 	osmo_stream_cli_set_addr(conn, "127.0.0.1");
 	osmo_stream_cli_set_port(conn, 10000);
 	osmo_stream_cli_set_connect_cb(conn, connect_cb);
+	osmo_stream_cli_set_disconnect_cb(conn, disconnect_cb);
 	osmo_stream_cli_set_read_cb(conn, read_cb);
 	osmo_stream_cli_set_data(conn, &num_msgs);
 

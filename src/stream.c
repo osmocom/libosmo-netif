@@ -155,6 +155,7 @@ struct osmo_stream_cli {
 	uint16_t			local_port;
 	uint16_t			proto;
 	int (*connect_cb)(struct osmo_stream_cli *srv);
+	int (*disconnect_cb)(struct osmo_stream_cli *srv);
 	int (*read_cb)(struct osmo_stream_cli *srv);
 	int (*write_cb)(struct osmo_stream_cli *srv);
 	void				*data;
@@ -194,8 +195,11 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 	close(cli->ofd.fd);
 	cli->ofd.fd = -1;
 
-	if (cli->state == STREAM_CLI_STATE_CONNECTED)
+	if (cli->state == STREAM_CLI_STATE_CONNECTED) {
 		LOGSCLI(cli, LOGL_DEBUG, "connection closed\n");
+		if (cli->disconnect_cb)
+			cli->disconnect_cb(cli);
+	}
 
 	cli->state = STREAM_CLI_STATE_NONE;
 }
@@ -440,6 +444,15 @@ osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli,
 	int (*connect_cb)(struct osmo_stream_cli *cli))
 {
 	cli->connect_cb = connect_cb;
+}
+
+/*! \brief Set the call-back function called on disconnect of the stream client socket
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] disconnect_cb Call-back function to be called upon disconnect */
+void osmo_stream_cli_set_disconnect_cb(struct osmo_stream_cli *cli,
+				       int (*disconnect_cb)(struct osmo_stream_cli *cli))
+{
+	cli->disconnect_cb = disconnect_cb;
 }
 
 /*! \brief Set the call-back function called to read from the stream client socket

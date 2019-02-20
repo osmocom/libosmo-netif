@@ -43,6 +43,13 @@ static int connect_cb(struct osmo_stream_cli *conn)
 	return 0;
 }
 
+static int disconnect_cb(struct osmo_stream_cli *conn)
+{
+	LOGP(DSTREAMTEST, LOGL_NOTICE, "disconnected: %s\n", osmo_stream_cli_get_sockname(conn));
+
+	return 0;
+}
+
 static int read_cb(struct osmo_stream_cli *conn)
 {
 	int bytes;
@@ -121,6 +128,7 @@ int main(void)
 	osmo_stream_cli_set_addr(conn, "127.0.0.1");
 	osmo_stream_cli_set_port(conn, 10000);
 	osmo_stream_cli_set_connect_cb(conn, connect_cb);
+	osmo_stream_cli_set_disconnect_cb(conn, disconnect_cb);
 	osmo_stream_cli_set_read_cb(conn, read_cb);
 
 	if (osmo_stream_cli_open(conn) < 0) {
