@@ -69,6 +69,9 @@ static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
 	return (uint8_t *)amrh + sizeof(struct amr_hdr);
 }
 
+/* AMR voice frame type identifiers
+ * See also 3GPP TS 26.101, Table 1a: Interpretation of Frame Type, Mode
+ * Indication and Mode Request fields */
 #define AMR_FT_0	0	/* 4.75 */
 #define AMR_FT_1	1	/* 5.15 */
 #define AMR_FT_2	2	/* 5.90 */
