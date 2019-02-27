@@ -83,6 +83,18 @@ static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
 #define AMR_FT_SID	8	/* SID */
 #define AMR_FT_MAX	9
 
+/* AMR voice frame length (in bytes, rounded),
+ * See also RFC 3267, chapter 3.6 */
+#define AMR_FT_0_LEN	12	/* 4.75 */
+#define AMR_FT_1_LEN	13	/* 5.15 */
+#define AMR_FT_2_LEN	15	/* 5.90 */
+#define AMR_FT_3_LEN	17	/* 6.70 */
+#define AMR_FT_4_LEN	19	/* 7.40 */
+#define AMR_FT_5_LEN	20	/* 7.95 */
+#define AMR_FT_6_LEN	26	/* 10.2 */
+#define AMR_FT_7_LEN	31	/* 12.2 */
+#define AMR_FT_SID_LEN	5	/* SID */
+
 int osmo_amr_ft_valid(uint8_t amr_ft);
 size_t osmo_amr_bytes(uint8_t amr_cmr);
 
