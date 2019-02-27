@@ -95,7 +95,15 @@ static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
 #define AMR_FT_7_LEN	31	/* 12.2 */
 #define AMR_FT_SID_LEN	5	/* SID */
 
+/* NOTE: the above constant refers to the length of one AMR speech frame-block,
+ * not counting CMR, TOC. */
+
 int osmo_amr_ft_valid(uint8_t amr_ft);
 size_t osmo_amr_bytes(uint8_t amr_cmr);
+
+bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len);
+int osmo_amr_oa_to_bwe(uint8_t *payload, unsigned int payload_len);
+int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
+		       unsigned int payload_maxlen);
 
 #endif

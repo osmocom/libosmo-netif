@@ -25,3 +25,9 @@ AT_KEYWORDS([jibuf_test])
 cat $abs_srcdir/jibuf/jibuf_test.ok > expout
 AT_CHECK([$abs_top_builddir/tests/jibuf/jibuf_test], [0], [expout], [ignore])
 AT_CLEANUP
+
+AT_SETUP([amr_test])
+AT_KEYWORDS([amr_test])
+cat $abs_srcdir/amr/amr_test.ok > expout
+AT_CHECK([$abs_top_builddir/tests/amr/amr_test], [0], [expout], [ignore])
+AT_CLEANUP

@@ -1,7 +1,7 @@
 AM_CFLAGS = -Wall -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS) -g
 AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS)
 
-check_PROGRAMS = osmux/osmux_test osmux/osmux_test2 stream/stream_test jibuf/jibuf_test
+check_PROGRAMS = osmux/osmux_test osmux/osmux_test2 stream/stream_test jibuf/jibuf_test amr/amr_test
 check_HEADERS =
 
 osmux_osmux_test_SOURCES = osmux/osmux_test.c
@@ -16,6 +16,9 @@ stream_stream_test_LDFLAGS = -no-install
 
 jibuf_jibuf_test_SOURCES = jibuf/jibuf_test.c
 jibuf_jibuf_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
+
+amr_amr_test_SOURCES = amr/amr_test.c
+amr_amr_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
 
 if HAVE_PCAP
 check_PROGRAMS += jibuf/jibuf_tool
@@ -63,7 +66,9 @@ EXTRA_DIST = testsuite.at $(srcdir)/package.m4 $(TESTSUITE)		\
 	     osmux/osmux_test2.ok \
 	     stream/stream_test.ok \
 	     stream/stream_test.err \
-	     jibuf/jibuf_test.ok
+	     jibuf/jibuf_test.ok \
+	     amr/amr_test.ok
+
 
 DISTCLEANFILES = atconfig
 
