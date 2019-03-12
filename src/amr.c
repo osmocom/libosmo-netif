@@ -158,7 +158,7 @@ int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 	if (payload_len + 1 > payload_maxlen)
 		return -1;
 
-	if (payload_len > sizeof(buf))
+	if (payload_len + 1 > sizeof(buf))
 		return -1;
 
 	buf[0] = payload[0] & 0xf0;
