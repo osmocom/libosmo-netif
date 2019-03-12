@@ -165,7 +165,7 @@ int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 	buf[1] = payload[0] << 4;
 	buf[1] |= (payload[1] >> 4) & 0x0c;
 
-	for (i = 0; i < frame_len -1; i++) {
+	for (i = 0; i < frame_len - 1; i++) {
 		buf[i + 2] = payload[i + 1] << 2;
 		buf[i + 2] |= payload[i + 2] >> 6;
 	}
