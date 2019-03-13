@@ -1,5 +1,5 @@
 AM_CFLAGS = -Wall -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS) -g
-AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS)
+AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS) -no-install
 
 check_PROGRAMS = osmux/osmux_test osmux/osmux_test2 stream/stream_test jibuf/jibuf_test amr/amr_test
 check_HEADERS =
@@ -12,7 +12,6 @@ osmux_osmux_test2_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)
 
 stream_stream_test_SOURCES = stream/stream_test.c
 stream_stream_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
-stream_stream_test_LDFLAGS = -no-install
 
 jibuf_jibuf_test_SOURCES = jibuf/jibuf_test.c
 jibuf_jibuf_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
