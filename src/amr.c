@@ -82,7 +82,7 @@ bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len)
 	unsigned int frame_len;
 
 	/* Broken payload? */
-	if (!payload || payload_len < 2)
+	if (!payload || payload_len < sizeof(struct amr_hdr))
 		return false;
 
 	/* In octet aligned mode, padding bits are specified to be
@@ -106,7 +106,7 @@ bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len)
 	if(!osmo_amr_ft_valid(oa_hdr->ft))
 		return false;
 	frame_len = osmo_amr_bytes(oa_hdr->ft);
-	if (frame_len != payload_len - 2)
+	if (frame_len != payload_len - sizeof(struct amr_hdr))
 		return false;
 
 	return true;
@@ -119,7 +119,7 @@ bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len)
 int osmo_amr_oa_to_bwe(uint8_t *payload, unsigned int payload_len)
 {
 	struct amr_hdr *oa_hdr = (struct amr_hdr *)payload;
-	unsigned int frame_len = payload_len - 2;
+	unsigned int frame_len = payload_len - sizeof(struct amr_hdr);
 	unsigned int i;
 
 	/* This implementation is not capable to handle multi-frame
