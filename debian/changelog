@@ -1,3 +1,40 @@
+libosmo-netif (0.5.0) unstable; urgency=medium
+
+  [ Max ]
+  * Stream examples: filter internal logging
+  * Stream examples: log sent/received bytes
+  * Stream examples: fix server's endless loop
+  * Add missing include
+  * Cosmetic: use #pragma once as include guard
+  * Stream client: fix doxygen typo
+  * Stream examples: print accepted client address
+  * Stream client: update logging
+  * Add socket name functions to stream client/server
+  * Stream client: fix disconnection logic
+  * Stream examples: fix typos in error message
+  * Ignore test binaries
+  * Stream client: report reconnection event as INFO
+  * Add stream client/server test
+  * Stream client: add disconnect callback
+  * Deprecate osmo_stream_cli_open2()
+
+  [ Philipp Maier ]
+  * AMR: add spec reference for AMR frame types
+  * AMR: add define constants for AMR payload length
+  * AMR: add functions to convert between bw-efficient and octet-aligned
+  * amr: cosmetic: correct sourcecode formatting
+  * amr: be sure result of osmo_amr_bwe_to_oa() fits into int buf
+  * amr: use sizeof(struct amr_hdr) when working with amr header length
+
+  [ Harald Welte ]
+  * debian: Add BuildDepends on libpcap0.8-dev
+
+  [ Oliver Smith ]
+  * gitignore: add amr_test
+  * tests: AM_LDFLAGS = -noinstall for all tests
+
+ -- Harald Welte <laforge@gnumonks.org>  Fri, 10 May 2019 12:40:03 +0200
+
 libosmo-netif (0.4.0) unstable; urgency=medium
 
   [ Neels Hofmeyr ]
