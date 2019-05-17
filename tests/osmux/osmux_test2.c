@@ -164,7 +164,7 @@ static void test_output_consecutive(void)
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init(&h_output, 0x7000000);
+	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
 	h_output.rtp_seq = (uint16_t)50;
 	h_output.rtp_timestamp = (uint32_t)500;
 	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);
@@ -226,7 +226,7 @@ static void test_output_interleaved(void)
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init(&h_output, 0x7000000);
+	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
 	h_output.rtp_seq = (uint16_t)50;
 	h_output.rtp_timestamp = (uint32_t)500;
 	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);
@@ -263,7 +263,7 @@ static void test_output_2together(void)
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init(&h_output, 0x7000000);
+	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
 	h_output.rtp_seq = (uint16_t)50;
 	h_output.rtp_timestamp = (uint32_t)500;
 	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);
@@ -297,7 +297,7 @@ static void test_output_frame_lost(void)
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init(&h_output, 0x7000000);
+	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
 	h_output.rtp_seq = (uint16_t)50;
 	h_output.rtp_timestamp = (uint32_t)500;
 	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);
@@ -329,7 +329,7 @@ static void test_output_flush(void)
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init(&h_output, 0x7000000);
+	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
 	h_output.rtp_seq = (uint16_t)50;
 	h_output.rtp_timestamp = (uint32_t)500;
 	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);

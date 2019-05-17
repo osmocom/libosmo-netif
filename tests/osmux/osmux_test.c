@@ -269,7 +269,7 @@ int main(void)
 	osmo_init_logging2(tall_ctx, &osmux_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
-	osmux_xfrm_output_init(&h_output, 0x7000000);
+	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
 	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
 
 	/* If the test takes longer than 10 seconds, abort it */

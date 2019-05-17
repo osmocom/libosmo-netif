@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
 	osmo_pcap.timer.cb = osmo_pcap_pkt_timer_cb;
 
 	osmux_xfrm_input_init(&h_input);
-	osmux_xfrm_output_init(&h_output);
+	osmux_xfrm_output_init2(&h_output, 0, 98);
 	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
 
 	/* first run */

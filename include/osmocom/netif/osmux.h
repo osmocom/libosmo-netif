@@ -80,6 +80,7 @@ struct osmux_out_handle {
 	uint16_t rtp_seq;
 	uint32_t rtp_timestamp;
 	uint32_t rtp_ssrc;
+	uint8_t rtp_payload_type;
 	uint8_t osmux_seq_ack; /* Latest received seq num */
 	struct osmo_timer_list	timer;
 	struct llist_head list;
@@ -106,7 +107,8 @@ void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid);
 int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid);
 void osmux_xfrm_input_deliver(struct osmux_in_handle *h);
 
-void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc);
+void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc) OSMO_DEPRECATED("Use osmux_xfrm_output_init2() instead");
+void osmux_xfrm_output_init2(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint8_t rtp_payload_type);
 void osmux_xfrm_output_set_tx_cb(struct osmux_out_handle *h, void (*tx_cb)(struct msgb *msg, void *data), void *data);
 int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h, struct llist_head *list) OSMO_DEPRECATED("Use osmux_xfrm_output_sched() instead");
 int osmux_xfrm_output_sched(struct osmux_out_handle *h, struct osmux_hdr *osmuxh);

@@ -146,7 +146,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
 	rtph->csrc_count = 0;
 	rtph->extension = 0;
 	rtph->version = RTP_VERSION;
-	rtph->payload_type = 98;
+	rtph->payload_type = h->rtp_payload_type;
 	/* ... emulate timestamp and ssrc */
 	rtph->timestamp = htonl(h->rtp_timestamp);
 	rtph->sequence = htons(h->rtp_seq);
@@ -999,14 +999,21 @@ osmux_tx_sched(struct llist_head *list,
 	}
 }
 
-void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
+void osmux_xfrm_output_init2(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint8_t rtp_payload_type)
 {
 	memset(h, 0, sizeof(*h));
 	h->rtp_seq = (uint16_t)random();
 	h->rtp_timestamp = (uint32_t)random();
 	h->rtp_ssrc = rtp_ssrc;
+	h->rtp_payload_type = rtp_payload_type;
 	INIT_LLIST_HEAD(&h->list);
 	osmo_timer_setup(&h->timer, osmux_xfrm_output_trigger, h);
+}
+
+void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
+{
+	/* backward compatibility with old users, where 98 was harcoded in osmux_rebuild_rtp()  */
+	osmux_xfrm_output_init2(h, rtp_ssrc, 98);
 }
 
 #define SNPRINTF_BUFFER_SIZE(ret, remain, offset)	\

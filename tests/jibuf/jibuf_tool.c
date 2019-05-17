@@ -517,7 +517,7 @@ void pcap_test() {
 	osmo_pcap.timer.cb = pcap_pkt_timer_cb;
 
 	if(opt_osmux) {
-		osmux_xfrm_output_init(&pcap_osmux_h, 0);
+		osmux_xfrm_output_init2(&pcap_osmux_h, 0, 98);
 		osmux_xfrm_output_set_tx_cb(&pcap_osmux_h, glue_cb, NULL);
 	}
 
