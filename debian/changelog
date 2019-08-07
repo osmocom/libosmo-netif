@@ -1,3 +1,13 @@
+libosmo-netif (0.6.0) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * osmux: Extend osmux_out_handle and add new API to set rtp payload_type
+
+  [ Oliver Smith ]
+  * contrib/jenkins.sh: run "make maintainer-clean"
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Wed, 07 Aug 2019 20:59:51 +0200
+
 libosmo-netif (0.5.0) unstable; urgency=medium
 
   [ Max ]

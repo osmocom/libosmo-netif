@@ -7,5 +7,3 @@
 # If any interfaces have been added since the last public release: c:r:a + 1.
 # If any interfaces have been removed or changed since the last public release: c:r:0.
 #library	what		description / commit summary line
-libosmo-netif	Add new field to struct osmux_out_handle	Breaks ABI with older versions
-libosmo-netif	Add new API osmux_xfrm_output_init2	Deprecates old osmux_xfrm_output_init
