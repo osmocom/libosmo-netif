@@ -283,7 +283,12 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 			osmo_stream_cli_reconnect(cli);
 			return 0;
 		}
-		ofd->when &= ~BSC_FD_WRITE;
+
+		/* If messages got enqueued while 'connecting', keep WRITE flag
+		   up to dispatch them upon next main loop step */
+		if (llist_empty(&cli->tx_queue))
+			cli->ofd.when &= ~BSC_FD_WRITE;
+
 		LOGSCLI(cli, LOGL_DEBUG, "connection done.\n");
 		cli->state = STREAM_CLI_STATE_CONNECTED;
 		if (cli->proto == IPPROTO_SCTP) {
