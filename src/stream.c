@@ -184,6 +184,14 @@ void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 	cli->state = STREAM_CLI_STATE_CONNECTING;
 }
 
+/*! \brief Check if Osmocom Stream Client is in connected state
+ *  \param[in] cli Osmocom Stream Client
+ */
+bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli)
+{
+	return cli->state == STREAM_CLI_STATE_CONNECTED;
+}
+
 /*! \brief Close an Osmocom Stream Client
  *  \param[in] cli Osmocom Stream Client to be closed
  *  We unregister the socket fd from the osmocom select() loop

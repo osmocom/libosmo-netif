@@ -67,6 +67,7 @@ void osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli, int (*connect_c
 void osmo_stream_cli_set_disconnect_cb(struct osmo_stream_cli *cli, int (*disconnect_cb)(struct osmo_stream_cli *cli));
 void osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli, int (*read_cb)(struct osmo_stream_cli *cli));
 void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli);
+bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli);
 
 struct osmo_stream_cli *osmo_stream_cli_create(void *ctx);
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli);
