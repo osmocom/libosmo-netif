@@ -1,43 +1,43 @@
 
-autoreconnecting test step 11 [client NA, server OK], FD reg 1
+{2.000001} autoreconnecting test step 11 [client NA, server OK], FD reg 1
 
-autoreconnecting test step 10 [client NA, server OK], FD reg 1
+{2.000002} autoreconnecting test step 10 [client NA, server OK], FD reg 1
 
-autoreconnecting test step 9 [client NA, server OK], FD reg 1
+{2.000003} autoreconnecting test step 9 [client NA, server OK], FD reg 1
 
-autoreconnecting test step 8 [client NA, server OK], FD reg 1
+{2.000004} autoreconnecting test step 8 [client NA, server OK], FD reg 1
 
-autoreconnecting test step 7 [client OK, server OK], FD reg 1
+{2.000005} autoreconnecting test step 7 [client OK, server OK], FD reg 1
 
-autoreconnecting test step 6 [client OK, server OK], FD reg 1
+{2.000006} autoreconnecting test step 6 [client OK, server OK], FD reg 1
 
-autoreconnecting test step 5 [client OK, server OK], FD reg 1
+{2.000007} autoreconnecting test step 5 [client OK, server OK], FD reg 1
 [ CONNECTED] osmo_stream_cli_recv(): connection closed with srv
 [      NONE] osmo_stream_cli_reconnect(): retrying in 9 seconds...
 
-autoreconnecting test step 4 [client OK, server OK], FD reg 0
+{11.000008} autoreconnecting test step 4 [client OK, server OK], FD reg 0
 
-autoreconnecting test step 3 [client OK, server OK], FD reg 1
+{11.000009} autoreconnecting test step 3 [client OK, server OK], FD reg 1
 
-autoreconnecting test step 2 [client OK, server OK], FD reg 0
+{11.000010} autoreconnecting test step 2 [client OK, server OK], FD reg 0
 connection closed with srv
 
-autoreconnecting test step 1 [client OK, server NA], FD reg 0
+{11.000011} autoreconnecting test step 1 [client OK, server NA], FD reg 0
 
-non-reconnecting test step 7 [client NA, server OK], FD reg 1
+{11.000012} non-reconnecting test step 7 [client NA, server OK], FD reg 1
 
-non-reconnecting test step 6 [client NA, server OK], FD reg 1
+{11.000013} non-reconnecting test step 6 [client NA, server OK], FD reg 1
 
-non-reconnecting test step 5 [client NA, server OK], FD reg 1
+{11.000014} non-reconnecting test step 5 [client NA, server OK], FD reg 1
 
-non-reconnecting test step 4 [client NA, server OK], FD reg 1
+{11.000015} non-reconnecting test step 4 [client NA, server OK], FD reg 1
 
-non-reconnecting test step 3 [client OK, server OK], FD reg 1
+{11.000016} non-reconnecting test step 3 [client OK, server OK], FD reg 1
 
-non-reconnecting test step 2 [client OK, server OK], FD reg 1
+{11.000017} non-reconnecting test step 2 [client OK, server OK], FD reg 1
 
-non-reconnecting test step 1 [client OK, server OK], FD reg 1
+{11.000018} non-reconnecting test step 1 [client OK, server OK], FD reg 1
 [ CONNECTED] osmo_stream_cli_recv(): connection closed with srv
 [      NONE] osmo_stream_cli_reconnect(): not reconnecting, disabled.
 
-non-reconnecting test step 0 [client OK, server OK], FD reg 0
+{20.000019} non-reconnecting test step 0 [client OK, server OK], FD reg 0
