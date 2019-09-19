@@ -19,8 +19,11 @@
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
 #include <osmocom/core/application.h>
+#include <osmocom/core/timer.h>
 
 #include <osmocom/netif/stream.h>
+
+#define RECONNECT_TIMEOUT_SECS 9
 
 #define DSTREAMTEST 0
 struct log_info_cat osmo_stream_test_cat[] = {
@@ -100,6 +103,7 @@ static int read_cb_cli(struct osmo_stream_cli *cli)
 		/* N. B: normally receiving 0 bytes means that we should close the connection and re-establish it
 		   but to test autoreconnection logic we ignore it in here to let the test run till completion */
 		LOGCLI(cli, "0-byte read, auto-reconnect will be triggered if enabled\n");
+		osmo_gettimeofday_override_add(RECONNECT_TIMEOUT_SECS, 0);
 	}
 
 	if (!cli_data) {
@@ -116,7 +120,7 @@ static int read_cb_cli(struct osmo_stream_cli *cli)
 static struct osmo_stream_cli *init_client_reconnection(struct osmo_stream_cli *cli, bool autoreconnect)
 {
 	/* setting negative timeout ensures that we disable reconnection logic */
-	osmo_stream_cli_set_reconnect_timeout(cli, autoreconnect ? 9 : -1);
+	osmo_stream_cli_set_reconnect_timeout(cli, autoreconnect ? RECONNECT_TIMEOUT_SECS : -1);
 
 	if (osmo_stream_cli_open(cli) < 0) {
 		LOGCLI(cli, "unable to open client\n");
@@ -352,6 +356,9 @@ int main(void)
 	char *host = "127.0.0.11";
 	unsigned port = 1111;
 	void *tall_test = talloc_named_const(NULL, 1, "osmo_stream_test");
+
+	osmo_gettimeofday_override = true;
+
 	msgb_talloc_ctx_init(tall_test, 0);
 	osmo_init_logging2(tall_test, &osmo_stream_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_INFO);
