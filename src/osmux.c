@@ -1093,7 +1093,10 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 			return -1;
 		}
 		osmuxh = (struct osmux_hdr *)((uint8_t *)msg->data + msg_off);
-
+		if (msg_off) {
+			ret = snprintf(buf + offset, remain, ", ");
+			SNPRINTF_BUFFER_SIZE(ret, remain, offset);
+		}
 		ret = osmux_snprintf_header(buf + offset, remain, osmuxh);
 		SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 
