@@ -366,8 +366,7 @@ static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit,
 		if (rtph == NULL)
 			return -1;
 
-		LOGP(DLMUX, LOGL_DEBUG, "Batch is full for RTP "
-					"ssrc=%u\n", rtph->ssrc);
+		LOGP(DLMUX, LOGL_DEBUG, "Batch is full for RTP sssrc=%u\n", rtph->ssrc);
 		return -1;
 	}
 
