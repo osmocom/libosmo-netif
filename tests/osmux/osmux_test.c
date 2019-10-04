@@ -63,6 +63,31 @@ static int mark_pkts;
 static struct timeval last;
 #endif
 
+#define clock_debug(fmt, args...) \
+	do { \
+		struct timespec ts; \
+		struct timeval tv; \
+		osmo_clock_gettime(CLOCK_MONOTONIC, &ts); \
+		osmo_gettimeofday(&tv, NULL); \
+		printf("sys={%lu.%06lu}, mono={%lu.%06lu}: " fmt, \
+			tv.tv_sec, tv.tv_usec, ts.tv_sec, ts.tv_nsec/1000, ##args); \
+	} while(0)
+
+static void clock_override_enable(bool enable)
+{
+	osmo_gettimeofday_override = enable;
+	osmo_clock_override_enable(CLOCK_MONOTONIC, enable);
+}
+
+static void clock_override_add_debug(long sec, long usec, bool dbg)
+{
+	osmo_gettimeofday_override_add(sec, usec);
+	osmo_clock_override_add(CLOCK_MONOTONIC, sec, usec*1000);
+	if (dbg)
+		clock_debug("clock_override_add\n");
+}
+#define clock_override_add(sec, usec) clock_override_add_debug(sec, usec, false)
+
 static void tx_cb(struct msgb *msg, void *data)
 {
 	struct rtp_hdr *rtph = (struct rtp_hdr *)msg->data;
@@ -161,13 +186,13 @@ static void osmux_test_marker(int ccid) {
 			}
 		}
 #if !OSMUX_TEST_USE_TIMING
-		osmo_gettimeofday_override_add(0, PKT_TIME_USEC);
+		clock_override_add(0, PKT_TIME_USEC);
 #endif
 	}
 
 	while (rtp_pkts) {
 #if !OSMUX_TEST_USE_TIMING
-		osmo_gettimeofday_override_add(1, 0);
+		clock_override_add(1, 0);
 #endif
 		osmo_select_main(0);
 	}
@@ -234,7 +259,7 @@ static void osmux_test_loop(int ccid)
 			for (j = 0; j < k-2; j++) {
 				osmo_select_main(0);
 #if !OSMUX_TEST_USE_TIMING
-				osmo_gettimeofday_override_add(0, PKT_TIME_USEC);
+				clock_override_add(0, PKT_TIME_USEC);
 #endif
 			}
 
@@ -260,7 +285,7 @@ int main(void)
 #if !OSMUX_TEST_USE_TIMING
 	/* This test uses fake time to speedup the run, unless we want to manually
 	 * test time specific stuff */
-	osmo_gettimeofday_override = true;
+	clock_override_enable(true);
 #endif
 
 	/* This test doesn't use it, but osmux requires it internally. */
