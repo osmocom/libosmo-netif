@@ -1032,7 +1032,7 @@ static int osmux_snprintf_header(char *buf, size_t size, struct osmux_hdr *osmux
 	ret = snprintf(buf, remain, "OSMUX seq=%03u ccid=%03u "
 				 "ft=%01u ctr=%01u "
 				 "amr_f=%01u amr_q=%01u "
-				 "amr_ft=%02u amr_cmr=%02u ",
+				 "amr_ft=%02u amr_cmr=%02u",
 			osmuxh->seq, osmuxh->circuit_id,
 			osmuxh->ft, osmuxh->ctr,
 			osmuxh->amr_f, osmuxh->amr_q,
@@ -1126,6 +1126,8 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg)
 			}
 
 			if (osmuxh->ft == OSMUX_FT_VOICE_AMR) {
+				ret = snprintf(buf + offset, remain, " ");
+				SNPRINTF_BUFFER_SIZE(ret, remain, offset);
 				ret = osmux_snprintf_payload(buf + offset, remain,
 							     osmux_get_payload(osmuxh),
 							     payload_len);
