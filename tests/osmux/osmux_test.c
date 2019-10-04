@@ -69,7 +69,7 @@ static struct timeval last;
 		struct timeval tv; \
 		osmo_clock_gettime(CLOCK_MONOTONIC, &ts); \
 		osmo_gettimeofday(&tv, NULL); \
-		printf("sys={%lu.%06lu}, mono={%lu.%06lu}: " fmt, \
+		fprintf(stderr, "sys={%lu.%06lu}, mono={%lu.%06lu}: " fmt, \
 			tv.tv_sec, tv.tv_usec, ts.tv_sec, ts.tv_nsec/1000, ##args); \
 	} while(0)
 
@@ -86,7 +86,7 @@ static void clock_override_add_debug(long sec, long usec, bool dbg)
 	if (dbg)
 		clock_debug("clock_override_add\n");
 }
-#define clock_override_add(sec, usec) clock_override_add_debug(sec, usec, false)
+#define clock_override_add(sec, usec) clock_override_add_debug(sec, usec, true)
 
 static void tx_cb(struct msgb *msg, void *data)
 {
@@ -100,7 +100,7 @@ static void tx_cb(struct msgb *msg, void *data)
 	last = now;
 
 	if (diff.tv_usec > 2*17000) {
-		fprintf(stdout, "delivery of reconstructed RTP lagged"
+		clock_debug("delivery of reconstructed RTP lagged"
 			" (diff.tv_usec=%u > 2*17000)\n",
 			(unsigned int)diff.tv_usec);
 		exit(EXIT_FAILURE);
@@ -108,12 +108,12 @@ static void tx_cb(struct msgb *msg, void *data)
 #endif
 
 	osmo_rtp_snprintf(buf, sizeof(buf), msg);
-	fprintf(stderr, "extracted packet: %s\n", buf);
+	clock_debug("extracted packet: %s\n", buf);
 
 	if (memcmp(msg->data + sizeof(struct rtp_hdr),
 		   rtp_pkt + sizeof(struct rtp_hdr),
 		   sizeof(rtp_pkt) - sizeof(struct rtp_hdr)) != 0) {
-		fprintf(stdout, "payload mismatch!\n");
+		clock_debug("payload mismatch!\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -131,7 +131,7 @@ static void osmux_deliver(struct msgb *batch_msg, void *data)
 	char buf[2048];
 
 	osmux_snprintf(buf, sizeof(buf), batch_msg);
-	fprintf(stderr, "OSMUX message (len=%d) %s\n", batch_msg->len, buf);
+	clock_debug("OSMUX message (len=%d): %s\n", batch_msg->len, buf);
 
 	/* For each OSMUX message, extract the RTP messages and put them
 	 * in a list. Then, reconstruct transmission timing.
@@ -149,7 +149,7 @@ struct osmux_in_handle h_input = {
 
 static void sigalarm_handler(int foo)
 {
-	printf("FAIL: test did not run successfully\n");
+	clock_debug("FAIL: test did not run successfully\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -198,7 +198,7 @@ static void osmux_test_marker(int ccid) {
 	}
 
 	if (mark_pkts) {
-		fprintf(stdout, "osmux_test_marker: RTP M bit (marker) mismatch! %d\n", mark_pkts);
+		clock_debug("osmux_test_marker: RTP M bit (marker) mismatch! %d\n", mark_pkts);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -230,7 +230,7 @@ static void osmux_test_loop(int ccid)
 		}
 
 		osmo_rtp_snprintf(buf, sizeof(buf), msg);
-		fprintf(stderr, "adding to ccid=%u %s\n", (i % 2) + ccid, buf);
+		clock_debug("adding to ccid=%u %s\n", (i % 2) + ccid, buf);
 		rtp_pkts++;
 
 		k++;
@@ -268,7 +268,7 @@ static void osmux_test_loop(int ccid)
 	}
 
 	if (mark_pkts) {
-		fprintf(stdout, "osmux_test_loop: RTP M bit (marker) mismatch! %d\n", mark_pkts);
+		clock_debug("osmux_test_loop: RTP M bit (marker) mismatch! %d\n", mark_pkts);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -293,6 +293,9 @@ int main(void)
 	msgb_talloc_ctx_init(tall_ctx, 0);
 	osmo_init_logging2(tall_ctx, &osmux_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
+	log_set_print_filename2(osmo_stderr_target, LOG_FILENAME_NONE);
+	log_set_print_category(osmo_stderr_target, 1);
+	log_set_print_category_hex(osmo_stderr_target, 0);
 
 	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
 	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
@@ -343,6 +346,6 @@ int main(void)
 
 	osmux_xfrm_input_fini(&h_input);
 
-	fprintf(stdout, "OK: Test passed\n");
+	clock_debug("OK: Test passed\n");
 	return EXIT_SUCCESS;
 }
