@@ -647,7 +647,8 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 
 struct osmo_stream_srv_link {
         struct osmo_fd                  ofd;
-        char                            *addr;
+        char                            *addr[OSMO_SOCK_MAX_ADDRS];
+        uint8_t                         addrcnt;
         uint16_t                        port;
         uint16_t                        proto;
         int (*accept_cb)(struct osmo_stream_srv_link *srv, int fd);
@@ -745,8 +746,32 @@ void osmo_stream_srv_link_set_nodelay(struct osmo_stream_srv_link *link, bool no
 void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link,
 				      const char *addr)
 {
-	osmo_talloc_replace_string(link, &link->addr, addr);
+	osmo_stream_srv_link_set_addrs(link, &addr, 1);
+}
+
+/*! \brief Set the local address set to which we bind.
+ *  Useful for protocols allowing bind on more than one address (such as SCTP)
+ *  \param[in] link Stream Server Link to modify
+ *  \param[in] addr Local IP address
+ *  \return negative on error, 0 on success
+ */
+int osmo_stream_srv_link_set_addrs(struct osmo_stream_srv_link *link, const char **addr, size_t addrcnt)
+{
+	int i = 0;
+
+	if (addrcnt > OSMO_SOCK_MAX_ADDRS)
+		return -EINVAL;
+
+	for (; i < addrcnt; i++)
+		osmo_talloc_replace_string(link, &link->addr[i], addr[i]);
+	for (; i < link->addrcnt; i++) {
+			talloc_free(link->addr[i]);
+			link->addr[i] = NULL;
+	}
+
+	link->addrcnt = addrcnt;
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
+	return 0;
 }
 
 /*! \brief Set the local port number to which we bind
@@ -853,8 +878,16 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 
 	link->flags &= ~OSMO_STREAM_SRV_F_RECONF;
 
-	ret = osmo_sock_init(AF_INET, SOCK_STREAM, link->proto,
-			     link->addr, link->port, OSMO_SOCK_F_BIND);
+	switch (link->proto) {
+	case IPPROTO_SCTP:
+		ret = osmo_sock_init2_multiaddr(AF_INET, SOCK_STREAM, link->proto,
+						(const char **)link->addr, link->addrcnt, link->port,
+						NULL, 0, 0, OSMO_SOCK_F_BIND);
+		break;
+	default:
+		ret = osmo_sock_init(AF_INET, SOCK_STREAM, link->proto,
+					link->addr[0], link->port, OSMO_SOCK_F_BIND);
+	}
 	if (ret < 0)
 		return ret;
 

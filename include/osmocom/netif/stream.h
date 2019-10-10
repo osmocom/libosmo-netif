@@ -22,6 +22,7 @@ void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link);
 
 void osmo_stream_srv_link_set_nodelay(struct osmo_stream_srv_link *link, bool nodelay);
 void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link, const char *addr);
+int osmo_stream_srv_link_set_addrs(struct osmo_stream_srv_link *link, const char **addr, size_t addrcnt);
 void osmo_stream_srv_link_set_port(struct osmo_stream_srv_link *link, uint16_t port);
 void osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link, uint16_t proto);
 void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link, int (*accept_cb)(struct osmo_stream_srv_link *link, int fd));
