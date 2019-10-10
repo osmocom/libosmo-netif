@@ -84,7 +84,6 @@ static int sctp_sock_activate_events(int fd)
 	event.sctp_data_io_event = 1;
 	event.sctp_association_event = 1;
 	event.sctp_address_event = 1;
-	event.sctp_address_event = 1;
 	event.sctp_send_failure_event = 1;
 	event.sctp_peer_error_event = 1;
 	event.sctp_shutdown_event = 1;
