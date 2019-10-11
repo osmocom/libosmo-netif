@@ -55,9 +55,11 @@ struct osmo_stream_cli;
 
 void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay);
 void osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr);
+int osmo_stream_cli_set_addrs(struct osmo_stream_cli *cli, const char **addr, size_t addrcnt);
 void osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port);
 void osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto);
 void osmo_stream_cli_set_local_addr(struct osmo_stream_cli *cli, const char *addr);
+int osmo_stream_cli_set_local_addrs(struct osmo_stream_cli *cli, const char **addr, size_t addrcnt);
 void osmo_stream_cli_set_local_port(struct osmo_stream_cli *cli, uint16_t port);
 void osmo_stream_cli_set_data(struct osmo_stream_cli *cli, void *data);
 void osmo_stream_cli_set_reconnect_timeout(struct osmo_stream_cli *cli, int timeout);

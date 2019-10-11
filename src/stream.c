@@ -148,9 +148,11 @@ struct osmo_stream_cli {
 	struct llist_head		tx_queue;
 	struct osmo_timer_list		timer;
 	enum osmo_stream_cli_state	state;
-	char				*addr;
+	char				*addr[OSMO_SOCK_MAX_ADDRS];
+	uint8_t                         addrcnt;
 	uint16_t			port;
-	char				*local_addr;
+	char				*local_addr[OSMO_SOCK_MAX_ADDRS];
+	uint8_t                         local_addrcnt;
 	uint16_t			local_port;
 	uint16_t			proto;
 	int (*connect_cb)(struct osmo_stream_cli *srv);
@@ -354,8 +356,32 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 void
 osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr)
 {
-	osmo_talloc_replace_string(cli, &cli->addr, addr);
+	osmo_stream_cli_set_addrs(cli, &addr, 1);
+}
+
+/*! \brief Set the remote address set to which we connect.
+ *  Useful for protocols allowing connecting to more than one address (such as SCTP)
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] addr Remote IP address set
+ *  \return negative on error, 0 on success
+ */
+int osmo_stream_cli_set_addrs(struct osmo_stream_cli *cli, const char **addr, size_t addrcnt)
+{
+	int i = 0;
+
+	if (addrcnt > OSMO_SOCK_MAX_ADDRS)
+		return -EINVAL;
+
+	for (; i < addrcnt; i++)
+		osmo_talloc_replace_string(cli, &cli->addr[i], addr[i]);
+	for (; i < cli->addrcnt; i++) {
+			talloc_free(cli->addr[i]);
+			cli->addr[i] = NULL;
+	}
+
+	cli->addrcnt = addrcnt;
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+	return 0;
 }
 
 /*! \brief Set the remote port number to which we connect
@@ -387,8 +413,32 @@ osmo_stream_cli_set_local_port(struct osmo_stream_cli *cli, uint16_t port)
 void
 osmo_stream_cli_set_local_addr(struct osmo_stream_cli *cli, const char *addr)
 {
-	osmo_talloc_replace_string(cli, &cli->local_addr, addr);
+	osmo_stream_cli_set_local_addrs(cli, &addr, 1);
+}
+
+/*! \brief Set the local address set to which we connect.
+ *  Useful for protocols allowing bind to more than one address (such as SCTP)
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] addr Local IP address set
+ *  \return negative on error, 0 on success
+ */
+int osmo_stream_cli_set_local_addrs(struct osmo_stream_cli *cli, const char **addr, size_t addrcnt)
+{
+	int i = 0;
+
+	if (addrcnt > OSMO_SOCK_MAX_ADDRS)
+		return -EINVAL;
+
+	for (; i < addrcnt; i++)
+		osmo_talloc_replace_string(cli, &cli->local_addr[i], addr[i]);
+	for (; i < cli->local_addrcnt; i++) {
+			talloc_free(cli->local_addr[i]);
+			cli->local_addr[i] = NULL;
+	}
+
+	cli->local_addrcnt = addrcnt;
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+	return 0;
 }
 
 /*! \brief Set the protocol for the stream client socket
@@ -503,10 +553,20 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 
 	cli->flags &= ~OSMO_STREAM_CLI_F_RECONF;
 
-	ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
-			      cli->local_addr, cli->local_port,
-			      cli->addr, cli->port,
-			      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+	switch (cli->proto) {
+	case IPPROTO_SCTP:
+		ret = osmo_sock_init2_multiaddr(AF_INET, SOCK_STREAM, cli->proto,
+						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
+						(const char **)cli->addr, cli->addrcnt, cli->port,
+						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+		break;
+	default:
+		ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
+				      cli->local_addr[0], cli->local_port,
+				      cli->addr[0], cli->port,
+				      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+	}
+
 	if (ret < 0) {
 		if (reconnect)
 			osmo_stream_cli_reconnect(cli);
@@ -561,10 +621,21 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 
 	cli->flags &= ~OSMO_STREAM_CLI_F_RECONF;
 
-	ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
-			      cli->local_addr, cli->local_port,
-			      cli->addr, cli->port,
-			      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+
+	switch (cli->proto) {
+	case IPPROTO_SCTP:
+		ret = osmo_sock_init2_multiaddr(AF_INET, SOCK_STREAM, cli->proto,
+						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
+						(const char **)cli->addr, cli->addrcnt, cli->port,
+						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+		break;
+	default:
+		ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
+				      cli->local_addr[0], cli->local_port,
+				      cli->addr[0], cli->port,
+				      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+	}
+
 	if (ret < 0) {
 		osmo_stream_cli_reconnect(cli);
 		return ret;
