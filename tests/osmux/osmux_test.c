@@ -299,6 +299,9 @@ int main(void)
 
 	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
 	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
+	/* These fields are set using random() */
+	h_output.rtp_seq = 9158;
+	h_output.rtp_timestamp = 1681692777;
 
 	/* If the test takes longer than 10 seconds, abort it */
 	alarm(10);
