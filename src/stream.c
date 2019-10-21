@@ -586,7 +586,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	return 0;
 
 error_close_socket:
-	close(ret);
+	close(cli->ofd.fd);
 	cli->ofd.fd = -1;
 	return -EIO;
 }
@@ -654,7 +654,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 	return 0;
 
 error_close_socket:
-	close(ret);
+	close(cli->ofd.fd);
 	cli->ofd.fd = -1;
 	return -EIO;
 }
