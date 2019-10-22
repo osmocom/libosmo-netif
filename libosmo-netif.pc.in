@@ -7,4 +7,5 @@ Name: Osmocom network interface library
 Description: C Utility Library
 Version: @VERSION@
 Libs: -L${libdir} -losmonetif
+Libs.private: @LIBSCTP_LIBS@
 Cflags: -I${includedir}/
