@@ -177,6 +177,7 @@ int main(int argc, char *argv[])
 	tall_test = talloc_named_const(NULL, 1, "osmux_pcap_test");
 	osmo_init_logging(&osmux_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
+	log_set_use_color(osmo_stderr_target, 0);
 
 	osmo_pcap_init();
 
