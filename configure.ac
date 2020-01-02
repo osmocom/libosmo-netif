@@ -82,8 +82,8 @@ AC_SUBST(SYMBOL_VISIBILITY)
 dnl Generate the output
 AM_CONFIG_HEADER(config.h)
 
-PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.0.0)
-PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.0.0)
+PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.3.0)
+PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.3.0)
 dnl FIXME: We depend on libosmoabis by now until we can move LAPD code here
 PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.6.0)
 

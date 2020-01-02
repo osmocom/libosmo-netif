@@ -7,4 +7,3 @@
 # If any interfaces have been added since the last public release: c:r:a + 1.
 # If any interfaces have been removed or changed since the last public release: c:r:0.
 #library	what		description / commit summary line
-libosmo-netif   stream          osmo_sock_init2_multiaddr() is used, requires libosmocore > 1.2.0 (to be released)

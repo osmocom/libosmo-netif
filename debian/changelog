@@ -1,3 +1,27 @@
+libosmo-netif (0.7.0) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * stream: Introduce API osmo_stream_cli_is_connected
+  * stream: Fix scheduling of queued messages during connecting state
+  * stream_test: Use fake time
+  * stream_test: Log fake time
+  * osmux: osmux_snprintf(): Append comma between osmux frames in msg
+  * osmux: osmux_snprintf(): Remove dangling whitespace at the end of dummy frames
+  * tests: osmux_test: Use fake time also for monotonic clock
+  * osmux: squash LOGP message to one line
+  * tests: osmux_test: Provide More accurate logging expectancies
+  * stream.c: remove duplicated line setting variable
+  * stream: osmo_stream_srv_link: Support setting multiple addr
+  * stream: osmo_stream_cli: Support setting multiple addr
+  * tests: osmux_test: Hardcode h_output values set by random()
+  * stream: Fix fd param passed to close() in error conditon
+  * libosmo-netif.pc.in: Append -lsctp to Libs.private
+
+  [ Neels Hofmeyr ]
+  * osmux_test: don't use color logging
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Thu, 02 Jan 2020 21:01:22 +0100
+
 libosmo-netif (0.6.0) unstable; urgency=medium
 
   [ Pau Espin Pedrol ]
