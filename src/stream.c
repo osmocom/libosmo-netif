@@ -239,8 +239,6 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	struct llist_head *lh;
 	int ret;
 
-	LOGSCLI(cli, LOGL_DEBUG, "sending data\n");
-
 	if (llist_empty(&cli->tx_queue)) {
 		cli->ofd.when &= ~BSC_FD_WRITE;
 		return 0;
@@ -254,6 +252,8 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 		return 0;
 	}
 
+	LOGSCLI(cli, LOGL_DEBUG, "sending %u bytes of data\n", msgb_length(msg));
+
 	switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
@@ -266,14 +266,14 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 #endif
 	case IPPROTO_TCP:
 	default:
-		ret = send(cli->ofd.fd, msg->data, msg->len, 0);
+		ret = send(cli->ofd.fd, msg->data, msgb_length(msg), 0);
 		break;
 	}
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ENOTCONN) {
 			osmo_stream_cli_reconnect(cli);
 		}
-		LOGSCLI(cli, LOGL_ERROR, "error to send\n");
+		LOGSCLI(cli, LOGL_ERROR, "error %d to send\n", ret);
 	}
 	msgb_free(msg);
 	return 0;
