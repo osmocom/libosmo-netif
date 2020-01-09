@@ -106,8 +106,6 @@ AS_IF([test "x$ENABLE_LIBSCTP" = "xyes"], [
 	LIBS=$old_LIBS
 ])
 
-AC_CHECK_HEADERS(dahdi/user.h,,AC_MSG_WARN(DAHDI input driver will not be built))
-
 found_pcap=yes
 AC_CHECK_HEADERS(pcap.h,,found_pcap=no)
 AM_CONDITIONAL(HAVE_PCAP, test "$found_pcap" = yes)
