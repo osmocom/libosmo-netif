@@ -87,16 +87,24 @@ PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.3.0)
 dnl FIXME: We depend on libosmoabis by now until we can move LAPD code here
 PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.6.0)
 
-old_LIBS=$LIBS
-AC_SEARCH_LIBS([sctp_send], [sctp], [
-	AC_DEFINE(HAVE_LIBSCTP, 1, [Define 1 to enable SCTP support])
-	AC_SUBST(HAVE_LIBSCTP, [1])
-	if test -n "$ac_lib"; then
-		AC_SUBST(LIBSCTP_LIBS, [-l$ac_lib])
-	fi
-	], [
-	AC_MSG_ERROR([sctp_send not found in searched libs])])
-LIBS=$old_LIBS
+AC_ARG_ENABLE([libsctp], [AS_HELP_STRING([--disable-libsctp], [Do not enable socket multiaddr APIs requiring libsctp])],
+	[ENABLE_LIBSCTP=$enableval], [ENABLE_LIBSCTP="yes"])
+AM_CONDITIONAL(ENABLE_LIBSCTP, test x"$ENABLE_LIBSCTP" = x"yes")
+AS_IF([test "x$ENABLE_LIBSCTP" = "xyes"], [
+	AC_CHECK_HEADERS(netinet/sctp.h,,AC_MSG_ERROR(netinet/sctp.h not found))
+	old_LIBS=$LIBS
+	AC_CHECK_LIB(osmocore, osmo_sock_init2_multiaddr,, AC_MSG_ERROR(libosmocore built without libsctp support), $LIBOSMOCORE_LIBS)
+	LIBS=$old_LIBS
+	AC_SEARCH_LIBS([sctp_send], [sctp], [
+		AC_DEFINE(HAVE_LIBSCTP, 1, [Define 1 to enable SCTP support])
+		AC_SUBST(HAVE_LIBSCTP, [1])
+		if test -n "$ac_lib"; then
+			AC_SUBST(LIBSCTP_LIBS, [-l$ac_lib])
+		fi
+		], [
+		AC_MSG_ERROR([sctp_send not found in searched libs])])
+	LIBS=$old_LIBS
+])
 
 AC_CHECK_HEADERS(dahdi/user.h,,AC_MSG_WARN(DAHDI input driver will not be built))
 

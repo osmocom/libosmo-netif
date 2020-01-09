@@ -106,9 +106,11 @@ static int setsockopt_nodelay(int fd, int proto, int on)
 	int rc;
 
 	switch (proto) {
+#ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
 		rc = setsockopt(fd, IPPROTO_SCTP, SCTP_NODELAY, &on, sizeof(on));
 		break;
+#endif
 	case IPPROTO_TCP:
 		rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
 		break;
@@ -143,15 +145,21 @@ static const struct value_string stream_cli_state_names[] = {
 #define OSMO_STREAM_CLI_F_RECONF	(1 << 0)
 #define OSMO_STREAM_CLI_F_NODELAY	(1 << 1)
 
+#ifdef HAVE_LIBSCTP
+#define OSMO_STREAM_MAX_ADDRS OSMO_SOCK_MAX_ADDRS
+#else
+#define OSMO_STREAM_MAX_ADDRS 1
+#endif
+
 struct osmo_stream_cli {
 	struct osmo_fd			ofd;
 	struct llist_head		tx_queue;
 	struct osmo_timer_list		timer;
 	enum osmo_stream_cli_state	state;
-	char				*addr[OSMO_SOCK_MAX_ADDRS];
+	char				*addr[OSMO_STREAM_MAX_ADDRS];
 	uint8_t                         addrcnt;
 	uint16_t			port;
-	char				*local_addr[OSMO_SOCK_MAX_ADDRS];
+	char				*local_addr[OSMO_STREAM_MAX_ADDRS];
 	uint8_t                         local_addrcnt;
 	uint16_t			local_port;
 	uint16_t			proto;
@@ -369,7 +377,7 @@ int osmo_stream_cli_set_addrs(struct osmo_stream_cli *cli, const char **addr, si
 {
 	int i = 0;
 
-	if (addrcnt > OSMO_SOCK_MAX_ADDRS)
+	if (addrcnt > OSMO_STREAM_MAX_ADDRS)
 		return -EINVAL;
 
 	for (; i < addrcnt; i++)
@@ -426,7 +434,7 @@ int osmo_stream_cli_set_local_addrs(struct osmo_stream_cli *cli, const char **ad
 {
 	int i = 0;
 
-	if (addrcnt > OSMO_SOCK_MAX_ADDRS)
+	if (addrcnt > OSMO_STREAM_MAX_ADDRS)
 		return -EINVAL;
 
 	for (; i < addrcnt; i++)
@@ -554,12 +562,14 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	cli->flags &= ~OSMO_STREAM_CLI_F_RECONF;
 
 	switch (cli->proto) {
+#ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
 		ret = osmo_sock_init2_multiaddr(AF_INET, SOCK_STREAM, cli->proto,
 						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 						(const char **)cli->addr, cli->addrcnt, cli->port,
 						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
 		break;
+#endif
 	default:
 		ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
 				      cli->local_addr[0], cli->local_port,
@@ -623,12 +633,14 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 
 
 	switch (cli->proto) {
+#ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
 		ret = osmo_sock_init2_multiaddr(AF_INET, SOCK_STREAM, cli->proto,
 						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 						(const char **)cli->addr, cli->addrcnt, cli->port,
 						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
 		break;
+#endif
 	default:
 		ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
 				      cli->local_addr[0], cli->local_port,
@@ -718,7 +730,7 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 
 struct osmo_stream_srv_link {
         struct osmo_fd                  ofd;
-        char                            *addr[OSMO_SOCK_MAX_ADDRS];
+        char                            *addr[OSMO_STREAM_MAX_ADDRS];
         uint8_t                         addrcnt;
         uint16_t                        port;
         uint16_t                        proto;
@@ -830,7 +842,7 @@ int osmo_stream_srv_link_set_addrs(struct osmo_stream_srv_link *link, const char
 {
 	int i = 0;
 
-	if (addrcnt > OSMO_SOCK_MAX_ADDRS)
+	if (addrcnt > OSMO_STREAM_MAX_ADDRS)
 		return -EINVAL;
 
 	for (; i < addrcnt; i++)
@@ -950,11 +962,13 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 	link->flags &= ~OSMO_STREAM_SRV_F_RECONF;
 
 	switch (link->proto) {
+#ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
 		ret = osmo_sock_init2_multiaddr(AF_INET, SOCK_STREAM, link->proto,
 						(const char **)link->addr, link->addrcnt, link->port,
 						NULL, 0, 0, OSMO_SOCK_F_BIND);
 		break;
+#endif
 	default:
 		ret = osmo_sock_init(AF_INET, SOCK_STREAM, link->proto,
 					link->addr[0], link->port, OSMO_SOCK_F_BIND);
