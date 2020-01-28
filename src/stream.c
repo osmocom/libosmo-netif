@@ -247,7 +247,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	llist_del(lh);
 	msg = llist_entry(lh, struct msgb, list);
 
-	if (cli->state == STREAM_CLI_STATE_CONNECTING) {
+	if (!osmo_stream_cli_is_connected(cli)) {
 		LOGSCLI(cli, LOGL_ERROR, "not connected, dropping data!\n");
 		return 0;
 	}
