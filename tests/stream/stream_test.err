@@ -12,8 +12,8 @@
 {2.000006} autoreconnecting test step 6 [client OK, server OK], FD reg 1
 
 {2.000007} autoreconnecting test step 5 [client OK, server OK], FD reg 1
-[ CONNECTED] osmo_stream_cli_recv(): connection closed with srv
-[      NONE] osmo_stream_cli_reconnect(): retrying in 9 seconds...
+[CONNECTED] osmo_stream_cli_recv(): connection closed with srv
+[WAIT_RECONNECT] osmo_stream_cli_reconnect(): retrying in 9 seconds...
 
 {11.000008} autoreconnecting test step 4 [client OK, server OK], FD reg 0
 
@@ -37,7 +37,7 @@ connection closed with srv
 {11.000017} non-reconnecting test step 2 [client OK, server OK], FD reg 1
 
 {11.000018} non-reconnecting test step 1 [client OK, server OK], FD reg 1
-[ CONNECTED] osmo_stream_cli_recv(): connection closed with srv
-[      NONE] osmo_stream_cli_reconnect(): not reconnecting, disabled.
+[CONNECTED] osmo_stream_cli_recv(): connection closed with srv
+[NONE] osmo_stream_cli_reconnect(): not reconnecting, disabled.
 
 {20.000019} non-reconnecting test step 0 [client OK, server OK], FD reg 0

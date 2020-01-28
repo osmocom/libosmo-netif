@@ -129,16 +129,18 @@ static int setsockopt_nodelay(int fd, int proto, int on)
  */
 
 enum osmo_stream_cli_state {
-        STREAM_CLI_STATE_NONE         = 0, /* No fd associated, may have timer active to try to connect again */
-        STREAM_CLI_STATE_CONNECTING   = 1, /* Fd associated, but connection not yet confirmed by peer or lower layers */
-        STREAM_CLI_STATE_CONNECTED    = 2, /* Fd associated and connection is established */
+        STREAM_CLI_STATE_NONE, 		 /* No fd associated, no timer active */
+        STREAM_CLI_STATE_WAIT_RECONNECT, /* No fd associated, has timer active to try to connect again */
+        STREAM_CLI_STATE_CONNECTING,	 /* Fd associated, but connection not yet confirmed by peer or lower layers */
+        STREAM_CLI_STATE_CONNECTED,	 /* Fd associated and connection is established */
         STREAM_CLI_STATE_MAX
 };
 
 static const struct value_string stream_cli_state_names[] = {
-	{ STREAM_CLI_STATE_NONE,       "      NONE" },
-	{ STREAM_CLI_STATE_CONNECTING, "CONNECTING" },
-	{ STREAM_CLI_STATE_CONNECTED,  " CONNECTED" },
+	{ STREAM_CLI_STATE_NONE,           "NONE" },
+	{ STREAM_CLI_STATE_WAIT_RECONNECT, "WAIT_RECONNECT" },
+	{ STREAM_CLI_STATE_CONNECTING,     "CONNECTING" },
+	{ STREAM_CLI_STATE_CONNECTED,      "CONNECTED" },
 	{ 0, NULL }
 };
 
@@ -187,6 +189,7 @@ void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 		return;
 	}
 
+	cli->state = STREAM_CLI_STATE_WAIT_RECONNECT;
 	LOGSCLI(cli, LOGL_INFO, "retrying in %d seconds...\n",
 		cli->reconnect_timeout);
 	osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
@@ -669,6 +672,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 	return 0;
 
 error_close_socket:
+	cli->state = STREAM_CLI_STATE_NONE;
 	close(cli->ofd.fd);
 	cli->ofd.fd = -1;
 	return -EIO;
