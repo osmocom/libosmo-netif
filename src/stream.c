@@ -129,9 +129,9 @@ static int setsockopt_nodelay(int fd, int proto, int on)
  */
 
 enum osmo_stream_cli_state {
-        STREAM_CLI_STATE_NONE         = 0,
-        STREAM_CLI_STATE_CONNECTING   = 1,
-        STREAM_CLI_STATE_CONNECTED    = 2,
+        STREAM_CLI_STATE_NONE         = 0, /* No fd associated, may have timer active to try to connect again */
+        STREAM_CLI_STATE_CONNECTING   = 1, /* Fd associated, but connection not yet confirmed by peer or lower layers */
+        STREAM_CLI_STATE_CONNECTED    = 2, /* Fd associated and connection is established */
         STREAM_CLI_STATE_MAX
 };
 
@@ -190,7 +190,6 @@ void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 	LOGSCLI(cli, LOGL_INFO, "retrying in %d seconds...\n",
 		cli->reconnect_timeout);
 	osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
-	cli->state = STREAM_CLI_STATE_CONNECTING;
 }
 
 /*! \brief Check if Osmocom Stream Client is in connected state
@@ -324,7 +323,8 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 		}
 		break;
 	default:
-		break;
+		/* Only CONNECTING and CONNECTED states are expected, since they are the only states where FD exists: */
+		osmo_panic("osmo_stream_cli_fd_cb called with unexpected state %d\n", cli->state);
 	}
         return 0;
 }
@@ -345,11 +345,10 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 
 	cli->proto = IPPROTO_TCP;
 	cli->ofd.fd = -1;
-	cli->ofd.when |= BSC_FD_READ | BSC_FD_WRITE;
 	cli->ofd.priv_nr = 0;	/* XXX */
 	cli->ofd.cb = osmo_stream_cli_fd_cb;
 	cli->ofd.data = cli;
-	cli->state = STREAM_CLI_STATE_CONNECTING;
+	cli->state = STREAM_CLI_STATE_NONE;
 	osmo_timer_setup(&cli->timer, cli_timer_cb, cli);
 	cli->reconnect_timeout = 5;	/* default is 5 seconds. */
 	INIT_LLIST_HEAD(&cli->tx_queue);
@@ -583,6 +582,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 		return ret;
 	}
 	cli->ofd.fd = ret;
+	cli->ofd.when = BSC_FD_READ | BSC_FD_WRITE;
 
 	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
 		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
@@ -593,6 +593,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	if (osmo_fd_register(&cli->ofd) < 0)
 		goto error_close_socket;
 
+	cli->state = STREAM_CLI_STATE_CONNECTING;
 	return 0;
 
 error_close_socket:
@@ -653,6 +654,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		return ret;
 	}
 	cli->ofd.fd = ret;
+	cli->ofd.when = BSC_FD_READ | BSC_FD_WRITE;
 
 	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
 		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
@@ -663,6 +665,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 	if (osmo_fd_register(&cli->ofd) < 0)
 		goto error_close_socket;
 
+	cli->state = STREAM_CLI_STATE_CONNECTING;
 	return 0;
 
 error_close_socket:
@@ -676,15 +679,7 @@ static void cli_timer_cb(void *data)
 	struct osmo_stream_cli *cli = data;
 
 	LOGSCLI(cli, LOGL_DEBUG, "reconnecting.\n");
-
-	switch(cli->state) {
-	case STREAM_CLI_STATE_CONNECTING:
-		cli->ofd.when |= BSC_FD_READ | BSC_FD_WRITE;
-		osmo_stream_cli_open(cli);
-	        break;
-	default:
-		break;
-	}
+	osmo_stream_cli_open(cli);
 }
 
 /*! \brief Enqueue data to be sent via an Osmocom stream client
