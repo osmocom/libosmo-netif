@@ -129,7 +129,7 @@ static int setsockopt_nodelay(int fd, int proto, int on)
  */
 
 enum osmo_stream_cli_state {
-        STREAM_CLI_STATE_NONE, 		 /* No fd associated, no timer active */
+        STREAM_CLI_STATE_CLOSED,	 /* No fd associated, no timer active */
         STREAM_CLI_STATE_WAIT_RECONNECT, /* No fd associated, has timer active to try to connect again */
         STREAM_CLI_STATE_CONNECTING,	 /* Fd associated, but connection not yet confirmed by peer or lower layers */
         STREAM_CLI_STATE_CONNECTED,	 /* Fd associated and connection is established */
@@ -137,7 +137,7 @@ enum osmo_stream_cli_state {
 };
 
 static const struct value_string stream_cli_state_names[] = {
-	{ STREAM_CLI_STATE_NONE,           "NONE" },
+	{ STREAM_CLI_STATE_CLOSED,         "CLOSED" },
 	{ STREAM_CLI_STATE_WAIT_RECONNECT, "WAIT_RECONNECT" },
 	{ STREAM_CLI_STATE_CONNECTING,     "CONNECTING" },
 	{ STREAM_CLI_STATE_CONNECTED,      "CONNECTED" },
@@ -221,7 +221,7 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 			cli->disconnect_cb(cli);
 	}
 
-	cli->state = STREAM_CLI_STATE_NONE;
+	cli->state = STREAM_CLI_STATE_CLOSED;
 }
 
 static void osmo_stream_cli_read(struct osmo_stream_cli *cli)
@@ -351,7 +351,7 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 	cli->ofd.priv_nr = 0;	/* XXX */
 	cli->ofd.cb = osmo_stream_cli_fd_cb;
 	cli->ofd.data = cli;
-	cli->state = STREAM_CLI_STATE_NONE;
+	cli->state = STREAM_CLI_STATE_CLOSED;
 	osmo_timer_setup(&cli->timer, cli_timer_cb, cli);
 	cli->reconnect_timeout = 5;	/* default is 5 seconds. */
 	INIT_LLIST_HEAD(&cli->tx_queue);
@@ -672,7 +672,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 	return 0;
 
 error_close_socket:
-	cli->state = STREAM_CLI_STATE_NONE;
+	cli->state = STREAM_CLI_STATE_CLOSED;
 	close(cli->ofd.fd);
 	cli->ofd.fd = -1;
 	return -EIO;

@@ -38,6 +38,6 @@ connection closed with srv
 
 {11.000018} non-reconnecting test step 1 [client OK, server OK], FD reg 1
 [CONNECTED] osmo_stream_cli_recv(): connection closed with srv
-[NONE] osmo_stream_cli_reconnect(): not reconnecting, disabled.
+[CLOSED] osmo_stream_cli_reconnect(): not reconnecting, disabled.
 
 {20.000019} non-reconnecting test step 0 [client OK, server OK], FD reg 0
