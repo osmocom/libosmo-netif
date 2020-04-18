@@ -15,8 +15,7 @@ Build-Depends: debhelper (>= 9),
                libosmo-abis-dev (>= 0.6.0),
                pkg-config,
                libpcap0.8-dev,
-               libsctp-dev,
-               libortp-dev
+               libsctp-dev
 Standards-Version: 3.9.6
 Vcs-Browser: http://git.osmocom.org/libosmo-netif/
 Vcs-Git: git://git.osmocom.org/libosmo-netif.git
