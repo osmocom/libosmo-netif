@@ -1,3 +1,9 @@
+libosmo-netif (0.7.0-fw.1) unstable; urgency=medium
+
+  * relocated to master:a45acd81be1f6
+
+ -- Kirill Zakharenko <kirill.zakharenko@fairwaves.co>  Fri, 1 May 2020 18:23:29 +0300
+
 libosmo-netif (0.7.0) unstable; urgency=medium
 
   [ Pau Espin Pedrol ]
