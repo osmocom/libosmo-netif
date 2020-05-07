@@ -92,6 +92,22 @@ static int sctp_sock_activate_events(int fd)
 	rc = setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS,
 			&event, sizeof(event));
 
+	/*
+	 * Attempt to work around kernel ABI breakage
+	 *
+	 * In kernel commit b6e6b5f1da7e8d092f86a4351802c27c0170c5a5, the
+	 * struct sctp_event_subscribe had a u8 field added to it at the end, thus
+	 * breaking ABI.
+	 * See https://marc.info/?l=linux-sctp&m=158729301516157&w=2 for discussion.
+	 *
+	 * We attempt to work around the issue where the kernel header are new
+	 * and running kernel is old, by forcing the size of the struct to 13 which
+	 * is the "old" size
+	 */
+	if ((rc < 0) && (sizeof(event) != 13))
+		rc = setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS,
+				&event, 13);
+
 	if (rc < 0)
 		LOGP(DLINP, LOGL_ERROR, "couldn't activate SCTP events "
 		     "on FD %u\n", fd);
