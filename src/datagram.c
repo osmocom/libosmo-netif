@@ -95,7 +95,7 @@ static int osmo_dgram_tx_write(struct osmo_dgram_tx *conn)
 	LOGP(DLINP, LOGL_DEBUG, "sending data\n");
 
 	if (llist_empty(&conn->tx_queue)) {
-		conn->ofd.when &= ~BSC_FD_WRITE;
+		conn->ofd.when &= ~OSMO_FD_WRITE;
 		return 0;
 	}
 	lh = conn->tx_queue.next;
@@ -115,7 +115,7 @@ static int osmo_dgram_tx_fd_cb(struct osmo_fd *ofd, unsigned int what)
 {
 	struct osmo_dgram_tx *conn = ofd->data;
 
-	if (what & BSC_FD_WRITE) {
+	if (what & OSMO_FD_WRITE) {
 		LOGP(DLINP, LOGL_DEBUG, "write\n");
 		osmo_dgram_tx_write(conn);
 	}
@@ -136,7 +136,7 @@ struct osmo_dgram_tx *osmo_dgram_tx_create(void *ctx)
 		return NULL;
 
 	conn->ofd.fd = -1;
-	conn->ofd.when |= BSC_FD_READ;
+	conn->ofd.when |= OSMO_FD_READ;
 	conn->ofd.priv_nr = 0;	/* XXX */
 	conn->ofd.cb = osmo_dgram_tx_fd_cb;
 	conn->ofd.data = conn;
@@ -240,7 +240,7 @@ void osmo_dgram_tx_send(struct osmo_dgram_tx *conn,
 				 struct msgb *msg)
 {
 	msgb_enqueue(&conn->tx_queue, msg);
-	conn->ofd.when |= BSC_FD_WRITE;
+	conn->ofd.when |= OSMO_FD_WRITE;
 }
 
 /*
@@ -290,7 +290,7 @@ static int osmo_dgram_rx_cb(struct osmo_fd *ofd, unsigned int what)
 	struct osmo_dgram_rx *conn = ofd->data;
 
 	LOGP(DLINP, LOGL_DEBUG, "read\n");
-	if (what & BSC_FD_READ)
+	if (what & OSMO_FD_READ)
 		osmo_dgram_rx_read(conn);
 
 	return 0;
@@ -310,7 +310,7 @@ struct osmo_dgram_rx *osmo_dgram_rx_create(void *ctx)
 		return NULL;
 
 	conn->ofd.fd = -1;
-	conn->ofd.when |= BSC_FD_READ;
+	conn->ofd.when |= OSMO_FD_READ;
 	conn->ofd.cb = osmo_dgram_rx_cb;
 	conn->ofd.data = conn;
 

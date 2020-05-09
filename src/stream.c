@@ -258,7 +258,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	int ret;
 
 	if (llist_empty(&cli->tx_queue)) {
-		cli->ofd.when &= ~BSC_FD_WRITE;
+		cli->ofd.when &= ~OSMO_FD_WRITE;
 		return 0;
 	}
 	lh = cli->tx_queue.next;
@@ -314,7 +314,7 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 		/* If messages got enqueued while 'connecting', keep WRITE flag
 		   up to dispatch them upon next main loop step */
 		if (llist_empty(&cli->tx_queue))
-			cli->ofd.when &= ~BSC_FD_WRITE;
+			cli->ofd.when &= ~OSMO_FD_WRITE;
 
 		LOGSCLI(cli, LOGL_DEBUG, "connection done.\n");
 		cli->state = STREAM_CLI_STATE_CONNECTED;
@@ -332,11 +332,11 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 			cli->connect_cb(cli);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
-		if (what & BSC_FD_READ) {
+		if (what & OSMO_FD_READ) {
 			LOGSCLI(cli, LOGL_DEBUG, "connected read\n");
 			osmo_stream_cli_read(cli);
 		}
-		if (what & BSC_FD_WRITE) {
+		if (what & OSMO_FD_WRITE) {
 			LOGSCLI(cli, LOGL_DEBUG, "connected write\n");
 			osmo_stream_cli_write(cli);
 		}
@@ -601,7 +601,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 		return ret;
 	}
 	cli->ofd.fd = ret;
-	cli->ofd.when = BSC_FD_READ | BSC_FD_WRITE;
+	cli->ofd.when = OSMO_FD_READ | OSMO_FD_WRITE;
 
 	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
 		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
@@ -673,7 +673,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		return ret;
 	}
 	cli->ofd.fd = ret;
-	cli->ofd.when = BSC_FD_READ | BSC_FD_WRITE;
+	cli->ofd.when = OSMO_FD_READ | OSMO_FD_WRITE;
 
 	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
 		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
@@ -708,7 +708,7 @@ static void cli_timer_cb(void *data)
 void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 {
 	msgb_enqueue(&cli->tx_queue, msg);
-	cli->ofd.when |= BSC_FD_WRITE;
+	cli->ofd.when |= OSMO_FD_WRITE;
 }
 
 /*! \brief Receive data via an Osmocom stream client
@@ -815,7 +815,7 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 
 	link->proto = IPPROTO_TCP;
 	link->ofd.fd = -1;
-	link->ofd.when |= BSC_FD_READ | BSC_FD_WRITE;
+	link->ofd.when |= OSMO_FD_READ | OSMO_FD_WRITE;
 	link->ofd.cb = osmo_stream_srv_fd_cb;
 	link->ofd.data = link;
 
@@ -1053,7 +1053,7 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	LOGP(DLINP, LOGL_DEBUG, "sending data\n");
 
 	if (llist_empty(&conn->tx_queue)) {
-		conn->ofd.when &= ~BSC_FD_WRITE;
+		conn->ofd.when &= ~OSMO_FD_WRITE;
 		return;
 	}
 	lh = conn->tx_queue.next;
@@ -1090,9 +1090,9 @@ static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
 	int rc = 0;
 
 	LOGP(DLINP, LOGL_DEBUG, "connected read/write\n");
-	if (what & BSC_FD_READ)
+	if (what & OSMO_FD_READ)
 		rc = osmo_stream_srv_read(conn);
-	if (rc != -EBADF && (what & BSC_FD_WRITE))
+	if (rc != -EBADF && (what & OSMO_FD_WRITE))
 		osmo_stream_srv_write(conn);
 
 	return rc;
@@ -1120,7 +1120,7 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	conn->ofd.fd = fd;
 	conn->ofd.data = conn;
 	conn->ofd.cb = osmo_stream_srv_cb;
-	conn->ofd.when = BSC_FD_READ;
+	conn->ofd.when = OSMO_FD_READ;
 	conn->cb = cb;
 	conn->closed_cb = closed_cb;
 	conn->data = data;
@@ -1206,7 +1206,7 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 	}
 
 	msgb_enqueue(&conn->tx_queue, msg);
-	conn->ofd.when |= BSC_FD_WRITE;
+	conn->ofd.when |= OSMO_FD_WRITE;
 }
 
 /*! \brief Receive data via Osmocom stream server

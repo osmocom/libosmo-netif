@@ -62,7 +62,7 @@ void rs232_tx_timer_cb(void *ptr)
 	struct osmo_rs232 *r = ptr;
 
 	/* we're again ready to transmit. */
-	r->ofd.when |= BSC_FD_WRITE;
+	r->ofd.when |= OSMO_FD_WRITE;
 }
 
 static int handle_ser_write(struct osmo_fd *bfd)
@@ -75,7 +75,7 @@ static int handle_ser_write(struct osmo_fd *bfd)
         LOGP(DLINP, LOGL_DEBUG, "writing data to rs232\n");
 
         if (llist_empty(&r->tx_queue)) {
-                r->ofd.when &= ~BSC_FD_WRITE;
+                r->ofd.when &= ~OSMO_FD_WRITE;
                 return 0;
         }
         lh = r->tx_queue.next;
@@ -92,7 +92,7 @@ static int handle_ser_write(struct osmo_fd *bfd)
 
 	/* We've got more data to write, but we have to wait to make it. */
 	if (!llist_empty(&r->tx_queue) && r->cfg.delay_us) {
-		r->ofd.when &= ~BSC_FD_WRITE;
+		r->ofd.when &= ~OSMO_FD_WRITE;
 		osmo_timer_schedule(&r->tx_timer, 0, r->cfg.delay_us);
 	}
 	return 0;
@@ -114,13 +114,13 @@ static int serial_fd_cb(struct osmo_fd *bfd, unsigned int what)
 {
 	int rc = 0;
 
-	if (what & BSC_FD_READ)
+	if (what & OSMO_FD_READ)
 		rc = handle_ser_read(bfd);
 
 	if (rc < 0)
 		return rc;
 
-	if (what & BSC_FD_WRITE)
+	if (what & OSMO_FD_WRITE)
 		rc = handle_ser_write(bfd);
 
 	return rc;
@@ -223,7 +223,7 @@ int osmo_rs232_open(struct osmo_rs232 *r)
 		return rc;
 	}
 
-	bfd->when = BSC_FD_READ;
+	bfd->when = OSMO_FD_READ;
 	bfd->cb = serial_fd_cb;
 	bfd->data = r;
 
@@ -257,7 +257,7 @@ int osmo_rs232_read(struct osmo_rs232 *r, struct msgb *msg)
 void osmo_rs232_write(struct osmo_rs232 *r, struct msgb *msg)
 {
         msgb_enqueue(&r->tx_queue, msg);
-        r->ofd.when |= BSC_FD_WRITE;
+        r->ofd.when |= OSMO_FD_WRITE;
 }
 
 void osmo_rs232_close(struct osmo_rs232 *r)

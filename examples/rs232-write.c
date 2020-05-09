@@ -377,7 +377,7 @@ int main(void)
                 exit(EXIT_FAILURE);
         }
         kbd_ofd->fd = STDIN_FILENO;
-        kbd_ofd->when = BSC_FD_READ;
+        kbd_ofd->when = OSMO_FD_READ;
         kbd_ofd->data = NULL;
         kbd_ofd->cb = kbd_cb;
         rc = osmo_fd_register(kbd_ofd);
