@@ -78,34 +78,20 @@ static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
 #define AMR_FT_SID	8	/* SID */
 #define AMR_FT_MAX	9
 
-/* AMR voice frame length (in bits).
- * See also RFC 3267, chapter 3.6.
- *
- * NOTE: These constants refer to the length of one AMR speech frame-block,
- * not counting CMR, TOC. */
-#define AMR_FT_0_LEN_BITS	95	/* 4.75 */
-#define AMR_FT_1_LEN_BITS	103	/* 5.15 */
-#define AMR_FT_2_LEN_BITS	118	/* 5.90 */
-#define AMR_FT_3_LEN_BITS	134	/* 6.70 */
-#define AMR_FT_4_LEN_BITS	148	/* 7.40 */
-#define AMR_FT_5_LEN_BITS	159	/* 7.95 */
-#define AMR_FT_6_LEN_BITS	204	/* 10.2 */
-#define AMR_FT_7_LEN_BITS	244	/* 12.2 */
-#define AMR_FT_SID_LEN_BITS	39	/* SID */
+/* AMR voice frame length (in bytes, rounded),
+ * See also RFC 3267, chapter 3.6 */
+#define AMR_FT_0_LEN	12	/* 4.75 */
+#define AMR_FT_1_LEN	13	/* 5.15 */
+#define AMR_FT_2_LEN	15	/* 5.90 */
+#define AMR_FT_3_LEN	17	/* 6.70 */
+#define AMR_FT_4_LEN	19	/* 7.40 */
+#define AMR_FT_5_LEN	20	/* 7.95 */
+#define AMR_FT_6_LEN	26	/* 10.2 */
+#define AMR_FT_7_LEN	31	/* 12.2 */
+#define AMR_FT_SID_LEN	5	/* SID */
 
-/* AMR voice frame length (in bytes, rounded).
- *
- * NOTE: These constants refer to the length of one AMR speech frame-block,
+/* NOTE: the above constant refers to the length of one AMR speech frame-block,
  * not counting CMR, TOC. */
-#define AMR_FT_0_LEN	((AMR_FT_0_LEN_BITS+7)/8)	/* 4.75 */
-#define AMR_FT_1_LEN	((AMR_FT_1_LEN_BITS+7)/8)	/* 5.15 */
-#define AMR_FT_2_LEN	((AMR_FT_2_LEN_BITS+7)/8)	/* 5.90 */
-#define AMR_FT_3_LEN	((AMR_FT_3_LEN_BITS+7)/8)	/* 6.70 */
-#define AMR_FT_4_LEN	((AMR_FT_4_LEN_BITS+7)/8)	/* 7.40 */
-#define AMR_FT_5_LEN	((AMR_FT_5_LEN_BITS+7)/8)	/* 7.95 */
-#define AMR_FT_6_LEN	((AMR_FT_6_LEN_BITS+7)/8)	/* 10.2 */
-#define AMR_FT_7_LEN	((AMR_FT_7_LEN_BITS+7)/8)	/* 12.2 */
-#define AMR_FT_SID_LEN	((AMR_FT_SID_LEN_BITS+7)/8)	/* SID */
 
 int osmo_amr_ft_valid(uint8_t amr_ft);
 size_t osmo_amr_bytes(uint8_t amr_cmr);

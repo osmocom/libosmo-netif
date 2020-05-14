@@ -44,9 +44,6 @@ char *oa_amr_samples[] = {
 	"100c4e9ba850e30d5d53d04de41e7c",
 	"100c6c18e7b7fff53aeb055e7d1c54",
 	"100c1fb967f7f1fdf547bf2e61c060",
-	"0004f89d67f1160935bde1996840",
-	"0004633cc7f0630439ffe0000000",
-	"0004eb81fc0758973b9edc782552",
 	"a038ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc",	/* test pattern */
 	"END",
 };
@@ -90,6 +87,7 @@ void osmo_amr_oa_to_bwe_test(void)
 			return;
 		printf("\n");
 		printf("Sample No.: %i\n", i);
+		len = strlen(oa_amr_samples[i]);
 
 		len = osmo_hexparse(oa_amr_samples[i], buf, sizeof(buf));
 		OSMO_ASSERT(len > 0);
@@ -104,6 +102,11 @@ void osmo_amr_oa_to_bwe_test(void)
 		dump_bits(buf, rc);
 		printf("\n");
 		printf("   rc: %i\n", rc);
+
+		if (rc > 0) {
+			OSMO_ASSERT(rc == len - 1);
+			OSMO_ASSERT(buf[len - 1] == 0x00);
+		}
 		i++;
 	}
 }
@@ -123,6 +126,7 @@ void osmo_amr_bwe_to_oa_test(void)
 			return;
 		printf("\n");
 		printf("Sample No.: %i\n", i);
+		len = strlen(bwe_amr_samples[i]);
 
 		len = osmo_hexparse(bwe_amr_samples[i], buf, sizeof(buf));
 		OSMO_ASSERT(len > 0);
@@ -138,6 +142,7 @@ void osmo_amr_bwe_to_oa_test(void)
 		printf("\n");
 		printf("   rc: %i\n", rc);
 
+		OSMO_ASSERT(rc == len + 1);
 		i++;
 	}
 }
@@ -146,8 +151,6 @@ void osmo_amr_oa_to_bwe_and_inverse_test(void)
 {
 	uint8_t buf[256];
 	uint8_t buf_chk[256];
-	struct amr_hdr *oa_hd = (struct amr_hdr *)buf;
-	unsigned int ft;
 
 	unsigned int i = 0;
 	int len;
@@ -160,21 +163,16 @@ void osmo_amr_oa_to_bwe_and_inverse_test(void)
 	while (1) {
 		if (strcmp(oa_amr_samples[i], "END") == 0)
 			return;
-		printf("Sample No.: %i...", i);
+		printf("Sample No.: %i...\n", i);
+		len = strlen(oa_amr_samples[i]);
 
 		len = osmo_hexparse(oa_amr_samples[i], buf, sizeof(buf));
 		OSMO_ASSERT(len > 0);
-		ft = oa_hd->ft;
-		OSMO_ASSERT(osmo_amr_bytes(ft) + 2 == len);
-		printf(" AMR mode: %d, OA: %d bytes,", ft, len);
 		memcpy(buf_chk, buf, sizeof(buf));
 
 		rc = osmo_amr_oa_to_bwe(buf, len);
 		OSMO_ASSERT(rc > 0);
-		printf(" BE: %d bytes,", rc);
 		rc = osmo_amr_bwe_to_oa(buf, rc, sizeof(buf));
-		printf(" OA: %d bytes\n", rc);
-		OSMO_ASSERT(len == rc);
 		OSMO_ASSERT(memcmp(buf, buf_chk, len) == 0);
 		i++;
 	}
