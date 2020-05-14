@@ -133,4 +133,5 @@ AC_OUTPUT(
 	examples/Makefile
 	tests/Makefile
 	Doxyfile
-	Makefile)
+	Makefile
+	contrib/libosmo-netif.spec)
