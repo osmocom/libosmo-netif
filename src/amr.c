@@ -120,7 +120,7 @@ bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len)
 
 	/* Match the length of the received payload against the expected frame
 	 * length that is defined by the frame type. */
-	if(!osmo_amr_ft_valid(oa_hdr->ft))
+	if (!osmo_amr_ft_valid(oa_hdr->ft))
 		return false;
 	frame_len = osmo_amr_bytes(oa_hdr->ft);
 	if (frame_len != payload_len - sizeof(struct amr_hdr))
