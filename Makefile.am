@@ -6,7 +6,12 @@ SUBDIRS = include src examples tests
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libosmo-netif.pc
 
-EXTRA_DIST = .version README.md
+EXTRA_DIST = \
+	     .version \
+	     README.md \
+	     contrib/libosmo-netif.spec.in \
+	     debian \
+	     $(NULL)
 
 @RELMAKE@
 
