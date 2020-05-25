@@ -46,7 +46,7 @@ char *oa_amr_samples[] = {
 	"100c1fb967f7f1fdf547bf2e61c060",
 	"0004f89d67f1160935bde1996840",
 	"0004633cc7f0630439ffe0000000",
-	"0004eb81fc0758973b9edc782552",
+	"0004eb81fc0758973b9edc782550",
 	"a078ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc",	/* sample with invalid FT */
 	"END",
 };

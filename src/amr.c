@@ -198,7 +198,7 @@ int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 		return -1;
 	oa_payload_len = 2 + osmo_amr_bytes(oa_hdr->ft);
 
-	for (i = 0; i < oa_payload_len - 2; i++) {
+	for (i = 0; i < oa_payload_len - 3; i++) {
 		buf[i + 2] = payload[i + 1] << 2;
 		buf[i + 2] |= payload[i + 2] >> 6;
 	}
