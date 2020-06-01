@@ -73,6 +73,97 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+/* is any of the bytes from offset .. u8_size in 'u8' non-zero? return offset or -1 if all zero */
+static int byte_nonzero(const uint8_t *u8, unsigned int offset, unsigned int u8_size)
+{
+	int j;
+
+	for (j = offset; j < u8_size; j++) {
+		if (u8[j] != 0)
+			return j;
+	}
+
+	return -1;
+}
+
+static int sctp_sockopt_event_subscribe_size = 0;
+
+static int determine_sctp_sockopt_event_subscribe_size(void)
+{
+	uint8_t buf[256];
+	socklen_t buf_len = sizeof(buf);
+	int sd, rc;
+
+	/* only do this once */
+	if (sctp_sockopt_event_subscribe_size != 0)
+		return 0;
+
+	sd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+	if (sd < 0)
+		return sd;
+
+	rc = getsockopt(sd, IPPROTO_SCTP, SCTP_EVENTS, buf, &buf_len);
+	if (rc < 0)
+		return rc;
+
+	sctp_sockopt_event_subscribe_size = buf_len;
+
+	LOGP(DLINP, LOGL_INFO, "sizes of 'struct sctp_event_subscribe': compile-time %zu, kernel: %u\n",
+		sizeof(struct sctp_event_subscribe), sctp_sockopt_event_subscribe_size);
+	return 0;
+}
+
+/* Attempt to work around Linux kernel ABI breakage
+ *
+ * The Linux kernel ABI for the SCTP_EVENTS socket option has been broken repeatedly.
+ *  - until commit 35ea82d611da59f8bea44a37996b3b11bb1d3fd7 ( kernel < 4.11), the size is 10 bytes
+ *  - in 4.11 it is 11 bytes
+ *  - in 4.12 .. 5.4 it is 13 bytes
+ *  - in kernels >= 5.5 it is 14 bytes
+ *
+ * This wouldn't be a problem if the kernel didn't have a "stupid" assumption that the structure
+ * size passed by userspace will match 1:1 the length of the structure at kernel compile time. In
+ * an ideal world, it would just use the known first bytes and assume the remainder is all zero.
+ * But as it doesn't do that, let's try to work around this */
+static int sctp_setsockopt_events_linux_workaround(int fd, const struct sctp_event_subscribe *event)
+{
+
+	const unsigned int compiletime_size = sizeof(*event);
+	int rc;
+
+	if (determine_sctp_sockopt_event_subscribe_size() < 0) {
+		LOGP(DLINP, LOGL_ERROR, "Cannot determine SCTP_EVENTS socket option size\n");
+		return -1;
+	}
+
+	if (compiletime_size == sctp_sockopt_event_subscribe_size) {
+		/* no kernel workaround needed */
+		return setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, event, compiletime_size);
+	} else if (compiletime_size < sctp_sockopt_event_subscribe_size) {
+		/* we are using an older userspace with a more modern kernel and hence need
+		 * to pad the data */
+		uint8_t buf[sctp_sockopt_event_subscribe_size];
+
+		memcpy(buf, event, compiletime_size);
+		memset(buf + sizeof(*event), 0, sctp_sockopt_event_subscribe_size - compiletime_size);
+		return setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, buf, sctp_sockopt_event_subscribe_size);
+	} else /* if (compiletime_size > sctp_sockopt_event_subscribe_size) */ {
+		/* we are using a newer userspace with an older kernel and hence need to truncate
+		 * the data - but only if the caller didn't try to enable any of the events of the
+		 * truncated portion */
+		rc = byte_nonzero((const uint8_t *)event, sctp_sockopt_event_subscribe_size,
+				  compiletime_size);
+		if (rc >= 0) {
+			LOGP(DLINP, LOGL_ERROR, "Kernel only supports sctp_event_subscribe of %u bytes, "
+				"but caller tried to enable more modern event at offset %u\n",
+				sctp_sockopt_event_subscribe_size, rc);
+			return -1;
+		}
+
+		return setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, event, sctp_sockopt_event_subscribe_size);
+	}
+}
+
 static int sctp_sock_activate_events(int fd)
 {
 #ifdef HAVE_LIBSCTP
@@ -89,28 +180,10 @@ static int sctp_sock_activate_events(int fd)
 	event.sctp_shutdown_event = 1;
 	/* IMPORTANT: Do NOT enable sender_dry_event here, see
 	 * https://bugzilla.redhat.com/show_bug.cgi?id=1442784 */
-	rc = setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS,
-			&event, sizeof(event));
 
-	/*
-	 * Attempt to work around kernel ABI breakage
-	 *
-	 * In kernel commit b6e6b5f1da7e8d092f86a4351802c27c0170c5a5, the
-	 * struct sctp_event_subscribe had a u8 field added to it at the end, thus
-	 * breaking ABI.
-	 * See https://marc.info/?l=linux-sctp&m=158729301516157&w=2 for discussion.
-	 *
-	 * We attempt to work around the issue where the kernel header are new
-	 * and running kernel is old, by forcing the size of the struct to 13 which
-	 * is the "old" size
-	 */
-	if ((rc < 0) && (sizeof(event) != 13))
-		rc = setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS,
-				&event, 13);
-
+	rc = sctp_setsockopt_events_linux_workaround(fd, &event);
 	if (rc < 0)
-		LOGP(DLINP, LOGL_ERROR, "couldn't activate SCTP events "
-		     "on FD %u\n", fd);
+		LOGP(DLINP, LOGL_ERROR, "couldn't activate SCTP events on FD %u\n", fd);
 	return rc;
 #else
 	return -1;
