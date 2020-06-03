@@ -103,6 +103,7 @@ static int determine_sctp_sockopt_event_subscribe_size(void)
 		return sd;
 
 	rc = getsockopt(sd, IPPROTO_SCTP, SCTP_EVENTS, buf, &buf_len);
+	close(sd);
 	if (rc < 0)
 		return rc;
 
