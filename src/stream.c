@@ -65,6 +65,7 @@
  *  \brief Osmocom stream socket helpers
  */
 
+#ifdef HAVE_LIBSCTP
 /*
  * Platforms that don't have MSG_NOSIGNAL (which disables SIGPIPE)
  * usually have SO_NOSIGPIPE (set via setsockopt).
@@ -164,6 +165,7 @@ static int sctp_setsockopt_events_linux_workaround(int fd, const struct sctp_eve
 		return setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, event, sctp_sockopt_event_subscribe_size);
 	}
 }
+#endif // HAVE_LIBSCTP
 
 static int sctp_sock_activate_events(int fd)
 {
