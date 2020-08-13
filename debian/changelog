@@ -1,3 +1,49 @@
+libosmo-netif (1.0.0) unstable; urgency=medium
+
+  [ Neels Hofmeyr ]
+  * struct amr_header: copy comments to little endian part
+  * add/clean big-endian packed structs (struct_endianess.py)
+
+  [ Pau Espin Pedrol ]
+  * configure.ac: Introduce --{enable,disable}-libsctp configure flag
+  * configure.ac: Drop unneeded check for dahdi
+  * stream.c: Improve logging during sock send()
+  * stream: Drop data during write() while in state NONE
+  * stream: Re-arrange cli states to fix 100% cpu usage bug
+  * stream: Add new WAIT_RECONNECT cli state
+  * stream: Rename cli state NONE to CLOSED
+  * debian/control: Drop incorrect libortp-dev dependency
+  * Use OSMO_FD_* instead of deprecated BSC_FD_*
+  * stream: Fix some SCTP code not disabled if --disable-libsctp is used
+
+  [ Eric ]
+  * configure.ac: fix libtool issue  with clang and sanitizer
+
+  [ Sylvain Munaut ]
+  * stream: Attempt to workaround kernel ABI breakage
+
+  [ Alexander Chemeris ]
+  * amr: Fix OA<->BWE conversion.
+  * amr: Fix OA<->BWE conversion.
+  * amr: Whitespace fix
+
+  [ neels ]
+  * Revert "amr: Fix OA<->BWE conversion."
+
+  [ Oliver Smith ]
+  * contrib: import RPM spec
+  * contrib: integrate RPM spec
+  * Makefile.am: EXTRA_DIST: debian, contrib/*.spec.in
+
+  [ Philipp Maier ]
+  * amr: fix off-by-one in osmo_amr_bwe_to_oa()
+
+  [ Harald Welte ]
+  * src/stream: Work around more Linux kernel ABI breakage
+  * src/stream.c: Don't leak socket during SCTP_EVENTS getsockopt
+
+ -- Harald Welte <laforge@osmocom.org>  Thu, 13 Aug 2020 11:21:02 +0200
+
 libosmo-netif (0.7.0) unstable; urgency=medium
 
   [ Pau Espin Pedrol ]
