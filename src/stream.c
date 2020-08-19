@@ -658,14 +658,14 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
-		ret = osmo_sock_init2_multiaddr(AF_INET, SOCK_STREAM, cli->proto,
+		ret = osmo_sock_init2_multiaddr(AF_UNSPEC, SOCK_STREAM, cli->proto,
 						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 						(const char **)cli->addr, cli->addrcnt, cli->port,
 						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
 		break;
 #endif
 	default:
-		ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
+		ret = osmo_sock_init2(AF_UNSPEC, SOCK_STREAM, cli->proto,
 				      cli->local_addr[0], cli->local_port,
 				      cli->addr[0], cli->port,
 				      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
@@ -731,14 +731,14 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 	switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
-		ret = osmo_sock_init2_multiaddr(AF_INET, SOCK_STREAM, cli->proto,
+		ret = osmo_sock_init2_multiaddr(AF_UNSPEC, SOCK_STREAM, cli->proto,
 						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 						(const char **)cli->addr, cli->addrcnt, cli->port,
 						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
 		break;
 #endif
 	default:
-		ret = osmo_sock_init2(AF_INET, SOCK_STREAM, cli->proto,
+		ret = osmo_sock_init2(AF_UNSPEC, SOCK_STREAM, cli->proto,
 				      cli->local_addr[0], cli->local_port,
 				      cli->addr[0], cli->port,
 				      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
@@ -1055,13 +1055,13 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 	switch (link->proto) {
 #ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
-		ret = osmo_sock_init2_multiaddr(AF_INET, SOCK_STREAM, link->proto,
+		ret = osmo_sock_init2_multiaddr(AF_UNSPEC, SOCK_STREAM, link->proto,
 						(const char **)link->addr, link->addrcnt, link->port,
 						NULL, 0, 0, OSMO_SOCK_F_BIND);
 		break;
 #endif
 	default:
-		ret = osmo_sock_init(AF_INET, SOCK_STREAM, link->proto,
+		ret = osmo_sock_init(AF_UNSPEC, SOCK_STREAM, link->proto,
 					link->addr[0], link->port, OSMO_SOCK_F_BIND);
 	}
 	if (ret < 0)
