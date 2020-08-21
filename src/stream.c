@@ -834,7 +834,9 @@ static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 {
 	int ret;
 	int sock_fd;
-	struct sockaddr_in sa;
+	char addrstr[128];
+	bool is_ipv6;
+	struct sockaddr_storage sa;
 	socklen_t sa_len = sizeof(sa);
 	struct osmo_stream_srv_link *link = ofd->data;
 
@@ -844,8 +846,13 @@ static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 			"peer, reason=`%s'\n", strerror(errno));
 		return ret;
 	}
+	is_ipv6 = ((struct sockaddr *)&sa)->sa_family == AF_INET6;
 	LOGP(DLINP, LOGL_DEBUG, "accept()ed new link from %s to port %u\n",
-		inet_ntoa(sa.sin_addr), link->port);
+		inet_ntop(is_ipv6 ? AF_INET6 : AF_INET,
+			  is_ipv6 ? (void*)&(((struct sockaddr_in6 *)&sa)->sin6_addr) :
+				    (void*)&(((struct sockaddr_in *)&sa)->sin_addr),
+			  addrstr, sizeof(addrstr)),
+		link->port);
 	sock_fd = ret;
 
 	if (link->proto == IPPROTO_SCTP) {
