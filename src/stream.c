@@ -289,6 +289,7 @@ void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 
 /*! \brief Check if Osmocom Stream Client is in connected state
  *  \param[in] cli Osmocom Stream Client
+ *  \return true if connected, false otherwise
  */
 bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli)
 {
@@ -429,7 +430,9 @@ static void cli_timer_cb(void *data);
 /*! \brief Create an Osmocom stream client
  *  \param[in] ctx talloc context from which to allocate memory
  *  This function allocates a new \ref osmo_stream_cli and initializes
- *  it with default values (5s reconnect timer, TCP protocol) */
+ *  it with default values (5s reconnect timer, TCP protocol)
+ *  \return allocated stream client, or NULL in case of error
+ */
 struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 {
 	struct osmo_stream_cli *cli;
@@ -644,6 +647,7 @@ void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
  * Open connection of an Osmocom stream client
  *  \param[in] cli Stream Client to connect
  *  \param[in] reconect 1 if we should not automatically reconnect
+ *  \return negative on error, 0 on success
  */
 int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 {
@@ -716,7 +720,8 @@ void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay)
 /*! \brief Open connection of an Osmocom stream client
  *  By default the client will automatically reconnect after default timeout.
  *  To disable this, use osmo_stream_cli_set_reconnect_timeout() before calling this function.
- *  \param[in] cli Stream Client to connect */
+ *  \param[in] cli Stream Client to connect
+ *  \return negative on error, 0 on success */
 int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 {
 	int ret;
@@ -1044,7 +1049,8 @@ void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link)
 
 /*! \brief Open the stream server link.  This actually initializes the
  *  underlying socket and binds it to the configured ip/port
- *  \param[in] link Stream Server Link to open */
+ *  \param[in] link Stream Server Link to open
+ *  \return negative on error, 0 on success */
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 {
 	int ret;
