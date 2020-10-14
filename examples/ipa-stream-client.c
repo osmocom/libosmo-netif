@@ -186,18 +186,10 @@ int main(int argc, char *argv[])
 	osmo_stream_cli_set_disconnect_cb(conn, disconnect_cb);
 	osmo_stream_cli_set_read_cb(conn, read_cb);
 	osmo_stream_cli_set_data(conn, &num_msgs);
+	osmo_stream_cli_set_nodelay(conn, true);
 
 	if (osmo_stream_cli_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
-		exit(EXIT_FAILURE);
-	}
-
-	int on = 1, ret;
-	struct osmo_fd *ofd = osmo_stream_cli_get_ofd(conn);
-
-	ret = setsockopt(ofd->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
-	if (ret < 0) {
-		LOGP(DIPATEST, LOGL_ERROR, "cannot disable Nagle\n");
 		exit(EXIT_FAILURE);
 	}
 

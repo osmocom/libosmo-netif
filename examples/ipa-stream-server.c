@@ -117,18 +117,10 @@ int main(void)
 	osmo_stream_srv_link_set_addr(srv, "127.0.0.1");
 	osmo_stream_srv_link_set_port(srv, 10000);
 	osmo_stream_srv_link_set_accept_cb(srv, accept_cb);
-
-	int on = 1, ret;
-	struct osmo_fd *ofd = osmo_stream_srv_link_get_ofd(srv);
+	osmo_stream_srv_link_set_nodelay(srv, true);
 
 	if (osmo_stream_srv_link_open(srv) < 0) {
 		fprintf(stderr, "cannot open client\n");
-		exit(EXIT_FAILURE);
-	}
-
-	ret = setsockopt(ofd->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
-	if (ret < 0) {
-		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot disable Nagle\n");
 		exit(EXIT_FAILURE);
 	}
 
