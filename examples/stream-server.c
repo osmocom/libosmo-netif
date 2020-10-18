@@ -165,10 +165,7 @@ int main(void)
 		LOGP(DSTREAMTEST, LOGL_ERROR, "OOM\n");
 		exit(EXIT_FAILURE);
 	}
-	kbd_ofd->fd = STDIN_FILENO;
-	kbd_ofd->when = OSMO_FD_READ;
-	kbd_ofd->data = srv;
-	kbd_ofd->cb = kbd_cb;
+	osmo_fd_setup(kbd_ofd, STDIN_FILENO, OSMO_FD_READ, kbd_cb, srv, 0);
 	osmo_fd_register(kbd_ofd);
 
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "Entering main loop on %s\n", osmo_stream_srv_link_get_sockname(srv));

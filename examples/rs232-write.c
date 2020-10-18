@@ -376,10 +376,7 @@ int main(void)
                 LOGP(DRS232TEST, LOGL_ERROR, "OOM\n");
                 exit(EXIT_FAILURE);
         }
-        kbd_ofd->fd = STDIN_FILENO;
-        kbd_ofd->when = OSMO_FD_READ;
-        kbd_ofd->data = NULL;
-        kbd_ofd->cb = kbd_cb;
+	osmo_fd_setup(kbd_ofd, STDIN_FILENO, OSMO_FD_READ, kbd_cb, NULL, 0);
         rc = osmo_fd_register(kbd_ofd);
 	if (rc < 0) {
 		LOGP(DRS232TEST, LOGL_ERROR, "FD Register\n");

@@ -135,11 +135,7 @@ struct osmo_dgram_tx *osmo_dgram_tx_create(void *ctx)
 	if (!conn)
 		return NULL;
 
-	conn->ofd.fd = -1;
-	conn->ofd.when |= OSMO_FD_READ;
-	conn->ofd.priv_nr = 0;	/* XXX */
-	conn->ofd.cb = osmo_dgram_tx_fd_cb;
-	conn->ofd.data = conn;
+	osmo_fd_setup(&conn->ofd, -1, OSMO_FD_READ, osmo_dgram_tx_fd_cb, conn, 0);
 	INIT_LLIST_HEAD(&conn->tx_queue);
 
 	return conn;
@@ -309,10 +305,7 @@ struct osmo_dgram_rx *osmo_dgram_rx_create(void *ctx)
 	if (!conn)
 		return NULL;
 
-	conn->ofd.fd = -1;
-	conn->ofd.when |= OSMO_FD_READ;
-	conn->ofd.cb = osmo_dgram_rx_cb;
-	conn->ofd.data = conn;
+	osmo_fd_setup(&conn->ofd, -1, OSMO_FD_READ, osmo_dgram_rx_cb, conn, 0);
 
 	return conn;
 }

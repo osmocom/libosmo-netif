@@ -223,9 +223,7 @@ int osmo_rs232_open(struct osmo_rs232 *r)
 		return rc;
 	}
 
-	bfd->when = OSMO_FD_READ;
-	bfd->cb = serial_fd_cb;
-	bfd->data = r;
+	osmo_fd_setup(bfd, bfd->fd, OSMO_FD_READ, serial_fd_cb, r, 0);
 
 	rc = osmo_fd_register(bfd);
 	if (rc < 0) {

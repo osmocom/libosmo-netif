@@ -680,8 +680,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 			osmo_stream_cli_reconnect(cli);
 		return ret;
 	}
-	cli->ofd.fd = ret;
-	cli->ofd.when = OSMO_FD_READ | OSMO_FD_WRITE;
+	osmo_fd_setup(&cli->ofd, ret, OSMO_FD_READ | OSMO_FD_WRITE, cli->ofd.cb, cli->ofd.data, cli->ofd.priv_nr);
 
 	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
 		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
@@ -753,8 +752,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		osmo_stream_cli_reconnect(cli);
 		return ret;
 	}
-	cli->ofd.fd = ret;
-	cli->ofd.when = OSMO_FD_READ | OSMO_FD_WRITE;
+	osmo_fd_setup(&cli->ofd, ret, OSMO_FD_READ | OSMO_FD_WRITE, cli->ofd.cb, cli->ofd.data, cli->ofd.priv_nr);
 
 	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
 		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
@@ -902,10 +900,7 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 		return NULL;
 
 	link->proto = IPPROTO_TCP;
-	link->ofd.fd = -1;
-	link->ofd.when |= OSMO_FD_READ | OSMO_FD_WRITE;
-	link->ofd.cb = osmo_stream_srv_fd_cb;
-	link->ofd.data = link;
+	osmo_fd_setup(&link->ofd, -1, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_srv_fd_cb, link, 0);
 
 	return link;
 }
@@ -1206,10 +1201,7 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 		return NULL;
 	}
 	conn->srv = link;
-	conn->ofd.fd = fd;
-	conn->ofd.data = conn;
-	conn->ofd.cb = osmo_stream_srv_cb;
-	conn->ofd.when = OSMO_FD_READ;
+	osmo_fd_setup(&conn->ofd, fd, OSMO_FD_READ, osmo_stream_srv_cb, conn, 0);
 	conn->cb = cb;
 	conn->closed_cb = closed_cb;
 	conn->data = data;
