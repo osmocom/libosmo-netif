@@ -95,7 +95,7 @@ static int osmo_dgram_tx_write(struct osmo_dgram_tx *conn)
 	LOGP(DLINP, LOGL_DEBUG, "sending data\n");
 
 	if (llist_empty(&conn->tx_queue)) {
-		conn->ofd.when &= ~OSMO_FD_WRITE;
+		osmo_fd_write_disable(&conn->ofd);
 		return 0;
 	}
 	lh = conn->tx_queue.next;
@@ -236,7 +236,7 @@ void osmo_dgram_tx_send(struct osmo_dgram_tx *conn,
 				 struct msgb *msg)
 {
 	msgb_enqueue(&conn->tx_queue, msg);
-	conn->ofd.when |= OSMO_FD_WRITE;
+	osmo_fd_write_enable(&conn->ofd);
 }
 
 /*

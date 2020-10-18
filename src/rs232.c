@@ -62,7 +62,7 @@ void rs232_tx_timer_cb(void *ptr)
 	struct osmo_rs232 *r = ptr;
 
 	/* we're again ready to transmit. */
-	r->ofd.when |= OSMO_FD_WRITE;
+	osmo_fd_write_enable(&r->ofd);
 }
 
 static int handle_ser_write(struct osmo_fd *bfd)
@@ -75,7 +75,7 @@ static int handle_ser_write(struct osmo_fd *bfd)
 	LOGP(DLINP, LOGL_DEBUG, "writing data to rs232\n");
 
 	if (llist_empty(&r->tx_queue)) {
-		r->ofd.when &= ~OSMO_FD_WRITE;
+		osmo_fd_write_disable(&r->ofd);
 		return 0;
 	}
 	lh = r->tx_queue.next;
@@ -92,7 +92,7 @@ static int handle_ser_write(struct osmo_fd *bfd)
 
 	/* We've got more data to write, but we have to wait to make it. */
 	if (!llist_empty(&r->tx_queue) && r->cfg.delay_us) {
-		r->ofd.when &= ~OSMO_FD_WRITE;
+		osmo_fd_write_disable(&r->ofd);
 		osmo_timer_schedule(&r->tx_timer, 0, r->cfg.delay_us);
 	}
 	return 0;
@@ -255,7 +255,7 @@ int osmo_rs232_read(struct osmo_rs232 *r, struct msgb *msg)
 void osmo_rs232_write(struct osmo_rs232 *r, struct msgb *msg)
 {
 	msgb_enqueue(&r->tx_queue, msg);
-	r->ofd.when |= OSMO_FD_WRITE;
+	osmo_fd_write_enable(&r->ofd);
 }
 
 void osmo_rs232_close(struct osmo_rs232 *r)
