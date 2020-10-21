@@ -221,15 +221,15 @@ static int setsockopt_nodelay(int fd, int proto, int on)
  */
 
 enum osmo_stream_cli_state {
-        STREAM_CLI_STATE_CLOSED,	 /* No fd associated, no timer active */
-        STREAM_CLI_STATE_WAIT_RECONNECT, /* No fd associated, has timer active to try to connect again */
-        STREAM_CLI_STATE_CONNECTING,	 /* Fd associated, but connection not yet confirmed by peer or lower layers */
-        STREAM_CLI_STATE_CONNECTED,	 /* Fd associated and connection is established */
-        STREAM_CLI_STATE_MAX
+	STREAM_CLI_STATE_CLOSED,	 /* No fd associated, no timer active */
+	STREAM_CLI_STATE_WAIT_RECONNECT, /* No fd associated, has timer active to try to connect again */
+	STREAM_CLI_STATE_CONNECTING,	 /* Fd associated, but connection not yet confirmed by peer or lower layers */
+	STREAM_CLI_STATE_CONNECTED,	 /* Fd associated and connection is established */
+	STREAM_CLI_STATE_MAX
 };
 
 static const struct value_string stream_cli_state_names[] = {
-	{ STREAM_CLI_STATE_CLOSED,         "CLOSED" },
+	{ STREAM_CLI_STATE_CLOSED,	 "CLOSED" },
 	{ STREAM_CLI_STATE_WAIT_RECONNECT, "WAIT_RECONNECT" },
 	{ STREAM_CLI_STATE_CONNECTING,     "CONNECTING" },
 	{ STREAM_CLI_STATE_CONNECTED,      "CONNECTED" },
@@ -251,10 +251,10 @@ struct osmo_stream_cli {
 	struct osmo_timer_list		timer;
 	enum osmo_stream_cli_state	state;
 	char				*addr[OSMO_STREAM_MAX_ADDRS];
-	uint8_t                         addrcnt;
+	uint8_t			 	addrcnt;
 	uint16_t			port;
 	char				*local_addr[OSMO_STREAM_MAX_ADDRS];
-	uint8_t                         local_addrcnt;
+	uint8_t			 	local_addrcnt;
 	uint16_t			local_port;
 	uint16_t			proto;
 	int (*connect_cb)(struct osmo_stream_cli *srv);
@@ -422,7 +422,7 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 		/* Only CONNECTING and CONNECTED states are expected, since they are the only states where FD exists: */
 		osmo_panic("osmo_stream_cli_fd_cb called with unexpected state %d\n", cli->state);
 	}
-        return 0;
+	return 0;
 }
 
 static void cli_timer_cb(void *data);
@@ -823,14 +823,14 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 #define OSMO_STREAM_SRV_F_NODELAY	(1 << 1)
 
 struct osmo_stream_srv_link {
-        struct osmo_fd                  ofd;
-        char                            *addr[OSMO_STREAM_MAX_ADDRS];
-        uint8_t                         addrcnt;
-        uint16_t                        port;
-        uint16_t                        proto;
-        int (*accept_cb)(struct osmo_stream_srv_link *srv, int fd);
-        void                            *data;
-	int				flags;
+	struct osmo_fd		ofd;
+	char			*addr[OSMO_STREAM_MAX_ADDRS];
+	uint8_t			addrcnt;
+	uint16_t		port;
+	uint16_t		proto;
+	int (*accept_cb)(struct osmo_stream_srv_link *srv, int fd);
+	void			*data;
+	int			flags;
 };
 
 static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
@@ -1100,11 +1100,11 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 
 struct osmo_stream_srv {
 	struct osmo_stream_srv_link	*srv;
-        struct osmo_fd                  ofd;
-        struct llist_head               tx_queue;
-        int (*closed_cb)(struct osmo_stream_srv *peer);
-        int (*cb)(struct osmo_stream_srv *peer);
-        void                            *data;
+	struct osmo_fd			ofd;
+	struct llist_head		tx_queue;
+	int (*closed_cb)(struct osmo_stream_srv *peer);
+	int (*cb)(struct osmo_stream_srv *peer);
+	void				*data;
 	int				flags;
 };
 

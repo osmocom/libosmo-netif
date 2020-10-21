@@ -72,15 +72,15 @@ static int handle_ser_write(struct osmo_fd *bfd)
 	struct msgb *msg;
 	int written;
 
-        LOGP(DLINP, LOGL_DEBUG, "writing data to rs232\n");
+	LOGP(DLINP, LOGL_DEBUG, "writing data to rs232\n");
 
-        if (llist_empty(&r->tx_queue)) {
-                r->ofd.when &= ~OSMO_FD_WRITE;
-                return 0;
-        }
-        lh = r->tx_queue.next;
-        llist_del(lh);
-        msg = llist_entry(lh, struct msgb, list);
+	if (llist_empty(&r->tx_queue)) {
+		r->ofd.when &= ~OSMO_FD_WRITE;
+		return 0;
+	}
+	lh = r->tx_queue.next;
+	llist_del(lh);
+	msg = llist_entry(lh, struct msgb, list);
 
 	written = write(bfd->fd, msg->data, msg->len);
 	if (written < msg->len) {
@@ -254,8 +254,8 @@ int osmo_rs232_read(struct osmo_rs232 *r, struct msgb *msg)
 
 void osmo_rs232_write(struct osmo_rs232 *r, struct msgb *msg)
 {
-        msgb_enqueue(&r->tx_queue, msg);
-        r->ofd.when |= OSMO_FD_WRITE;
+	msgb_enqueue(&r->tx_queue, msg);
+	r->ofd.when |= OSMO_FD_WRITE;
 }
 
 void osmo_rs232_close(struct osmo_rs232 *r)

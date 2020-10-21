@@ -119,7 +119,7 @@ static int osmo_dgram_tx_fd_cb(struct osmo_fd *ofd, unsigned int what)
 		LOGP(DLINP, LOGL_DEBUG, "write\n");
 		osmo_dgram_tx_write(conn);
 	}
-        return 0;
+	return 0;
 }
 
 /*! \brief Create an Osmocom datagram transmitter
@@ -246,12 +246,12 @@ void osmo_dgram_tx_send(struct osmo_dgram_tx *conn,
 #define OSMO_DGRAM_RX_F_RECONF	(1 << 0)
 
 struct osmo_dgram_rx {
-        struct osmo_fd                  ofd;
-        char                            *addr;
-        uint16_t                        port;
+	struct osmo_fd		ofd;
+	char			*addr;
+	uint16_t		port;
 	int (*cb)(struct osmo_dgram_rx *conn);
-        void                            *data;
-	unsigned int			flags;
+	void			*data;
+	unsigned int		flags;
 };
 
 /*! \brief Receive data via Osmocom datagram receiver
