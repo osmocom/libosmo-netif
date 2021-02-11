@@ -24,7 +24,6 @@ BuildRequires:  automake
 BuildRequires:  libtool >= 2
 BuildRequires:  lksctp-tools-devel
 BuildRequires:  pkgconfig >= 0.20
-BuildRequires:  pkgconfig(libosmoabis) >= 0.6.0
 BuildRequires:  pkgconfig(libosmocore) >= 1.0.0
 BuildRequires:  pkgconfig(libosmogsm) >= 1.0.0
 

@@ -35,7 +35,7 @@ echo
 set -x
 
 autoreconf --install --force
-./configure --enable-sanitize --enable-werror
+./configure --enable-sanitize --enable-werror --enable-lapd-examples
 $MAKE $PARALLEL_MAKE
 $MAKE $PARALLEL_MAKE distcheck \
   || cat-testlogs.sh

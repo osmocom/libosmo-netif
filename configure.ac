@@ -91,8 +91,19 @@ AM_CONFIG_HEADER(config.h)
 
 PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.3.0)
 PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.3.0)
-dnl FIXME: We depend on libosmoabis by now until we can move LAPD code here
-PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.6.0)
+
+AC_ARG_ENABLE([lapd_examples],
+	[AS_HELP_STRING(
+		[--enable-lapd-examples],
+		[Build some lapd examples]
+	)],
+	[lapd_examples=$enableval], [lapd_examples="no"])
+AS_IF([test "x$lapd_examples" = "xyes"], [
+	PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.6.0)
+	AC_DEFINE([ENABLE_LAPD], [1], [Enable LAPD examples])
+])
+AM_CONDITIONAL(ENABLE_LAPD, test "x$lapd_examples" = "xyes")
+AC_SUBST(ENABLE_LAPD)
 
 AC_ARG_ENABLE([libsctp], [AS_HELP_STRING([--disable-libsctp], [Do not enable socket multiaddr APIs requiring libsctp])],
 	[ENABLE_LIBSCTP=$enableval], [ENABLE_LIBSCTP="yes"])
