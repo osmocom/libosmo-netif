@@ -381,7 +381,7 @@ int main(void)
 	log_set_use_color(osmo_stderr_target, 0);
 	log_set_print_category_hex(osmo_stderr_target, 0);
 	log_set_print_category(osmo_stderr_target, 0);
-	log_set_print_filename(osmo_stderr_target, 0);
+	log_set_print_filename2(osmo_stderr_target, LOG_FILENAME_NONE);
 
 	printf("Preparing stream server...\n");
 	srv = osmo_stream_srv_link_create(tall_test);
