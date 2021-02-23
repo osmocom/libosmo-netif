@@ -1,3 +1,31 @@
+libosmo-netif (1.1.0) unstable; urgency=medium
+
+  [ Vadim Yanitskiy ]
+  * debian/control: change maintainer to the Osmocom team / mailing list
+  * stream: add missing Doxygen \return statements to non-void functions
+
+  [ Pau Espin Pedrol ]
+  * stream: Support creating sockets with IPv6 addresses
+  * stream: Fix log of IPv6 during accept()
+  * contrib/jenkins: Enable parallel make in make distcheck
+  * tests: Explicitly drop category from log
+  * gitignore: Ignore autfoo *~ churn
+  * tests: Replace deprecated API log_set_print_filename
+
+  [ Daniel Willmann ]
+  * examples: Use osmo_stream_*_set_nodelay in ipa examples
+
+  [ Harald Welte ]
+  * Use osmo_fd_setup() wherever applicable
+  * cosmetic: Fix whitespace (use tab instead of 8x space)
+  * migrate to osmo_fd_{read,write}_{enable,disable}()
+  * Don't depend on libosmo-abis (by default)
+
+  [ Oliver Smith ]
+  * configure.ac: set -std=gnu11
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 23 Feb 2021 16:47:37 +0100
+
 libosmo-netif (1.0.0) unstable; urgency=medium
 
   [ Neels Hofmeyr ]

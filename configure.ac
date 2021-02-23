@@ -24,7 +24,7 @@ AC_PROG_INSTALL
 LT_INIT
 AC_PROG_LIBTOOL
 
-dnl patching ${archive_cmds} to affect generation of file "libtool" to fix linking with clang 
+dnl patching ${archive_cmds} to affect generation of file "libtool" to fix linking with clang
 AS_CASE(["$LD"],[*clang*],
   [AS_CASE(["${host_os}"],
      [*linux*],[archive_cmds='$CC -shared $pic_flag $libobjs $deplibs $compiler_flags $wl-soname $wl$soname -o $lib'])])
@@ -89,8 +89,8 @@ AC_SUBST(SYMBOL_VISIBILITY)
 dnl Generate the output
 AM_CONFIG_HEADER(config.h)
 
-PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.3.0)
-PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.3.0)
+PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.5.0)
+PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.5.0)
 
 AC_ARG_ENABLE([lapd_examples],
 	[AS_HELP_STRING(
@@ -99,7 +99,7 @@ AC_ARG_ENABLE([lapd_examples],
 	)],
 	[lapd_examples=$enableval], [lapd_examples="no"])
 AS_IF([test "x$lapd_examples" = "xyes"], [
-	PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 0.6.0)
+	PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 1.1.0)
 	AC_DEFINE([ENABLE_LAPD], [1], [Enable LAPD examples])
 ])
 AM_CONDITIONAL(ENABLE_LAPD, test "x$lapd_examples" = "xyes")

@@ -7,4 +7,3 @@
 # If any interfaces have been added since the last public release: c:r:a + 1.
 # If any interfaces have been removed or changed since the last public release: c:r:0.
 #library	what		description / commit summary line
-libosmo-netif   ipv6            Depends on libosmocore > 1.4.0 for IPv6 osmo_sock_inti2_multiaddr AF_UNSPEC (IPv6) support.
