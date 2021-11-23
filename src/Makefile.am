@@ -20,3 +20,7 @@ libosmonetif_la_SOURCES = amr.c			\
 			  rs232.c		\
 			  rtp.c			\
 			  stream.c
+
+if ENABLE_LIBSCTP
+libosmonetif_la_SOURCES += sctp.c
+endif

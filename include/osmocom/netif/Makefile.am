@@ -8,4 +8,8 @@ osmonetif_HEADERS = amr.h		\
 		    rtp.h		\
 		    stream.h
 
+if ENABLE_LIBSCTP
+osmonetif_HEADERS += sctp.h
+endif
+
 osmonetifdir = $(includedir)/osmocom/netif
