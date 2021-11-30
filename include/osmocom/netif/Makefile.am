@@ -4,6 +4,7 @@ osmonetif_HEADERS = amr.h		\
 		    osmux.h		\
 		    ipa.h		\
 		    ipa_unit.h		\
+		    prim.h		\
 		    rs232.h		\
 		    rtp.h		\
 		    stream.h
