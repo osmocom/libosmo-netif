@@ -256,6 +256,8 @@ struct osmo_stream_cli {
 	char				*local_addr[OSMO_STREAM_MAX_ADDRS];
 	uint8_t			 	local_addrcnt;
 	uint16_t			local_port;
+	int				sk_domain;
+	int				sk_type;
 	uint16_t			proto;
 	int (*connect_cb)(struct osmo_stream_cli *srv);
 	int (*disconnect_cb)(struct osmo_stream_cli *srv);
@@ -349,20 +351,31 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 
 	LOGSCLI(cli, LOGL_DEBUG, "sending %u bytes of data\n", msgb_length(msg));
 
-	switch (cli->proto) {
+	switch (cli->sk_domain) {
+	case AF_UNIX:
+		ret = send(cli->ofd.fd, msg->data, msg->len, 0);
+		break;
+	case AF_UNSPEC:
+	case AF_INET:
+	case AF_INET6:
+		switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
-	case IPPROTO_SCTP:
-		memset(&sinfo, 0, sizeof(sinfo));
-		sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
-		sinfo.sinfo_stream = msgb_sctp_stream(msg);
-		ret = sctp_send(cli->ofd.fd, msg->data, msgb_length(msg),
-				&sinfo, MSG_NOSIGNAL);
-		break;
+		case IPPROTO_SCTP:
+			memset(&sinfo, 0, sizeof(sinfo));
+			sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
+			sinfo.sinfo_stream = msgb_sctp_stream(msg);
+			ret = sctp_send(cli->ofd.fd, msg->data, msgb_length(msg),
+					&sinfo, MSG_NOSIGNAL);
+			break;
 #endif
-	case IPPROTO_TCP:
-	default:
-		ret = send(cli->ofd.fd, msg->data, msgb_length(msg), 0);
+		case IPPROTO_TCP:
+		default:
+			ret = send(cli->ofd.fd, msg->data, msgb_length(msg), 0);
+			break;
+		}
 		break;
+	default:
+		ret = -ENOTSUP;
 	}
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ENOTCONN) {
@@ -372,6 +385,20 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	}
 	msgb_free(msg);
 	return 0;
+}
+
+static int _setsockopt_nosigpipe(struct osmo_stream_cli *cli)
+{
+#ifdef SO_NOSIGPIPE
+	int ret;
+	int val = 1;
+	ret = setsockopt(cli->ofd.fd, SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val));
+	if (ret < 0)
+		LOGSCLI(cli, LOGL_DEBUG, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
+	return ret;
+#else
+	return 0;
+#endif
 }
 
 static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
@@ -395,15 +422,20 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 
 		LOGSCLI(cli, LOGL_DEBUG, "connection done.\n");
 		cli->state = STREAM_CLI_STATE_CONNECTED;
-		if (cli->proto == IPPROTO_SCTP) {
-#ifdef SO_NOSIGPIPE
-			int val = 1;
-
-			ret = setsockopt(ofd->fd, SOL_SOCKET, SO_NOSIGPIPE, (void*)&val, sizeof(val));
-			if (ret < 0)
-				LOGSCLI(cli, LOGL_DEBUG, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
-#endif
-			sctp_sock_activate_events(ofd->fd);
+		switch (cli->sk_domain) {
+		case AF_UNIX:
+			_setsockopt_nosigpipe(cli);
+			break;
+		case AF_UNSPEC:
+		case AF_INET:
+		case AF_INET6:
+			if (cli->proto == IPPROTO_SCTP) {
+				_setsockopt_nosigpipe(cli);
+				sctp_sock_activate_events(ofd->fd);
+			}
+			break;
+		default:
+			break;
 		}
 		if (cli->connect_cb)
 			cli->connect_cb(cli);
@@ -441,6 +473,8 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 	if (!cli)
 		return NULL;
 
+	cli->sk_domain = AF_UNSPEC;
+	cli->sk_type = SOCK_STREAM;
 	cli->proto = IPPROTO_TCP;
 	cli->ofd.fd = -1;
 	cli->ofd.priv_nr = 0;	/* XXX */
@@ -555,6 +589,46 @@ osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
 {
 	cli->proto = proto;
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+}
+
+/*! \brief Set the socket type for the stream server link
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] type Socket Type (like SOCK_STREAM (default), SOCK_SEQPACKET, ...)
+ *  \returns zero on success, negative on error.
+ */
+int osmo_stream_cli_set_type(struct osmo_stream_cli *cli, int type)
+{
+	switch (type) {
+	case SOCK_STREAM:
+	case SOCK_SEQPACKET:
+		break;
+	default:
+		return -ENOTSUP;
+	}
+	cli->sk_type = type;
+	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+	return 0;
+}
+
+/*! \brief Set the socket type for the stream server link
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] type Socket Domain (like AF_UNSPEC (default for IP), AF_UNIX, AF_INET, ...)
+ *  \returns zero on success, negative on error.
+ */
+int osmo_stream_cli_set_domain(struct osmo_stream_cli *cli, int domain)
+{
+	switch (domain) {
+	case AF_UNSPEC:
+	case AF_INET:
+	case AF_INET6:
+	case AF_UNIX:
+		break;
+	default:
+		return -ENOTSUP;
+	}
+	cli->sk_domain = domain;
+	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+	return 0;
 }
 
 /*! \brief Set the reconnect time of the stream client socket
@@ -731,21 +805,31 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 
 	cli->flags &= ~OSMO_STREAM_CLI_F_RECONF;
 
-
-	switch (cli->proto) {
-#ifdef HAVE_LIBSCTP
-	case IPPROTO_SCTP:
-		ret = osmo_sock_init2_multiaddr(AF_UNSPEC, SOCK_STREAM, cli->proto,
-						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
-						(const char **)cli->addr, cli->addrcnt, cli->port,
-						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+	switch (cli->sk_domain) {
+	case AF_UNIX:
+		ret = osmo_sock_unix_init(cli->sk_type, 0, cli->addr[0], OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
 		break;
+	case AF_INET:
+	case AF_INET6:
+	case AF_UNSPEC:
+		switch (cli->proto) {
+#ifdef HAVE_LIBSCTP
+		case IPPROTO_SCTP:
+			ret = osmo_sock_init2_multiaddr(cli->sk_domain, cli->sk_type, cli->proto,
+							(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
+							(const char **)cli->addr, cli->addrcnt, cli->port,
+							OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+			break;
 #endif
+		default:
+			ret = osmo_sock_init2(cli->sk_domain, cli->sk_type, cli->proto,
+					      cli->local_addr[0], cli->local_port,
+					      cli->addr[0], cli->port,
+					      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+		}
+		break;
 	default:
-		ret = osmo_sock_init2(AF_UNSPEC, SOCK_STREAM, cli->proto,
-				      cli->local_addr[0], cli->local_port,
-				      cli->addr[0], cli->port,
-				      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+		return -ENOTSUP;
 	}
 
 	if (ret < 0) {
@@ -827,6 +911,8 @@ struct osmo_stream_srv_link {
 	char			*addr[OSMO_STREAM_MAX_ADDRS];
 	uint8_t			addrcnt;
 	uint16_t		port;
+	int			sk_domain;
+	int			sk_type;
 	uint16_t		proto;
 	int (*accept_cb)(struct osmo_stream_srv_link *srv, int fd);
 	void			*data;
@@ -838,7 +924,7 @@ static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 	int ret;
 	int sock_fd;
 	char addrstr[128];
-	bool is_ipv6;
+	bool is_ipv6 = false;
 	struct sockaddr_storage sa;
 	socklen_t sa_len = sizeof(sa);
 	struct osmo_stream_srv_link *link = ofd->data;
@@ -849,19 +935,35 @@ static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
 			"peer, reason=`%s'\n", strerror(errno));
 		return ret;
 	}
-	is_ipv6 = ((struct sockaddr *)&sa)->sa_family == AF_INET6;
-	LOGP(DLINP, LOGL_DEBUG, "accept()ed new link from %s to port %u\n",
-		inet_ntop(is_ipv6 ? AF_INET6 : AF_INET,
-			  is_ipv6 ? (void*)&(((struct sockaddr_in6 *)&sa)->sin6_addr) :
-				    (void*)&(((struct sockaddr_in *)&sa)->sin_addr),
-			  addrstr, sizeof(addrstr)),
-		link->port);
 	sock_fd = ret;
 
-	if (link->proto == IPPROTO_SCTP) {
-		ret = sctp_sock_activate_events(sock_fd);
-		if (ret < 0)
-			goto error_close_socket;
+	is_ipv6 = false;
+	switch (((struct sockaddr *)&sa)->sa_family) {
+	case AF_UNIX:
+		LOGP(DLINP, LOGL_DEBUG, "accept()ed new link on fd %d\n",
+		     sock_fd);
+		break;
+	case AF_INET6:
+		is_ipv6 = true;
+		/* fall through */
+	case AF_INET:
+		LOGP(DLINP, LOGL_DEBUG, "accept()ed new link from %s to port %u\n",
+			inet_ntop(is_ipv6 ? AF_INET6 : AF_INET,
+				  is_ipv6 ? (void *)&(((struct sockaddr_in6 *)&sa)->sin6_addr) :
+					    (void *)&(((struct sockaddr_in *)&sa)->sin_addr),
+				  addrstr, sizeof(addrstr)),
+			link->port);
+
+		if (link->proto == IPPROTO_SCTP) {
+			ret = sctp_sock_activate_events(sock_fd);
+			if (ret < 0)
+				goto error_close_socket;
+		}
+		break;
+	default:
+		LOGP(DLINP, LOGL_DEBUG, "accept()ed unexpected address family %d\n",
+		     ((struct sockaddr *)&sa)->sa_family);
+		goto error_close_socket;
 	}
 
 	if (link->flags & OSMO_STREAM_SRV_F_NODELAY) {
@@ -899,6 +1001,8 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	if (!link)
 		return NULL;
 
+	link->sk_domain = AF_UNSPEC;
+	link->sk_type = SOCK_STREAM;
 	link->proto = IPPROTO_TCP;
 	osmo_fd_setup(&link->ofd, -1, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_srv_fd_cb, link, 0);
 
@@ -976,6 +1080,47 @@ osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link,
 {
 	link->proto = proto;
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
+}
+
+
+/*! \brief Set the socket type for the stream server link
+ *  \param[in] link Stream Server Link to modify
+ *  \param[in] type Socket Type (like SOCK_STREAM (default), SOCK_SEQPACKET, ...)
+ *  \returns zero on success, negative on error.
+ */
+int osmo_stream_srv_link_set_type(struct osmo_stream_srv_link *link, int type)
+{
+	switch (type) {
+	case SOCK_STREAM:
+	case SOCK_SEQPACKET:
+		break;
+	default:
+		return -ENOTSUP;
+	}
+	link->sk_type = type;
+	link->flags |= OSMO_STREAM_SRV_F_RECONF;
+	return 0;
+}
+
+/*! \brief Set the socket type for the stream server link
+ *  \param[in] link Stream Server Link to modify
+ *  \param[in] type Socket Domain (like AF_UNSPEC (default for IP), AF_UNIX, AF_INET, ...)
+ *  \returns zero on success, negative on error.
+ */
+int osmo_stream_srv_link_set_domain(struct osmo_stream_srv_link *link, int domain)
+{
+	switch (domain) {
+	case AF_UNSPEC:
+	case AF_INET:
+	case AF_INET6:
+	case AF_UNIX:
+		break;
+	default:
+		return -ENOTSUP;
+	}
+	link->sk_domain = domain;
+	link->flags |= OSMO_STREAM_SRV_F_RECONF;
+	return 0;
 }
 
 /*! \brief Set application private data of the stream server link
@@ -1060,17 +1205,28 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 
 	link->flags &= ~OSMO_STREAM_SRV_F_RECONF;
 
-	switch (link->proto) {
-#ifdef HAVE_LIBSCTP
-	case IPPROTO_SCTP:
-		ret = osmo_sock_init2_multiaddr(AF_UNSPEC, SOCK_STREAM, link->proto,
-						(const char **)link->addr, link->addrcnt, link->port,
-						NULL, 0, 0, OSMO_SOCK_F_BIND);
+	switch (link->sk_domain) {
+	case AF_UNIX:
+		ret = osmo_sock_unix_init(link->sk_type, 0, link->addr[0], OSMO_SOCK_F_BIND);
 		break;
+	case AF_UNSPEC:
+	case AF_INET:
+	case AF_INET6:
+		switch (link->proto) {
+#ifdef HAVE_LIBSCTP
+		case IPPROTO_SCTP:
+			ret = osmo_sock_init2_multiaddr(link->sk_domain, link->sk_type, link->proto,
+							(const char **)link->addr, link->addrcnt, link->port,
+							NULL, 0, 0, OSMO_SOCK_F_BIND);
+			break;
 #endif
+		default:
+			ret = osmo_sock_init(link->sk_domain, link->sk_type, link->proto,
+					     link->addr[0], link->port, OSMO_SOCK_F_BIND);
+		}
+		break;
 	default:
-		ret = osmo_sock_init(AF_UNSPEC, SOCK_STREAM, link->proto,
-					link->addr[0], link->port, OSMO_SOCK_F_BIND);
+		ret = -ENOTSUP;
 	}
 	if (ret < 0)
 		return ret;
@@ -1144,20 +1300,31 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	llist_del(lh);
 	msg = llist_entry(lh, struct msgb, list);
 
-	switch (conn->srv->proto) {
-#ifdef HAVE_LIBSCTP
-	case IPPROTO_SCTP:
-		memset(&sinfo, 0, sizeof(sinfo));
-		sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
-		sinfo.sinfo_stream = msgb_sctp_stream(msg);
-		ret = sctp_send(conn->ofd.fd, msg->data, msgb_length(msg),
-				&sinfo, MSG_NOSIGNAL);
-		break;
-#endif
-	case IPPROTO_TCP:
-	default:
+	switch (conn->srv->sk_domain) {
+	case AF_UNIX:
 		ret = send(conn->ofd.fd, msg->data, msg->len, 0);
 		break;
+	case AF_INET:
+	case AF_INET6:
+	case AF_UNSPEC:
+		switch (conn->srv->proto) {
+#ifdef HAVE_LIBSCTP
+		case IPPROTO_SCTP:
+			memset(&sinfo, 0, sizeof(sinfo));
+			sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
+			sinfo.sinfo_stream = msgb_sctp_stream(msg);
+			ret = sctp_send(conn->ofd.fd, msg->data, msgb_length(msg),
+					&sinfo, MSG_NOSIGNAL);
+			break;
+#endif
+		case IPPROTO_TCP:
+		default:
+			ret = send(conn->ofd.fd, msg->data, msg->len, 0);
+			break;
+		}
+		break;
+	default:
+		ret = -ENOTSUP;
 	}
 	if (ret < 0) {
 		LOGP(DLINP, LOGL_ERROR, "error to send\n");
@@ -1352,16 +1519,27 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 	if (!msg)
 		return -EINVAL;
 
-	switch (conn->srv->proto) {
-#ifdef HAVE_LIBSCTP
-	case IPPROTO_SCTP:
-		ret = _sctp_recvmsg_wrapper(conn->ofd.fd, msg);
-		break;
-#endif
-	case IPPROTO_TCP:
-	default:
+	switch (conn->srv->sk_domain) {
+	case AF_UNIX:
 		ret = recv(conn->ofd.fd, msgb_data(msg), msgb_tailroom(msg), 0);
 		break;
+	case AF_INET:
+	case AF_INET6:
+	case AF_UNSPEC:
+		switch (conn->srv->proto) {
+#ifdef HAVE_LIBSCTP
+		case IPPROTO_SCTP:
+			ret = _sctp_recvmsg_wrapper(conn->ofd.fd, msg);
+			break;
+#endif
+		case IPPROTO_TCP:
+		default:
+			ret = recv(conn->ofd.fd, msgb_data(msg), msgb_tailroom(msg), 0);
+			break;
+		}
+		break;
+	default:
+		ret = -ENOTSUP;
 	}
 
 	if (ret < 0) {

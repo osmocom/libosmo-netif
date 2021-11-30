@@ -25,6 +25,8 @@ void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link, const char
 int osmo_stream_srv_link_set_addrs(struct osmo_stream_srv_link *link, const char **addr, size_t addrcnt);
 void osmo_stream_srv_link_set_port(struct osmo_stream_srv_link *link, uint16_t port);
 void osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link, uint16_t proto);
+int osmo_stream_srv_link_set_type(struct osmo_stream_srv_link *link, int type);
+int osmo_stream_srv_link_set_domain(struct osmo_stream_srv_link *link, int domain);
 void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link, int (*accept_cb)(struct osmo_stream_srv_link *link, int fd));
 void osmo_stream_srv_link_set_data(struct osmo_stream_srv_link *link, void *data);
 void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link);
@@ -57,6 +59,8 @@ void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay);
 void osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr);
 int osmo_stream_cli_set_addrs(struct osmo_stream_cli *cli, const char **addr, size_t addrcnt);
 void osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port);
+int osmo_stream_cli_set_type(struct osmo_stream_cli *cli, int type);
+int osmo_stream_cli_set_domain(struct osmo_stream_cli *cli, int domain);
 void osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto);
 void osmo_stream_cli_set_local_addr(struct osmo_stream_cli *cli, const char *addr);
 int osmo_stream_cli_set_local_addrs(struct osmo_stream_cli *cli, const char **addr, size_t addrcnt);
