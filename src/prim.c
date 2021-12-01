@@ -82,6 +82,7 @@ struct osmo_prim_srv_link {
 	struct osmo_stream_srv_link *stream;
 	osmo_prim_srv_conn_cb opened_conn_cb;
 	osmo_prim_srv_conn_cb closed_conn_cb;
+	osmo_prim_srv_rx_sapi_version rx_sapi_version_cb;
 	osmo_prim_srv_rx_cb rx_cb;
 	size_t rx_msgb_alloc_len;
 };
@@ -93,9 +94,106 @@ struct osmo_prim_srv {
 };
 
 /******************************
+ * CONTROL SAP
+ ******************************/
+#define OSMO_PRIM_CTL_SAPI		0xffffffff
+#define OSMO_PRIM_CTL_API_VERSION	0
+
+enum sap_ctl_prim_type {
+	SAP_CTL_PRIM_HELLO,
+	_SAP_CTL_PRIM_MAX
+};
+
+const struct value_string sap_ctl_prim_type_names[] = {
+	OSMO_VALUE_STRING(SAP_CTL_PRIM_HELLO),
+	{ 0, NULL }
+};
+
+/* HNB_CTL_PRIM_HELLO.ind, UL */
+struct sap_ctl_hello_param {
+	uint32_t sapi; /* SAPI for which we negotiate version */
+	uint16_t api_version; /* The intended version */
+} __attribute__ ((packed));
+
+struct sap_ctl_prim {
+	struct osmo_prim_hdr hdr;
+	union {
+		struct sap_ctl_hello_param hello_req;
+		struct sap_ctl_hello_param hello_cnf;
+	} u;
+} __attribute__ ((packed));
+
+static struct sap_ctl_prim *_sap_ctl_makeprim_hello_cnf(uint32_t sapi, uint16_t api_version)
+{
+	struct sap_ctl_prim *ctl_prim;
+
+	ctl_prim = (struct sap_ctl_prim *)osmo_prim_msgb_alloc(
+						OSMO_PRIM_CTL_SAPI, SAP_CTL_PRIM_HELLO, PRIM_OP_CONFIRM,
+						sizeof(struct osmo_prim_hdr) + sizeof(struct sap_ctl_hello_param));
+	msgb_put(ctl_prim->hdr.msg, sizeof(struct sap_ctl_hello_param));
+	ctl_prim->u.hello_cnf.sapi = sapi;
+	ctl_prim->u.hello_cnf.api_version = api_version;
+
+	return ctl_prim;
+}
+
+/******************************
  * osmo_prim_srv
  ******************************/
 #define LOGSRV(srv, lvl, fmt, args...) LOGP((srv)->link->log_cat, lvl, fmt, ## args)
+
+static int _srv_sap_ctl_rx_hello_req(struct osmo_prim_srv *prim_srv, struct sap_ctl_hello_param *hello_ind)
+{
+	struct sap_ctl_prim *prim_resp;
+	int rc;
+
+	LOGSRV(prim_srv, LOGL_INFO, "Rx CTL-HELLO.req SAPI=%u API_VERSION=%u\n", hello_ind->sapi, hello_ind->api_version);
+
+	if (hello_ind->sapi == OSMO_PRIM_CTL_SAPI)
+		rc = hello_ind->api_version ==  OSMO_PRIM_CTL_API_VERSION ? OSMO_PRIM_CTL_API_VERSION : -1;
+	else if (prim_srv->link->rx_sapi_version_cb)
+		rc = prim_srv->link->rx_sapi_version_cb(prim_srv, hello_ind->sapi, hello_ind->api_version);
+	else	/* Accept whatever version by default: */
+		rc = hello_ind->api_version;
+
+	if (rc < 0) {
+		LOGSRV(prim_srv, LOGL_ERROR,
+		       "SAPI=%u API_VERSION=%u not supported! destroying connection\n",
+		       hello_ind->sapi, hello_ind->api_version);
+		osmo_stream_srv_set_flush_and_destroy(prim_srv->stream);
+		return rc;
+	}
+	prim_resp = _sap_ctl_makeprim_hello_cnf(hello_ind->sapi, (uint16_t)rc);
+	LOGSRV(prim_srv, LOGL_INFO, "Tx CTL-HELLO.cnf SAPI=%u API_VERSION=%u\n",
+	       hello_ind->sapi, prim_resp->u.hello_cnf.api_version);
+	osmo_prim_srv_send(prim_srv, prim_resp->hdr.msg);
+	return rc;
+}
+
+static int _srv_sap_ctl_rx(struct osmo_prim_srv *prim_srv, struct osmo_prim_hdr *oph)
+{
+	switch (oph->operation) {
+	case PRIM_OP_REQUEST:
+		switch (oph->primitive) {
+		case SAP_CTL_PRIM_HELLO:
+			return _srv_sap_ctl_rx_hello_req(prim_srv, (struct sap_ctl_hello_param *)msgb_data(oph->msg));
+		default:
+			LOGSRV(prim_srv, LOGL_ERROR, "Rx unknown CTL SAP primitive %u (len=%u)\n",
+			     oph->primitive, msgb_length(oph->msg));
+			return -EINVAL;
+		}
+		break;
+	case PRIM_OP_RESPONSE:
+	case PRIM_OP_INDICATION:
+	case PRIM_OP_CONFIRM:
+	default:
+		LOGSRV(prim_srv, LOGL_ERROR, "Rx CTL SAP unexpected primitive operation %s-%s (len=%u)\n",
+		     get_value_string(sap_ctl_prim_type_names, oph->primitive),
+		     get_value_string(osmo_prim_op_names, oph->operation),
+		     msgb_length(oph->msg));
+		return -EINVAL;
+	}
+}
 
 static int _osmo_prim_srv_read_cb(struct osmo_stream_srv *srv)
 {
@@ -133,9 +231,15 @@ static int _osmo_prim_srv_read_cb(struct osmo_stream_srv *srv)
 	osmo_prim_init(&oph, pkth->sap, pkth->primitive, pkth->operation, msg);
 	msgb_pull(msg, sizeof(*pkth));
 
-	if (prim_srv->link->rx_cb)
-		rc = prim_srv->link->rx_cb(prim_srv, &oph);
-
+	switch (oph.sap) {
+	case OSMO_PRIM_CTL_SAPI:
+		rc = _srv_sap_ctl_rx(prim_srv, &oph);
+		break;
+	default:
+		if (prim_srv->link->rx_cb)
+			rc = prim_srv->link->rx_cb(prim_srv, &oph);
+		break;
+	}
 	/* as we always synchronously process the message in _osmo_prim_srv_link_rx() and
 	 * its callbacks, we can free the message here. */
 	msgb_free(msg);
@@ -323,6 +427,11 @@ void osmo_prim_srv_link_set_opened_conn_cb(struct osmo_prim_srv_link *prim_link,
 void osmo_prim_srv_link_set_closed_conn_cb(struct osmo_prim_srv_link *prim_link, osmo_prim_srv_conn_cb closed_conn_cb)
 {
 	prim_link->closed_conn_cb = closed_conn_cb;
+}
+
+void osmo_prim_srv_link_set_rx_sapi_version_cb(struct osmo_prim_srv_link *prim_link, osmo_prim_srv_rx_sapi_version rx_sapi_version_cb)
+{
+	prim_link->rx_sapi_version_cb = rx_sapi_version_cb;
 }
 
 void osmo_prim_srv_link_set_rx_cb(struct osmo_prim_srv_link *prim_link, osmo_prim_srv_rx_cb rx_cb)

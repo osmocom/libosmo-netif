@@ -31,6 +31,15 @@ typedef int (*osmo_prim_srv_conn_cb)(struct osmo_prim_srv *prim_srv);
 /*! oph and related msgb is owned by srv and wll be freed after the callback returns. */
 typedef int (*osmo_prim_srv_rx_cb)(struct osmo_prim_srv *prim_srv, struct osmo_prim_hdr *oph);
 
+/*! Return value:
+ * RET=rem_version: Accept the version
+ * RET!=rem_version && RET > 0: Reject the requested version but propose another candidate version
+ *                              In this case, the client can decide whether to request another VER
+ *                              or close the connection.
+ * RET<0: Reject the proposed version and close the connection.
+ */
+typedef int (*osmo_prim_srv_rx_sapi_version)(struct osmo_prim_srv *prim_srv, uint32_t sapi, uint16_t rem_version);
+
 struct osmo_prim_hdr *osmo_prim_msgb_alloc(unsigned int sap, unsigned int primitive,
 					  enum osmo_prim_operation operation, size_t alloc_len);
 
@@ -43,6 +52,7 @@ void *osmo_prim_srv_link_get_priv(const struct osmo_prim_srv_link *prim_link);
 void osmo_prim_srv_link_set_log_category(struct osmo_prim_srv_link *prim_link, int log_cat);
 void osmo_prim_srv_link_set_opened_conn_cb(struct osmo_prim_srv_link *prim_link, osmo_prim_srv_conn_cb opened_conn_cb);
 void osmo_prim_srv_link_set_closed_conn_cb(struct osmo_prim_srv_link *prim_link, osmo_prim_srv_conn_cb closed_conn_cb);
+void osmo_prim_srv_link_set_rx_sapi_version_cb(struct osmo_prim_srv_link *prim_link, osmo_prim_srv_rx_sapi_version rx_sapi_version_cb);
 void osmo_prim_srv_link_set_rx_cb(struct osmo_prim_srv_link *prim_link, osmo_prim_srv_rx_cb rx_cb);
 void osmo_prim_srv_link_set_rx_msgb_alloc_len(struct osmo_prim_srv_link *prim_link, size_t alloc_len);
 int osmo_prim_srv_link_open(struct osmo_prim_srv_link *prim_link);
