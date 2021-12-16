@@ -166,7 +166,7 @@ static int _srv_sap_ctl_rx_hello_req(struct osmo_prim_srv *prim_srv, struct sap_
 	prim_resp = _sap_ctl_makeprim_hello_cnf(hello_ind->sapi, (uint16_t)rc);
 	LOGSRV(prim_srv, LOGL_INFO, "Tx CTL-HELLO.cnf SAPI=%u API_VERSION=%u\n",
 	       hello_ind->sapi, prim_resp->u.hello_cnf.api_version);
-	osmo_prim_srv_send(prim_srv, prim_resp->hdr.msg);
+	rc = osmo_prim_srv_send(prim_srv, prim_resp->hdr.msg);
 	return rc;
 }
 
