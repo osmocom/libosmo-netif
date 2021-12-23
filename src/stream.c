@@ -173,6 +173,42 @@ static int sctp_sock_activate_events(int fd)
 	struct sctp_event_subscribe event;
 	int rc;
 
+#ifdef SCTP_EVENT
+	/* See https://datatracker.ietf.org/doc/html/rfc6458 Section 6.2.2
+	 * and 480ba9c18a27ff77b02a2012e50dfd3e20ee9f7a in linux.git */
+	unsigned int elen = sizeof(struct sctp_event);
+	struct sctp_event e;
+	unsigned int i;
+
+	/* Use getsockopt() to check if SCTP_EVENT is supported by the kernel.
+	 * The related code is only present in kernels >= 5.0. */
+	e = (struct sctp_event) { .se_type = SCTP_DATA_IO_EVENT }; // FIXME: se_assoc_id
+	if (getsockopt(fd, IPPROTO_SCTP, SCTP_EVENT, &e, &elen) != 0)
+		goto fallback;
+
+	const uint16_t events[] = {
+		SCTP_DATA_IO_EVENT,
+		SCTP_ASSOC_CHANGE,
+		SCTP_PEER_ADDR_CHANGE,
+		SCTP_SEND_FAILED,
+		SCTP_REMOTE_ERROR,
+		SCTP_SHUTDOWN_EVENT,
+	};
+
+	for (i = 0; i < ARRAY_SIZE(events); i++) {
+		e = (struct sctp_event) { .se_type = events[i], .se_on = 1 }; // FIXME: se_assoc_id
+		if ((rc = setsockopt(fd, IPPROTO_SCTP, SCTP_EVENT, &e, sizeof(e))) != 0) {
+			LOGP(DLINP, LOGL_ERROR,
+			     "Couldn't activate SCTP event %u on FD %u\n",
+			     events[i], fd);
+			return rc;
+		}
+	}
+
+	return 0;
+#endif
+
+fallback:
 	/* subscribe for all relevant events */
 	memset((uint8_t *)&event, 0, sizeof(event));
 	event.sctp_data_io_event = 1;
