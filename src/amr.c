@@ -152,7 +152,7 @@ int osmo_amr_oa_to_bwe(uint8_t *payload, unsigned int payload_len)
 		return -1;
 
 	/* Move TOC close to CMR */
-	payload[0] |= (payload[1] >> 4) & 0x0f;
+	payload[0] = (payload[0] & 0xf0) | ((payload[1] >> 4) & 0x0f);
 	payload[1] = (payload[1] << 4) & 0xf0;
 
 	for (i = 0; i < frame_len; i++) {
