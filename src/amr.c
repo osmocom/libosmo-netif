@@ -63,6 +63,15 @@ size_t osmo_amr_bytes(uint8_t amr_ft)
 	return amr_ft_to_bytes[amr_ft];
 }
 
+int osmo_amr_bytes_to_ft(size_t bytes)
+{
+	for (int ft = 0; ft < AMR_FT_MAX; ft++) {
+		if (amr_ft_to_bytes[ft] == bytes)
+			return ft;
+	}
+	return -1;
+}
+
 int osmo_amr_ft_valid(uint8_t amr_ft)
 {
 	/*
@@ -206,4 +215,66 @@ int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 
 	memcpy(payload, buf, oa_payload_len);
 	return oa_payload_len;
+}
+
+/*! Convert an AMR frame from bandwith-efficient mode to IuuP/IuPF payload.
+ *  The IuuP/IuPF payload only contains the class a, b, c bits. No header.
+ *  \param[inout] payload user provided memory containing the AMR payload.
+ *  \param[in] payload_len overall length of the AMR payload.
+ *  \param[in] payload_maxlen maximum length of the user provided memory.
+ *  \returns resulting payload length, -1 on error. */
+int osmo_amr_bwe_to_iuup(uint8_t *payload, unsigned int payload_len)
+{
+       /* The header is only valid after shifting first two bytes to OA mode */
+       unsigned int i;
+       unsigned int amr_speech_len;
+       uint8_t ft;
+
+       if (payload_len < 2)
+               return -1;
+
+       /* Calculate new payload length */
+       ft = (payload[0] & 0xf0) >> 4;
+       if (!osmo_amr_ft_valid(ft))
+               return -1;
+
+       amr_speech_len = osmo_amr_bytes(ft);
+       if (payload_len < amr_speech_len + 2)
+               return -1;
+
+       for (i = 0; i < amr_speech_len; i++) {
+	       /* we have to shift the payload by 10 bits to get only the Class A, B, C bits */
+	       payload[i] = (payload[i + 1] << 2) | ((payload[i + 2]) >> 6);
+       }
+
+       return amr_speech_len;
+}
+
+/*! Convert an AMR frame from IuuP/IuPF payload to bandwith-efficient mode.
+ *  The IuuP/IuPF payload only contains the class a, b, c bits. No header.
+ *  \param[inout] payload user provided memory containing the AMR payload.
+ *  \param[in] payload_len overall length of the AMR payload.
+ *  \param[in] payload_maxlen maximum length of the user provided memory.
+ *  \returns resulting payload length, -1 on error. */
+int osmo_amr_iuup_to_bwe(uint8_t *payload, unsigned int payload_len,
+			 unsigned int payload_maxlen)
+{
+       /* shift all bits by 10 */
+       unsigned int i;
+       uint8_t buffer[256] = { 0 };
+
+       if (payload_maxlen < payload_len + 2)
+	       return -1;
+
+       if (payload_len > sizeof(buffer) - 2)
+	       return -1;
+
+       for (i = 0; i < payload_len; i++) {
+	       /* we have to shift the payload by 10 bits to get only the Class A, B, C bits */
+	       buffer[i+1] |= (payload[i] >> 2);
+	       buffer[i+2] |= (payload[i] << 6);
+       }
+
+       memcpy(payload, buffer, payload_len + 2);
+       return payload_len + 2;
 }

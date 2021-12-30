@@ -115,5 +115,9 @@ bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len);
 int osmo_amr_oa_to_bwe(uint8_t *payload, unsigned int payload_len);
 int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 		       unsigned int payload_maxlen);
+int osmo_amr_bwe_to_iuup(uint8_t *payload, unsigned int payload_len);
+int osmo_amr_iuup_to_bwe(uint8_t *payload, unsigned int payload_len,
+			 unsigned int payload_maxlen);
+int osmo_amr_bytes_to_ft(size_t bytes);
 
 #endif
