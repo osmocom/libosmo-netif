@@ -63,6 +63,15 @@ char *bwe_amr_samples[] = {
 	"END",
 };
 
+/* Some IuUP payload containg AMR */
+char *iuup_amr_samples[] = {
+	"7a687b8b29ba02013d3cb863a5af4206869618fb5336d504968d7541663210",
+	"4482803977dc1880b56aab097728a6bbbb48a57e3affe41125838a5ce65fc0",
+	"2683c1d26e",
+	"END",
+};
+
+
 void dump_bits(uint8_t *buf, int len)
 {
 	unsigned int i;
@@ -185,6 +194,55 @@ void osmo_amr_oa_to_bwe_and_inverse_test(void)
 	}
 }
 
+void osmo_amr_iuup_to_bwe_and_inverse_test(void)
+{
+	uint8_t buf[256];
+	uint8_t buf_chk[256];
+	unsigned int ft;
+
+	unsigned int i = 0;
+	int len;
+	int rc;
+
+	printf("\n\n");
+	printf
+	    ("Testing conversion from IuUP to bw-efficient and inverse:\n");
+
+	while (1) {
+		if (strcmp(iuup_amr_samples[i], "END") == 0)
+			return;
+		printf("Sample No.: %d...", i);
+
+		len = osmo_hexparse(iuup_amr_samples[i], buf, sizeof(buf));
+		OSMO_ASSERT(len > 0);
+		i++;
+
+		ft = osmo_amr_bytes_to_ft(len);
+		if (ft < 0) {
+			printf(" skipping a sample with a wrong FT\n");
+			continue;
+		}
+		printf(" AMR mode: %d, IuUP: %d bytes,", ft, len);
+		memcpy(buf_chk, buf, sizeof(buf));
+
+		rc = osmo_amr_iuup_to_bwe(buf, len, sizeof(buf));
+		OSMO_ASSERT(rc > 0);
+		OSMO_ASSERT(rc == len + 2);
+		printf(" BE: %d bytes (%s),", rc, osmo_hexdump(buf, rc));
+
+		buf[0] = (ft << 4) & 0xf0;
+		rc = osmo_amr_bwe_to_iuup(buf, rc);
+		printf(" IuUP: %d bytes\n", rc);
+		OSMO_ASSERT(rc > 0);
+		OSMO_ASSERT(len == rc);
+		if (memcmp(buf, buf_chk, len) != 0) {
+			printf("Got:     %s\n", osmo_hexdump(buf, len));
+			printf("Expected:%s\n", osmo_hexdump(buf_chk, len));
+		}
+		OSMO_ASSERT(memcmp(buf, buf_chk, len) == 0);
+	}
+}
+
 void osmo_amr_is_oa_test(void)
 {
 	uint8_t buf[256];
@@ -239,6 +297,7 @@ int main(int argc, char **argv)
 	osmo_amr_oa_to_bwe_test();
 	osmo_amr_bwe_to_oa_test();
 	osmo_amr_oa_to_bwe_and_inverse_test();
+	osmo_amr_iuup_to_bwe_and_inverse_test();
 	osmo_amr_is_oa_test();
 
 	fprintf(stdout, "OK: Test passed\n");
