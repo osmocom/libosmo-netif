@@ -109,6 +109,7 @@ static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
 
 int osmo_amr_ft_valid(uint8_t amr_ft);
 size_t osmo_amr_bytes(uint8_t amr_cmr);
+size_t osmo_amr_bits(uint8_t amr_ft);
 
 bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len);
 int osmo_amr_oa_to_bwe(uint8_t *payload, unsigned int payload_len);
