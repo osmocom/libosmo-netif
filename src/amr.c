@@ -236,7 +236,7 @@ int osmo_amr_bwe_to_iuup(uint8_t *payload, unsigned int payload_len)
 		return -1;
 
 	/* Calculate new payload length */
-	ft = (payload[0] & 0xf0) >> 4;
+	ft = ((payload[0] & 0x07) << 1) | ((payload[1] & 0x80) >> 7);
 	if (!osmo_amr_ft_valid(ft))
 		return -1;
 
