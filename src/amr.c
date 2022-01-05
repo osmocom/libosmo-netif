@@ -228,8 +228,8 @@ int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 int osmo_amr_bwe_to_iuup(uint8_t *payload, unsigned int payload_len)
 {
 	/* The header is only valid after shifting first two bytes to OA mode */
-	unsigned int i;
-	unsigned int amr_speech_len;
+	unsigned int i, required_len_bits;
+	unsigned int amr_speech_len_bytes, amr_speech_len_bits;
 	uint8_t ft;
 
 	if (payload_len < 2)
@@ -240,16 +240,19 @@ int osmo_amr_bwe_to_iuup(uint8_t *payload, unsigned int payload_len)
 	if (!osmo_amr_ft_valid(ft))
 		return -1;
 
-	amr_speech_len = osmo_amr_bytes(ft);
-	if (payload_len < amr_speech_len + 2)
+	amr_speech_len_bits = osmo_amr_bits(ft);
+	amr_speech_len_bytes = osmo_amr_bytes(ft);
+
+	required_len_bits = amr_speech_len_bits + 10; /* shift of 10 bits */
+	if (payload_len < (required_len_bits + 7)/8)
 		return -1;
 
-	for (i = 0; i < amr_speech_len; i++) {
+	for (i = 0; i < amr_speech_len_bytes; i++) {
 		/* we have to shift the payload by 10 bits to get only the Class A, B, C bits */
 		payload[i] = (payload[i + 1] << 2) | ((payload[i + 2]) >> 6);
 	}
 
-	return amr_speech_len;
+	return amr_speech_len_bytes;
 }
 
 /*! Convert an AMR frame from IuuP/IuFP payload to bandwith-efficient mode.
@@ -263,9 +266,15 @@ int osmo_amr_iuup_to_bwe(uint8_t *payload, unsigned int payload_len,
 			 unsigned int payload_maxlen)
 {
 	/* shift all bits by 10 */
-	int i;
+	unsigned int i, required_len_bits, required_len_bytes;
 
-	if (payload_maxlen < payload_len + 2)
+	int ft = osmo_amr_bytes_to_ft(payload_len);
+	if (ft < 0)
+		return ft;
+
+	required_len_bits = osmo_amr_bits(ft) + 10;
+	required_len_bytes = (required_len_bits + 7)/8;
+	if (payload_maxlen < required_len_bytes)
 		return -1;
 
 	i = payload_len + 1;
@@ -276,5 +285,5 @@ int osmo_amr_iuup_to_bwe(uint8_t *payload, unsigned int payload_len,
 	}
 	payload[i] = (payload[i - 1] >> 2);
 	payload[0] = 0;
-	return payload_len + 2;
+	return required_len_bytes;
 }

@@ -227,7 +227,7 @@ void osmo_amr_iuup_to_bwe_and_inverse_test(void)
 
 		rc = osmo_amr_iuup_to_bwe(buf, len, sizeof(buf));
 		OSMO_ASSERT(rc > 0);
-		OSMO_ASSERT(rc == len + 2);
+		OSMO_ASSERT((rc == len + 1) || (rc == len + 2));
 		printf(" BE: %d bytes (%s),", rc, osmo_hexdump(buf, rc));
 
 		buf[0] = (ft >> 1) & 0x07;
