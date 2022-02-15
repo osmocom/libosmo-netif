@@ -103,8 +103,8 @@ bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len)
 	 * mode normally relys on out of band methods that explicitly select
 	 * one of the two modes. (See also RFC 3267, chapter 3.8). However the
 	 * A interface in GSM does not provide ways to communicate which mode
-	 * is used exactly used. The following functions uses some heuristics
-	 * to check if an AMR payload is octet aligned or not. */
+	 * is exactly used. The following functions uses some heuristics to
+	 * check if an AMR payload is octet aligned or not. */
 
 	struct amr_hdr *oa_hdr = (struct amr_hdr *)payload;
 	unsigned int frame_len;
