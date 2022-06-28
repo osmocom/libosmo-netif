@@ -1,3 +1,29 @@
+libosmo-netif (1.2.0) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * Introduce sctp.h to provide SCTP related functionalities
+  * stream: Factor out sctp_recvmg long code chunk
+  * stream: Add support for AF_UNIX sockets
+  * Introduce osmo_prim_srv APIs
+  * prim: Add internal CTL SAPI to negotiate SAP versions
+  * prim: return last error code
+  * amr: Fix FormatType from parsing BWE AMR header
+  * amr: Fix length check in bwe<->iuup converters
+
+  [ Alexander Couzens ]
+  * amr: don't rely on pad bits to be zero
+  * export osmo_amr_bits
+  * amr: Introduce APIs to convert BE to IuUP/IuFP format
+
+  [ Philipp Maier ]
+  * amr: cosmetic: fix grammer in comment
+  * amr_test: increase test coverage for oa / bwe conversation
+
+  [ Harald Welte ]
+  * update git URLs (git -> https; gitea)
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 28 Jun 2022 18:09:49 +0200
+
 libosmo-netif (1.1.0) unstable; urgency=medium
 
   [ Vadim Yanitskiy ]
