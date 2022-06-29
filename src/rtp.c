@@ -89,13 +89,14 @@ int osmo_rtp_handle_tx_set_timestamp(struct osmo_rtp_handle *h, uint32_t timesta
 
 struct rtp_hdr *osmo_rtp_get_hdr(struct msgb *msg)
 {
-	struct rtp_hdr *rtph = (struct rtp_hdr *)msg->data;
+	struct rtp_hdr *rtph;
 
 	if (msg->len < sizeof(struct rtp_hdr)) {
 		DEBUGPC(DLMUX, "received RTP frame too short (len = %d)\n",
 			msg->len);
 		return NULL;
 	}
+	rtph = (struct rtp_hdr *)msg->data;
 	if (rtph->version != RTP_VERSION) {
 		DEBUGPC(DLMUX, "received RTP version %d not supported.\n",
 			rtph->version);
