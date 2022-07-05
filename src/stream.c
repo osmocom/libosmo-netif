@@ -870,6 +870,8 @@ static void cli_timer_cb(void *data)
  *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 {
+	OSMO_ASSERT(cli);
+	OSMO_ASSERT(msg);
 	msgb_enqueue(&cli->tx_queue, msg);
 	osmo_fd_write_enable(&cli->ofd);
 }
@@ -881,6 +883,8 @@ void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 {
 	int ret;
+	OSMO_ASSERT(cli);
+	OSMO_ASSERT(msg);
 
 	ret = recv(cli->ofd.fd, msg->data, msg->data_len, 0);
 	if (ret < 0) {
@@ -1448,6 +1452,8 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
  *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 {
+	OSMO_ASSERT(conn);
+	OSMO_ASSERT(msg);
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
 		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring new outgoing message\n");
 		return;
@@ -1515,9 +1521,8 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 {
 	int ret;
-
-	if (!msg)
-		return -EINVAL;
+	OSMO_ASSERT(conn);
+	OSMO_ASSERT(msg);
 
 	switch (conn->srv->sk_domain) {
 	case AF_UNIX:
