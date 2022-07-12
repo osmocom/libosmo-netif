@@ -209,7 +209,7 @@ void osmo_amr_iuup_to_bwe_and_inverse_test(void)
 {
 	uint8_t buf[256];
 	uint8_t buf_chk[256];
-	unsigned int ft;
+	int ft;
 
 	unsigned int i = 0;
 	int len;
