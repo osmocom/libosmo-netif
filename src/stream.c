@@ -87,7 +87,7 @@ static int byte_nonzero(const uint8_t *u8, unsigned int offset, unsigned int u8_
 	return -1;
 }
 
-static int sctp_sockopt_event_subscribe_size = 0;
+static unsigned int sctp_sockopt_event_subscribe_size = 0;
 
 static int determine_sctp_sockopt_event_subscribe_size(void)
 {
@@ -96,7 +96,7 @@ static int determine_sctp_sockopt_event_subscribe_size(void)
 	int sd, rc;
 
 	/* only do this once */
-	if (sctp_sockopt_event_subscribe_size != 0)
+	if (sctp_sockopt_event_subscribe_size > 0)
 		return 0;
 
 	sd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
@@ -108,7 +108,7 @@ static int determine_sctp_sockopt_event_subscribe_size(void)
 	if (rc < 0)
 		return rc;
 
-	sctp_sockopt_event_subscribe_size = buf_len;
+	sctp_sockopt_event_subscribe_size = (unsigned int)buf_len;
 
 	LOGP(DLINP, LOGL_INFO, "sizes of 'struct sctp_event_subscribe': compile-time %zu, kernel: %u\n",
 		sizeof(struct sctp_event_subscribe), sctp_sockopt_event_subscribe_size);
