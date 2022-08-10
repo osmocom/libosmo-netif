@@ -3,6 +3,7 @@
 
 #include <osmocom/core/endian.h>
 #include <osmocom/core/timer.h>
+#include <osmocom/core/msgb.h>
 
 /*! \addtogroup osmux
  *  @{
