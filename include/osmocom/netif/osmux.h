@@ -13,6 +13,8 @@
  *  Osmocom multiplex protocol helpers
  */
 
+#define OSMUX_DEFAULT_PORT 1984
+
 /* OSmux header:
  *
  *	rtp_m (1 bit):		RTP M field (RFC3550, RFC4867)
