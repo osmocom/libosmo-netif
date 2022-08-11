@@ -199,7 +199,8 @@ osmo_rtp_build(struct osmo_rtp_handle *h, uint8_t payload_type,
 	rtph->timestamp = htonl(h->tx.timestamp);
 	h->tx.timestamp += duration;
 	rtph->ssrc = htonl(h->tx.ssrc);
-	memcpy(msg->data + sizeof(struct rtp_hdr), data, payload_len);
+	if (payload_len > 0)
+		memcpy(msg->data + sizeof(struct rtp_hdr), data, payload_len);
 	msgb_put(msg, sizeof(struct rtp_hdr) + payload_len);
 
 	return msg;
