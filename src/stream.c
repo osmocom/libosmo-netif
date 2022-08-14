@@ -1294,8 +1294,6 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	struct llist_head *lh;
 	int ret;
 
-	LOGP(DLINP, LOGL_DEBUG, "sending data\n");
-
 	if (llist_empty(&conn->tx_queue)) {
 		osmo_fd_write_disable(&conn->ofd);
 		return;
@@ -1303,6 +1301,8 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	lh = conn->tx_queue.next;
 	llist_del(lh);
 	msg = llist_entry(lh, struct msgb, list);
+
+	LOGP(DLINP, LOGL_DEBUG, "sending %u bytes of data\n", msg->len);
 
 	switch (conn->srv->sk_domain) {
 	case AF_UNIX:
@@ -1331,7 +1331,7 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 		ret = -ENOTSUP;
 	}
 	if (ret < 0) {
-		LOGP(DLINP, LOGL_ERROR, "error to send\n");
+		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", strerror(-ret));
 	}
 	msgb_free(msg);
 
