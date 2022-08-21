@@ -1330,8 +1330,8 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	default:
 		ret = -ENOTSUP;
 	}
-	if (ret < 0) {
-		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", strerror(-ret));
+	if (ret < 0) { /* send(): On error , -1 is returned, and errno is set appropriately */
+		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", (ret == -1) ? strerror(errno) : strerror(-ret));
 	}
 	msgb_free(msg);
 
