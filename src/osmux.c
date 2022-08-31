@@ -825,22 +825,6 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	LOGP(DLMUX, LOGL_DEBUG, "initialized osmux input converter\n");
 }
 
-/*! \brief Set transmission callback to call when a generated RTP packet is to be transmitted
- *  \param[in] h the osmux out handle handling a specific CID
- *  \param[in] osmuxh Buffer pointing to osmux frame header structure and AMR payload
- *  \return Number of generated RTP packets
- *
- * This Function sets the callback called by the interal timer set by
- * osmux_xfrm_out_sched function.
- */
-void osmux_xfrm_output_set_tx_cb(struct osmux_out_handle *h,
-				void (*tx_cb)(struct msgb *msg, void *data),
-				void *data)
-{
-	h->tx_cb = tx_cb;
-	h->data = data;
-}
-
 int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
 				  int dummy)
 {
@@ -895,6 +879,22 @@ void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
 {
 	/* backward compatibility with old users, where 98 was harcoded in osmux_rebuild_rtp()  */
 	osmux_xfrm_output_init2(h, rtp_ssrc, 98);
+}
+
+/*! \brief Set transmission callback to call when a generated RTP packet is to be transmitted
+ *  \param[in] h the osmux out handle handling a specific CID
+ *  \param[in] osmuxh Buffer pointing to osmux frame header structure and AMR payload
+ *  \return Number of generated RTP packets
+ *
+ * This Function sets the callback called by the interal timer set by
+ * osmux_xfrm_out_sched function.
+ */
+void osmux_xfrm_output_set_tx_cb(struct osmux_out_handle *h,
+				void (*tx_cb)(struct msgb *msg, void *data),
+				void *data)
+{
+	h->tx_cb = tx_cb;
+	h->data = data;
 }
 
 #define SNPRINTF_BUFFER_SIZE(ret, remain, offset)	\
