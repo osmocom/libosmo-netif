@@ -864,6 +864,40 @@ struct osmux_tx_handle {
 	void			*data;
 };
 
+static int osmux_xfrm_output_talloc_destructor(struct osmux_out_handle *h)
+{
+	osmux_xfrm_output_flush(h);
+	return 0;
+}
+
+/*! \brief Allocate a new osmux out handle
+ *  \param[in] ctx talloc context to use when allocating the returned struct
+ *  \return Allocated osmux out handle
+ *
+ * This object contains configuration and state to handle a specific CID in
+ * incoming network Osmux messages, repackaging the frames for that CID as RTP
+ * packets and pushing them up the protocol stack.
+ * Returned pointer can be freed with regular talloc_free, queue will be flushed
+ * and all internal data will be freed. */
+struct osmux_out_handle *osmux_xfrm_output_alloc(void *ctx)
+{
+	struct osmux_out_handle *h;
+
+	h = talloc_zero(ctx, struct osmux_out_handle);
+	OSMO_ASSERT(h);
+
+	h->rtp_seq = (uint16_t)random();
+	h->rtp_timestamp = (uint32_t)random();
+	h->rtp_ssrc = (uint32_t)random();
+	h->rtp_payload_type = 98;
+	INIT_LLIST_HEAD(&h->list);
+	osmo_timer_setup(&h->timer, osmux_xfrm_output_trigger, h);
+
+	talloc_set_destructor(h, osmux_xfrm_output_talloc_destructor);
+	return h;
+}
+
+/* DEPRECATED: Use osmux_xfrm_output_alloc() and osmux_xfrm_output_set_rtp_*() instead */
 void osmux_xfrm_output_init2(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint8_t rtp_payload_type)
 {
 	memset(h, 0, sizeof(*h));
@@ -875,6 +909,7 @@ void osmux_xfrm_output_init2(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint
 	osmo_timer_setup(&h->timer, osmux_xfrm_output_trigger, h);
 }
 
+/* DEPRECATED: Use osmux_xfrm_output_alloc() and osmux_xfrm_output_set_rtp_*() instead */
 void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
 {
 	/* backward compatibility with old users, where 98 was harcoded in osmux_rebuild_rtp()  */
@@ -895,6 +930,24 @@ void osmux_xfrm_output_set_tx_cb(struct osmux_out_handle *h,
 {
 	h->tx_cb = tx_cb;
 	h->data = data;
+}
+
+/*! \brief Set SSRC of generated RTP packets from Osmux frames
+ *  \param[in] h the osmux out handle handling a specific CID
+ *  \param[in] rtp_ssrc the RTP SSRC to set
+ */
+void osmux_xfrm_output_set_rtp_ssrc(struct osmux_out_handle *h, uint32_t rtp_ssrc)
+{
+	h->rtp_ssrc = rtp_ssrc;
+}
+
+/*! \brief Set Payload Type of generated RTP packets from Osmux frames
+ *  \param[in] h the osmux out handle handling a specific CID
+ *  \param[in] rtp_payload_type the RTP Payload Type to set
+ */
+void osmux_xfrm_output_set_rtp_pl_type(struct osmux_out_handle *h, uint32_t rtp_payload_type)
+{
+	h->rtp_payload_type = rtp_payload_type;
 }
 
 #define SNPRINTF_BUFFER_SIZE(ret, remain, offset)	\

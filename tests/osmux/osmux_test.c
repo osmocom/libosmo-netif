@@ -123,7 +123,7 @@ static void tx_cb(struct msgb *msg, void *data)
 	msgb_free(msg);
 }
 
-static struct osmux_out_handle h_output;
+static struct osmux_out_handle *h_output;
 
 static void osmux_deliver(struct msgb *batch_msg, void *data)
 {
@@ -137,7 +137,7 @@ static void osmux_deliver(struct msgb *batch_msg, void *data)
 	 * in a list. Then, reconstruct transmission timing.
 	 */
 	while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL)
-		osmux_xfrm_output_sched(&h_output, osmuxh);
+		osmux_xfrm_output_sched(h_output, osmuxh);
 	msgb_free(batch_msg);
 }
 
@@ -298,11 +298,13 @@ int main(void)
 	log_set_print_category_hex(osmo_stderr_target, 0);
 	log_set_use_color(osmo_stderr_target, 0);
 
-	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
-	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
+	h_output = osmux_xfrm_output_alloc(NULL);
+	osmux_xfrm_output_set_rtp_ssrc(h_output, 0x7000000);
+	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
+	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, NULL);
 	/* These fields are set using random() */
-	h_output.rtp_seq = 9158;
-	h_output.rtp_timestamp = 1681692777;
+	h_output->rtp_seq = 9158;
+	h_output->rtp_timestamp = 1681692777;
 
 	/* If the test takes longer than 10 seconds, abort it */
 	alarm(10);

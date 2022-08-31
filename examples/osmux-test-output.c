@@ -42,7 +42,7 @@ static struct osmo_rtp_handle *rtp;
  * This is the output handle for osmux, it stores last RTP sequence and
  * timestamp that has been used. There should be one per circuit ID.
  */
-static struct osmux_out_handle h_output;
+static struct osmux_out_handle *h_output;
 
 static int fd;
 
@@ -107,7 +107,7 @@ int read_cb(struct osmo_dgram *conn)
 		msg->len, buf);
 
 	while((osmuxh = osmux_xfrm_output_pull(msg)) != NULL)
-		osmux_xfrm_output_sched(&h_output, osmuxh);
+		osmux_xfrm_output_sched(h_output, osmuxh);
 
 	return 0;
 }
@@ -117,7 +117,7 @@ void sighandler(int foo)
 	LOGP(DOSMUX_TEST, LOGL_NOTICE, "closing OSMUX.\n");
 	osmo_dgram_close(conn);
 	osmo_dgram_destroy(conn);
-	osmux_xfrm_output_flush(&h_output);
+	talloc_free(h_output);
 	osmo_rtp_handle_free(rtp);
 	amr_close();
 	exit(EXIT_SUCCESS);
@@ -155,8 +155,10 @@ int main(int argc, char *argv[])
 	/*
 	 * initialize OSMUX handlers.
 	 */
-	osmux_xfrm_output_init2(&h_output, random(), 98);
-	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
+	h_output = osmux_xfrm_output_alloc(NULL);
+	osmux_xfrm_output_set_rtp_ssrc(h_output, random());
+	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
+	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, NULL);
 	/*
 	 * initialize datagram server.
 	 */

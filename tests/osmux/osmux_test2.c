@@ -157,20 +157,23 @@ static void tx_cb(struct msgb *msg, void *data)
 
 static void test_output_consecutive(void)
 {
-	struct osmux_out_handle h_output;
+	struct osmux_out_handle *h_output;
 
 	printf("===test_output_consecutive===\n");
 
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
-	h_output.rtp_seq = (uint16_t)50;
-	h_output.rtp_timestamp = (uint32_t)500;
-	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);
+
+	h_output = osmux_xfrm_output_alloc(NULL);
+	osmux_xfrm_output_set_rtp_ssrc(h_output, 0x7000000);
+	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
+	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, h_output);
+	h_output->rtp_seq = (uint16_t)50;
+	h_output->rtp_timestamp = (uint32_t)500;
 
 	/* First osmux frame at t=0 */
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 	clock_debug("first dequed before first select");
 	osmo_select_main(0);
 
@@ -193,11 +196,11 @@ static void test_output_consecutive(void)
 	clock_override_add(0, TIME_RTP_PKT_MS*1000);
 	clock_debug("sixth select, sixth dequed");
 	osmo_select_main(0);
-	OSMO_ASSERT(llist_empty(&h_output.list));
+	OSMO_ASSERT(llist_empty(&h_output->list));
 
 	/* Second osmux frame at t=80 */
 	clock_debug("send second osmux frame");
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 	clock_debug("first dequed before first select");
 	osmo_select_main(0);
 
@@ -208,33 +211,38 @@ static void test_output_consecutive(void)
 	clock_override_add(0, 4*TIME_RTP_PKT_MS*1000);
 	clock_debug("third select, four packet should be dequeued");
 	osmo_select_main(0);
-	OSMO_ASSERT(llist_empty(&h_output.list));
-	OSMO_ASSERT(!osmo_timer_pending(&h_output.timer));
+	OSMO_ASSERT(llist_empty(&h_output->list));
+	OSMO_ASSERT(!osmo_timer_pending(&h_output->timer));
 
 	clock_debug("calling flush on empty list, should do nothing");
-	osmux_xfrm_output_flush(&h_output);
-	OSMO_ASSERT(llist_empty(&h_output.list));
-	OSMO_ASSERT(!osmo_timer_pending(&h_output.timer));
+	osmux_xfrm_output_flush(h_output);
+	OSMO_ASSERT(llist_empty(&h_output->list));
+	OSMO_ASSERT(!osmo_timer_pending(&h_output->timer));
+
+	talloc_free(h_output);
 }
 
 static void test_output_interleaved(void)
 {
-	struct osmux_out_handle h_output;
+	struct osmux_out_handle *h_output;
 
 	printf("===test_output_interleaved===\n");
 
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
-	h_output.rtp_seq = (uint16_t)50;
-	h_output.rtp_timestamp = (uint32_t)500;
-	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);
+
+	h_output = osmux_xfrm_output_alloc(NULL);
+	osmux_xfrm_output_set_rtp_ssrc(h_output, 0x7000000);
+	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
+	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, h_output);
+	h_output->rtp_seq = (uint16_t)50;
+	h_output->rtp_timestamp = (uint32_t)500;
 
 	/* First osmux frame at t=0, but it actually arrives late due to jitter,
 	   so 2nd frame is going to arrive before the 1st one is completelly
 	   scheduled */
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 
 	clock_override_add(0, 2*TIME_RTP_PKT_MS*1000);
 	clock_debug("select, 3 dequed, 3 still queued");
@@ -242,68 +250,78 @@ static void test_output_interleaved(void)
 
 	/* Second osmux frame at t=0 */
 	clock_debug("next frame arrives, 3 pending rtp packets are dequeued and first of new osmux frame too");
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 	osmo_select_main(0);
-	OSMO_ASSERT(llist_count(&h_output.list) == 5);
+	OSMO_ASSERT(llist_count(&h_output->list) == 5);
 
 	clock_override_add(0, 5*TIME_RTP_PKT_MS*1000);
 	clock_debug("calling select, then all should be out");
 	osmo_select_main(0);
 
-	OSMO_ASSERT(llist_empty(&h_output.list));
-	OSMO_ASSERT(!osmo_timer_pending(&h_output.timer));
+	OSMO_ASSERT(llist_empty(&h_output->list));
+	OSMO_ASSERT(!osmo_timer_pending(&h_output->timer));
+
+	talloc_free(h_output);
 }
 
 static void test_output_2together(void)
 {
-	struct osmux_out_handle h_output;
+	struct osmux_out_handle *h_output;
 
 	printf("===test_output_2together===\n");
 
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
-	h_output.rtp_seq = (uint16_t)50;
-	h_output.rtp_timestamp = (uint32_t)500;
-	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);
+
+	h_output = osmux_xfrm_output_alloc(NULL);
+	osmux_xfrm_output_set_rtp_ssrc(h_output, 0x7000000);
+	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
+	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, h_output);
+	h_output->rtp_seq = (uint16_t)50;
+	h_output->rtp_timestamp = (uint32_t)500;
 
 	/* First osmux frame at t=0, but it actually arrives late due to jitter,
 	   so we receive both at the same time. */
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 	clock_debug("calling select in between 2 osmux recv");
 	osmo_select_main(0);
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 
 	clock_debug("calling select after receiving 2nd osmux. Dequeue 1st osmux frame and 1st rtp from 2nd osmux frame.");
 	osmo_select_main(0);
-	OSMO_ASSERT(llist_count(&h_output.list) == 5);
+	OSMO_ASSERT(llist_count(&h_output->list) == 5);
 
 	clock_override_add(0, 5*TIME_RTP_PKT_MS*1000);
 	clock_debug("select, all 5 remaining should be out");
 	osmo_select_main(0);
 
-	OSMO_ASSERT(llist_empty(&h_output.list));
-	OSMO_ASSERT(!osmo_timer_pending(&h_output.timer));
+	OSMO_ASSERT(llist_empty(&h_output->list));
+	OSMO_ASSERT(!osmo_timer_pending(&h_output->timer));
+
+	talloc_free(h_output);
 }
 
 /* FIXME: this test shows generated rtp stream doesn't have osmux lost frames into account! */
 static void test_output_frame_lost(void)
 {
-	struct osmux_out_handle h_output;
+	struct osmux_out_handle *h_output;
 
 	printf("===test_output_frame_lost===\n");
 
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
-	h_output.rtp_seq = (uint16_t)50;
-	h_output.rtp_timestamp = (uint32_t)500;
-	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);
+
+	h_output = osmux_xfrm_output_alloc(NULL);
+	osmux_xfrm_output_set_rtp_ssrc(h_output, 0x7000000);
+	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
+	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, h_output);
+	h_output->rtp_seq = (uint16_t)50;
+	h_output->rtp_timestamp = (uint32_t)500;
 
 	clock_debug("first osmux frame");
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 	clock_override_add(0, 5*TIME_RTP_PKT_MS*1000);
 	osmo_select_main(0);
 
@@ -312,42 +330,49 @@ static void test_output_frame_lost(void)
 	clock_override_add(0, 6*TIME_RTP_PKT_MS*1000);
 
 	clock_debug("3rd osmux frame arrives");
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 	clock_override_add(0, 5*TIME_RTP_PKT_MS*1000);
 	osmo_select_main(0);
 
-	OSMO_ASSERT(llist_empty(&h_output.list));
-	OSMO_ASSERT(!osmo_timer_pending(&h_output.timer));
+	OSMO_ASSERT(llist_empty(&h_output->list));
+	OSMO_ASSERT(!osmo_timer_pending(&h_output->timer));
+
+	talloc_free(h_output);
 }
 
 static void test_output_flush(void)
 {
-	struct osmux_out_handle h_output;
+	struct osmux_out_handle *h_output;
 
 	printf("===test_output_flush===\n");
 
 	clock_override_enable(true);
 	clock_override_set(0, 0);
 	osmux_init(32);
-	osmux_xfrm_output_init2(&h_output, 0x7000000, 98);
-	h_output.rtp_seq = (uint16_t)50;
-	h_output.rtp_timestamp = (uint32_t)500;
-	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, &h_output);
+
+	h_output = osmux_xfrm_output_alloc(NULL);
+	osmux_xfrm_output_set_rtp_ssrc(h_output, 0x7000000);
+	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
+	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, h_output);
+	h_output->rtp_seq = (uint16_t)50;
+	h_output->rtp_timestamp = (uint32_t)500;
 
 	clock_debug("first osmux frame");
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 	clock_override_add(0, 2*TIME_RTP_PKT_MS*1000);
 	osmo_select_main(0);
 
 	clock_debug("2nd osmux frame arrives");
-	PULL_NEXT(&h_output);
+	PULL_NEXT(h_output);
 
 	clock_debug("flushing, all packet should be transmitted immediately");
-	OSMO_ASSERT(llist_count(&h_output.list) == 9);
-	OSMO_ASSERT(osmo_timer_pending(&h_output.timer));
-	osmux_xfrm_output_flush(&h_output);
-	OSMO_ASSERT(llist_empty(&h_output.list));
-	OSMO_ASSERT(!osmo_timer_pending(&h_output.timer));
+	OSMO_ASSERT(llist_count(&h_output->list) == 9);
+	OSMO_ASSERT(osmo_timer_pending(&h_output->timer));
+	osmux_xfrm_output_flush(h_output);
+	OSMO_ASSERT(llist_empty(&h_output->list));
+	OSMO_ASSERT(!osmo_timer_pending(&h_output->timer));
+
+	talloc_free(h_output);
 }
 
 int main(int argc, char **argv)

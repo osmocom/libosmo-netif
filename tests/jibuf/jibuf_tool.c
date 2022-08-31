@@ -113,7 +113,7 @@ static uint32_t packets_too_much_jitter;
 /* Used for test pcap: */
 static struct osmo_pcap osmo_pcap;
 static bool pcap_finished;
-static struct osmux_out_handle pcap_osmux_h;
+static struct osmux_out_handle *pcap_osmux_h;
 /* ----------------------------- */
 
 static void sigalarm_handler(int foo)
@@ -438,7 +438,7 @@ int pcap_read_osmux(struct msgb *msg)
 
 	/* This code below belongs to the osmux receiver */
 	while((osmuxh = osmux_xfrm_output_pull(msg)) != NULL)
-		osmux_xfrm_output_sched(&pcap_osmux_h, osmuxh);
+		osmux_xfrm_output_sched(pcap_osmux_h, osmuxh);
 	msgb_free(msg);
 	return 0;
 }
@@ -517,8 +517,10 @@ void pcap_test() {
 	osmo_pcap.timer.cb = pcap_pkt_timer_cb;
 
 	if(opt_osmux) {
-		osmux_xfrm_output_init2(&pcap_osmux_h, 0, 98);
-		osmux_xfrm_output_set_tx_cb(&pcap_osmux_h, glue_cb, NULL);
+		pcap_osmux_h = osmux_xfrm_output_alloc(NULL);
+		osmux_xfrm_output_set_rtp_ssrc(pcap_osmux_h, 0);
+		osmux_xfrm_output_set_rtp_pl_type(pcap_osmux_h, 98);
+		osmux_xfrm_output_set_tx_cb(pcap_osmux_h, glue_cb, NULL);
 	}
 
 	jb = osmo_jibuf_alloc(NULL);
@@ -532,11 +534,12 @@ void pcap_test() {
 
 	while(!pcap_finished || !osmo_jibuf_empty(jb)) {
 		if (pcap_finished && opt_osmux) /* Flushing once should be enough */
-			osmux_xfrm_output_flush(&pcap_osmux_h);
+			osmux_xfrm_output_flush(pcap_osmux_h);
 		osmo_select_main(0);
 	}
 
 	osmo_jibuf_delete(jb);
+	talloc_free(pcap_osmux_h);
 
 	pcap_test_check();
 }
