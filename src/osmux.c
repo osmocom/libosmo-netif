@@ -44,12 +44,6 @@
  *  \brief Osmocom multiplex protocol helpers
  */
 
-
-/* This allows you to debug timing reconstruction in the output path */
-#if 0
-#define DEBUG_TIMING		0
-#endif
-
 /* This allows you to debug osmux message transformations (spamming) */
 #if 0
 #define DEBUG_MSG		0
@@ -189,46 +183,6 @@ osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
 	}
 
 	return out_msg;
-}
-
-int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h,
-		      struct llist_head *list)
-{
-	struct msgb *msg;
-	int i;
-
-	INIT_LLIST_HEAD(list);
-
-	for (i=0; i<osmuxh->ctr+1; i++) {
-		struct rtp_hdr *rtph;
-
-		msg = osmux_rebuild_rtp(h, osmuxh,
-					osmux_get_payload(osmuxh) +
-					i * osmo_amr_bytes(osmuxh->amr_ft),
-					osmo_amr_bytes(osmuxh->amr_ft), !i);
-		if (msg == NULL)
-			continue;
-
-		rtph = osmo_rtp_get_hdr(msg);
-		if (rtph == NULL)
-			continue;
-
-#ifdef DEBUG_MSG
-		{
-			char buf[4096];
-
-			osmo_rtp_snprintf(buf, sizeof(buf), msg);
-			buf[sizeof(buf)-1] = '\0';
-			LOGP(DLMUX, LOGL_DEBUG, "to BTS: %s\n", buf);
-		}
-#endif
-		llist_add_tail(&msg->list, list);
-	}
-
-	/* Update last seen seq number: */
-	h->osmux_seq_ack = osmuxh->seq;
-
-	return i;
 }
 
 static void osmux_xfrm_output_trigger(void *data)
@@ -924,79 +878,7 @@ struct osmux_tx_handle {
 	struct msgb		*msg;
 	void			(*tx_cb)(struct msgb *msg, void *data);
 	void			*data;
-#ifdef DEBUG_TIMING
-	struct timeval		start;
-	struct timeval		when;
-#endif
 };
-
-static void osmux_tx_cb(void *data)
-{
-	struct osmux_tx_handle *h = data;
-#ifdef DEBUG_TIMING
-	struct timeval now, diff;
-
-	osmo_gettimeofday(&now, NULL);
-	timersub(&now, &h->start, &diff);
-	timersub(&diff,&h->when, &diff);
-	LOGP(DLMUX, LOGL_DEBUG, "we are lagging %lu.%.6lu in scheduled "
-		"transmissions\n", diff.tv_sec, diff.tv_usec);
-#endif
-
-	h->tx_cb(h->msg, h->data);
-
-	talloc_free(h);
-}
-
-static void
-osmux_tx(struct msgb *msg, struct timeval *when,
-	 void (*tx_cb)(struct msgb *msg, void *data), void *data)
-{
-	struct osmux_tx_handle *h;
-
-	h = talloc_zero(osmux_ctx, struct osmux_tx_handle);
-	if (h == NULL)
-		return;
-
-	h->msg = msg;
-	h->tx_cb = tx_cb;
-	h->data = data;
-	osmo_timer_setup(&h->timer, osmux_tx_cb, h);
-
-#ifdef DEBUG_TIMING
-	osmo_gettimeofday(&h->start, NULL);
-	h->when.tv_sec = when->tv_sec;
-	h->when.tv_usec = when->tv_usec;
-#endif
-	/* send it now */
-	if (when->tv_sec == 0 && when->tv_usec == 0) {
-		osmux_tx_cb(h);
-		return;
-	}
-	osmo_timer_schedule(&h->timer, when->tv_sec, when->tv_usec);
-}
-
-void
-osmux_tx_sched(struct llist_head *list,
-	       void (*tx_cb)(struct msgb *msg, void *data), void *data)
-{
-	struct msgb *cur, *tmp;
-	struct timeval delta = { .tv_sec = 0, .tv_usec = DELTA_RTP_MSG };
-	struct timeval when;
-
-	timerclear(&when);
-
-	llist_for_each_entry_safe(cur, tmp, list, list) {
-
-#ifdef DEBUG_MSG
-		LOGP(DLMUX, LOGL_DEBUG, "scheduled transmision in %lu.%6lu "
-			"seconds, msg=%p\n", when.tv_sec, when.tv_usec, cur);
-#endif
-		llist_del(&cur->list);
-		osmux_tx(cur, &when, tx_cb, data);
-		timeradd(&when, &delta, &when);
-	}
-}
 
 void osmux_xfrm_output_init2(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint8_t rtp_payload_type)
 {

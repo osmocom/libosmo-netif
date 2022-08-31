@@ -110,13 +110,9 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h);
 void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc) OSMO_DEPRECATED("Use osmux_xfrm_output_init2() instead");
 void osmux_xfrm_output_init2(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint8_t rtp_payload_type);
 void osmux_xfrm_output_set_tx_cb(struct osmux_out_handle *h, void (*tx_cb)(struct msgb *msg, void *data), void *data);
-int osmux_xfrm_output(struct osmux_hdr *osmuxh, struct osmux_out_handle *h, struct llist_head *list) OSMO_DEPRECATED("Use osmux_xfrm_output_sched() instead");
 int osmux_xfrm_output_sched(struct osmux_out_handle *h, struct osmux_hdr *osmuxh);
 void osmux_xfrm_output_flush(struct osmux_out_handle *h);
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg);
-
-void osmux_tx_sched(struct llist_head *list, void (*tx_cb)(struct msgb *msg, void *data), void *data) OSMO_DEPRECATED("Use osmux_xfrm_output_set_tx_cb() instead");
-
 /*! @} */
 
 #endif
