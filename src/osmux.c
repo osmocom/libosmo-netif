@@ -127,11 +127,15 @@ osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
 	struct rtp_hdr *rtph;
 	struct amr_hdr *amrh;
 	struct timespec delta = { .tv_sec = 0, .tv_nsec = DELTA_RTP_MSG*1000 };
+	unsigned int msg_len = sizeof(struct rtp_hdr) +
+			       sizeof(struct amr_hdr) +
+			       payload_len;
 
-	out_msg = msgb_alloc(sizeof(struct rtp_hdr) +
-			     sizeof(struct amr_hdr) +
-			     osmo_amr_bytes(osmuxh->amr_ft),
-			     "OSMUX test");
+	if (h->rtp_msgb_alloc_cb) {
+		out_msg = h->rtp_msgb_alloc_cb(h->rtp_msgb_alloc_cb_data, msg_len);
+	} else {
+		out_msg = msgb_alloc(msg_len, "osmux-rtp");
+	}
 	if (out_msg == NULL)
 		return NULL;
 
@@ -930,6 +934,20 @@ void osmux_xfrm_output_set_tx_cb(struct osmux_out_handle *h,
 {
 	h->tx_cb = tx_cb;
 	h->data = data;
+}
+
+/*! \brief Set callback to call when an RTP packet to be generated is to be allocated
+ *  \param[in] h the osmux out handle handling a specific CID
+ *  \param[in] cb User defined msgb alloc function for generated RTP pkts
+ *  \param[in] cb_data Opaque data pointer set by user and passed in \ref cb
+ *  \return msgb structure to be used to fill in generated RTP pkt content
+ */
+void osmux_xfrm_output_set_rtp_msgb_alloc_cb(struct osmux_out_handle *h,
+					     rtp_msgb_alloc_cb_t cb,
+					     void *cb_data)
+{
+	h->rtp_msgb_alloc_cb = cb;
+	h->rtp_msgb_alloc_cb_data = cb_data;
 }
 
 /*! \brief Set SSRC of generated RTP packets from Osmux frames

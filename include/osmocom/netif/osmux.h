@@ -75,6 +75,8 @@ struct osmux_in_handle {
 
 #define OSMUX_MAX_CONCURRENT_CALLS	8
 
+typedef struct msgb *(*rtp_msgb_alloc_cb_t)(void *rtp_msgb_alloc_priv_data,
+					    unsigned int msg_len);
 /* one per OSmux circuit_id, ie. one per RTP flow. */
 struct osmux_out_handle {
 	uint16_t rtp_seq;
@@ -86,6 +88,8 @@ struct osmux_out_handle {
 	struct llist_head list;
 	void (*tx_cb)(struct msgb *msg, void *data); /* Used defined rtp tx callback */
 	void *data; /* User defined opaque data structure */
+	rtp_msgb_alloc_cb_t rtp_msgb_alloc_cb; /* User defined msgb alloc function for generated RTP pkts */
+	void *rtp_msgb_alloc_cb_data; /* Opaque data pointer set by user and passed in rtp_msgb_alloc_cb() */
 };
 
 static inline uint8_t *osmux_get_payload(struct osmux_hdr *osmuxh)
@@ -113,6 +117,7 @@ void osmux_xfrm_output_init2(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint
 void osmux_xfrm_output_set_rtp_ssrc(struct osmux_out_handle *h, uint32_t rtp_ssrc);
 void osmux_xfrm_output_set_rtp_pl_type(struct osmux_out_handle *h, uint32_t rtp_payload_type);
 void osmux_xfrm_output_set_tx_cb(struct osmux_out_handle *h, void (*tx_cb)(struct msgb *msg, void *data), void *data);
+void osmux_xfrm_output_set_rtp_msgb_alloc_cb(struct osmux_out_handle *h, rtp_msgb_alloc_cb_t cb, void *cb_data);
 int osmux_xfrm_output_sched(struct osmux_out_handle *h, struct osmux_hdr *osmuxh);
 void osmux_xfrm_output_flush(struct osmux_out_handle *h);
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg);
