@@ -843,8 +843,11 @@ void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid)
 	struct osmux_circuit *circuit;
 
 	circuit = osmux_batch_find_circuit(batch, ccid);
-	if (circuit == NULL)
+	if (circuit == NULL) {
+		LOGP(DLMUX, LOGL_NOTICE, "Unable to close circuit %d: Not found\n",
+		     ccid);
 		return;
+	}
 
 	osmux_batch_del_circuit(batch, circuit);
 }
