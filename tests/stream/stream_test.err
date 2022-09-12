@@ -20,7 +20,7 @@
 {11.000009} autoreconnecting test step 3 [client OK, server OK], FD reg 1
 
 {11.000010} autoreconnecting test step 2 [client OK, server OK], FD reg 0
-connection closed with srv
+connection closed with client
 
 {11.000011} autoreconnecting test step 1 [client OK, server NA], FD reg 0
 

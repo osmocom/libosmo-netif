@@ -1550,11 +1550,11 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ECONNRESET) {
 			LOGP(DLINP, LOGL_ERROR,
-				"lost connection with srv\n");
+				"lost connection with client\n");
 		}
 		return ret;
 	} else if (ret == 0) {
-		LOGP(DLINP, LOGL_ERROR, "connection closed with srv\n");
+		LOGP(DLINP, LOGL_ERROR, "connection closed with client\n");
 		return ret;
 	}
 	msgb_put(msg, ret);
