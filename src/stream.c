@@ -1439,8 +1439,9 @@ struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *
  *  \param[in] conn Stream Server to be destroyed */
 void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 {
-	close(conn->ofd.fd);
 	osmo_fd_unregister(&conn->ofd);
+	close(conn->ofd.fd);
+	conn->ofd.fd = -1;
 	if (conn->closed_cb)
 		conn->closed_cb(conn);
 	msgb_queue_free(&conn->tx_queue);
