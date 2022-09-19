@@ -9,6 +9,10 @@
  *  @{
  */
 
+/*! \brief Access SCTP flags from the msgb control buffer */
+#define OSMO_STREAM_SCTP_MSG_FLAGS_NOTIFICATION 0x80 /* sctp_recvmsg() flags=MSG_NOTIFICATION, msgb_data() contains "union sctp_notification*" */
+#define msgb_sctp_msg_flags(msg)	(msg)->cb[2]
+
 /*! \brief Access the SCTP PPID from the msgb control buffer */
 #define msgb_sctp_ppid(msg)             (msg)->cb[3]
 /*! \brief Access the SCTP Stream ID from the msgb control buffer */

@@ -1476,6 +1476,7 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 	if (flags & MSG_NOTIFICATION) {
 		union sctp_notification *notif = (union sctp_notification *)msgb_data(msg);
 		LOGP(DLINP, LOGL_DEBUG, "NOTIFICATION %u flags=0x%x\n", notif->sn_header.sn_type, notif->sn_header.sn_flags);
+		msgb_sctp_msg_flags(msg) = OSMO_STREAM_SCTP_MSG_FLAGS_NOTIFICATION;
 		switch (notif->sn_header.sn_type) {
 		case SCTP_ASSOC_CHANGE:
 			LOGP(DLINP, LOGL_DEBUG, "===> ASSOC CHANGE:");
