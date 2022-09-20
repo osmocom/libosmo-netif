@@ -686,8 +686,10 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 		batch->ndummy--;
 	}
 	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
-	if (amr_payload_len < 0)
+	if (amr_payload_len < 0) {
+		LOGP(DLMUX, LOGL_NOTICE, "AMR payload invalid\n");
 		return -1;
+	}
 
 	/* First check if there is room for this message in the batch */
 	bytes += amr_payload_len;
@@ -769,18 +771,22 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	 * to avoid a possible forever loop in the caller.
 	 */
 	if (msg->len > h->batch_size - sizeof(struct osmux_hdr)) {
+		LOGP(DLMUX, LOGL_NOTICE, "RTP payload too big (%u) for configured batch size (%u)\n",
+			 msg->len, h->batch_size);
 		msgb_free(msg);
 		return 0;
 	}
 
 	rtph = osmo_rtp_get_hdr(msg);
 	if (rtph == NULL) {
+		LOGP(DLMUX, LOGL_NOTICE, "msg not containing an RTP header\n");
 		msgb_free(msg);
 		return 0;
 	}
 
 	switch(rtph->payload_type) {
 		case RTP_PT_RTCP:
+			LOGP(DLMUX, LOGL_INFO, "Dropping RTCP packet\n");
 			msgb_free(msg);
 			return 0;
 		default:
@@ -797,6 +803,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 				 * Malformed, duplicated, OOM. Drop it and tell
 				 * the upper layer that we have digest it.
 				 */
+				LOGP(DLMUX, LOGL_DEBUG, "Dropping RTP packet instead of adding to batch\n");
 				msgb_free(msg);
 				return 0;
 			}
