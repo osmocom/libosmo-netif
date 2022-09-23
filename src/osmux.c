@@ -754,9 +754,11 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
  * osmux_xfrm_input - add RTP message to OSmux batch
  * \param msg: RTP message that you want to batch into one OSmux message
  *
- * If 0 is returned, this indicates that the message has been batched or that
- * an error occured and we have skipped the message. If 1 is returned, you
- * have to invoke osmux_xfrm_input_deliver and try again.
+ * If 0 is returned, this indicates that the message has been batched and the
+ * msgb is now owned by the osmux layer.
+ * If negative value is returned, an error occurred and the message has been
+ * dropped (and freed).
+ * If 1 is returned, you have to invoke osmux_xfrm_input_deliver and try again.
  *
  * The function takes care of releasing the messages in case of error and
  * when building the batch.
@@ -774,14 +776,14 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 		LOGP(DLMUX, LOGL_NOTICE, "RTP payload too big (%u) for configured batch size (%u)\n",
 			 msg->len, h->batch_size);
 		msgb_free(msg);
-		return 0;
+		return -1;
 	}
 
 	rtph = osmo_rtp_get_hdr(msg);
 	if (rtph == NULL) {
 		LOGP(DLMUX, LOGL_NOTICE, "msg not containing an RTP header\n");
 		msgb_free(msg);
-		return 0;
+		return -1;
 	}
 
 	switch(rtph->payload_type) {
@@ -805,7 +807,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 				 */
 				LOGP(DLMUX, LOGL_DEBUG, "Dropping RTP packet instead of adding to batch\n");
 				msgb_free(msg);
-				return 0;
+				return ret;
 			}
 
 			h->stats.input_rtp_msgs++;
