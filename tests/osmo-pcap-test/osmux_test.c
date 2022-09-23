@@ -124,7 +124,7 @@ static int pcap_test_run(struct msgb *msg)
 	if (ccid < 0)
 		register_ccid(rtph->ssrc);
 
-	while ((ret = osmux_xfrm_input(&h_input, msg, ccid)) > 1) {
+	while ((ret = osmux_xfrm_input(&h_input, msg, ccid)) > 0) {
 		/* batch full, deliver it */
 		osmux_xfrm_input_deliver(&h_input);
 	}
