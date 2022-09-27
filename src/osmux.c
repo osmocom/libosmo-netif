@@ -398,23 +398,6 @@ static int osmux_batch_put(struct osmux_batch *batch,
 	return 0;
 }
 
-static int osmux_xfrm_encode_amr(struct osmux_batch *batch,
-				 struct osmux_input_state *state)
-{
-	uint32_t amr_len;
-
-	state->amrh = osmo_rtp_get_payload(state->rtph, state->msg, &amr_len);
-	if (state->amrh == NULL)
-		return -1;
-
-	state->amr_payload_len = amr_len - sizeof(struct amr_hdr);
-
-	if (osmux_batch_put(batch, state) < 0)
-		return -1;
-
-	return 0;
-}
-
 static void osmux_encode_dummy(struct osmux_batch *batch, uint8_t batch_factor,
 			       struct osmux_input_state *state)
 {
@@ -457,6 +440,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 	llist_for_each_entry(circuit, &batch->circuit_list, head) {
 		struct msgb *cur, *tmp;
 		int ctr = 0;
+		int prev_amr_ft;
 
 		if (circuit->dummy) {
 			struct osmux_input_state state = {
@@ -473,6 +457,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 				.out_msg	= batch_msg,
 				.ccid		= circuit->ccid,
 			};
+			uint32_t amr_len;
 #ifdef DEBUG_MSG
 			char buf[4096];
 
@@ -482,20 +467,31 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 #endif
 
 			state.rtph = osmo_rtp_get_hdr(cur);
-			if (state.rtph == NULL)
+			if (!state.rtph)
 				return NULL;
+			state.amrh = osmo_rtp_get_payload(state.rtph, state.msg, &amr_len);
+			if (!state.amrh)
+				return NULL;
+			state.amr_payload_len = amr_len - sizeof(struct amr_hdr);
 
 			if (ctr == 0) {
 #ifdef DEBUG_MSG
-				LOGP(DLMUX, LOGL_DEBUG, "add osmux header\n");
+				LOGP(DLMUX, LOGL_DEBUG, "Add osmux header (First in batch)\n");
+#endif
+				state.add_osmux_hdr = 1;
+			} else if (prev_amr_ft != state.amrh->ft) {
+				/* If AMR FT changed, we have to generate an extra batch osmux header: */
+#ifdef DEBUG_MSG
+				LOGP(DLMUX, LOGL_DEBUG, "Add osmux header (New AMR FT)\n");
 #endif
 				state.add_osmux_hdr = 1;
 			}
 
-			osmux_xfrm_encode_amr(batch, &state);
+			osmux_batch_put(batch, &state);
 			osmux_batch_dequeue(cur, circuit);
-			msgb_free(cur);
+			prev_amr_ft = state.amrh->ft;
 			ctr++;
+			msgb_free(cur);
 			batch->nmsgs--;
 		}
 	}
@@ -536,15 +532,9 @@ static void osmux_batch_timer_expired(void *data)
 	osmux_xfrm_input_deliver(h);
 }
 
-static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
+static int osmux_rtp_amr_payload_len(struct amr_hdr *amrh, uint32_t amr_len)
 {
-	struct amr_hdr *amrh;
-	unsigned int amr_len;
 	int amr_payload_len;
-
-	amrh = osmo_rtp_get_payload(rtph, msg, &amr_len);
-	if (amrh == NULL)
-		return -1;
 
 	if (!osmo_amr_ft_valid(amrh->ft))
 		return -1;
@@ -559,6 +549,28 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 		return -1;
 	}
 	return amr_payload_len;
+}
+
+/* Last stored AMR FT to be added in the current osmux batch. -1 if none stored yet */
+static int osmux_circuit_get_last_stored_amr_ft(struct osmux_circuit *circuit)
+{
+	struct msgb *last;
+	struct rtp_hdr *rtph;
+	struct amr_hdr *amrh;
+	uint32_t amr_len;
+	/* Have we seen any RTP packet in this batch before? */
+	if (llist_empty(&circuit->msg_list))
+		return -1;
+	OSMO_ASSERT(circuit->nmsgs > 0);
+
+	/* Get last RTP packet seen in this batch */
+	last = llist_entry(circuit->msg_list.prev, struct msgb, list);
+	rtph = osmo_rtp_get_hdr(last);
+	amrh = osmo_rtp_get_payload(rtph, last, &amr_len);
+	if (amrh == NULL)
+		return -1;
+	return amrh->ft;
+
 }
 
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
@@ -683,6 +695,8 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 	struct osmux_circuit *circuit;
 	struct msgb *cur;
 	int rc;
+	struct amr_hdr *amrh;
+	uint32_t amr_len;
 
 	circuit = osmux_batch_find_circuit(batch, ccid);
 	if (!circuit)
@@ -693,7 +707,11 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 		circuit->dummy = 0;
 		batch->ndummy--;
 	}
-	amr_payload_len = osmux_rtp_amr_payload_len(msg, rtph);
+
+	amrh = osmo_rtp_get_payload(rtph, msg, &amr_len);
+	if (amrh == NULL)
+		return -1;
+	amr_payload_len = osmux_rtp_amr_payload_len(amrh, amr_len);
 	if (amr_payload_len < 0) {
 		LOGP(DLMUX, LOGL_NOTICE, "AMR payload invalid\n");
 		return -1;
@@ -723,7 +741,12 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 	}
 
 	/* First check if there is room for this message in the batch */
+	/* First in batch comes after the batch header: */
 	if (circuit->nmsgs == 0)
+		bytes += sizeof(struct osmux_hdr);
+	/* If AMR FT changes in the middle of current batch a new header is
+	 * required to adapt to size change: */
+	else if (osmux_circuit_get_last_stored_amr_ft(circuit) != amrh->ft)
 		bytes += sizeof(struct osmux_hdr);
 	bytes += amr_payload_len;
 
