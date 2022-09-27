@@ -560,23 +560,24 @@ static int osmux_rtp_amr_payload_len(struct msgb *msg, struct rtp_hdr *rtph)
 	return amr_payload_len;
 }
 
-static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
+/* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
+static int osmux_replay_lost_packets(struct osmux_circuit *circuit,
 				      struct rtp_hdr *cur_rtph, int batch_factor)
 {
 	int16_t diff;
 	struct msgb *last;
 	struct rtp_hdr *rtph;
-	int i;
+	int i, rc;
 
 	/* Have we seen any RTP packet in this batch before? */
 	if (llist_empty(&circuit->msg_list))
-		return;
+		return 0;
 
 	/* Get last RTP packet seen in this batch */
 	last = llist_entry(circuit->msg_list.prev, struct msgb, list);
 	rtph = osmo_rtp_get_hdr(last);
 	if (rtph == NULL)
-		return;
+		return -1;
 
 	diff = ntohs(cur_rtph->sequence) - ntohs(rtph->sequence);
 
@@ -584,6 +585,7 @@ static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
 	if (diff > 16)
 		diff = 16;
 
+	rc = 0;
 	/* If diff between last RTP packet seen and this one is > 1,
 	 * then we lost several RTP packets, let's replay them.
 	 */
@@ -607,13 +609,15 @@ static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
 					DELTA_RTP_TIMESTAMP);
 
 		/* No more room in this batch, skip padding with more clones */
-		if (osmux_batch_enqueue(clone, circuit, batch_factor) != 0) {
+		rc = osmux_batch_enqueue(clone, circuit, batch_factor);
+		if (rc != 0) {
 			msgb_free(clone);
-			break;
+			return rc;
 		}
 
 		LOGP(DLMUX, LOGL_ERROR, "adding cloned RTP\n");
 	}
+	return rc;
 }
 
 static struct osmux_circuit *
@@ -727,7 +731,9 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 		return 1;
 
 	/* Handle RTP packet loss scenario */
-	osmux_replay_lost_packets(circuit, rtph, batch_factor);
+	rc = osmux_replay_lost_packets(circuit, rtph, batch_factor);
+	if (rc != 0)
+		return rc;
 
 	/* This batch is full, force batch delivery */
 	rc = osmux_batch_enqueue(msg, circuit, batch_factor);
