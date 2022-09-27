@@ -715,9 +715,9 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 	}
 
 	/* First check if there is room for this message in the batch */
-	bytes += amr_payload_len;
 	if (circuit->nmsgs == 0)
 		bytes += sizeof(struct osmux_hdr);
+	bytes += amr_payload_len;
 
 	/* No room, sorry. You'll have to retry */
 	if (bytes > batch->remaining_bytes)
