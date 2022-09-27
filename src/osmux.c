@@ -567,7 +567,7 @@ static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
 	struct rtp_hdr *rtph;
 	int i;
 
-	/* Have we see any RTP packet in this batch before? */
+	/* Have we seen any RTP packet in this batch before? */
 	if (llist_empty(&circuit->msg_list))
 		return;
 
@@ -597,7 +597,7 @@ static void osmux_replay_lost_packets(struct osmux_circuit *circuit,
 		memcpy(clone->data, last->data, last->len);
 		msgb_put(clone, last->len);
 
-		/* The original RTP message has been already sanity check. */
+		/* The original RTP message has been already sanity checked. */
 		rtph = osmo_rtp_get_hdr(clone);
 
 		/* Adjust sequence number and timestamp */
