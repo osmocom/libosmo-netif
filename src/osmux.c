@@ -691,21 +691,11 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 		return -1;
 	}
 
-	/* First check if there is room for this message in the batch */
-	bytes += amr_payload_len;
-	if (circuit->nmsgs == 0)
-		bytes += sizeof(struct osmux_hdr);
-
-	/* No room, sorry. You'll have to retry */
-	if (bytes > batch->remaining_bytes)
-		return 1;
-
 	/* Init of talkspurt (RTP M marker bit) needs to be in the first AMR slot
 	 * of the OSMUX packet, enforce sending previous batch if required:
 	 */
 	if (rtph->marker && circuit->nmsgs != 0)
 		return 1;
-
 
 	/* Extra validation: check if this message already exists, should not
 	 * happen but make sure we don't propagate duplicated messages.
@@ -723,6 +713,16 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 			return -1;
 		}
 	}
+
+	/* First check if there is room for this message in the batch */
+	bytes += amr_payload_len;
+	if (circuit->nmsgs == 0)
+		bytes += sizeof(struct osmux_hdr);
+
+	/* No room, sorry. You'll have to retry */
+	if (bytes > batch->remaining_bytes)
+		return 1;
+
 	/* Handle RTP packet loss scenario */
 	osmux_replay_lost_packets(circuit, rtph, batch_factor);
 
