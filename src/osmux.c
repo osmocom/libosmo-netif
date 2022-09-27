@@ -318,7 +318,8 @@ static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit,
 	/* Validate amount of messages per batch. The counter field of the
 	 * osmux header is just 3 bits long, so make sure it doesn't overflow.
 	 */
-	if (circuit->nmsgs >= batch_factor || circuit->nmsgs >= 8) {
+	OSMO_ASSERT(batch_factor <= 8);
+	if (circuit->nmsgs >= batch_factor) {
 		struct rtp_hdr *rtph;
 
 		rtph = osmo_rtp_get_hdr(msg);
