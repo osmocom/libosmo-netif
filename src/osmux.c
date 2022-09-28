@@ -1005,11 +1005,11 @@ static int osmux_snprintf_header(char *buf, size_t size, struct osmux_hdr *osmux
 	int ret;
 
 	ret = snprintf(buf, remain, "OSMUX seq=%03u ccid=%03u "
-				 "ft=%01u ctr=%01u "
+				 "ft=%01u rtp_m=%01u ctr=%01u "
 				 "amr_f=%01u amr_q=%01u "
 				 "amr_ft=%02u amr_cmr=%02u",
 			osmuxh->seq, osmuxh->circuit_id,
-			osmuxh->ft, osmuxh->ctr,
+			osmuxh->ft, osmuxh->rtp_m, osmuxh->ctr,
 			osmuxh->amr_f, osmuxh->amr_q,
 			osmuxh->amr_ft, osmuxh->amr_cmr);
 	SNPRINTF_BUFFER_SIZE(ret, remain, offset);
