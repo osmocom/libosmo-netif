@@ -1,14 +1,14 @@
 AM_CFLAGS = -Wall -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS) -g
 AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS) -no-install
 
-check_PROGRAMS = osmux/osmux_test osmux/osmux_test2 stream/stream_test jibuf/jibuf_test amr/amr_test
+check_PROGRAMS = osmux/osmux_test osmux/osmux_output_test stream/stream_test jibuf/jibuf_test amr/amr_test
 check_HEADERS =
 
 osmux_osmux_test_SOURCES = osmux/osmux_test.c
 osmux_osmux_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
 
-osmux_osmux_test2_SOURCES = osmux/osmux_test2.c
-osmux_osmux_test2_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
+osmux_osmux_output_test_SOURCES = osmux/osmux_output_test.c
+osmux_osmux_output_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
 
 stream_stream_test_SOURCES = stream/stream_test.c
 stream_stream_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
@@ -62,7 +62,7 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 
 EXTRA_DIST = testsuite.at $(srcdir)/package.m4 $(TESTSUITE)		\
 	     osmux/osmux_test.ok \
-	     osmux/osmux_test2.ok \
+	     osmux/osmux_output_test.ok \
 	     stream/stream_test.ok \
 	     stream/stream_test.err \
 	     jibuf/jibuf_test.ok \
