@@ -1,14 +1,13 @@
 /*
  * (C) 2013 by Pablo Neira Ayuso <pablo@gnumonks.org>
  * (C) 2013 by On Waves ehf <http://www.on-waves.com>
+ * (C) 2022 by sysmocom - s.f.m.c. GmbH <info@sysmocom.de>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  */
-
-#define OSMUX_TEST_USE_TIMING 0
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,9 +16,6 @@
 #include <string.h>
 #include <signal.h>
 #include <arpa/inet.h>
-#if OSMUX_TEST_USE_TIMING
-#include <sys/time.h>
-#endif
 
 #include <osmocom/core/select.h>
 #include <osmocom/core/application.h>
@@ -59,9 +55,6 @@ static uint8_t rtp_pkt[] = {
 
 static int rtp_pkts;
 static int mark_pkts;
-#if OSMUX_TEST_USE_TIMING
-static struct timeval last;
-#endif
 
 #define clock_debug(fmt, args...) \
 	do { \
@@ -92,20 +85,6 @@ static void tx_cb(struct msgb *msg, void *data)
 {
 	struct rtp_hdr *rtph = (struct rtp_hdr *)msg->data;
 	char buf[4096];
-#if OSMUX_TEST_USE_TIMING
-	struct timeval now, diff;
-
-	osmo_gettimeofday(&now, NULL);
-	timersub(&now, &last, &diff);
-	last = now;
-
-	if (diff.tv_usec > 2*17000) {
-		clock_debug("delivery of reconstructed RTP lagged"
-			" (diff.tv_usec=%u > 2*17000)\n",
-			(unsigned int)diff.tv_usec);
-		exit(EXIT_FAILURE);
-	}
-#endif
 
 	osmo_rtp_snprintf(buf, sizeof(buf), msg);
 	clock_debug("extracted packet: %s\n", buf);
@@ -185,15 +164,11 @@ static void osmux_test_marker(int ccid) {
 				osmux_xfrm_input_deliver(&h_input);
 			}
 		}
-#if !OSMUX_TEST_USE_TIMING
 		clock_override_add(0, PKT_TIME_USEC);
-#endif
 	}
 
 	while (rtp_pkts) {
-#if !OSMUX_TEST_USE_TIMING
 		clock_override_add(1, 0);
-#endif
 		osmo_select_main(0);
 	}
 
@@ -242,10 +217,6 @@ static void osmux_test_loop(int ccid)
 		osmux_xfrm_input(&h_input, msg, (i % 2) + ccid);
 
 		if (i % 4 == 0) {
-#if OSMUX_TEST_USE_TIMING
-			osmo_gettimeofday(&last, NULL);
-#endif
-
 			/* After four RTP messages, squash them into the OSMUX
 			 * batch and call the routine to deliver it.
 			 */
@@ -258,9 +229,7 @@ static void osmux_test_loop(int ccid)
 			 */
 			for (j = 0; j < k-2; j++) {
 				osmo_select_main(0);
-#if !OSMUX_TEST_USE_TIMING
 				clock_override_add(0, PKT_TIME_USEC);
-#endif
 			}
 
 			k = 0;
@@ -282,11 +251,9 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-#if !OSMUX_TEST_USE_TIMING
 	/* This test uses fake time to speedup the run, unless we want to manually
 	 * test time specific stuff */
 	clock_override_enable(true);
-#endif
 
 	/* This test doesn't use it, but osmux requires it internally. */
 	void *tall_ctx = talloc_named_const(NULL, 1, "Root context");
@@ -309,7 +276,6 @@ int main(void)
 	/* If the test takes longer than 10 seconds, abort it */
 	alarm(10);
 
-#if !OSMUX_TEST_USE_TIMING
 	/* Check if marker bit features work correctly */
 	osmux_xfrm_input_init(&h_input);
 	for (i = 0; i < 4; i++)
@@ -318,7 +284,6 @@ int main(void)
 	for (i = 0; i < 4; i++)
 		osmux_xfrm_input_close_circuit(&h_input, i);
 	osmux_xfrm_input_fini(&h_input);
-#endif
 
 	osmux_xfrm_input_init(&h_input);
 
