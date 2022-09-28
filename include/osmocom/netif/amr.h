@@ -57,6 +57,7 @@ struct amr_hdr {
 	uint8_t cmr:4, pad1:4;
 	uint8_t f:1, ft:4, q:1, pad2:2;
 #endif
+	uint8_t data[0];
 } __attribute__((packed));
 
 static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
