@@ -390,6 +390,36 @@ static void test_output_flush(void)
 	talloc_free(h_output);
 }
 
+/* Test how the osmux_out_handle behaves when seqnum 0xff->0x00 is received */
+static void test_output_seqnum_wraparound(void)
+{
+	struct osmux_out_handle *h_output;
+
+	printf("===test_output_seqnum_wraparound===\n");
+
+	clock_override_enable(true);
+	clock_override_set(0, 0);
+	osmux_init(0xff);
+
+	h_output = osmux_xfrm_output_alloc(NULL);
+	osmux_xfrm_output_set_rtp_ssrc(h_output, 0x7000000);
+	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
+	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, h_output);
+	h_output->rtp_seq = (uint16_t)50;
+	h_output->rtp_timestamp = (uint32_t)500;
+	h_output->osmux_seq_ack = 0xff;
+
+	clock_debug("Sending osmux frame with seqnum=0");
+	PULL_NEXT(h_output);
+	clock_override_add(0, 2*TIME_RTP_PKT_MS*1000);
+	osmo_select_main(0);
+
+	clock_debug("flushing other RTP packets");
+	osmux_xfrm_output_flush(h_output);
+
+	talloc_free(h_output);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -412,6 +442,7 @@ int main(int argc, char **argv)
 	test_output_2together();
 	test_output_frame_lost();
 	test_output_flush();
+	test_output_seqnum_wraparound();
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;

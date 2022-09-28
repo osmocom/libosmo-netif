@@ -105,4 +105,15 @@ sys={0.040000}, mono={0.040000}: dequeue: seq=58 ts=1780 enqueued=3
 sys={0.040000}, mono={0.040000}: dequeue: seq=59 ts=1940 enqueued=2
 sys={0.040000}, mono={0.040000}: dequeue: seq=60 ts=2100 enqueued=1
 sys={0.040000}, mono={0.040000}: dequeue: seq=61 ts=2260 enqueued=0
+===test_output_seqnum_wraparound===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: Sending osmux frame with seqnum=0
+sys={0.000000}, mono={0.000000}: dequeue: seq=50 ts=500 M enqueued=5
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: dequeue: seq=51 ts=660 enqueued=4
+sys={0.040000}, mono={0.040000}: dequeue: seq=52 ts=820 enqueued=3
+sys={0.040000}, mono={0.040000}: flushing other RTP packets
+sys={0.040000}, mono={0.040000}: dequeue: seq=53 ts=980 enqueued=2
+sys={0.040000}, mono={0.040000}: dequeue: seq=54 ts=1140 enqueued=1
+sys={0.040000}, mono={0.040000}: dequeue: seq=55 ts=1300 enqueued=0
 OK: Test passed
