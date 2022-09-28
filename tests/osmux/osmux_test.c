@@ -320,6 +320,15 @@ int main(void)
 
 	osmux_xfrm_input_fini(&h_input);
 
+	for (i = 0; i < ARRAY_SIZE(h_output); i++) {
+		clock_debug("Flushing CID %u\n", i);
+		osmux_xfrm_output_flush(h_output[i]);
+	}
+
+	for (i = 0; i < ARRAY_SIZE(h_output); i++) {
+		TALLOC_FREE(h_output[i]);
+	}
+
 	clock_debug("OK: Test passed\n");
 	return EXIT_SUCCESS;
 }

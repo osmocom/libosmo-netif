@@ -1077,4 +1077,10 @@ sys={28.604242}, mono={5.180000}: clock_override_add
 sys={28.604242}, mono={5.180000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9316 timestamp=1681718057 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.604242}, mono={5.180000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9316 timestamp=1681718057 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.624242}, mono={5.200000}: clock_override_add
+sys={28.624242}, mono={5.200000}: Flushing CID 0
+sys={28.624242}, mono={5.200000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9317 timestamp=1681718217 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
+sys={28.624242}, mono={5.200000}: Flushing CID 1
+sys={28.624242}, mono={5.200000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9317 timestamp=1681718217 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
+sys={28.624242}, mono={5.200000}: Flushing CID 2
+sys={28.624242}, mono={5.200000}: Flushing CID 3
 sys={28.624242}, mono={5.200000}: OK: Test passed
