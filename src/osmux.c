@@ -156,7 +156,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
 	 *    steady increase of delay
 	 */
 	rtph->marker = first_pkt &&
-			(osmuxh->rtp_m || (osmuxh->seq != h->osmux_seq_ack + 1));
+			(osmuxh->rtp_m || (osmuxh->seq != ((h->osmux_seq_ack + 1) & 0xff)));
 
 	msgb_put(out_msg, sizeof(struct rtp_hdr));
 

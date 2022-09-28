@@ -108,7 +108,7 @@ sys={0.040000}, mono={0.040000}: dequeue: seq=61 ts=2260 enqueued=0
 ===test_output_seqnum_wraparound===
 sys={0.000000}, mono={0.000000}: clock_override_set
 sys={0.000000}, mono={0.000000}: Sending osmux frame with seqnum=0
-sys={0.000000}, mono={0.000000}: dequeue: seq=50 ts=500 M enqueued=5
+sys={0.000000}, mono={0.000000}: dequeue: seq=50 ts=500 enqueued=5
 sys={0.040000}, mono={0.040000}: clock_override_add
 sys={0.040000}, mono={0.040000}: dequeue: seq=51 ts=660 enqueued=4
 sys={0.040000}, mono={0.040000}: dequeue: seq=52 ts=820 enqueued=3
