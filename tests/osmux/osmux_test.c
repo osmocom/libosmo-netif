@@ -102,7 +102,7 @@ static void tx_cb(struct msgb *msg, void *data)
 	msgb_free(msg);
 }
 
-static struct osmux_out_handle *h_output;
+static struct osmux_out_handle *h_output[4];
 
 static void osmux_deliver(struct msgb *batch_msg, void *data)
 {
@@ -116,7 +116,7 @@ static void osmux_deliver(struct msgb *batch_msg, void *data)
 	 * in a list. Then, reconstruct transmission timing.
 	 */
 	while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL)
-		osmux_xfrm_output_sched(h_output, osmuxh);
+		osmux_xfrm_output_sched(h_output[osmuxh->circuit_id], osmuxh);
 	msgb_free(batch_msg);
 }
 
@@ -132,7 +132,8 @@ static void sigalarm_handler(int foo)
 	exit(EXIT_FAILURE);
 }
 
-static void osmux_test_marker(int ccid) {
+static void osmux_test_marker(int num_ccid)
+{
 	struct msgb *msg;
 	struct rtp_hdr *rtph = (struct rtp_hdr *)rtp_pkt;
 	struct rtp_hdr *cpy_rtph;
@@ -145,7 +146,7 @@ static void osmux_test_marker(int ccid) {
 		seq++;
 		rtph->sequence = htons(seq);
 
-		for (j=0; j<4; j++) {
+		for (j = 0; j < num_ccid; j++) {
 			msg = msgb_alloc(1500, "test");
 			if (!msg)
 				exit(EXIT_FAILURE);
@@ -160,7 +161,7 @@ static void osmux_test_marker(int ccid) {
 			}
 
 			rtp_pkts++;
-			while (osmux_xfrm_input(&h_input, msg, j + ccid) > 0) {
+			while (osmux_xfrm_input(&h_input, msg, j) > 0) {
 				osmux_xfrm_input_deliver(&h_input);
 			}
 		}
@@ -265,13 +266,15 @@ int main(void)
 	log_set_print_category_hex(osmo_stderr_target, 0);
 	log_set_use_color(osmo_stderr_target, 0);
 
-	h_output = osmux_xfrm_output_alloc(NULL);
-	osmux_xfrm_output_set_rtp_ssrc(h_output, 0x7000000);
-	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
-	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, NULL);
-	/* These fields are set using random() */
-	h_output->rtp_seq = 9158;
-	h_output->rtp_timestamp = 1681692777;
+	for (i = 0; i < ARRAY_SIZE(h_output); i++) {
+		h_output[i] = osmux_xfrm_output_alloc(NULL);
+		osmux_xfrm_output_set_rtp_ssrc(h_output[i], 0x7000000 + i);
+		osmux_xfrm_output_set_rtp_pl_type(h_output[i], 98);
+		osmux_xfrm_output_set_tx_cb(h_output[i], tx_cb, NULL);
+		/* These fields are set using random() */
+		h_output[i]->rtp_seq = 9158;
+		h_output[i]->rtp_timestamp = 1681692777;
+	}
 
 	/* If the test takes longer than 10 seconds, abort it */
 	alarm(10);
@@ -280,7 +283,7 @@ int main(void)
 	osmux_xfrm_input_init(&h_input);
 	for (i = 0; i < 4; i++)
 		osmux_xfrm_input_open_circuit(&h_input, i, 0);
-	osmux_test_marker(0);
+	osmux_test_marker(4);
 	for (i = 0; i < 4; i++)
 		osmux_xfrm_input_close_circuit(&h_input, i);
 	osmux_xfrm_input_fini(&h_input);

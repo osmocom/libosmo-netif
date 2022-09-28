@@ -298,7 +298,6 @@ struct osmux_batch {
 	struct osmux_hdr	*osmuxh;
 	struct llist_head	circuit_list;
 	unsigned int		remaining_bytes;
-	uint8_t			seq;
 	uint32_t		nmsgs;
 	int			ndummy;
 };
@@ -309,6 +308,7 @@ struct osmux_circuit {
 	struct llist_head	msg_list;
 	int			nmsgs;
 	int			dummy;
+	uint8_t			seq;
 };
 
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
@@ -357,7 +357,7 @@ struct osmux_input_state {
 	struct rtp_hdr	*rtph;
 	struct amr_hdr	*amrh;
 	uint32_t	amr_payload_len;
-	int		ccid;
+	struct osmux_circuit *circuit;
 	int		add_osmux_hdr;
 };
 
@@ -371,8 +371,8 @@ static int osmux_batch_put(struct osmux_batch *batch,
 		osmuxh->ft = OSMUX_FT_VOICE_AMR;
 		osmuxh->ctr = 0;
 		osmuxh->rtp_m = osmuxh->rtp_m || state->rtph->marker;
-		osmuxh->seq = batch->seq++;
-		osmuxh->circuit_id = state->ccid;
+		osmuxh->seq = state->circuit->seq++;
+		osmuxh->circuit_id = state->circuit->ccid;
 		osmuxh->amr_ft = state->amrh->ft;
 
 		/* annotate current osmux header */
@@ -412,7 +412,7 @@ static void osmux_encode_dummy(struct osmux_batch *batch, uint8_t batch_factor,
 	osmuxh->amr_f = 0;
 	osmuxh->amr_q= 0;
 	osmuxh->seq = 0;
-	osmuxh->circuit_id = state->ccid;
+	osmuxh->circuit_id = state->circuit->ccid;
 	osmuxh->amr_cmr = 0;
 	osmuxh->amr_ft = AMR_FT_3;
 	msgb_put(state->out_msg, sizeof(struct osmux_hdr));
@@ -445,7 +445,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 		if (circuit->dummy) {
 			struct osmux_input_state state = {
 				.out_msg	= batch_msg,
-				.ccid		= circuit->ccid,
+				.circuit	= circuit,
 			};
 			osmux_encode_dummy(batch, batch_factor, &state);
 			continue;
@@ -455,7 +455,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 			struct osmux_input_state state = {
 				.msg		= cur,
 				.out_msg	= batch_msg,
-				.ccid		= circuit->ccid,
+				.circuit	= circuit,
 			};
 			uint32_t amr_len;
 #ifdef DEBUG_MSG
