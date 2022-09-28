@@ -243,7 +243,7 @@ int osmux_xfrm_output_sched(struct osmux_out_handle *h, struct osmux_hdr *osmuxh
 		osmo_timer_schedule(&h->timer, 0, 0);
 	}
 
-	for (i=0; i<osmuxh->ctr+1; i++) {
+	for (i = 0; i < osmuxh->ctr + 1; i++) {
 		struct rtp_hdr *rtph;
 
 		msg = osmux_rebuild_rtp(h, osmuxh,
