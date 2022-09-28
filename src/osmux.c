@@ -152,7 +152,7 @@ osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
 	/* rtp packet with the marker bit is always guaranteed to be the first
 	 * one. We want to notify with marker in 2 scenarios:
 	 * 1- Sender told us through osmux frame rtp_m.
-	 * 2- Sntermediate osmux frame lost (seq gap), otherwise rtp receiver only sees
+	 * 2- Intermediate osmux frame lost (seq gap), otherwise rtp receiver only sees
 	 *    steady increase of delay
 	 */
 	rtph->marker = first_pkt &&
