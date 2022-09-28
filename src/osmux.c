@@ -364,20 +364,16 @@ struct osmux_input_state {
 static int osmux_batch_put(struct osmux_batch *batch,
 			   struct osmux_input_state *state)
 {
-	struct osmux_hdr *osmuxh;
-
 	if (state->add_osmux_hdr) {
-		osmuxh = (struct osmux_hdr *)state->out_msg->tail;
+		struct osmux_hdr *osmuxh;
+		osmuxh = (struct osmux_hdr *)msgb_put(state->out_msg,
+						      sizeof(struct osmux_hdr));
 		osmuxh->ft = OSMUX_FT_VOICE_AMR;
 		osmuxh->ctr = 0;
 		osmuxh->rtp_m = osmuxh->rtp_m || state->rtph->marker;
-		osmuxh->amr_f = state->amrh->f;
-		osmuxh->amr_q= state->amrh->q;
 		osmuxh->seq = batch->seq++;
 		osmuxh->circuit_id = state->ccid;
-		osmuxh->amr_cmr = state->amrh->cmr;
 		osmuxh->amr_ft = state->amrh->ft;
-		msgb_put(state->out_msg, sizeof(struct osmux_hdr));
 
 		/* annotate current osmux header */
 		batch->osmuxh = osmuxh;
@@ -390,6 +386,10 @@ static int osmux_batch_put(struct osmux_batch *batch,
 		}
 		batch->osmuxh->ctr++;
 	}
+	/* For fields below, we only use the last included in batch and ignore any previous: */
+	batch->osmuxh->amr_cmr = state->amrh->cmr;
+	batch->osmuxh->amr_f = state->amrh->f;
+	batch->osmuxh->amr_q = state->amrh->q;
 
 	memcpy(state->out_msg->tail, osmo_amr_get_payload(state->amrh),
 	       state->amr_payload_len);

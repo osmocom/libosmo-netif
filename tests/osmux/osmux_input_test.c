@@ -85,7 +85,7 @@ static struct msgb *rtp_next(void)
 	return rtp_new(rtp_next_seq, rtp_next_ts, 0);
 }
 
-static void rtp_append_amr(struct msgb *msg, uint8_t ft)
+static struct amr_hdr *rtp_append_amr(struct msgb *msg, uint8_t ft)
 {
 	struct amr_hdr *amrh;
 	struct rtp_hdr *rtph = (struct rtp_hdr *)msg->data;
@@ -98,6 +98,7 @@ static void rtp_append_amr(struct msgb *msg, uint8_t ft)
 	amrh->f = 0;
 	amrh->ft = ft;
 	msgb_put(msg, osmo_amr_bytes(amrh->ft));
+	return amrh;
 }
 
 static void sigalarm_handler(int foo)
@@ -251,6 +252,100 @@ static void test_amr_ft_change_middle_batch(void)
 	osmux_xfrm_input_fini(&h_input);
 }
 
+static void test_last_amr_cmr_f_q_used_osmux_deliver_cb(struct msgb *batch_msg, void *data)
+{
+	struct osmux_hdr *osmuxh;
+	char buf[2048];
+	bool *osmux_transmitted = (bool *)data;
+
+	osmux_snprintf(buf, sizeof(buf), batch_msg);
+	clock_debug("OSMUX message (len=%d): %s\n", batch_msg->len, buf);
+
+	/* We expect 1 batch: */
+	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh->ft == OSMUX_FT_VOICE_AMR);
+	/* Check CMR and Q values are the ones from the last message: */
+	OSMO_ASSERT(osmuxh->amr_f == 0);
+	OSMO_ASSERT(osmuxh->amr_q == 0);
+	OSMO_ASSERT(osmuxh->amr_cmr == 2);
+
+	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh == NULL);
+
+	msgb_free(batch_msg);
+
+	*osmux_transmitted = true;
+}
+/* Test that fields CMR, F and Q of the last RTP packet in the batch are the
+ * ones set in the osmux batch header. */
+static void test_last_amr_cmr_f_q_used(void)
+{
+	struct msgb *msg;
+	int rc;
+	const uint8_t cid = 32;
+	bool osmux_transmitted = false;
+	struct amr_hdr *amrh;
+
+	printf("===%s===\n", __func__);
+
+
+
+	clock_override_enable(true);
+	clock_override_set(0, 0);
+	rtp_init(0, 0);
+
+	struct osmux_in_handle h_input = {
+	.osmux_seq	= 0, /* sequence number to start OSmux message from */
+	.batch_factor	= 3, /* batch up to 3 RTP messages */
+	.deliver	= test_last_amr_cmr_f_q_used_osmux_deliver_cb,
+	.data		= &osmux_transmitted,
+	};
+
+	osmux_xfrm_input_init(&h_input);
+	osmux_xfrm_input_open_circuit(&h_input, cid, false);
+
+	/* First RTP frame at t=0 */
+	msg = rtp_next();
+	amrh = rtp_append_amr(msg, AMR_FT_2);
+	amrh->f = 1;
+	amrh->q = 1;
+	amrh->cmr = 0;
+	rc = osmux_xfrm_input(&h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	/* Second RTP frame at t=20, CMR changes 0->1 */
+	clock_debug("Submit 2nd RTP packet, CMR changes");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	amrh = rtp_append_amr(msg, AMR_FT_2);
+	amrh->f = 1;
+	amrh->q = 1;
+	amrh->cmr = 1;
+	rc = osmux_xfrm_input(&h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	/* Third RTP frame at t=40, q changes 1->0, CMR changes 1->2: */
+	clock_debug("Submit 3rd RTP packet with Q and CMR changes");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	amrh = rtp_append_amr(msg, AMR_FT_2);
+	amrh->f = 0;
+	amrh->q = 0;
+	amrh->cmr = 2;
+	rc = osmux_xfrm_input(&h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	/* t=60, osmux batch is scheduled to be transmitted: */
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	clock_debug("Osmux frame should now be transmitted");
+	osmo_select_main(0);
+	OSMO_ASSERT(osmux_transmitted == true);
+
+	clock_debug("Closing circuit");
+	osmux_xfrm_input_close_circuit(&h_input, cid);
+	osmux_xfrm_input_fini(&h_input);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -269,6 +364,7 @@ int main(int argc, char **argv)
 	alarm(10);
 
 	test_amr_ft_change_middle_batch();
+	test_last_amr_cmr_f_q_used();
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;
