@@ -155,6 +155,7 @@ static void tx_cb(struct msgb *msg, void *data)
 		OSMO_ASSERT(_rc == _osmuxh->ctr+1); \
 		}
 
+/* Test some regular scenario where frames arrive at exactly the time they should. */
 static void test_output_consecutive(void)
 {
 	struct osmux_out_handle *h_output;
@@ -222,6 +223,12 @@ static void test_output_consecutive(void)
 	talloc_free(h_output);
 }
 
+/* Test that receiving new osmux frame triggers flushing of RTP pakcets
+ * generated from previous one, to avoid steady growing delay in scheduling due to
+ * jitter of osmux packets received. Specifically test case where the 2 Osmux
+ * packets arrive with a small delay of system time in between them, aka the 1st
+ * Osmux frame has had some of its AMR payloads already forwarded as RTP to the
+ * upper layers. */
 static void test_output_interleaved(void)
 {
 	struct osmux_out_handle *h_output;
@@ -264,6 +271,11 @@ static void test_output_interleaved(void)
 	talloc_free(h_output);
 }
 
+/* Test that receiving new osmux frame triggers flushing of RTP pakcets
+ * generated from previous one, to avoid steady growing delay in scheduling due to
+ * jitter of osmux packets received. Specifically test case where the 2 Osmux
+ * packets arrive (almost) exactly at the same time, so no internal acton is
+ * triggered between receival of those. */
 static void test_output_2together(void)
 {
 	struct osmux_out_handle *h_output;
@@ -302,7 +314,8 @@ static void test_output_2together(void)
 	talloc_free(h_output);
 }
 
-/* FIXME: this test shows generated rtp stream doesn't have osmux lost frames into account! */
+/* Generated rtp stream gets first RTP pkt marked with M bit after osmux frame
+ * lost is detected (hence a gap in sequence) */
 static void test_output_frame_lost(void)
 {
 	struct osmux_out_handle *h_output;
@@ -340,6 +353,8 @@ static void test_output_frame_lost(void)
 	talloc_free(h_output);
 }
 
+/* Test all packets are transmitted immediately when osmux_xfrm_output_flush()
+ * is called. */
 static void test_output_flush(void)
 {
 	struct osmux_out_handle *h_output;
