@@ -346,6 +346,74 @@ static void test_last_amr_cmr_f_q_used(void)
 	osmux_xfrm_input_fini(&h_input);
 }
 
+static void test_initial_osmux_seqnum_osmux_deliver_cb(struct msgb *batch_msg, void *data)
+{
+	struct osmux_hdr *osmuxh;
+	char buf[2048];
+	bool *osmux_transmitted = (bool *)data;
+
+	osmux_snprintf(buf, sizeof(buf), batch_msg);
+	clock_debug("OSMUX message (len=%d): %s\n", batch_msg->len, buf);
+
+	/* We expect 1 batch: */
+	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	/* Check seqnum is the one configured beforehand: */
+	OSMO_ASSERT(osmuxh->seq == 123);
+
+	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh == NULL);
+
+	msgb_free(batch_msg);
+
+	*osmux_transmitted = true;
+}
+/* Test that the first transmitted osmux header is set according to what has been configured. */
+static void test_initial_osmux_seqnum(void)
+{
+	struct msgb *msg;
+	int rc;
+	const uint8_t cid = 33;
+	bool osmux_transmitted = false;
+	struct amr_hdr *amrh;
+
+	printf("===%s===\n", __func__);
+
+
+
+	clock_override_enable(true);
+	clock_override_set(0, 0);
+	rtp_init(0, 0);
+
+	struct osmux_in_handle h_input = {
+	.osmux_seq	= 123, /* sequence number to start OSmux message from */
+	.batch_factor	= 1, /* batch up to 1 RTP messages */
+	.deliver	= test_initial_osmux_seqnum_osmux_deliver_cb,
+	.data		= &osmux_transmitted,
+	};
+
+	osmux_xfrm_input_init(&h_input);
+	osmux_xfrm_input_open_circuit(&h_input, cid, false);
+
+	/* First RTP frame at t=0 */
+	msg = rtp_next();
+	amrh = rtp_append_amr(msg, AMR_FT_2);
+	amrh->f = 1;
+	amrh->q = 1;
+	amrh->cmr = 0;
+	rc = osmux_xfrm_input(&h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	/* t=20, osmux batch is scheduled to be transmitted:  */
+	clock_debug("Submit 2nd RTP packet, CMR changes");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	osmo_select_main(0);
+	OSMO_ASSERT(osmux_transmitted == true);
+
+	clock_debug("Closing circuit");
+	osmux_xfrm_input_close_circuit(&h_input, cid);
+	osmux_xfrm_input_fini(&h_input);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -365,6 +433,7 @@ int main(int argc, char **argv)
 
 	test_amr_ft_change_middle_batch();
 	test_last_amr_cmr_f_q_used();
+	test_initial_osmux_seqnum();
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;

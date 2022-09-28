@@ -859,6 +859,7 @@ int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
 	}
 
 	circuit->ccid = ccid;
+	circuit->seq = h->osmux_seq;
 	INIT_LLIST_HEAD(&circuit->msg_list);
 	llist_add_tail(&circuit->head, &batch->circuit_list);
 

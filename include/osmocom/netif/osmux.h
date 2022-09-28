@@ -57,6 +57,7 @@ struct osmux_hdr {
 
 /* one to handle all existing RTP flows */
 struct osmux_in_handle {
+	/* Initial Osmux seqnum for each circuit, set during osmux_xfrm_input_open_circuit() */
 	uint8_t osmux_seq;
 	uint8_t batch_factor;
 	uint16_t batch_size;
