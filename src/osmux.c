@@ -645,38 +645,6 @@ osmux_batch_find_circuit(struct osmux_batch *batch, int ccid)
 	return NULL;
 }
 
-static struct osmux_circuit *
-osmux_batch_add_circuit(struct osmux_batch *batch, int ccid, int dummy,
-			uint8_t batch_factor)
-{
-	struct osmux_circuit *circuit;
-
-	circuit = osmux_batch_find_circuit(batch, ccid);
-	if (circuit != NULL) {
-		LOGP(DLMUX, LOGL_ERROR, "circuit %u already exists!\n", ccid);
-		return NULL;
-	}
-
-	circuit = talloc_zero(osmux_ctx, struct osmux_circuit);
-	if (circuit == NULL) {
-		LOGP(DLMUX, LOGL_ERROR, "OOM on circuit %u\n", ccid);
-		return NULL;
-	}
-
-	circuit->ccid = ccid;
-	INIT_LLIST_HEAD(&circuit->msg_list);
-	llist_add_tail(&circuit->head, &batch->circuit_list);
-
-	if (dummy) {
-		circuit->dummy = dummy;
-		batch->ndummy++;
-		if (!osmo_timer_pending(&batch->timer))
-			osmo_timer_schedule(&batch->timer, 0,
-					    batch_factor * DELTA_RTP_MSG);
-	}
-	return circuit;
-}
-
 static void osmux_batch_del_circuit(struct osmux_batch *batch, struct osmux_circuit *circuit)
 {
 	if (circuit->dummy)
@@ -876,8 +844,32 @@ int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
 				  int dummy)
 {
 	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
+	struct osmux_circuit *circuit;
 
-	return osmux_batch_add_circuit(batch, ccid, dummy, h->batch_factor) ? 0 : -1;
+	circuit = osmux_batch_find_circuit(batch, ccid);
+	if (circuit != NULL) {
+		LOGP(DLMUX, LOGL_ERROR, "circuit %u already exists!\n", ccid);
+		return -1;
+	}
+
+	circuit = talloc_zero(osmux_ctx, struct osmux_circuit);
+	if (circuit == NULL) {
+		LOGP(DLMUX, LOGL_ERROR, "OOM on circuit %u\n", ccid);
+		return -1;
+	}
+
+	circuit->ccid = ccid;
+	INIT_LLIST_HEAD(&circuit->msg_list);
+	llist_add_tail(&circuit->head, &batch->circuit_list);
+
+	if (dummy) {
+		circuit->dummy = dummy;
+		batch->ndummy++;
+		if (!osmo_timer_pending(&batch->timer))
+			osmo_timer_schedule(&batch->timer, 0,
+					    h->batch_factor * DELTA_RTP_MSG);
+	}
+	return 0;
 }
 
 void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid)
