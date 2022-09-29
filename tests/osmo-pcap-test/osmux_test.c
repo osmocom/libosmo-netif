@@ -65,11 +65,7 @@ static void deliver(struct msgb *batch_msg)
  * This is the input handle for osmux. It stores the last osmux sequence that
  * has been used and the deliver function that sends the osmux batch.
  */
-struct osmux_in_handle h_input = {
-	.osmux_seq	= 0, /* sequence number to start OSmux message from */
-	.batch_factor = 4, /* batch up to 4 RTP messages */
-	.deliver	= deliver,
-};
+struct osmux_in_handle *h_input;
 
 #define MAX_CONCURRENT_CALLS	8
 
@@ -124,9 +120,9 @@ static int pcap_test_run(struct msgb *msg)
 	if (ccid < 0)
 		register_ccid(rtph->ssrc);
 
-	while ((ret = osmux_xfrm_input(&h_input, msg, ccid)) > 0) {
+	while ((ret = osmux_xfrm_input(h_input, msg, ccid)) > 0) {
 		/* batch full, deliver it */
-		osmux_xfrm_input_deliver(&h_input);
+		osmux_xfrm_input_deliver(h_input);
 	}
 	if (ret == -1)
 		printf("something is wrong\n");
@@ -189,7 +185,10 @@ int main(int argc, char *argv[])
 
 	osmo_pcap.timer.cb = osmo_pcap_pkt_timer_cb;
 
-	osmux_xfrm_input_init(&h_input);
+	h_input = osmux_xfrm_input_alloc(tall_test);
+	osmux_xfrm_input_set_initial_seqnum(h_input, 0);
+	osmux_xfrm_input_set_batch_factor(h_input, 4);
+	osmux_xfrm_input_set_deliver_cb(h_input, deliver, NULL);
 
 	h_output = osmux_xfrm_output_alloc(tall_test);
 	osmux_xfrm_output_set_rtp_ssrc(h_output, 0);

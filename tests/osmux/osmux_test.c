@@ -120,11 +120,7 @@ static void osmux_deliver(struct msgb *batch_msg, void *data)
 	msgb_free(batch_msg);
 }
 
-struct osmux_in_handle h_input = {
-	.osmux_seq	= 0, /* sequence number to start OSmux message from */
-	.batch_factor	= 4, /* batch up to 4 RTP messages */
-	.deliver	= osmux_deliver,
-};
+struct osmux_in_handle *h_input;
 
 static void sigalarm_handler(int foo)
 {
@@ -161,8 +157,8 @@ static void osmux_test_marker(int num_ccid)
 			}
 
 			rtp_pkts++;
-			while (osmux_xfrm_input(&h_input, msg, j) > 0) {
-				osmux_xfrm_input_deliver(&h_input);
+			while (osmux_xfrm_input(h_input, msg, j) > 0) {
+				osmux_xfrm_input_deliver(h_input);
 			}
 		}
 		clock_override_add(0, PKT_TIME_USEC);
@@ -215,13 +211,13 @@ static void osmux_test_loop(int ccid)
 		 * gaps between two messages to test the osmux replaying
 		 * feature.
 		 */
-		osmux_xfrm_input(&h_input, msg, (i % 2) + ccid);
+		osmux_xfrm_input(h_input, msg, (i % 2) + ccid);
 
 		if (i % 4 == 0) {
 			/* After four RTP messages, squash them into the OSMUX
 			 * batch and call the routine to deliver it.
 			 */
-			osmux_xfrm_input_deliver(&h_input);
+			osmux_xfrm_input_deliver(h_input);
 
 			/* The first two RTP message (one per circuit ID batch)
 			 * are delivered immediately, wait until the three RTP
@@ -280,22 +276,29 @@ int main(void)
 	alarm(10);
 
 	/* Check if marker bit features work correctly */
-	osmux_xfrm_input_init(&h_input);
+	h_input = osmux_xfrm_input_alloc(tall_ctx);
+	osmux_xfrm_input_set_initial_seqnum(h_input, 0);
+	osmux_xfrm_input_set_batch_factor(h_input, 4);
+	osmux_xfrm_input_set_deliver_cb(h_input, osmux_deliver, NULL);
+
 	for (i = 0; i < 4; i++)
-		osmux_xfrm_input_open_circuit(&h_input, i, 0);
+		osmux_xfrm_input_open_circuit(h_input, i, 0);
 	osmux_test_marker(4);
 	for (i = 0; i < 4; i++)
-		osmux_xfrm_input_close_circuit(&h_input, i);
-	osmux_xfrm_input_fini(&h_input);
+		osmux_xfrm_input_close_circuit(h_input, i);
+	TALLOC_FREE(h_input);
 
-	osmux_xfrm_input_init(&h_input);
+	h_input = osmux_xfrm_input_alloc(tall_ctx);
+	osmux_xfrm_input_set_initial_seqnum(h_input, 0);
+	osmux_xfrm_input_set_batch_factor(h_input, 4);
+	osmux_xfrm_input_set_deliver_cb(h_input, osmux_deliver, NULL);
 
 	for (i = 0; i < 2; i++)
-		osmux_xfrm_input_open_circuit(&h_input, i, 0);
+		osmux_xfrm_input_open_circuit(h_input, i, 0);
 
 	/* Add two circuits with dummy padding */
-	osmux_xfrm_input_open_circuit(&h_input, 2, 1);
-	osmux_xfrm_input_open_circuit(&h_input, 3, 1);
+	osmux_xfrm_input_open_circuit(h_input, 2, 1);
+	osmux_xfrm_input_open_circuit(h_input, 3, 1);
 
 	/* Wait 10 times to make sure dummy padding timer works fine */
 	for (i = 0; i < 10; i++)
@@ -309,16 +312,16 @@ int main(void)
 	osmux_test_loop(2);
 
 	for (i = 0; i < 4; i++)
-		osmux_xfrm_input_close_circuit(&h_input, i);
+		osmux_xfrm_input_close_circuit(h_input, i);
 
 	/* Reopen with two circuits and retest */
-	osmux_xfrm_input_open_circuit(&h_input, 0, 0);
-	osmux_xfrm_input_open_circuit(&h_input, 1, 1);
+	osmux_xfrm_input_open_circuit(h_input, 0, 0);
+	osmux_xfrm_input_open_circuit(h_input, 1, 1);
 	osmux_test_loop(0);
-	osmux_xfrm_input_close_circuit(&h_input, 0);
-	osmux_xfrm_input_close_circuit(&h_input, 1);
+	osmux_xfrm_input_close_circuit(h_input, 0);
+	osmux_xfrm_input_close_circuit(h_input, 1);
 
-	osmux_xfrm_input_fini(&h_input);
+	TALLOC_FREE(h_input);
 
 	for (i = 0; i < ARRAY_SIZE(h_output); i++) {
 		clock_debug("Flushing CID %u\n", i);

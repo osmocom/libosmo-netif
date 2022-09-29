@@ -33,6 +33,8 @@
 static uint16_t rtp_next_seq;
 static uint16_t rtp_next_ts;
 
+void *tall_ctx;
+
 #define TIME_RTP_PKT_MS 20
 #define BATCH_FACTOR 6
 /* ----------------------------- */
@@ -194,6 +196,7 @@ static void test_amr_ft_change_middle_batch(void)
 	int rc;
 	const uint8_t cid = 30;
 	bool osmux_transmitted = false;
+	struct osmux_in_handle *h_input;
 
 	printf("===%s===\n", __func__);
 
@@ -202,27 +205,25 @@ static void test_amr_ft_change_middle_batch(void)
 	clock_override_set(0, 0);
 	rtp_init(0, 0);
 
-	struct osmux_in_handle h_input = {
-	.osmux_seq	= 0, /* sequence number to start OSmux message from */
-	.batch_factor	= 4, /* batch up to 4 RTP messages */
-	.deliver	= test_amr_ft_change_middle_batch_osmux_deliver_cb,
-	.data		= &osmux_transmitted,
-	};
-
-	osmux_xfrm_input_init(&h_input);
-	osmux_xfrm_input_open_circuit(&h_input, cid, false);
+	h_input = osmux_xfrm_input_alloc(tall_ctx);
+	osmux_xfrm_input_set_initial_seqnum(h_input, 0);
+	osmux_xfrm_input_set_batch_factor(h_input, 4);
+	osmux_xfrm_input_set_deliver_cb(h_input,
+					test_amr_ft_change_middle_batch_osmux_deliver_cb,
+					&osmux_transmitted);
+	osmux_xfrm_input_open_circuit(h_input, cid, false);
 
 	/* First RTP frame at t=0 */
 	msg = rtp_next();
 	rtp_append_amr(msg, AMR_FT_2);
-	rc = osmux_xfrm_input(&h_input, msg, cid);
+	rc = osmux_xfrm_input(h_input, msg, cid);
 	OSMO_ASSERT(rc == 0);
 
 	/* Second RTP frame at t=20 */
 	clock_override_add(0, TIME_RTP_PKT_MS*1000);
 	msg = rtp_next();
 	rtp_append_amr(msg, AMR_FT_2);
-	rc = osmux_xfrm_input(&h_input, msg, cid);
+	rc = osmux_xfrm_input(h_input, msg, cid);
 	OSMO_ASSERT(rc == 0);
 
 	/* Third RTP frame at t=40, AMR FT changes: */
@@ -230,7 +231,7 @@ static void test_amr_ft_change_middle_batch(void)
 	clock_override_add(0, TIME_RTP_PKT_MS*1000);
 	msg = rtp_next();
 	rtp_append_amr(msg, AMR_FT_6);
-	rc = osmux_xfrm_input(&h_input, msg, cid);
+	rc = osmux_xfrm_input(h_input, msg, cid);
 	OSMO_ASSERT(rc == 0);
 
 	/* Forth RTP frame at t=60, AMR FT changes again: */
@@ -238,7 +239,7 @@ static void test_amr_ft_change_middle_batch(void)
 	clock_override_add(0, TIME_RTP_PKT_MS*1000);
 	msg = rtp_next();
 	rtp_append_amr(msg, AMR_FT_1);
-	rc = osmux_xfrm_input(&h_input, msg, cid);
+	rc = osmux_xfrm_input(h_input, msg, cid);
 	OSMO_ASSERT(rc == 0);
 
 	/* t=80, osmux batch is scheduled to be transmitted: */
@@ -248,8 +249,8 @@ static void test_amr_ft_change_middle_batch(void)
 	OSMO_ASSERT(osmux_transmitted == true);
 
 	clock_debug("Closing circuit");
-	osmux_xfrm_input_close_circuit(&h_input, cid);
-	osmux_xfrm_input_fini(&h_input);
+	osmux_xfrm_input_close_circuit(h_input, cid);
+	talloc_free(h_input);
 }
 
 static void test_last_amr_cmr_f_q_used_osmux_deliver_cb(struct msgb *batch_msg, void *data)
@@ -285,6 +286,7 @@ static void test_last_amr_cmr_f_q_used(void)
 	const uint8_t cid = 32;
 	bool osmux_transmitted = false;
 	struct amr_hdr *amrh;
+	struct osmux_in_handle *h_input;
 
 	printf("===%s===\n", __func__);
 
@@ -294,15 +296,13 @@ static void test_last_amr_cmr_f_q_used(void)
 	clock_override_set(0, 0);
 	rtp_init(0, 0);
 
-	struct osmux_in_handle h_input = {
-	.osmux_seq	= 0, /* sequence number to start OSmux message from */
-	.batch_factor	= 3, /* batch up to 3 RTP messages */
-	.deliver	= test_last_amr_cmr_f_q_used_osmux_deliver_cb,
-	.data		= &osmux_transmitted,
-	};
-
-	osmux_xfrm_input_init(&h_input);
-	osmux_xfrm_input_open_circuit(&h_input, cid, false);
+	h_input = osmux_xfrm_input_alloc(tall_ctx);
+	osmux_xfrm_input_set_initial_seqnum(h_input, 0);
+	osmux_xfrm_input_set_batch_factor(h_input, 3);
+	osmux_xfrm_input_set_deliver_cb(h_input,
+					test_last_amr_cmr_f_q_used_osmux_deliver_cb,
+					&osmux_transmitted);
+	osmux_xfrm_input_open_circuit(h_input, cid, false);
 
 	/* First RTP frame at t=0 */
 	msg = rtp_next();
@@ -310,7 +310,7 @@ static void test_last_amr_cmr_f_q_used(void)
 	amrh->f = 1;
 	amrh->q = 1;
 	amrh->cmr = 0;
-	rc = osmux_xfrm_input(&h_input, msg, cid);
+	rc = osmux_xfrm_input(h_input, msg, cid);
 	OSMO_ASSERT(rc == 0);
 
 	/* Second RTP frame at t=20, CMR changes 0->1 */
@@ -321,7 +321,7 @@ static void test_last_amr_cmr_f_q_used(void)
 	amrh->f = 1;
 	amrh->q = 1;
 	amrh->cmr = 1;
-	rc = osmux_xfrm_input(&h_input, msg, cid);
+	rc = osmux_xfrm_input(h_input, msg, cid);
 	OSMO_ASSERT(rc == 0);
 
 	/* Third RTP frame at t=40, q changes 1->0, CMR changes 1->2: */
@@ -332,7 +332,7 @@ static void test_last_amr_cmr_f_q_used(void)
 	amrh->f = 0;
 	amrh->q = 0;
 	amrh->cmr = 2;
-	rc = osmux_xfrm_input(&h_input, msg, cid);
+	rc = osmux_xfrm_input(h_input, msg, cid);
 	OSMO_ASSERT(rc == 0);
 
 	/* t=60, osmux batch is scheduled to be transmitted: */
@@ -342,8 +342,8 @@ static void test_last_amr_cmr_f_q_used(void)
 	OSMO_ASSERT(osmux_transmitted == true);
 
 	clock_debug("Closing circuit");
-	osmux_xfrm_input_close_circuit(&h_input, cid);
-	osmux_xfrm_input_fini(&h_input);
+	osmux_xfrm_input_close_circuit(h_input, cid);
+	talloc_free(h_input);
 }
 
 static void test_initial_osmux_seqnum_osmux_deliver_cb(struct msgb *batch_msg, void *data)
@@ -375,6 +375,7 @@ static void test_initial_osmux_seqnum(void)
 	const uint8_t cid = 33;
 	bool osmux_transmitted = false;
 	struct amr_hdr *amrh;
+	struct osmux_in_handle *h_input;
 
 	printf("===%s===\n", __func__);
 
@@ -384,15 +385,13 @@ static void test_initial_osmux_seqnum(void)
 	clock_override_set(0, 0);
 	rtp_init(0, 0);
 
-	struct osmux_in_handle h_input = {
-	.osmux_seq	= 123, /* sequence number to start OSmux message from */
-	.batch_factor	= 1, /* batch up to 1 RTP messages */
-	.deliver	= test_initial_osmux_seqnum_osmux_deliver_cb,
-	.data		= &osmux_transmitted,
-	};
-
-	osmux_xfrm_input_init(&h_input);
-	osmux_xfrm_input_open_circuit(&h_input, cid, false);
+	h_input = osmux_xfrm_input_alloc(tall_ctx);
+	osmux_xfrm_input_set_initial_seqnum(h_input, 123);
+	osmux_xfrm_input_set_batch_factor(h_input, 1);
+	osmux_xfrm_input_set_deliver_cb(h_input,
+					test_initial_osmux_seqnum_osmux_deliver_cb,
+					&osmux_transmitted);
+	osmux_xfrm_input_open_circuit(h_input, cid, false);
 
 	/* First RTP frame at t=0 */
 	msg = rtp_next();
@@ -400,7 +399,7 @@ static void test_initial_osmux_seqnum(void)
 	amrh->f = 1;
 	amrh->q = 1;
 	amrh->cmr = 0;
-	rc = osmux_xfrm_input(&h_input, msg, cid);
+	rc = osmux_xfrm_input(h_input, msg, cid);
 	OSMO_ASSERT(rc == 0);
 
 	/* t=20, osmux batch is scheduled to be transmitted:  */
@@ -410,8 +409,8 @@ static void test_initial_osmux_seqnum(void)
 	OSMO_ASSERT(osmux_transmitted == true);
 
 	clock_debug("Closing circuit");
-	osmux_xfrm_input_close_circuit(&h_input, cid);
-	osmux_xfrm_input_fini(&h_input);
+	osmux_xfrm_input_close_circuit(h_input, cid);
+	talloc_free(h_input);
 }
 
 int main(int argc, char **argv)
@@ -422,7 +421,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	void *tall_ctx = talloc_named_const(NULL, 1, "Root context");
+	tall_ctx = talloc_named_const(NULL, 1, "Root context");
 	msgb_talloc_ctx_init(tall_ctx, 0);
 	osmo_init_logging2(tall_ctx, &log_info);
 	log_set_print_filename2(osmo_stderr_target, LOG_FILENAME_NONE);
