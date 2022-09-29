@@ -178,7 +178,7 @@ static void osmux_encode_dummy(struct osmux_batch *batch, uint8_t batch_factor,
 	osmuxh->ft = OSMUX_FT_DUMMY;
 	osmuxh->ctr = batch_factor - 1;
 	osmuxh->amr_f = 0;
-	osmuxh->amr_q= 0;
+	osmuxh->amr_q = 0;
 	osmuxh->seq = 0;
 	osmuxh->circuit_id = state->circuit->ccid;
 	osmuxh->amr_cmr = 0;
@@ -370,7 +370,7 @@ static int osmux_replay_lost_packets(struct osmux_circuit *circuit,
 	/* If diff between last RTP packet seen and this one is > 1,
 	 * then we lost several RTP packets, let's replay them.
 	 */
-	for (i=1; i<diff; i++) {
+	for (i = 1; i < diff; i++) {
 		struct msgb *clone;
 
 		/* Clone last RTP packet seen */
@@ -556,33 +556,33 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 		return -1;
 	}
 
-	switch(rtph->payload_type) {
-		case RTP_PT_RTCP:
-			LOGP(DLMUX, LOGL_INFO, "Dropping RTCP packet\n");
+	switch (rtph->payload_type) {
+	case RTP_PT_RTCP:
+		LOGP(DLMUX, LOGL_INFO, "Dropping RTCP packet\n");
+		msgb_free(msg);
+		return 0;
+	default:
+		/* The RTP payload type is dynamically allocated,
+			* although we use static ones. Assume that we always
+			* receive AMR traffic.
+			*/
+
+		/* Add this RTP to the OSMUX batch */
+		ret = osmux_batch_add(batch, h->batch_factor,
+					msg, rtph, ccid);
+		if (ret < 0) {
+			/* Cannot put this message into the batch.
+				* Malformed, duplicated, OOM. Drop it and tell
+				* the upper layer that we have digest it.
+				*/
+			LOGP(DLMUX, LOGL_DEBUG, "Dropping RTP packet instead of adding to batch\n");
 			msgb_free(msg);
-			return 0;
-		default:
-			/* The RTP payload type is dynamically allocated,
-			 * although we use static ones. Assume that we always
-			 * receive AMR traffic.
-			 */
+			return ret;
+		}
 
-			/* Add this RTP to the OSMUX batch */
-			ret = osmux_batch_add(batch, h->batch_factor,
-					      msg, rtph, ccid);
-			if (ret < 0) {
-				/* Cannot put this message into the batch.
-				 * Malformed, duplicated, OOM. Drop it and tell
-				 * the upper layer that we have digest it.
-				 */
-				LOGP(DLMUX, LOGL_DEBUG, "Dropping RTP packet instead of adding to batch\n");
-				msgb_free(msg);
-				return ret;
-			}
-
-			h->stats.input_rtp_msgs++;
-			h->stats.input_rtp_bytes += msg->len;
-			break;
+		h->stats.input_rtp_msgs++;
+		h->stats.input_rtp_bytes += msg->len;
+		break;
 	}
 	return ret;
 }

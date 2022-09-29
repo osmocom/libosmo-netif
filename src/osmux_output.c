@@ -203,7 +203,7 @@ static void osmux_xfrm_output_trigger(void *data)
 }
 
 /*! \brief Generate RTP packets from osmux frame AMR payload set and schedule
- *         them for transmission at appropiate time.
+ *         them for transmission at appropriate time.
  *  \param[in] h the osmux out handle handling a specific CID
  *  \param[in] osmuxh Buffer pointing to osmux frame header structure and AMR payload
  *  \return Number of generated RTP packets
@@ -252,7 +252,7 @@ int osmux_xfrm_output_sched(struct osmux_out_handle *h, struct osmux_hdr *osmuxh
 	h->osmux_seq_ack = osmuxh->seq;
 
 	/* In case list is still empty after parsing messages, no need to rearm */
-	if(was_empty && !llist_empty(&h->list))
+	if (was_empty && !llist_empty(&h->list))
 		osmux_xfrm_output_trigger(h);
 	return i;
 }
