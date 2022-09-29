@@ -37,7 +37,7 @@
  * This is the output handle for osmux, it stores last RTP sequence and
  * timestamp that has been used. There should be one per circuit ID.
  */
-static struct osmux_out_handle h_output;
+static struct osmux_out_handle *h_output;
 
 static void tx_cb(struct msgb *msg, void *data)
 {
@@ -57,7 +57,7 @@ static void deliver(struct msgb *batch_msg)
 
 	/* This code below belongs to the osmux receiver */
 	while((osmuxh = osmux_xfrm_output_pull(batch_msg)) != NULL)
-		osmux_xfrm_output_sched(&h_output, osmuxh);
+		osmux_xfrm_output_sched(h_output, osmuxh);
 	msgb_free(batch_msg);
 }
 
@@ -190,8 +190,11 @@ int main(int argc, char *argv[])
 	osmo_pcap.timer.cb = osmo_pcap_pkt_timer_cb;
 
 	osmux_xfrm_input_init(&h_input);
-	osmux_xfrm_output_init2(&h_output, 0, 98);
-	osmux_xfrm_output_set_tx_cb(&h_output, tx_cb, NULL);
+
+	h_output = osmux_xfrm_output_alloc(tall_test);
+	osmux_xfrm_output_set_rtp_ssrc(h_output, 0);
+	osmux_xfrm_output_set_rtp_pl_type(h_output, 98);
+	osmux_xfrm_output_set_tx_cb(h_output, tx_cb, NULL);
 
 	/* first run */
 	osmo_pcap_pkt_timer_cb(NULL);
@@ -199,6 +202,8 @@ int main(int argc, char *argv[])
 	while(1) {
 		osmo_select_main(0);
 	}
+
+	talloc_free(h_output);
 
 	return ret;
 }
