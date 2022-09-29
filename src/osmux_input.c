@@ -587,6 +587,56 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	return ret;
 }
 
+static int osmux_xfrm_input_talloc_destructor(struct osmux_in_handle *h)
+{
+	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
+	struct osmux_circuit *circuit, *next;
+
+	llist_for_each_entry_safe(circuit, next, &batch->circuit_list, head)
+		osmux_batch_del_circuit(batch, circuit);
+
+	osmo_timer_del(&batch->timer);
+	talloc_free(batch);
+	return 0;
+}
+
+/*! \brief Allocate a new osmux in handle (osmux source, tx side)
+ *  \param[in] ctx talloc context to use when allocating the returned struct
+ *  \return Allocated osmux in handle
+ *
+ * This object contains configuration and state to handle a group of circuits (trunk),
+ * receiving RTP packets from the upper layer (API user) and sending batched &
+ * trunked Osmux messages containing all the data of those circuits down the
+ * stack outgoing network Osmux messages.
+ * Returned pointer can be freed with regular talloc_free, all pending messages
+ * in queue and all internal data will be freed. */
+struct osmux_in_handle *osmux_xfrm_input_alloc(void *ctx)
+{
+	struct osmux_in_handle *h;
+
+	h = talloc_zero(ctx, struct osmux_in_handle);
+	OSMO_ASSERT(h);
+
+	struct osmux_batch *batch;
+
+	h->batch_size = OSMUX_BATCH_DEFAULT_MAX;
+
+	batch = talloc_zero(h, struct osmux_batch);
+	OSMO_ASSERT(batch);
+
+	INIT_LLIST_HEAD(&batch->circuit_list);
+	batch->remaining_bytes = h->batch_size;
+	osmo_timer_setup(&batch->timer, osmux_batch_timer_expired, h);
+
+	h->internal_data = (void *)batch;
+
+	LOGP(DLMUX, LOGL_DEBUG, "initialized osmux input converter\n");
+
+	talloc_set_destructor(h, osmux_xfrm_input_talloc_destructor);
+	return h;
+}
+
+/* DEPRECATED: Use osmux_xfrm_input_alloc() instead */
 void osmux_xfrm_input_init(struct osmux_in_handle *h)
 {
 	struct osmux_batch *batch;
@@ -606,6 +656,34 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	h->internal_data = (void *)batch;
 
 	LOGP(DLMUX, LOGL_DEBUG, "initialized osmux input converter\n");
+}
+
+int osmux_xfrm_input_set_batch_factor(struct osmux_in_handle *h, uint8_t batch_factor)
+{
+	if (batch_factor > 8)
+		return -1;
+	h->batch_factor = batch_factor;
+	return 0;
+}
+
+void osmux_xfrm_input_set_batch_size(struct osmux_in_handle *h, uint16_t batch_size)
+{
+	if (batch_size == 0)
+		h->batch_size = OSMUX_BATCH_DEFAULT_MAX;
+	else
+		h->batch_size = batch_size;
+}
+
+void osmux_xfrm_input_set_initial_seqnum(struct osmux_in_handle *h, uint8_t osmux_seqnum)
+{
+	h->osmux_seq = osmux_seqnum;
+}
+
+void osmux_xfrm_input_set_deliver_cb(struct osmux_in_handle *h,
+				     void (*deliver_cb)(struct msgb *msg, void *data), void *data)
+{
+	h->deliver = deliver_cb;
+	h->data = data;
 }
 
 int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
@@ -656,16 +734,10 @@ void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid)
 	osmux_batch_del_circuit(batch, circuit);
 }
 
+/* DEPRECATED: Use talloc_free() instead (will call osmux_xfrm_input_talloc_destructor()) */
 void osmux_xfrm_input_fini(struct osmux_in_handle *h)
 {
-	struct osmux_batch *batch = (struct osmux_batch *)h->internal_data;
-	struct osmux_circuit *circuit, *next;
-
-	llist_for_each_entry_safe(circuit, next, &batch->circuit_list, head)
-		osmux_batch_del_circuit(batch, circuit);
-
-	osmo_timer_del(&batch->timer);
-	talloc_free(batch);
+	(void)osmux_xfrm_input_talloc_destructor(h);
 }
 
 /*! @} */

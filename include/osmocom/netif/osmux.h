@@ -103,8 +103,13 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg);
 /* 1500 - sizeof(iphdr) = 20 bytes - sizeof(udphdr) = 8 bytes. */
 #define OSMUX_BATCH_DEFAULT_MAX		1472
 
-void osmux_xfrm_input_init(struct osmux_in_handle *h);
-void osmux_xfrm_input_fini(struct osmux_in_handle *h);
+struct osmux_in_handle *osmux_xfrm_input_alloc(void *ctx);
+void osmux_xfrm_input_init(struct osmux_in_handle *h) OSMO_DEPRECATED("Use osmux_xfrm_input_alloc() instead");
+void osmux_xfrm_input_fini(struct osmux_in_handle *h) OSMO_DEPRECATED("Use talloc_free() instead");
+int osmux_xfrm_input_set_batch_factor(struct osmux_in_handle *h, uint8_t batch_factor);
+void osmux_xfrm_input_set_batch_size(struct osmux_in_handle *h, uint16_t batch_size);
+void osmux_xfrm_input_set_initial_seqnum(struct osmux_in_handle *h, uint8_t osmux_seqnum);
+void osmux_xfrm_input_set_deliver_cb(struct osmux_in_handle *h, void (*deliver_cb)(struct msgb *msg, void *data), void *data);
 
 int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid, int dummy);
 void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid);
