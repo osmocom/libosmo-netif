@@ -1490,7 +1490,8 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 				break;
 			case SCTP_COMM_LOST:
 				LOGPC(DLINP, LOGL_DEBUG, " LOST\n");
-				break;
+				/* Handle this like a regular disconnect */
+				return 0;
 			case SCTP_RESTART:
 				LOGPC(DLINP, LOGL_DEBUG, " RESTART\n");
 				break;
