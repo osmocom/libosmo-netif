@@ -1500,6 +1500,9 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 				break;
 			}
 			break;
+		case SCTP_SEND_FAILED:
+			LOGP(DLINP, LOGL_DEBUG, "===> SEND FAILED\n");
+			break;
 		case SCTP_PEER_ADDR_CHANGE:
 			LOGP(DLINP, LOGL_DEBUG, "===> PEER ADDR CHANGE\n");
 			break;
