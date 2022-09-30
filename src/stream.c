@@ -1524,6 +1524,16 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
  *  \param[in] conn Stream Server from which to receive
  *  \param msg pre-allocate message buffer to which received data is appended
  *  \returns number of bytes read, negative on error.
+ *
+ *  If conn is an SCTP connection, additional specific considerations shall be taken:
+ *  - msg->cb is always filled with SCTP ppid, and SCTP stream values, see msgb_sctp_*() APIs.
+ *  - If an SCTP notification was received when reading from the SCTP socket,
+ *    msgb_sctp_msg_flags(msg) will contain bit flag
+ *    OSMO_STREAM_SCTP_MSG_FLAGS_NOTIFICATION set, and the msgb will
+ *    contain a "union sctp_notification" instead of user data. In this case the
+ *    return code will be either 0 (if conn is considered dead after the
+ *    notification) or -EAGAIN (if conn is considered still alive after the
+ *    notification) resembling the standard recv() API.
  */
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 {
