@@ -1473,6 +1473,7 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 
 	ret = sctp_recvmsg(fd, msgb_data(msg), msgb_tailroom(msg),
 			NULL, NULL, &sinfo, &flags);
+	msgb_sctp_msg_flags(msg) = 0;
 	if (flags & MSG_NOTIFICATION) {
 		union sctp_notification *notif = (union sctp_notification *)msgb_data(msg);
 		LOGP(DLINP, LOGL_DEBUG, "NOTIFICATION %u flags=0x%x\n", notif->sn_header.sn_type, notif->sn_header.sn_flags);
