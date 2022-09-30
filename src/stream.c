@@ -1474,6 +1474,8 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 	ret = sctp_recvmsg(fd, msgb_data(msg), msgb_tailroom(msg),
 			NULL, NULL, &sinfo, &flags);
 	msgb_sctp_msg_flags(msg) = 0;
+	msgb_sctp_ppid(msg) = ntohl(sinfo.sinfo_ppid);
+	msgb_sctp_stream(msg) = sinfo.sinfo_stream;
 	if (flags & MSG_NOTIFICATION) {
 		union sctp_notification *notif = (union sctp_notification *)msgb_data(msg);
 		LOGP(DLINP, LOGL_DEBUG, "NOTIFICATION %u flags=0x%x\n", notif->sn_header.sn_type, notif->sn_header.sn_flags);
@@ -1514,8 +1516,6 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 		}
 		return -EAGAIN;
 	}
-	msgb_sctp_ppid(msg) = ntohl(sinfo.sinfo_ppid);
-	msgb_sctp_stream(msg) = sinfo.sinfo_stream;
 	return ret;
 }
 #endif
