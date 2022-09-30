@@ -1512,7 +1512,6 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 			LOGP(DLINP, LOGL_DEBUG, "===> SHUTDOWN EVT\n");
 			/* Handle this like a regular disconnect */
 			return 0;
-			break;
 		}
 		return -EAGAIN;
 	}
