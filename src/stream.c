@@ -1328,11 +1328,12 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 		}
 		break;
 	default:
-		ret = -ENOTSUP;
+		ret = -1;
+		errno = ENOTSUP;
 	}
-	if (ret < 0) { /* send(): On error , -1 is returned, and errno is set appropriately */
-		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", (ret == -1) ? strerror(errno) : strerror(-ret));
-	}
+	if (ret == -1) /* send(): On error -1 is returned, and errno is set appropriately */
+		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", strerror(errno));
+
 	msgb_free(msg);
 
 	if (llist_empty(&conn->tx_queue) && (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY))
