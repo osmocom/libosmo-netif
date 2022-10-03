@@ -686,6 +686,11 @@ void osmux_xfrm_input_set_deliver_cb(struct osmux_in_handle *h,
 	h->data = data;
 }
 
+void *osmux_xfrm_input_get_deliver_cb_data(struct osmux_in_handle *h)
+{
+	return h->data;
+}
+
 int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
 				  int dummy)
 {

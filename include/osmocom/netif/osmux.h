@@ -110,6 +110,7 @@ int osmux_xfrm_input_set_batch_factor(struct osmux_in_handle *h, uint8_t batch_f
 void osmux_xfrm_input_set_batch_size(struct osmux_in_handle *h, uint16_t batch_size);
 void osmux_xfrm_input_set_initial_seqnum(struct osmux_in_handle *h, uint8_t osmux_seqnum);
 void osmux_xfrm_input_set_deliver_cb(struct osmux_in_handle *h, void (*deliver_cb)(struct msgb *msg, void *data), void *data);
+void *osmux_xfrm_input_get_deliver_cb_data(struct osmux_in_handle *h);
 
 int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid, int dummy);
 void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid);
