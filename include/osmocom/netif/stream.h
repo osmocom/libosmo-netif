@@ -89,6 +89,6 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect) \
 void osmo_stream_cli_close(struct osmo_stream_cli *cli);
 
 void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg);
-int osmo_stream_cli_recv(struct osmo_stream_cli *conn, struct msgb *msg);
+int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg);
 
 /*! @} */
