@@ -56,6 +56,8 @@ void osmo_stream_srv_set_data(struct osmo_stream_srv *conn, void *data);
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg);
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg);
 
+void osmo_stream_srv_clear_tx_queue(struct osmo_stream_srv *conn);
+
 /*! \brief Osmocom Stream Client: Single client connection */
 struct osmo_stream_cli;
 
@@ -90,5 +92,7 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli);
 
 void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg);
 int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg);
+
+void osmo_stream_cli_clear_tx_queue(struct osmo_stream_cli *cli);
 
 /*! @} */
