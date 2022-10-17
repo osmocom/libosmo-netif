@@ -49,6 +49,8 @@
 #include <netinet/sctp.h>
 #endif
 
+#include <osmocom/netif/sctp.h>
+
 #define LOGSCLI(cli, level, fmt, args...) \
 	LOGP(DLINP, level, "[%s] %s(): " fmt, get_value_string(stream_cli_state_names, (cli)->state), __func__, ## args)
 
@@ -1508,7 +1510,16 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 			LOGP(DLINP, LOGL_DEBUG, "===> SEND FAILED\n");
 			break;
 		case SCTP_PEER_ADDR_CHANGE:
-			LOGP(DLINP, LOGL_DEBUG, "===> PEER ADDR CHANGE\n");
+			{
+			char addr_str[INET6_ADDRSTRLEN + 10];
+			struct sockaddr_storage sa = notif->sn_paddr_change.spc_aaddr;
+			osmo_sockaddr_to_str_buf(addr_str, sizeof(addr_str),
+						 (const struct osmo_sockaddr *)&sa);
+			LOGP(DLINP, LOGL_DEBUG, "===> PEER ADDR CHANGE: %s %s err=%s\n",
+			     addr_str, osmo_sctp_paddr_chg_str(notif->sn_paddr_change.spc_state),
+			     (notif->sn_paddr_change.spc_state == SCTP_ADDR_UNREACHABLE) ?
+				osmo_sctp_sn_error_str(notif->sn_paddr_change.spc_error) : "None");
+			}
 			break;
 		case SCTP_SHUTDOWN_EVENT:
 			LOGP(DLINP, LOGL_DEBUG, "===> SHUTDOWN EVT\n");

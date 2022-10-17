@@ -10,6 +10,19 @@ const struct value_string osmo_sctp_assoc_chg_strs[] = {
 	{ 0, NULL }
 };
 
+const struct value_string osmo_sctp_paddr_chg_strs[] = {
+	{ SCTP_ADDR_AVAILABLE,		"ADDR_AVAILABLE" },
+	{ SCTP_ADDR_UNREACHABLE,	"ADDR_UNREACHABLE" },
+	{ SCTP_ADDR_REMOVED,		"ADDR_REMOVED" },
+	{ SCTP_ADDR_ADDED,		"ADDR_ADDED" },
+	{ SCTP_ADDR_MADE_PRIM,		"ADDR_MADE_PRIM" },
+	{ SCTP_ADDR_CONFIRMED,		"ADDR_CONFIRMED" },
+#ifdef SCTP_ADDR_PF
+	{ SCTP_ADDR_PF,	"ADDR_POTENTIALLY_FAILED" },
+#endif
+	{ 0, NULL }
+};
+
 const struct value_string osmo_sctp_sn_type_strs[] = {
 	{ SCTP_ASSOC_CHANGE,		"ASSOC_CHANGE" },
 	{ SCTP_PEER_ADDR_CHANGE,	"PEER_ADDR_CHANGE" },
@@ -24,5 +37,17 @@ const struct value_string osmo_sctp_sn_type_strs[] = {
 #ifdef SCTP_SENDER_DRY_EVENT
 	{ SCTP_SENDER_DRY_EVENT,	"SENDER_DRY_EVENT" },
 #endif
+	{ 0, NULL }
+};
+
+
+const struct value_string osmo_sctp_sn_error_strs[] = {
+	{ SCTP_FAILED_THRESHOLD,	"FAILED_THRESHOLD" },
+	{ SCTP_RECEIVED_SACK,		"RECEIVED_SACK" },
+	{ SCTP_HEARTBEAT_SUCCESS,	"HEARTBEAT_SUCCESS" },
+	{ SCTP_RESPONSE_TO_USER_REQ,	"RESPONSE_TO_USER_REQ" },
+	{ SCTP_INTERNAL_ERROR,		"INTERNAL_ERROR" },
+	{ SCTP_SHUTDOWN_GUARD_EXPIRES,	"SHUTDOWN_GUARD_EXPIRES" },
+	{ SCTP_PEER_FAULTY,		"PEER_FAULTY" },
 	{ 0, NULL }
 };
