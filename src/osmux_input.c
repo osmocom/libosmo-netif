@@ -563,9 +563,9 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 		return 0;
 	default:
 		/* The RTP payload type is dynamically allocated,
-			* although we use static ones. Assume that we always
-			* receive AMR traffic.
-			*/
+		 * although we use static ones. Assume that we always
+		 * receive AMR traffic.
+		 */
 
 		/* Add this RTP to the OSMUX batch */
 		ret = osmux_batch_add(batch, h->batch_factor,
