@@ -27,6 +27,7 @@
  *      5          7.95      159    20
  *      6         10.20      204    26
  *      7         12.20      244    31
+ *      8           SID       39     5
  */
 
 static size_t amr_ft_to_bits[AMR_FT_MAX] = {
