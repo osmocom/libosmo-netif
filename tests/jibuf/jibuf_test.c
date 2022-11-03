@@ -622,7 +622,7 @@ static void test_rtp_marker(void)
 /* This test aims at testing scenarios described in OS#3262, in which syncpoint
    packets can provoke a situation in which packets are stored out-of-order in
    the queue. */
-static void test_rtp_marker_queue_order()
+static void test_rtp_marker_queue_order(void)
 {
 	int min_delay = 60;
 	struct msgb *msg;

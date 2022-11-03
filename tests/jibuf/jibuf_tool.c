@@ -336,7 +336,7 @@ struct rtp_pkt_info * msgb_allocate_pinfo(struct msgb *msg)
 	return cb->data;
 }
 
-void rand_send_rtp_packet()
+void rand_send_rtp_packet(void)
 {
 
 	struct rtp_pkt_info *pinfo;
@@ -458,7 +458,7 @@ void pcap_pkt_timer_cb(void *data)
 	}
 }
 
-void rand_test_check()
+void rand_test_check(void)
 {
 	uint32_t drop_threshold = NUM_PACKETS_TO_SEND * 5 / 100;
 	if (packets_dropped > drop_threshold) {
@@ -475,7 +475,7 @@ void rand_test_check()
 	}
 }
 
-void rand_test()
+void rand_test(void)
 {
 	srandom(time(NULL));
 	rtp_first_seq = (uint16_t) random();
@@ -503,11 +503,11 @@ void rand_test()
 	rand_test_check();
 }
 
-void pcap_test_check() {
+void pcap_test_check(void) {
 
 }
 
-void pcap_test() {
+void pcap_test(void) {
 	osmo_pcap_init();
 
 	osmo_pcap.h = osmo_pcap_test_open(opt_pcap_file);
