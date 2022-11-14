@@ -313,8 +313,8 @@ static int osmux_rtp_amr_payload_len(struct amr_hdr *amrh, uint32_t amr_len)
 	/* The AMR payload does not fit with what we expect */
 	if (osmo_amr_bytes(amrh->ft) != amr_payload_len) {
 		LOGP(DLMUX, LOGL_ERROR,
-		     "Bad AMR frame, expected %zd bytes, got %d bytes\n",
-		     osmo_amr_bytes(amrh->ft), amr_len);
+		     "Bad AMR frame FT=%u, expected %zd bytes, got %d bytes\n",
+		     amrh->ft, osmo_amr_bytes(amrh->ft), amr_len);
 		return -1;
 	}
 	return amr_payload_len;
