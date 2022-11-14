@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/timer.h>
@@ -347,7 +348,8 @@ static int osmux_replay_lost_packets(struct osmux_circuit *circuit,
 {
 	int16_t diff;
 	struct msgb *last;
-	struct rtp_hdr *rtph;
+	struct rtp_hdr *last_rtph, *rtph;
+	uint16_t last_seq, cur_seq;
 	int i, rc;
 
 	/* Have we seen any RTP packet in this batch before? */
@@ -356,20 +358,29 @@ static int osmux_replay_lost_packets(struct osmux_circuit *circuit,
 
 	/* Get last RTP packet seen in this batch */
 	last = llist_entry(circuit->msg_list.prev, struct msgb, list);
-	rtph = osmo_rtp_get_hdr(last);
-	if (rtph == NULL)
+	last_rtph = osmo_rtp_get_hdr(last);
+	if (last_rtph == NULL)
 		return -1;
+	last_seq = ntohs(last_rtph->sequence);
+	cur_seq = ntohs(cur_rtph->sequence);
+	diff = cur_seq - last_seq;
 
-	diff = ntohs(cur_rtph->sequence) - ntohs(rtph->sequence);
+	/* If diff between last RTP packet seen and this one is > 1,
+	 * then we lost several RTP packets, let's replay them.
+	 */
+	if (diff <= 1)
+		return 0;
+
+	LOGP(DLMUX, LOGL_INFO, "RTP seq jump detected, recreating %" PRId16
+	     " lost packets (seq jump: %" PRIu16 " -> %" PRIu16 ")\n",
+	     diff - 1, last_seq, cur_seq);
 
 	/* Lifesaver: make sure bugs don't spawn lots of clones */
 	if (diff > 16)
 		diff = 16;
 
 	rc = 0;
-	/* If diff between last RTP packet seen and this one is > 1,
-	 * then we lost several RTP packets, let's replay them.
-	 */
+	rtph = last_rtph;
 	for (i = 1; i < diff; i++) {
 		struct msgb *clone;
 
@@ -395,8 +406,6 @@ static int osmux_replay_lost_packets(struct osmux_circuit *circuit,
 			msgb_free(clone);
 			return rc;
 		}
-
-		LOGP(DLMUX, LOGL_ERROR, "adding cloned RTP\n");
 	}
 	return rc;
 }
