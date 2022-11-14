@@ -385,12 +385,9 @@ static int osmux_replay_lost_packets(struct osmux_circuit *circuit,
 		struct msgb *clone;
 
 		/* Clone last RTP packet seen */
-		clone = msgb_alloc(last->data_len, "RTP clone");
+		clone = msgb_copy(last, "RTP clone");
 		if (!clone)
 			continue;
-
-		memcpy(clone->data, last->data, last->len);
-		msgb_put(clone, last->len);
 
 		/* The original RTP message has been already sanity checked. */
 		rtph = osmo_rtp_get_hdr(clone);
