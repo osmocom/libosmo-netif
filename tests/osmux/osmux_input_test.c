@@ -491,6 +491,89 @@ static void test_rtp_dup(void)
 	talloc_free(h_input);
 }
 
+/* Test some scenario where some RTP packets are lost */
+static void test_rtp_pkt_gap_osmux_deliver_cb(struct msgb *batch_msg, void *data)
+{
+	struct osmux_hdr *osmuxh;
+	char buf[2048];
+	bool *osmux_transmitted = (bool *)data;
+
+	osmux_snprintf(buf, sizeof(buf), batch_msg);
+	clock_debug("OSMUX message (len=%d): %s\n", batch_msg->len, buf);
+
+	/* We expect 1 batch: */
+	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	/* Check seqnum is the one configured beforehand: */
+	OSMO_ASSERT(osmuxh->seq == 123);
+	/* Check four AMR payloads appear: */
+	OSMO_ASSERT(osmuxh->ctr == 3);
+
+	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh == NULL);
+
+	msgb_free(batch_msg);
+
+	*osmux_transmitted = true;
+}
+static void test_rtp_pkt_gap(void)
+{
+	struct msgb *msg;
+	int rc;
+	const uint8_t cid = 33;
+	bool osmux_transmitted = false;
+	struct osmux_in_handle *h_input;
+
+	printf("===%s===\n", __func__);
+
+	clock_override_enable(true);
+	clock_override_set(0, 0);
+	rtp_init(60, 18000);
+
+	h_input = osmux_xfrm_input_alloc(tall_ctx);
+	osmux_xfrm_input_set_initial_seqnum(h_input, 123);
+	osmux_xfrm_input_set_batch_factor(h_input, 4);
+	osmux_xfrm_input_set_deliver_cb(h_input,
+					test_rtp_pkt_gap_osmux_deliver_cb,
+					&osmux_transmitted);
+	osmux_xfrm_input_open_circuit(h_input, cid, false);
+
+	/* First RTP frame at t=0 */
+	clock_debug("1st RTP packet is received");
+	msg = rtp_next();
+	rtp_append_amr(msg, AMR_FT_2);
+	rc = osmux_xfrm_input(h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	clock_debug("2nd RTP packet is lost");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	msgb_free(msg);
+
+	clock_debug("3rd RTP packet is received");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	rtp_append_amr(msg, AMR_FT_2);
+	rc = osmux_xfrm_input(h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	clock_debug("4th RTP packet is received");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	rtp_append_amr(msg, AMR_FT_2);
+	rc = osmux_xfrm_input(h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	/* t=80, osmux batch is scheduled to be transmitted: */
+	clock_debug("osmux batch transmitted");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	osmo_select_main(0);
+	OSMO_ASSERT(osmux_transmitted == true);
+
+	clock_debug("Closing circuit");
+	osmux_xfrm_input_close_circuit(h_input, cid);
+	talloc_free(h_input);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -512,6 +595,7 @@ int main(int argc, char **argv)
 	test_last_amr_cmr_f_q_used();
 	test_initial_osmux_seqnum();
 	test_rtp_dup();
+	test_rtp_pkt_gap();
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;
