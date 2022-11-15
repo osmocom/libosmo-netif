@@ -479,6 +479,11 @@ osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
 		}
 	}
 
+	/* Handle RTP packet loss scenario */
+	rc = osmux_replay_lost_packets(link, req);
+	if (rc != 0)
+		return rc;
+
 	/* Init of talkspurt (RTP M marker bit) needs to be in the first AMR slot
 	 * of the OSMUX packet, enforce sending previous batch if required:
 	 */
@@ -498,11 +503,6 @@ osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
 	/* No room, sorry. You'll have to retry */
 	if (needed_bytes > link->remaining_bytes)
 		return 1;
-
-	/* Handle RTP packet loss scenario */
-	rc = osmux_replay_lost_packets(link, req);
-	if (rc != 0)
-		return rc;
 
 	/* This batch is full, force batch delivery */
 	rc = osmux_circuit_enqueue(link, req->circuit, req->msg);
