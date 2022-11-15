@@ -401,7 +401,8 @@ static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux
 
 		/* The original RTP message has been already sanity checked. */
 		rtph = osmo_rtp_get_hdr(clone);
-
+		/* Faking a follow up RTP pkt here, so no Marker bit: */
+		rtph->marker = false;
 		/* Adjust sequence number and timestamp */
 		rtph->sequence = htons(ntohs(rtph->sequence) + i);
 		rtph->timestamp = htonl(ntohl(rtph->timestamp) +
