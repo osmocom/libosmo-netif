@@ -353,71 +353,6 @@ static int osmux_circuit_get_last_stored_amr_ft(struct osmux_circuit *circuit)
 
 }
 
-/* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
-static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux_in_req *req)
-{
-	int16_t diff;
-	struct msgb *last;
-	struct rtp_hdr *last_rtph, *rtph;
-	uint16_t last_seq, cur_seq;
-	int i, rc;
-
-	/* Have we seen any RTP packet in this batch before? */
-	if (llist_empty(&req->circuit->msg_list))
-		return 0;
-
-	/* Get last RTP packet seen in this batch */
-	last = llist_entry(req->circuit->msg_list.prev, struct msgb, list);
-	last_rtph = osmo_rtp_get_hdr(last);
-	if (last_rtph == NULL)
-		return -1;
-	last_seq = ntohs(last_rtph->sequence);
-	cur_seq = ntohs(req->rtph->sequence);
-	diff = cur_seq - last_seq;
-
-	/* If diff between last RTP packet seen and this one is > 1,
-	 * then we lost several RTP packets, let's replay them.
-	 */
-	if (diff <= 1)
-		return 0;
-
-	LOGP(DLMUX, LOGL_INFO, "RTP seq jump detected, recreating %" PRId16
-	     " lost packets (seq jump: %" PRIu16 " -> %" PRIu16 ")\n",
-	     diff - 1, last_seq, cur_seq);
-
-	/* Lifesaver: make sure bugs don't spawn lots of clones */
-	if (diff > 16)
-		diff = 16;
-
-	rc = 0;
-	rtph = last_rtph;
-	for (i = 1; i < diff; i++) {
-		struct msgb *clone;
-
-		/* Clone last RTP packet seen */
-		clone = msgb_copy(last, "RTP clone");
-		if (!clone)
-			continue;
-
-		/* The original RTP message has been already sanity checked. */
-		rtph = osmo_rtp_get_hdr(clone);
-		/* Faking a follow up RTP pkt here, so no Marker bit: */
-		rtph->marker = false;
-		/* Adjust sequence number and timestamp */
-		rtph->sequence = htons(ntohs(rtph->sequence) + i);
-		rtph->timestamp = htonl(ntohl(rtph->timestamp) +
-					DELTA_RTP_TIMESTAMP);
-
-		/* No more room in this batch, skip padding with more clones */
-		rc = osmux_circuit_enqueue(link, req->circuit, clone);
-		if (rc != 0) {
-			msgb_free(clone);
-			return rc;
-		}
-	}
-	return rc;
-}
-
 static struct osmux_circuit *
 osmux_link_find_circuit(struct osmux_link *link, int ccid)
 {
@@ -440,51 +375,10 @@ static void osmux_link_del_circuit(struct osmux_link *link, struct osmux_circuit
 }
 
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
-static int
-osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
+static int osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
 {
-	struct msgb *cur, *next;
-	int rc;
 	unsigned int needed_bytes = 0;
-
-	/* We've seen the first RTP message, disable dummy padding */
-	if (req->circuit->dummy) {
-		req->circuit->dummy = 0;
-		link->ndummy--;
-	}
-
-	/* Extra validation: check if this message already exists, should not
-	 * happen but make sure we don't propagate duplicated messages.
-	 */
-	llist_for_each_entry_safe(cur, next, &req->circuit->msg_list, list) {
-		struct rtp_hdr *rtph2 = osmo_rtp_get_hdr(cur);
-		OSMO_ASSERT(rtph2);
-
-		/* Already exists message with this sequence. Let's copy over
-		 * the new RTP, since there's the chance that the existing one may
-		 * be a forged copy we did when we detected a hole. */
-		if (rtph2->sequence == req->rtph->sequence) {
-			if (msgb_length(cur) != msgb_length(req->msg)) {
-				/* Different packet size, AMR FT may have changed. Let's avoid changing it to
-				 * break accounted size to be written (would need new osmux_hdr, etc.) */
-				LOGP(DLMUX, LOGL_NOTICE, "RTP pkt with seq=%u and different len %u != %u already exists, skip it\n",
-				     ntohs(req->rtph->sequence), msgb_length(cur), msgb_length(req->msg));
-				return -1;
-			}
-			LOGP(DLMUX, LOGL_INFO, "RTP pkt with seq=%u already exists, replace it\n",
-				ntohs(req->rtph->sequence));
-			__llist_add(&req->msg->list, &cur->list, cur->list.next);
-			llist_del(&cur->list);
-			msgb_free(cur);
-			return 0;
-		}
-	}
-
-	/* Handle RTP packet loss scenario */
-	rc = osmux_replay_lost_packets(link, req);
-	if (rc != 0)
-		return rc;
-
+	int rc;
 	/* Init of talkspurt (RTP M marker bit) needs to be in the first AMR slot
 	 * of the OSMUX packet, enforce sending previous batch if required:
 	 */
@@ -528,6 +422,119 @@ osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
 	link->nmsgs++;
 
 	return 0;
+};
+
+/* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
+static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux_in_req *req)
+{
+	int16_t diff;
+	struct msgb *last;
+	struct rtp_hdr *last_rtph;
+	uint16_t last_seq, cur_seq;
+	int i, rc;
+	struct osmux_in_req clone_req;
+
+	/* Have we seen any RTP packet in this batch before? */
+	if (llist_empty(&req->circuit->msg_list))
+		return 0;
+
+	/* Get last RTP packet seen in this batch */
+	last = llist_entry(req->circuit->msg_list.prev, struct msgb, list);
+	last_rtph = osmo_rtp_get_hdr(last);
+	if (last_rtph == NULL)
+		return -1;
+	last_seq = ntohs(last_rtph->sequence);
+	cur_seq = ntohs(req->rtph->sequence);
+	diff = cur_seq - last_seq;
+
+	/* If diff between last RTP packet seen and this one is > 1,
+	 * then we lost several RTP packets, let's replay them.
+	 */
+	if (diff <= 1)
+		return 0;
+
+	LOGP(DLMUX, LOGL_INFO, "RTP seq jump detected, recreating %" PRId16
+	     " lost packets (seq jump: %" PRIu16 " -> %" PRIu16 ")\n",
+	     diff - 1, last_seq, cur_seq);
+
+	/* Lifesaver: make sure bugs don't spawn lots of clones */
+	if (diff > 16)
+		diff = 16;
+
+	rc = 0;
+	clone_req = *req;
+	for (i = 1; i < diff; i++) {
+		/* Clone last RTP packet seen */
+		clone_req.msg = msgb_copy(last, "RTP clone");
+		if (!clone_req.msg)
+			continue;
+
+		/* The original RTP message has been already sanity checked. */
+		clone_req.rtph = osmo_rtp_get_hdr(clone_req.msg);
+		clone_req.amrh = osmo_rtp_get_payload(clone_req.rtph, clone_req.msg, &clone_req.rtp_payload_len);
+		clone_req.amr_payload_len = osmux_rtp_amr_payload_len(clone_req.amrh, clone_req.rtp_payload_len);
+
+		/* Faking a follow up RTP pkt here, so no Marker bit: */
+		clone_req.rtph->marker = false;
+		/* Adjust sequence number and timestamp */
+		clone_req.rtph->sequence = htons(ntohs(clone_req.rtph->sequence) + i);
+		clone_req.rtph->timestamp = htonl(ntohl(clone_req.rtph->timestamp) +
+					DELTA_RTP_TIMESTAMP);
+		rc = osmux_link_add(link, &clone_req);
+		/* No more room in this batch, skip padding with more clones */
+		if (rc != 0) {
+			msgb_free(clone_req.msg);
+			return rc;
+		}
+	}
+	return rc;
+}
+
+/* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
+static int osmux_link_handle_rtp_req(struct osmux_link *link, struct osmux_in_req *req)
+{
+	struct msgb *cur, *next;
+	int rc;
+
+	/* We've seen the first RTP message, disable dummy padding */
+	if (req->circuit->dummy) {
+		req->circuit->dummy = 0;
+		link->ndummy--;
+	}
+
+	/* Extra validation: check if this message already exists, should not
+	 * happen but make sure we don't propagate duplicated messages.
+	 */
+	llist_for_each_entry_safe(cur, next, &req->circuit->msg_list, list) {
+		struct rtp_hdr *rtph2 = osmo_rtp_get_hdr(cur);
+		OSMO_ASSERT(rtph2);
+
+		/* Already exists message with this sequence. Let's copy over
+		 * the new RTP, since there's the chance that the existing one may
+		 * be a forged copy we did when we detected a hole. */
+		if (rtph2->sequence == req->rtph->sequence) {
+			if (msgb_length(cur) != msgb_length(req->msg)) {
+				/* Different packet size, AMR FT may have changed. Let's avoid changing it to
+				 * break accounted size to be written (would need new osmux_hdr, etc.) */
+				LOGP(DLMUX, LOGL_NOTICE, "RTP pkt with seq=%u and different len %u != %u already exists, skip it\n",
+				     ntohs(req->rtph->sequence), msgb_length(cur), msgb_length(req->msg));
+				return -1;
+			}
+			LOGP(DLMUX, LOGL_INFO, "RTP pkt with seq=%u already exists, replace it\n",
+				ntohs(req->rtph->sequence));
+			__llist_add(&req->msg->list, &cur->list, cur->list.next);
+			llist_del(&cur->list);
+			msgb_free(cur);
+			return 0;
+		}
+	}
+
+	/* Handle RTP packet loss scenario */
+	rc = osmux_replay_lost_packets(link, req);
+	if (rc != 0)
+		return rc;
+
+	return osmux_link_add(link, req);
 }
 
 /**
@@ -592,7 +599,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 		}
 
 		/* Add this RTP to the OSMUX batch */
-		ret = osmux_link_add(link, &req);
+		ret = osmux_link_handle_rtp_req(link, &req);
 		if (ret < 0) {
 			/* Cannot put this message into the batch.
 				* Malformed, duplicated, OOM. Drop it and tell

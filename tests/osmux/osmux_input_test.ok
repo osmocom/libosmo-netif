@@ -119,6 +119,8 @@ sys={0.260000}, mono={0.260000}: 12th+3 RTP packet is received
 sys={0.280000}, mono={0.280000}: clock_override_add
 sys={0.280000}, mono={0.280000}: osmux batch transmitted
 sys={0.300000}, mono={0.300000}: clock_override_add
+sys={0.300000}, mono={0.300000}: OSMUX message 2 (len=64): OSMUX seq=124 ccid=033 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=00 [ 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+
 sys={0.300000}, mono={0.300000}: Closing circuit
 ===test_rtp_pkt_gap_bigger_than_batch_factor(65533)===
 sys={0.000000}, mono={0.000000}: clock_override_set
@@ -146,6 +148,8 @@ sys={0.260000}, mono={0.260000}: 12th+3 RTP packet is received
 sys={0.280000}, mono={0.280000}: clock_override_add
 sys={0.280000}, mono={0.280000}: osmux batch transmitted
 sys={0.300000}, mono={0.300000}: clock_override_add
+sys={0.300000}, mono={0.300000}: OSMUX message 2 (len=64): OSMUX seq=124 ccid=033 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=00 [ 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+
 sys={0.300000}, mono={0.300000}: Closing circuit
 ===test_rtp_pkt_gap_bigger_than_batch_factor(65534)===
 sys={0.000000}, mono={0.000000}: clock_override_set
@@ -173,6 +177,8 @@ sys={0.260000}, mono={0.260000}: 12th+3 RTP packet is received
 sys={0.280000}, mono={0.280000}: clock_override_add
 sys={0.280000}, mono={0.280000}: osmux batch transmitted
 sys={0.300000}, mono={0.300000}: clock_override_add
+sys={0.300000}, mono={0.300000}: OSMUX message 2 (len=64): OSMUX seq=124 ccid=033 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=00 [ 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+
 sys={0.300000}, mono={0.300000}: Closing circuit
 ===test_rtp_pkt_gap_bigger_than_batch_factor(65535)===
 sys={0.000000}, mono={0.000000}: clock_override_set
@@ -200,5 +206,7 @@ sys={0.260000}, mono={0.260000}: 12th+3 RTP packet is received
 sys={0.280000}, mono={0.280000}: clock_override_add
 sys={0.280000}, mono={0.280000}: osmux batch transmitted
 sys={0.300000}, mono={0.300000}: clock_override_add
+sys={0.300000}, mono={0.300000}: OSMUX message 2 (len=64): OSMUX seq=124 ccid=033 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=00 [ 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+
 sys={0.300000}, mono={0.300000}: Closing circuit
 OK: Test passed

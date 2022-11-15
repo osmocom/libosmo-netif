@@ -683,7 +683,7 @@ static void test_rtp_pkt_gap_bigger_than_batch_factor(uint16_t rtp_start_seqnum)
 	clock_debug("osmux batch transmitted");
 	clock_override_add(0, TIME_RTP_PKT_MS*1000);
 	osmo_select_main(0);
-	OSMO_ASSERT(osmux_transmitted == 1); /* FIXME: this is a bug, should be 2! */
+	OSMO_ASSERT(osmux_transmitted == 2);
 
 	clock_debug("Closing circuit");
 	osmux_xfrm_input_close_circuit(h_input, cid);
