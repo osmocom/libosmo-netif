@@ -452,12 +452,6 @@ osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
 		link->ndummy--;
 	}
 
-	/* Init of talkspurt (RTP M marker bit) needs to be in the first AMR slot
-	 * of the OSMUX packet, enforce sending previous batch if required:
-	 */
-	if (req->rtph->marker && req->circuit->nmsgs != 0)
-		return 1;
-
 	/* Extra validation: check if this message already exists, should not
 	 * happen but make sure we don't propagate duplicated messages.
 	 */
@@ -472,6 +466,12 @@ osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
 			return -1;
 		}
 	}
+
+	/* Init of talkspurt (RTP M marker bit) needs to be in the first AMR slot
+	 * of the OSMUX packet, enforce sending previous batch if required:
+	 */
+	if (req->rtph->marker && req->circuit->nmsgs != 0)
+		return 1;
 
 	/* First check if there is room for this message in the batch */
 	/* First in batch comes after the batch header: */
