@@ -87,6 +87,16 @@ struct osmux_circuit {
 	uint8_t			seq;
 };
 
+/* Used internally to temporarily cache all parsed content of an RTP pkt from user to be transmitted as Osmux */
+struct osmux_in_req {
+	struct osmux_circuit *circuit;
+	struct msgb	*msg;
+	struct rtp_hdr	*rtph;
+	uint32_t	rtp_payload_len;
+	struct amr_hdr	*amrh;
+	int		amr_payload_len;
+};
+
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
 static int osmux_circuit_enqueue(struct osmux_link *link, struct osmux_circuit *circuit, struct msgb *msg)
 {
@@ -344,8 +354,7 @@ static int osmux_circuit_get_last_stored_amr_ft(struct osmux_circuit *circuit)
 }
 
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
-static int osmux_replay_lost_packets(struct osmux_link *link, struct osmux_circuit *circuit,
-				     struct rtp_hdr *cur_rtph)
+static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux_in_req *req)
 {
 	int16_t diff;
 	struct msgb *last;
@@ -354,16 +363,16 @@ static int osmux_replay_lost_packets(struct osmux_link *link, struct osmux_circu
 	int i, rc;
 
 	/* Have we seen any RTP packet in this batch before? */
-	if (llist_empty(&circuit->msg_list))
+	if (llist_empty(&req->circuit->msg_list))
 		return 0;
 
 	/* Get last RTP packet seen in this batch */
-	last = llist_entry(circuit->msg_list.prev, struct msgb, list);
+	last = llist_entry(req->circuit->msg_list.prev, struct msgb, list);
 	last_rtph = osmo_rtp_get_hdr(last);
 	if (last_rtph == NULL)
 		return -1;
 	last_seq = ntohs(last_rtph->sequence);
-	cur_seq = ntohs(cur_rtph->sequence);
+	cur_seq = ntohs(req->rtph->sequence);
 	diff = cur_seq - last_seq;
 
 	/* If diff between last RTP packet seen and this one is > 1,
@@ -399,7 +408,7 @@ static int osmux_replay_lost_packets(struct osmux_link *link, struct osmux_circu
 					DELTA_RTP_TIMESTAMP);
 
 		/* No more room in this batch, skip padding with more clones */
-		rc = osmux_circuit_enqueue(link, circuit, clone);
+		rc = osmux_circuit_enqueue(link, req->circuit, clone);
 		if (rc != 0) {
 			msgb_free(clone);
 			return rc;
@@ -431,78 +440,60 @@ static void osmux_link_del_circuit(struct osmux_link *link, struct osmux_circuit
 
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
 static int
-osmux_link_add(struct osmux_link *link, struct msgb *msg,
-		struct rtp_hdr *rtph, int ccid)
+osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
 {
-	int bytes = 0, amr_payload_len;
-	struct osmux_circuit *circuit;
 	struct msgb *cur;
 	int rc;
-	struct amr_hdr *amrh;
-	uint32_t amr_len;
-
-	circuit = osmux_link_find_circuit(link, ccid);
-	if (!circuit)
-		return -1;
+	unsigned int needed_bytes = 0;
 
 	/* We've seen the first RTP message, disable dummy padding */
-	if (circuit->dummy) {
-		circuit->dummy = 0;
+	if (req->circuit->dummy) {
+		req->circuit->dummy = 0;
 		link->ndummy--;
-	}
-
-	amrh = osmo_rtp_get_payload(rtph, msg, &amr_len);
-	if (amrh == NULL)
-		return -1;
-	amr_payload_len = osmux_rtp_amr_payload_len(amrh, amr_len);
-	if (amr_payload_len < 0) {
-		LOGP(DLMUX, LOGL_NOTICE, "AMR payload invalid\n");
-		return -1;
 	}
 
 	/* Init of talkspurt (RTP M marker bit) needs to be in the first AMR slot
 	 * of the OSMUX packet, enforce sending previous batch if required:
 	 */
-	if (rtph->marker && circuit->nmsgs != 0)
+	if (req->rtph->marker && req->circuit->nmsgs != 0)
 		return 1;
 
 	/* Extra validation: check if this message already exists, should not
 	 * happen but make sure we don't propagate duplicated messages.
 	 */
-	llist_for_each_entry(cur, &circuit->msg_list, list) {
+	llist_for_each_entry(cur, &req->circuit->msg_list, list) {
 		struct rtp_hdr *rtph2 = osmo_rtp_get_hdr(cur);
-		if (rtph2 == NULL)
-			return -1;
+		OSMO_ASSERT(rtph2);
 
 		/* Already exists message with this sequence, skip */
-		if (rtph2->sequence == rtph->sequence) {
+		if (rtph2->sequence == req->rtph->sequence) {
 			LOGP(DLMUX, LOGL_ERROR, "RTP pkt with seq=%u already exists, skip it\n",
-			     ntohs(rtph->sequence));
+			     ntohs(req->rtph->sequence));
 			return -1;
 		}
 	}
 
 	/* First check if there is room for this message in the batch */
 	/* First in batch comes after the batch header: */
-	if (circuit->nmsgs == 0)
-		bytes += sizeof(struct osmux_hdr);
+	if (req->circuit->nmsgs == 0)
+		needed_bytes += sizeof(struct osmux_hdr);
 	/* If AMR FT changes in the middle of current batch a new header is
 	 * required to adapt to size change: */
-	else if (osmux_circuit_get_last_stored_amr_ft(circuit) != amrh->ft)
-		bytes += sizeof(struct osmux_hdr);
-	bytes += amr_payload_len;
+	else if (osmux_circuit_get_last_stored_amr_ft(req->circuit) != req->amrh->ft)
+		needed_bytes += sizeof(struct osmux_hdr);
+	needed_bytes += req->amr_payload_len;
 
 	/* No room, sorry. You'll have to retry */
-	if (bytes > link->remaining_bytes)
+	if (needed_bytes > link->remaining_bytes)
 		return 1;
 
 	/* Handle RTP packet loss scenario */
-	rc = osmux_replay_lost_packets(link, circuit, rtph);
+	rc = osmux_replay_lost_packets(link, req);
 	if (rc != 0)
 		return rc;
 
 	/* This batch is full, force batch delivery */
-	rc = osmux_circuit_enqueue(link, circuit, msg);
+	rc = osmux_circuit_enqueue(link, req->circuit, req->msg);
 	if (rc != 0)
 		return rc;
 
@@ -512,7 +503,7 @@ osmux_link_add(struct osmux_link *link, struct msgb *msg,
 #endif
 
 	/* Update remaining room in this batch */
-	link->remaining_bytes -= bytes;
+	link->remaining_bytes -= needed_bytes;
 
 	if (link->nmsgs == 0) {
 #ifdef DEBUG_MSG
@@ -542,8 +533,22 @@ osmux_link_add(struct osmux_link *link, struct msgb *msg,
 int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 {
 	int ret;
-	struct rtp_hdr *rtph;
 	struct osmux_link *link = (struct osmux_link *)h->internal_data;
+	struct osmux_in_req req = {
+		.msg = msg,
+		.rtph = osmo_rtp_get_hdr(msg),
+		.circuit = osmux_link_find_circuit(link, ccid),
+	};
+
+	if (!req.circuit) {
+		LOGP(DLMUX, LOGL_INFO, "Couldn't find circuit CID=%u\n", ccid);
+		goto err_free;
+	}
+
+	if (!req.rtph) {
+		LOGP(DLMUX, LOGL_NOTICE, "msg not containing an RTP header\n");
+		goto err_free;
+	}
 
 	/* Ignore too big RTP/RTCP messages, most likely forged. Sanity check
 	 * to avoid a possible forever loop in the caller.
@@ -551,18 +556,10 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	if (msg->len > h->batch_size - sizeof(struct osmux_hdr)) {
 		LOGP(DLMUX, LOGL_NOTICE, "RTP payload too big (%u) for configured batch size (%u)\n",
 			 msg->len, h->batch_size);
-		msgb_free(msg);
-		return -1;
+		goto err_free;
 	}
 
-	rtph = osmo_rtp_get_hdr(msg);
-	if (rtph == NULL) {
-		LOGP(DLMUX, LOGL_NOTICE, "msg not containing an RTP header\n");
-		msgb_free(msg);
-		return -1;
-	}
-
-	switch (rtph->payload_type) {
+	switch (req.rtph->payload_type) {
 	case RTP_PT_RTCP:
 		LOGP(DLMUX, LOGL_INFO, "Dropping RTCP packet\n");
 		msgb_free(msg);
@@ -572,17 +569,24 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 		 * although we use static ones. Assume that we always
 		 * receive AMR traffic.
 		 */
+		req.amrh = osmo_rtp_get_payload(req.rtph, req.msg, &req.rtp_payload_len);
+		if (req.amrh == NULL)
+			goto err_free;
+		req.amr_payload_len = osmux_rtp_amr_payload_len(req.amrh, req.rtp_payload_len);
+		if (req.amr_payload_len < 0) {
+			LOGP(DLMUX, LOGL_NOTICE, "AMR payload invalid\n");
+			goto err_free;
+		}
 
 		/* Add this RTP to the OSMUX batch */
-		ret = osmux_link_add(link, msg, rtph, ccid);
+		ret = osmux_link_add(link, &req);
 		if (ret < 0) {
 			/* Cannot put this message into the batch.
 				* Malformed, duplicated, OOM. Drop it and tell
 				* the upper layer that we have digest it.
 				*/
 			LOGP(DLMUX, LOGL_DEBUG, "Dropping RTP packet instead of adding to batch\n");
-			msgb_free(msg);
-			return ret;
+			goto err_free;
 		}
 
 		h->stats.input_rtp_msgs++;
@@ -590,6 +594,10 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 		break;
 	}
 	return ret;
+
+err_free:
+	msgb_free(msg);
+	return -1;
 }
 
 static int osmux_xfrm_input_talloc_destructor(struct osmux_in_handle *h)
