@@ -476,9 +476,8 @@ osmux_link_add(struct osmux_link *link, struct msgb *msg,
 
 		/* Already exists message with this sequence, skip */
 		if (rtph2->sequence == rtph->sequence) {
-			LOGP(DLMUX, LOGL_ERROR, "already exists "
-				"message with seq=%u, skip it\n",
-				rtph->sequence);
+			LOGP(DLMUX, LOGL_ERROR, "RTP pkt with seq=%u already exists, skip it\n",
+			     ntohs(rtph->sequence));
 			return -1;
 		}
 	}
