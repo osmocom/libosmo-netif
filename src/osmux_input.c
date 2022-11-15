@@ -81,7 +81,7 @@ struct osmux_circuit {
 };
 
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
-static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit,
+static int osmux_circuit_enqueue(struct osmux_circuit *circuit, struct msgb *msg,
 				uint8_t batch_factor)
 {
 	/* Validate amount of messages per batch. The counter field of the
@@ -104,7 +104,7 @@ static int osmux_batch_enqueue(struct msgb *msg, struct osmux_circuit *circuit,
 	return 0;
 }
 
-static void osmux_batch_dequeue(struct msgb *msg, struct osmux_circuit *circuit)
+static void osmux_circuit_dequeue(struct osmux_circuit *circuit, struct msgb *msg)
 {
 	llist_del(&msg->list);
 	circuit->nmsgs--;
@@ -114,7 +114,7 @@ static void osmux_circuit_del_msgs(struct osmux_batch *batch, struct osmux_circu
 {
 	struct msgb *cur, *tmp;
 	llist_for_each_entry_safe(cur, tmp, &circuit->msg_list, list) {
-		osmux_batch_dequeue(cur, circuit);
+		osmux_circuit_dequeue(circuit, cur);
 		msgb_free(cur);
 		batch->nmsgs--;
 	}
@@ -257,7 +257,7 @@ static struct msgb *osmux_build_batch(struct osmux_batch *batch,
 			}
 
 			osmux_batch_put(batch, &state);
-			osmux_batch_dequeue(cur, circuit);
+			osmux_circuit_dequeue(circuit, cur);
 			prev_amr_ft = state.amrh->ft;
 			ctr++;
 			msgb_free(cur);
@@ -398,7 +398,7 @@ static int osmux_replay_lost_packets(struct osmux_circuit *circuit,
 					DELTA_RTP_TIMESTAMP);
 
 		/* No more room in this batch, skip padding with more clones */
-		rc = osmux_batch_enqueue(clone, circuit, batch_factor);
+		rc = osmux_circuit_enqueue(circuit, clone, batch_factor);
 		if (rc != 0) {
 			msgb_free(clone);
 			return rc;
@@ -502,7 +502,7 @@ osmux_batch_add(struct osmux_batch *batch, uint32_t batch_factor, struct msgb *m
 		return rc;
 
 	/* This batch is full, force batch delivery */
-	rc = osmux_batch_enqueue(msg, circuit, batch_factor);
+	rc = osmux_circuit_enqueue(circuit, msg, batch_factor);
 	if (rc != 0)
 		return rc;
 
