@@ -62,6 +62,12 @@ static uint32_t osmux_ft_dummy_size(uint8_t amr_ft, uint8_t batch_factor)
 	return sizeof(struct osmux_hdr) + (osmo_amr_bytes(amr_ft) * batch_factor);
 }
 
+/* This is (struct osmux_in_handle)->internal_data.
+ * TODO: API have been defined to access all fields of osmux_in_handle
+ * (deprecated osmux_xfrm_input_init()), hence at some point we remove struct
+ * osmux_in_handle definition from osmux.h and we move it here internally and
+ * merge it with struct osmux_link.
+ */
 struct osmux_link {
 	struct osmo_timer_list	timer;
 	struct osmux_hdr	*osmuxh;
@@ -69,6 +75,7 @@ struct osmux_link {
 	unsigned int		remaining_bytes;
 	uint32_t		nmsgs;
 	int			ndummy;
+	struct osmux_in_handle *h; /* backpointer to parent object */
 };
 
 struct osmux_circuit {
@@ -81,14 +88,13 @@ struct osmux_circuit {
 };
 
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
-static int osmux_circuit_enqueue(struct osmux_circuit *circuit, struct msgb *msg,
-				uint8_t batch_factor)
+static int osmux_circuit_enqueue(struct osmux_link *link, struct osmux_circuit *circuit, struct msgb *msg)
 {
 	/* Validate amount of messages per batch. The counter field of the
 	 * osmux header is just 3 bits long, so make sure it doesn't overflow.
 	 */
-	OSMO_ASSERT(batch_factor <= 8);
-	if (circuit->nmsgs >= batch_factor) {
+	OSMO_ASSERT(link->h->batch_factor <= 8);
+	if (circuit->nmsgs >= link->h->batch_factor) {
 		struct rtp_hdr *rtph;
 
 		rtph = osmo_rtp_get_hdr(msg);
@@ -130,8 +136,7 @@ struct osmux_input_state {
 	int		add_osmux_hdr;
 };
 
-static int osmux_link_put(struct osmux_link *link,
-			   struct osmux_input_state *state)
+static int osmux_link_put(struct osmux_link *link, struct osmux_input_state *state)
 {
 	if (state->add_osmux_hdr) {
 		struct osmux_hdr *osmuxh;
@@ -167,17 +172,16 @@ static int osmux_link_put(struct osmux_link *link,
 	return 0;
 }
 
-static void osmux_encode_dummy(struct osmux_link *link, uint8_t batch_factor,
-			       struct osmux_input_state *state)
+static void osmux_encode_dummy(struct osmux_link *link, struct osmux_input_state *state)
 {
 	struct osmux_hdr *osmuxh;
 	/* TODO: This should be configurable at some point. */
-	uint32_t payload_size = osmux_ft_dummy_size(AMR_FT_3, batch_factor) -
+	uint32_t payload_size = osmux_ft_dummy_size(AMR_FT_3, link->h->batch_factor) -
 				sizeof(struct osmux_hdr);
 
 	osmuxh = (struct osmux_hdr *)state->out_msg->tail;
 	osmuxh->ft = OSMUX_FT_DUMMY;
-	osmuxh->ctr = batch_factor - 1;
+	osmuxh->ctr = link->h->batch_factor - 1;
 	osmuxh->amr_f = 0;
 	osmuxh->amr_q = 0;
 	osmuxh->seq = 0;
@@ -190,8 +194,7 @@ static void osmux_encode_dummy(struct osmux_link *link, uint8_t batch_factor,
 	msgb_put(state->out_msg, payload_size);
 }
 
-static struct msgb *osmux_build_batch(struct osmux_link *link,
-				      uint32_t batch_size, uint8_t batch_factor)
+static struct msgb *osmux_build_batch(struct osmux_link *link)
 {
 	struct msgb *batch_msg;
 	struct osmux_circuit *circuit;
@@ -200,7 +203,7 @@ static struct msgb *osmux_build_batch(struct osmux_link *link,
 	LOGP(DLMUX, LOGL_DEBUG, "Now building batch\n");
 #endif
 
-	batch_msg = msgb_alloc(batch_size, "osmux");
+	batch_msg = msgb_alloc(link->h->batch_size, "osmux");
 	if (batch_msg == NULL) {
 		LOGP(DLMUX, LOGL_ERROR, "Not enough memory\n");
 		return NULL;
@@ -216,7 +219,7 @@ static struct msgb *osmux_build_batch(struct osmux_link *link,
 				.out_msg	= batch_msg,
 				.circuit	= circuit,
 			};
-			osmux_encode_dummy(link, batch_factor, &state);
+			osmux_encode_dummy(link, &state);
 			continue;
 		}
 
@@ -275,7 +278,7 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 #ifdef DEBUG_MSG
 	LOGP(DLMUX, LOGL_DEBUG, "invoking delivery function\n");
 #endif
-	batch_msg = osmux_build_batch(link, h->batch_size, h->batch_factor);
+	batch_msg = osmux_build_batch(link);
 	if (!batch_msg)
 		return;
 	h->stats.output_osmux_msgs++;
@@ -341,8 +344,8 @@ static int osmux_circuit_get_last_stored_amr_ft(struct osmux_circuit *circuit)
 }
 
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
-static int osmux_replay_lost_packets(struct osmux_circuit *circuit,
-				      struct rtp_hdr *cur_rtph, int batch_factor)
+static int osmux_replay_lost_packets(struct osmux_link *link, struct osmux_circuit *circuit,
+				     struct rtp_hdr *cur_rtph)
 {
 	int16_t diff;
 	struct msgb *last;
@@ -396,7 +399,7 @@ static int osmux_replay_lost_packets(struct osmux_circuit *circuit,
 					DELTA_RTP_TIMESTAMP);
 
 		/* No more room in this batch, skip padding with more clones */
-		rc = osmux_circuit_enqueue(circuit, clone, batch_factor);
+		rc = osmux_circuit_enqueue(link, circuit, clone);
 		if (rc != 0) {
 			msgb_free(clone);
 			return rc;
@@ -428,7 +431,7 @@ static void osmux_link_del_circuit(struct osmux_link *link, struct osmux_circuit
 
 /* returns: 1 if batch is full, 0 if batch still not full, negative on error. */
 static int
-osmux_link_add(struct osmux_link *link, uint32_t batch_factor, struct msgb *msg,
+osmux_link_add(struct osmux_link *link, struct msgb *msg,
 		struct rtp_hdr *rtph, int ccid)
 {
 	int bytes = 0, amr_payload_len;
@@ -495,12 +498,12 @@ osmux_link_add(struct osmux_link *link, uint32_t batch_factor, struct msgb *msg,
 		return 1;
 
 	/* Handle RTP packet loss scenario */
-	rc = osmux_replay_lost_packets(circuit, rtph, batch_factor);
+	rc = osmux_replay_lost_packets(link, circuit, rtph);
 	if (rc != 0)
 		return rc;
 
 	/* This batch is full, force batch delivery */
-	rc = osmux_circuit_enqueue(circuit, msg, batch_factor);
+	rc = osmux_circuit_enqueue(link, circuit, msg);
 	if (rc != 0)
 		return rc;
 
@@ -517,7 +520,7 @@ osmux_link_add(struct osmux_link *link, uint32_t batch_factor, struct msgb *msg,
 		LOGP(DLMUX, LOGL_DEBUG, "osmux start timer batch\n");
 #endif
 		osmo_timer_schedule(&link->timer, 0,
-				    batch_factor * DELTA_RTP_MSG);
+				    link->h->batch_factor * DELTA_RTP_MSG);
 	}
 	link->nmsgs++;
 
@@ -572,7 +575,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 		 */
 
 		/* Add this RTP to the OSMUX batch */
-		ret = osmux_link_add(link, h->batch_factor, msg, rtph, ccid);
+		ret = osmux_link_add(link, msg, rtph, ccid);
 		if (ret < 0) {
 			/* Cannot put this message into the batch.
 				* Malformed, duplicated, OOM. Drop it and tell
@@ -616,18 +619,17 @@ static int osmux_xfrm_input_talloc_destructor(struct osmux_in_handle *h)
 struct osmux_in_handle *osmux_xfrm_input_alloc(void *ctx)
 {
 	struct osmux_in_handle *h;
+	struct osmux_link *link;
 
 	h = talloc_zero(ctx, struct osmux_in_handle);
 	OSMO_ASSERT(h);
-
-	struct osmux_link *link;
 
 	h->batch_size = OSMUX_BATCH_DEFAULT_MAX;
 
 	link = talloc_zero(h, struct osmux_link);
 	OSMO_ASSERT(link);
-
 	INIT_LLIST_HEAD(&link->circuit_list);
+	link->h = h;
 	link->remaining_bytes = h->batch_size;
 	osmo_timer_setup(&link->timer, osmux_link_timer_expired, h);
 
@@ -651,8 +653,8 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	link = talloc_zero(osmux_ctx, struct osmux_link);
 	if (link == NULL)
 		return;
-
 	INIT_LLIST_HEAD(&link->circuit_list);
+	link->h = h;
 	link->remaining_bytes = h->batch_size;
 	osmo_timer_setup(&link->timer, osmux_link_timer_expired, h);
 
