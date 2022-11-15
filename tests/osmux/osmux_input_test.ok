@@ -28,4 +28,13 @@ sys={0.020000}, mono={0.020000}: clock_override_add
 sys={0.020000}, mono={0.020000}: OSMUX message (len=19): OSMUX seq=123 ccid=033 ft=1 rtp_m=0 ctr=0 amr_f=1 amr_q=1 amr_ft=02 amr_cmr=00 [ 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
 
 sys={0.020000}, mono={0.020000}: Closing circuit
+===test_rtp_dup===
+sys={0.000000}, mono={0.000000}: clock_override_set
+sys={0.000000}, mono={0.000000}: Submit 2nd RTP packet, seqnum dup
+sys={0.020000}, mono={0.020000}: clock_override_add
+sys={0.020000}, mono={0.020000}: Submit 3rd RTP packet, triggers osmux batch
+sys={0.040000}, mono={0.040000}: clock_override_add
+sys={0.040000}, mono={0.040000}: OSMUX message (len=19): OSMUX seq=123 ccid=033 ft=1 rtp_m=0 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=00 [ 12 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+
+sys={0.040000}, mono={0.040000}: Closing circuit
 OK: Test passed

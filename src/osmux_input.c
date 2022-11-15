@@ -442,7 +442,7 @@ static void osmux_link_del_circuit(struct osmux_link *link, struct osmux_circuit
 static int
 osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
 {
-	struct msgb *cur;
+	struct msgb *cur, *next;
 	int rc;
 	unsigned int needed_bytes = 0;
 
@@ -455,15 +455,27 @@ osmux_link_add(struct osmux_link *link, const struct osmux_in_req *req)
 	/* Extra validation: check if this message already exists, should not
 	 * happen but make sure we don't propagate duplicated messages.
 	 */
-	llist_for_each_entry(cur, &req->circuit->msg_list, list) {
+	llist_for_each_entry_safe(cur, next, &req->circuit->msg_list, list) {
 		struct rtp_hdr *rtph2 = osmo_rtp_get_hdr(cur);
 		OSMO_ASSERT(rtph2);
 
-		/* Already exists message with this sequence, skip */
+		/* Already exists message with this sequence. Let's copy over
+		 * the new RTP, since there's the chance that the existing one may
+		 * be a forged copy we did when we detected a hole. */
 		if (rtph2->sequence == req->rtph->sequence) {
-			LOGP(DLMUX, LOGL_ERROR, "RTP pkt with seq=%u already exists, skip it\n",
-			     ntohs(req->rtph->sequence));
-			return -1;
+			if (msgb_length(cur) != msgb_length(req->msg)) {
+				/* Different packet size, AMR FT may have changed. Let's avoid changing it to
+				 * break accounted size to be written (would need new osmux_hdr, etc.) */
+				LOGP(DLMUX, LOGL_NOTICE, "RTP pkt with seq=%u and different len %u != %u already exists, skip it\n",
+				     ntohs(req->rtph->sequence), msgb_length(cur), msgb_length(req->msg));
+				return -1;
+			}
+			LOGP(DLMUX, LOGL_INFO, "RTP pkt with seq=%u already exists, replace it\n",
+				ntohs(req->rtph->sequence));
+			__llist_add(&req->msg->list, &cur->list, cur->list.next);
+			llist_del(&cur->list);
+			msgb_free(cur);
+			return 0;
 		}
 	}
 
