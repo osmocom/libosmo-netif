@@ -53,6 +53,7 @@ struct osmux_hdr {
 /* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
 	uint8_t amr_ft:4, amr_cmr:4;
 #endif
+	uint8_t data[0];
 } __attribute__((packed));
 
 /* one to handle all existing RTP flows */
