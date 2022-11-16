@@ -515,7 +515,7 @@ static void test_rtp_pkt_gap_osmux_deliver_cb(struct msgb *batch_msg, void *data
 
 	*osmux_transmitted = true;
 }
-static void test_rtp_pkt_gap(void)
+static void test_rtp_pkt_gap(uint16_t rtp_start_seqnum)
 {
 	struct msgb *msg;
 	int rc;
@@ -523,11 +523,11 @@ static void test_rtp_pkt_gap(void)
 	bool osmux_transmitted = false;
 	struct osmux_in_handle *h_input;
 
-	printf("===%s===\n", __func__);
+	printf("===%s(%" PRIu16 ")===\n", __func__, rtp_start_seqnum);
 
 	clock_override_enable(true);
 	clock_override_set(0, 0);
-	rtp_init(60, 18000);
+	rtp_init(rtp_start_seqnum, 18000);
 
 	h_input = osmux_xfrm_input_alloc(tall_ctx);
 	osmux_xfrm_input_set_initial_seqnum(h_input, 123);
@@ -595,7 +595,11 @@ int main(int argc, char **argv)
 	test_last_amr_cmr_f_q_used();
 	test_initial_osmux_seqnum();
 	test_rtp_dup();
-	test_rtp_pkt_gap();
+	test_rtp_pkt_gap(60);
+	/* Test several wraparound scenarios: */
+	test_rtp_pkt_gap(65533);
+	test_rtp_pkt_gap(65534);
+	test_rtp_pkt_gap(65535);
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;
