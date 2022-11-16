@@ -154,7 +154,7 @@ static int osmux_link_put(struct osmux_link *link, struct osmux_input_state *sta
 						      sizeof(struct osmux_hdr));
 		osmuxh->ft = OSMUX_FT_VOICE_AMR;
 		osmuxh->ctr = 0;
-		osmuxh->rtp_m = osmuxh->rtp_m || state->rtph->marker;
+		osmuxh->rtp_m = state->rtph->marker;
 		osmuxh->seq = state->circuit->seq++;
 		osmuxh->circuit_id = state->circuit->ccid;
 		osmuxh->amr_ft = state->amrh->ft;
