@@ -596,7 +596,7 @@ static void test_rtp_pkt_gap_bigger_than_batch_factor_osmux_deliver_cb(struct ms
 	 * there was an incoming RTP jump between this resulting osmux frame and
 	 * the previous one. */
 	if (*osmux_transmitted == 2)
-		OSMO_ASSERT(osmuxh->rtp_m == 0); /* FIXME: This should be 1! Fix osmux_input.c code! */
+		OSMO_ASSERT(osmuxh->rtp_m == 1);
 
 	osmuxh = osmux_xfrm_output_pull(batch_msg);
 	OSMO_ASSERT(osmuxh == NULL);

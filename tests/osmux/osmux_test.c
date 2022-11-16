@@ -199,6 +199,12 @@ static void osmux_test_loop(int ccid)
 			/* Mark 1 rtp packet of each stream */
 			cpy_rtph->marker = 1;
 			mark_pkts++;
+		} else {
+		/* osmux is yet unable to detect RTP holes and recreate RTP
+		 * packets at the start of the batch. It will hence simply add an M
+		 * bit to the osmux header in that situation: */
+			if (k == 0 || k == 1)
+				mark_pkts++;
 		}
 
 		osmo_rtp_snprintf(buf, sizeof(buf), msg);

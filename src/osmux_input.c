@@ -85,6 +85,7 @@ struct osmux_circuit {
 	int			nmsgs;
 	int			dummy;
 	uint8_t			seq;
+	int32_t			last_transmitted_rtp_seq; /* -1 = unset */
 };
 
 /* Used internally to temporarily cache all parsed content of an RTP pkt from user to be transmitted as Osmux */
@@ -148,13 +149,17 @@ struct osmux_input_state {
 
 static int osmux_link_put(struct osmux_link *link, struct osmux_input_state *state)
 {
+	uint16_t rtp_seqnum = ntohs(state->rtph->sequence);
+
 	if (state->add_osmux_hdr) {
+		bool seq_jump = state->circuit->last_transmitted_rtp_seq != -1 &&
+				((state->circuit->last_transmitted_rtp_seq + 1) & 0xffff) != rtp_seqnum;
 		struct osmux_hdr *osmuxh;
 		osmuxh = (struct osmux_hdr *)msgb_put(state->out_msg,
 						      sizeof(struct osmux_hdr));
 		osmuxh->ft = OSMUX_FT_VOICE_AMR;
 		osmuxh->ctr = 0;
-		osmuxh->rtp_m = state->rtph->marker;
+		osmuxh->rtp_m = state->rtph->marker || seq_jump;
 		osmuxh->seq = state->circuit->seq++;
 		osmuxh->circuit_id = state->circuit->ccid;
 		osmuxh->amr_ft = state->amrh->ft;
@@ -179,6 +184,8 @@ static int osmux_link_put(struct osmux_link *link, struct osmux_input_state *sta
 	       state->amr_payload_len);
 	msgb_put(state->out_msg, state->amr_payload_len);
 
+	/* Update circuit state of last transmitted incoming RTP seqnum: */
+	state->circuit->last_transmitted_rtp_seq = rtp_seqnum;
 	return 0;
 }
 
@@ -753,6 +760,7 @@ int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
 
 	circuit->ccid = ccid;
 	circuit->seq = h->osmux_seq;
+	circuit->last_transmitted_rtp_seq = -1; /* field unset */
 	INIT_LLIST_HEAD(&circuit->msg_list);
 	llist_add_tail(&circuit->head, &link->circuit_list);
 
