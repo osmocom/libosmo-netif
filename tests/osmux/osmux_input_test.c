@@ -491,7 +491,7 @@ static void test_rtp_dup(void)
 	talloc_free(h_input);
 }
 
-/* Test some scenario where some RTP packets are lost */
+/* Test some scenario where one RTP packet is lost */
 static void test_rtp_pkt_gap_osmux_deliver_cb(struct msgb *batch_msg, void *data)
 {
 	struct osmux_hdr *osmuxh;
@@ -574,6 +574,122 @@ static void test_rtp_pkt_gap(uint16_t rtp_start_seqnum)
 	talloc_free(h_input);
 }
 
+/* Test some scenario where some RTP packets (>batch_factor) are lost */
+static void test_rtp_pkt_gap_bigger_than_batch_factor_osmux_deliver_cb(struct msgb *batch_msg, void *data)
+{
+	struct osmux_hdr *osmuxh;
+	char buf[2048];
+	unsigned *osmux_transmitted = (unsigned *)data;
+	(*osmux_transmitted)++;
+
+	osmux_snprintf(buf, sizeof(buf), batch_msg);
+	clock_debug("OSMUX message %u (len=%d): %s\n", *osmux_transmitted, batch_msg->len, buf);
+
+	/* We expect 1 batch: */
+	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	/* Check seqnum is the one configured beforehand: */
+	OSMO_ASSERT(osmuxh->seq == (123 + *osmux_transmitted - 1));
+	/* Check four AMR payloads appear: */
+	OSMO_ASSERT(osmuxh->ctr == 3);
+
+	/* Second osmux frame: is it expected to have the Marker bit set, since
+	 * there was an incoming RTP jump between this resulting osmux frame and
+	 * the previous one. */
+	if (*osmux_transmitted == 2)
+		OSMO_ASSERT(osmuxh->rtp_m == 0); /* FIXME: This should be 1! Fix osmux_input.c code! */
+
+	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh == NULL);
+
+	msgb_free(batch_msg);
+}
+static void test_rtp_pkt_gap_bigger_than_batch_factor(uint16_t rtp_start_seqnum)
+{
+	struct msgb *msg;
+	int rc;
+	const uint8_t cid = 33;
+	unsigned osmux_transmitted = 0;
+	struct osmux_in_handle *h_input;
+	int i;
+
+	printf("===%s(%" PRIu16 ")===\n", __func__, rtp_start_seqnum);
+
+	clock_override_enable(true);
+	clock_override_set(0, 0);
+	rtp_init(rtp_start_seqnum, 18000);
+
+	h_input = osmux_xfrm_input_alloc(tall_ctx);
+	osmux_xfrm_input_set_initial_seqnum(h_input, 123);
+	osmux_xfrm_input_set_batch_factor(h_input, 4);
+	osmux_xfrm_input_set_deliver_cb(h_input,
+					test_rtp_pkt_gap_bigger_than_batch_factor_osmux_deliver_cb,
+					&osmux_transmitted);
+	osmux_xfrm_input_open_circuit(h_input, cid, false);
+
+	/* First RTP frame at t=0 */
+	clock_debug("1st RTP packet is received");
+	msg = rtp_next();
+	rtp_append_amr(msg, AMR_FT_2);
+	rc = osmux_xfrm_input(h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	clock_debug("10 packets are lost");
+	for (i = 0; i < 10; i++) {
+		clock_override_add(0, TIME_RTP_PKT_MS*1000);
+		msg = rtp_next();
+		msgb_free(msg);
+	}
+
+	clock_debug("12th RTP packet is received");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	rtp_append_amr(msg, AMR_FT_2);
+	/* The recreation of lost pkts fills the batch and hence triggers transmission of osmux frame: */
+	rc = osmux_xfrm_input(h_input, msg, cid);
+	OSMO_ASSERT(rc == 1);
+	/* We call deliver as requested by API: */
+	osmux_xfrm_input_deliver(h_input);
+	OSMO_ASSERT(osmux_transmitted == 1);
+	/* We try to feed the RTP packet again as per API. This time 0 is
+	 * received, pkt is stored in osmux layer. This is because we don't
+	 * recreate entire batches with fake data. Instead, Osmux should use the
+	 * Marker bit to announce the peer there was a (potentially huge) jump
+	 * in seqnums. */
+	rc = osmux_xfrm_input(h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	/* We continue filling the current batch so it gets transmitted: */
+	clock_debug("12th+1 RTP packet is received");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	rtp_append_amr(msg, AMR_FT_2);
+	rc = osmux_xfrm_input(h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	clock_debug("12th+2 RTP packet is received");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	rtp_append_amr(msg, AMR_FT_2);
+	rc = osmux_xfrm_input(h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	clock_debug("12th+3 RTP packet is received");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	msg = rtp_next();
+	rtp_append_amr(msg, AMR_FT_2);
+	rc = osmux_xfrm_input(h_input, msg, cid);
+	OSMO_ASSERT(rc == 0);
+
+	clock_debug("osmux batch transmitted");
+	clock_override_add(0, TIME_RTP_PKT_MS*1000);
+	osmo_select_main(0);
+	OSMO_ASSERT(osmux_transmitted == 1); /* FIXME: this is a bug, should be 2! */
+
+	clock_debug("Closing circuit");
+	osmux_xfrm_input_close_circuit(h_input, cid);
+	talloc_free(h_input);
+}
+
 int main(int argc, char **argv)
 {
 
@@ -600,6 +716,11 @@ int main(int argc, char **argv)
 	test_rtp_pkt_gap(65533);
 	test_rtp_pkt_gap(65534);
 	test_rtp_pkt_gap(65535);
+	test_rtp_pkt_gap_bigger_than_batch_factor(60);
+	/* Test several wraparound scenarios: */
+	test_rtp_pkt_gap_bigger_than_batch_factor(65533);
+	test_rtp_pkt_gap_bigger_than_batch_factor(65534);
+	test_rtp_pkt_gap_bigger_than_batch_factor(65535);
 
 	fprintf(stdout, "OK: Test passed\n");
 	return EXIT_SUCCESS;
