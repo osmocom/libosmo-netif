@@ -428,6 +428,7 @@ static int osmux_link_add(struct osmux_link *link, const struct osmux_in_req *re
 static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux_in_req *req)
 {
 	int16_t diff;
+	uint16_t lost_pkts;
 	struct msgb *last;
 	struct rtp_hdr *last_rtph;
 	uint16_t last_seq, cur_seq;
@@ -452,18 +453,23 @@ static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux
 	 */
 	if (diff <= 1)
 		return 0;
+	lost_pkts = diff - 1;
 
-	LOGP(DLMUX, LOGL_INFO, "RTP seq jump detected, recreating %" PRId16
-	     " lost packets (seq jump: %" PRIu16 " -> %" PRIu16 ")\n",
-	     diff - 1, last_seq, cur_seq);
+	LOGP(DLMUX, LOGL_INFO, "RTP seq jump detected: %" PRIu16 " -> %" PRIu16 " (%" PRId16
+	     " lost packets, %u/%u batched)\n",
+	     last_seq, cur_seq, lost_pkts, req->circuit->nmsgs, link->h->batch_factor);
 
-	/* Lifesaver: make sure bugs don't spawn lots of clones */
-	if (diff > 16)
-		diff = 16;
+	/* We know we can feed only up to batch_factor before osmux_link_add()
+	 * returning 1 signalling "transmission needed, call deliver() and retry".
+	 * Hence, it doesn't make sense to even attempt recreating a big number of
+	 * RTP packets (>batch_factor).
+	 */
+	if (lost_pkts > link->h->batch_factor - req->circuit->nmsgs)
+		lost_pkts = link->h->batch_factor - req->circuit->nmsgs;
 
 	rc = 0;
 	clone_req = *req;
-	for (i = 1; i < diff; i++) {
+	for (i = 0; i < lost_pkts; i++) {
 		/* Clone last RTP packet seen */
 		clone_req.msg = msgb_copy(last, "RTP clone");
 		if (!clone_req.msg)
@@ -477,7 +483,7 @@ static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux
 		/* Faking a follow up RTP pkt here, so no Marker bit: */
 		clone_req.rtph->marker = false;
 		/* Adjust sequence number and timestamp */
-		clone_req.rtph->sequence = htons(ntohs(clone_req.rtph->sequence) + i);
+		clone_req.rtph->sequence = htons(last_seq + 1 + i);
 		clone_req.rtph->timestamp = htonl(ntohl(clone_req.rtph->timestamp) +
 					DELTA_RTP_TIMESTAMP);
 		rc = osmux_link_add(link, &clone_req);
