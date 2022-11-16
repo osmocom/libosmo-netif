@@ -86,6 +86,7 @@ struct osmux_circuit {
 	int			dummy;
 	uint8_t			seq;
 	int32_t			last_transmitted_rtp_seq; /* -1 = unset */
+	uint32_t		last_transmitted_rtp_ts; /* Check last_transmitted_rtp_seq = -1 to detect unset */
 };
 
 /* Used internally to temporarily cache all parsed content of an RTP pkt from user to be transmitted as Osmux */
@@ -184,8 +185,9 @@ static int osmux_link_put(struct osmux_link *link, struct osmux_input_state *sta
 	       state->amr_payload_len);
 	msgb_put(state->out_msg, state->amr_payload_len);
 
-	/* Update circuit state of last transmitted incoming RTP seqnum: */
+	/* Update circuit state of last transmitted incoming RTP seqnum/ts: */
 	state->circuit->last_transmitted_rtp_seq = rtp_seqnum;
+	state->circuit->last_transmitted_rtp_ts = ntohl(state->rtph->timestamp);
 	return 0;
 }
 
@@ -436,9 +438,9 @@ static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux
 {
 	int16_t diff;
 	uint16_t lost_pkts;
-	struct msgb *last;
-	struct rtp_hdr *last_rtph;
+	struct msgb *copy_from;
 	uint16_t last_seq, cur_seq;
+	uint32_t last_ts;
 	int i, rc;
 	struct osmux_in_req clone_req;
 
@@ -447,15 +449,31 @@ static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux
 		return 0;
 
 	/* Have we seen any RTP packet in this batch before? */
-	if (llist_empty(&req->circuit->msg_list))
-		return 0;
-
-	/* Get last RTP packet seen in this batch */
-	last = llist_entry(req->circuit->msg_list.prev, struct msgb, list);
-	last_rtph = osmo_rtp_get_hdr(last);
-	if (last_rtph == NULL)
-		return -1;
-	last_seq = ntohs(last_rtph->sequence);
+	if (llist_empty(&req->circuit->msg_list)) {
+		/* Since current batch is empty, it can be assumed:
+		 * 1- circuit->last_transmitted_rtp_seq is either unset or really contains the last RTP enqueued
+		 * 2- This pkt will generate an osmuxhdr and hence there's no
+		 *    restriction on the FT, as opposite to the case where the batch
+		 *    is half full
+		 * Conclusion:
+		 * 1- It is fine using circuit->last_transmitted_rtp_seq as last enqueued RTP header to detect seqnum jumps.
+		 * 2- It is fine filling holes at the start of the batch by using current req->rtph.
+		 */
+		if (req->circuit->last_transmitted_rtp_seq == -1)
+			return 0; /* first message in circuit, do nothing */
+		copy_from = req->msg;
+		last_seq = req->circuit->last_transmitted_rtp_seq;
+		last_ts = req->circuit->last_transmitted_rtp_ts;
+	} else {
+		/* Get last RTP packet seen in this batch, so that we simply keep filling with same osmuxhdr */
+		struct rtp_hdr *last_rtph;
+		copy_from = llist_entry(req->circuit->msg_list.prev, struct msgb, list);
+		last_rtph = osmo_rtp_get_hdr(copy_from);
+		if (last_rtph == NULL)
+			return -1;
+		last_seq = ntohs(last_rtph->sequence);
+		last_ts = ntohl(last_rtph->timestamp);
+	}
 	cur_seq = ntohs(req->rtph->sequence);
 	diff = cur_seq - last_seq;
 
@@ -475,14 +493,23 @@ static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux
 	 * Hence, it doesn't make sense to even attempt recreating a big number of
 	 * RTP packets (>batch_factor).
 	 */
-	if (lost_pkts > link->h->batch_factor - req->circuit->nmsgs)
+	if (lost_pkts > link->h->batch_factor - req->circuit->nmsgs) {
+		if (llist_empty(&req->circuit->msg_list)) {
+			/* If we are starting a batch, it doesn't make sense to keep filling entire
+			 * batches with lost packets, since it could potentially end up in a loop if
+			 * the lost_pkts value is huge. Instead, avoid recreating packets and let the
+			 * osmux encoder set an M bit on the osmuxhdr when acting upon current req->rtph.
+			 */
+			return 0;
+		}
 		lost_pkts = link->h->batch_factor - req->circuit->nmsgs;
+	}
 
 	rc = 0;
 	clone_req = *req;
 	for (i = 0; i < lost_pkts; i++) {
-		/* Clone last RTP packet seen */
-		clone_req.msg = msgb_copy(last, "RTP clone");
+		/* Clone last (or new if last not available) RTP packet seen */
+		clone_req.msg = msgb_copy(copy_from, "RTP clone");
 		if (!clone_req.msg)
 			continue;
 
@@ -495,8 +522,7 @@ static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux
 		clone_req.rtph->marker = false;
 		/* Adjust sequence number and timestamp */
 		clone_req.rtph->sequence = htons(last_seq + 1 + i);
-		clone_req.rtph->timestamp = htonl(ntohl(clone_req.rtph->timestamp) +
-					DELTA_RTP_TIMESTAMP);
+		clone_req.rtph->timestamp = last_ts + ((1 + i) * DELTA_RTP_TIMESTAMP);
 		rc = osmux_link_add(link, &clone_req);
 		/* No more room in this batch, skip padding with more clones */
 		if (rc != 0) {
