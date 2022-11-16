@@ -435,6 +435,10 @@ static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux
 	int i, rc;
 	struct osmux_in_req clone_req;
 
+	/* If M bit is set, this is a sync point, so any sort of seq jump is expected and has no real meaning. */
+	if (req->rtph->marker)
+		return 0;
+
 	/* Have we seen any RTP packet in this batch before? */
 	if (llist_empty(&req->circuit->msg_list))
 		return 0;
