@@ -277,6 +277,7 @@ int main(void)
 
 	/* Check if marker bit features work correctly */
 	h_input = osmux_xfrm_input_alloc(tall_ctx);
+	osmux_xfrm_input_set_name(h_input, "first");
 	osmux_xfrm_input_set_initial_seqnum(h_input, 0);
 	osmux_xfrm_input_set_batch_factor(h_input, 4);
 	osmux_xfrm_input_set_deliver_cb(h_input, osmux_deliver, NULL);
@@ -289,6 +290,7 @@ int main(void)
 	TALLOC_FREE(h_input);
 
 	h_input = osmux_xfrm_input_alloc(tall_ctx);
+	osmux_xfrm_input_set_name(h_input, "second");
 	osmux_xfrm_input_set_initial_seqnum(h_input, 0);
 	osmux_xfrm_input_set_batch_factor(h_input, 4);
 	osmux_xfrm_input_set_deliver_cb(h_input, osmux_deliver, NULL);

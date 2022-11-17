@@ -1,4 +1,4 @@
-DLMUX initialized osmux input converter
+DLMUX [input-0] Initialized osmux input converter
 sys={23.444242}, mono={0.020000}: clock_override_add
 sys={23.464242}, mono={0.040000}: clock_override_add
 sys={23.484242}, mono={0.060000}: clock_override_add
@@ -358,7 +358,7 @@ sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9219 timestamp=1681702537 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9220 timestamp=1681702697 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=1 ext=0 csrc_count=0 sequence=9221 timestamp=1681702857 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX initialized osmux input converter
+DLMUX [input-1] Initialized osmux input converter
 sys={26.704242}, mono={3.280000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=1 ext=0 csrc_count=0 sequence=16396 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.704242}, mono={3.280000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=1 ext=0 csrc_count=0 sequence=16397 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.704242}, mono={3.280000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16398 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]

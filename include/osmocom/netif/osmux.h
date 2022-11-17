@@ -107,6 +107,7 @@ int osmux_snprintf(char *buf, size_t size, struct msgb *msg);
 struct osmux_in_handle *osmux_xfrm_input_alloc(void *ctx);
 void osmux_xfrm_input_init(struct osmux_in_handle *h) OSMO_DEPRECATED("Use osmux_xfrm_input_alloc() instead");
 void osmux_xfrm_input_fini(struct osmux_in_handle *h) OSMO_DEPRECATED("Use talloc_free() instead");
+void osmux_xfrm_input_set_name(struct osmux_in_handle *h, const char *name);
 int osmux_xfrm_input_set_batch_factor(struct osmux_in_handle *h, uint8_t batch_factor);
 void osmux_xfrm_input_set_batch_size(struct osmux_in_handle *h, uint16_t batch_size);
 void osmux_xfrm_input_set_initial_seqnum(struct osmux_in_handle *h, uint8_t osmux_seqnum);

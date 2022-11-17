@@ -75,6 +75,7 @@ struct osmux_link {
 	unsigned int		remaining_bytes;
 	uint32_t		nmsgs;
 	int			ndummy;
+	char			*name;
 	struct osmux_in_handle *h; /* backpointer to parent object */
 };
 
@@ -686,6 +687,7 @@ static int osmux_xfrm_input_talloc_destructor(struct osmux_in_handle *h)
  * stack outgoing network Osmux messages.
  * Returned pointer can be freed with regular talloc_free, all pending messages
  * in queue and all internal data will be freed. */
+static unsigned int next_default_name_idx = 0;
 struct osmux_in_handle *osmux_xfrm_input_alloc(void *ctx)
 {
 	struct osmux_in_handle *h;
@@ -701,11 +703,13 @@ struct osmux_in_handle *osmux_xfrm_input_alloc(void *ctx)
 	INIT_LLIST_HEAD(&link->circuit_list);
 	link->h = h;
 	link->remaining_bytes = h->batch_size;
+	link->name = talloc_asprintf(link, "input-%u", next_default_name_idx++);
 	osmo_timer_setup(&link->timer, osmux_link_timer_expired, h);
 
 	h->internal_data = (void *)link;
 
-	LOGP(DLMUX, LOGL_DEBUG, "initialized osmux input converter\n");
+	LOGP(DLMUX, LOGL_DEBUG, "[%s] Initialized osmux input converter\n",
+	     link->name);
 
 	talloc_set_destructor(h, osmux_xfrm_input_talloc_destructor);
 	return h;
@@ -726,11 +730,13 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 	INIT_LLIST_HEAD(&link->circuit_list);
 	link->h = h;
 	link->remaining_bytes = h->batch_size;
+	link->name = talloc_asprintf(link, "%u", next_default_name_idx++);
 	osmo_timer_setup(&link->timer, osmux_link_timer_expired, h);
 
 	h->internal_data = (void *)link;
 
-	LOGP(DLMUX, LOGL_DEBUG, "initialized osmux input converter\n");
+	LOGP(DLMUX, LOGL_DEBUG, "[%s] Initialized osmux input converter\n",
+	     link->name);
 }
 
 int osmux_xfrm_input_set_batch_factor(struct osmux_in_handle *h, uint8_t batch_factor)
@@ -764,6 +770,12 @@ void osmux_xfrm_input_set_deliver_cb(struct osmux_in_handle *h,
 void *osmux_xfrm_input_get_deliver_cb_data(struct osmux_in_handle *h)
 {
 	return h->data;
+}
+
+void osmux_xfrm_input_set_name(struct osmux_in_handle *h, const char *name)
+{
+	struct osmux_link *link = (struct osmux_link *)h->internal_data;
+	osmo_talloc_replace_string(link, &link->name, name);
 }
 
 int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
