@@ -55,6 +55,20 @@
 /* delta time between two RTP messages (in samples, 8kHz) */
 #define DELTA_RTP_TIMESTAMP	160
 
+#define LOGMUXLK_(link, lvl, fmt, args ...) \
+	LOGP(DLMUX, lvl, "[%s,%u/%" PRIu16 "]" fmt, \
+	     (link)->name, (link)->h->batch_size - (link)->remaining_bytes, \
+	     (link)->h->batch_size, \
+	     ## args)
+
+#define LOGMUXLK(link, lvl, fmt, args ...) \
+	LOGMUXLK_(link, lvl, " " fmt, ## args)
+
+#define LOGMUXCID(link, circuit, lvl, fmt, args ...) \
+	LOGMUXLK_(link, lvl, "[CID=%" PRIu8 ",batched=%u/%u] " fmt, \
+		  (circuit)->ccid, (circuit)->nmsgs, (link)->h->batch_factor, ## args)
+
+
 static void *osmux_ctx;
 
 static uint32_t osmux_ft_dummy_size(uint8_t amr_ft, uint8_t batch_factor)
@@ -114,7 +128,7 @@ static int osmux_circuit_enqueue(struct osmux_link *link, struct osmux_circuit *
 		if (rtph == NULL)
 			return -1;
 
-		LOGP(DLMUX, LOGL_DEBUG, "Batch is full for RTP sssrc=%u\n", rtph->ssrc);
+		LOGMUXCID(link, circuit, LOGL_DEBUG, "Batch is full for RTP sssrc=%u\n", rtph->ssrc);
 		return 1;
 	}
 
@@ -170,9 +184,9 @@ static int osmux_link_put(struct osmux_link *link, struct osmux_input_state *sta
 		link->osmuxh = osmuxh;
 	} else {
 		if (link->osmuxh->ctr == 0x7) {
-			LOGP(DLMUX, LOGL_ERROR, "cannot add msg=%p, "
-			     "too many messages for this RTP ssrc=%u\n",
-			     state->msg, state->rtph->ssrc);
+			LOGMUXCID(link, state->circuit, LOGL_ERROR,
+				  "Cannot encode RTP pkt ssrc=%u into osmux batch, too many packets\n",
+				  state->rtph->ssrc);
 			return 0;
 		}
 		link->osmuxh->ctr++;
@@ -220,12 +234,12 @@ static struct msgb *osmux_build_batch(struct osmux_link *link)
 	struct osmux_circuit *circuit;
 
 #ifdef DEBUG_MSG
-	LOGP(DLMUX, LOGL_DEBUG, "Now building batch\n");
+	LOGMUXLK(link, LOGL_DEBUG, "Now building batch\n");
 #endif
 
 	batch_msg = msgb_alloc(link->h->batch_size, "osmux");
 	if (batch_msg == NULL) {
-		LOGP(DLMUX, LOGL_ERROR, "Not enough memory\n");
+		LOGMUXLK(link, LOGL_ERROR, "Not enough memory\n");
 		return NULL;
 	}
 
@@ -255,7 +269,7 @@ static struct msgb *osmux_build_batch(struct osmux_link *link)
 
 			osmo_rtp_snprintf(buf, sizeof(buf), cur);
 			buf[sizeof(buf)-1] = '\0';
-			LOGP(DLMUX, LOGL_DEBUG, "to BSC-NAT: %s\n", buf);
+			LOGMUXCID(link, circuit, LOGL_DEBUG, "to BSC-NAT: %s\n", buf);
 #endif
 
 			state.rtph = osmo_rtp_get_hdr(cur);
@@ -268,13 +282,13 @@ static struct msgb *osmux_build_batch(struct osmux_link *link)
 
 			if (ctr == 0) {
 #ifdef DEBUG_MSG
-				LOGP(DLMUX, LOGL_DEBUG, "Add osmux header (First in batch)\n");
+				LOGMUXCID(link, circuit, LOGL_DEBUG, "Add osmux header (First in batch)\n");
 #endif
 				state.add_osmux_hdr = 1;
 			} else if (prev_amr_ft != state.amrh->ft) {
 				/* If AMR FT changed, we have to generate an extra batch osmux header: */
 #ifdef DEBUG_MSG
-				LOGP(DLMUX, LOGL_DEBUG, "Add osmux header (New AMR FT)\n");
+				LOGMUXCID(link, circuit, LOGL_DEBUG, "Add osmux header (New AMR FT)\n");
 #endif
 				state.add_osmux_hdr = 1;
 			}
@@ -296,7 +310,7 @@ void osmux_xfrm_input_deliver(struct osmux_in_handle *h)
 	struct osmux_link *link = (struct osmux_link *)h->internal_data;
 
 #ifdef DEBUG_MSG
-	LOGP(DLMUX, LOGL_DEBUG, "invoking delivery function\n");
+	LOGMUXLK(link, LOGL_DEBUG, "Invoking delivery function\n");
 #endif
 	batch_msg = osmux_build_batch(link);
 	if (!batch_msg)
@@ -317,7 +331,8 @@ static void osmux_link_timer_expired(void *data)
 	struct osmux_in_handle *h = data;
 
 #ifdef DEBUG_MSG
-	LOGP(DLMUX, LOGL_DEBUG, "osmux_link_timer_expired\n");
+	const struct osmux_link *link = (struct osmux_link *)h->internal_data;
+	LOGMUXLK(link, LOGL_DEBUG, "Batch delivery timer timeout\n");
 #endif
 	osmux_xfrm_input_deliver(h);
 }
@@ -415,8 +430,8 @@ static int osmux_link_add(struct osmux_link *link, const struct osmux_in_req *re
 		return rc;
 
 #ifdef DEBUG_MSG
-	LOGP(DLMUX, LOGL_DEBUG, "adding msg with ssrc=%u to batch\n",
-		rtph->ssrc);
+	LOGMUXCID(link, req->circuit, LOGL_DEBUG, "Adding msg with ssrc=%u to batch\n",
+		  req->rtph->ssrc);
 #endif
 
 	/* Update remaining room in this batch */
@@ -424,7 +439,7 @@ static int osmux_link_add(struct osmux_link *link, const struct osmux_in_req *re
 
 	if (link->nmsgs == 0) {
 #ifdef DEBUG_MSG
-		LOGP(DLMUX, LOGL_DEBUG, "osmux start timer batch\n");
+		LOGMUXLK(link, LOGL_DEBUG, "Osmux start batch delivery timer\n");
 #endif
 		osmo_timer_schedule(&link->timer, 0,
 				    link->h->batch_factor * DELTA_RTP_MSG);
@@ -485,9 +500,10 @@ static int osmux_replay_lost_packets(struct osmux_link *link, const struct osmux
 		return 0;
 	lost_pkts = diff - 1;
 
-	LOGP(DLMUX, LOGL_INFO, "RTP seq jump detected: %" PRIu16 " -> %" PRIu16 " (%" PRId16
-	     " lost packets, %u/%u batched)\n",
-	     last_seq, cur_seq, lost_pkts, req->circuit->nmsgs, link->h->batch_factor);
+	LOGMUXCID(link, req->circuit, LOGL_INFO,
+		  "RTP seq jump detected: %" PRIu16 " -> %" PRIu16 " (%" PRId16
+		  " lost packets)\n",
+		  last_seq, cur_seq, lost_pkts);
 
 	/* We know we can feed only up to batch_factor before osmux_link_add()
 	 * returning 1 signalling "transmission needed, call deliver() and retry".
@@ -560,12 +576,14 @@ static int osmux_link_handle_rtp_req(struct osmux_link *link, struct osmux_in_re
 			if (msgb_length(cur) != msgb_length(req->msg)) {
 				/* Different packet size, AMR FT may have changed. Let's avoid changing it to
 				 * break accounted size to be written (would need new osmux_hdr, etc.) */
-				LOGP(DLMUX, LOGL_NOTICE, "RTP pkt with seq=%u and different len %u != %u already exists, skip it\n",
-				     ntohs(req->rtph->sequence), msgb_length(cur), msgb_length(req->msg));
+				LOGMUXCID(link, req->circuit, LOGL_NOTICE,
+					  "RTP pkt with seq=%u and different len %u != %u already exists, skip it\n",
+					  ntohs(req->rtph->sequence), msgb_length(cur), msgb_length(req->msg));
 				return -1;
 			}
-			LOGP(DLMUX, LOGL_INFO, "RTP pkt with seq=%u already exists, replace it\n",
-				ntohs(req->rtph->sequence));
+			LOGMUXCID(link, req->circuit, LOGL_INFO,
+				  "RTP pkt with seq=%u already exists, replace it\n",
+				  ntohs(req->rtph->sequence));
 			__llist_add(&req->msg->list, &cur->list, cur->list.next);
 			llist_del(&cur->list);
 			msgb_free(cur);
@@ -605,12 +623,12 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	};
 
 	if (!req.circuit) {
-		LOGP(DLMUX, LOGL_INFO, "Couldn't find circuit CID=%u\n", ccid);
+		LOGMUXLK(link, LOGL_INFO, "Couldn't find circuit CID=%u\n", ccid);
 		goto err_free;
 	}
 
 	if (!req.rtph) {
-		LOGP(DLMUX, LOGL_NOTICE, "msg not containing an RTP header\n");
+		LOGMUXCID(link, req.circuit, LOGL_NOTICE, "msg not containing an RTP header\n");
 		goto err_free;
 	}
 
@@ -618,14 +636,15 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 	 * to avoid a possible forever loop in the caller.
 	 */
 	if (msg->len > h->batch_size - sizeof(struct osmux_hdr)) {
-		LOGP(DLMUX, LOGL_NOTICE, "RTP payload too big (%u) for configured batch size (%u)\n",
-			 msg->len, h->batch_size);
+		LOGMUXCID(link, req.circuit, LOGL_NOTICE,
+			  "RTP payload too big (%u) for configured batch size (%u)\n",
+			  msg->len, h->batch_size);
 		goto err_free;
 	}
 
 	switch (req.rtph->payload_type) {
 	case RTP_PT_RTCP:
-		LOGP(DLMUX, LOGL_INFO, "Dropping RTCP packet\n");
+		LOGMUXCID(link, req.circuit, LOGL_INFO, "Dropping RTCP packet\n");
 		msgb_free(msg);
 		return 0;
 	default:
@@ -638,7 +657,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 			goto err_free;
 		req.amr_payload_len = osmux_rtp_amr_payload_len(req.amrh, req.rtp_payload_len);
 		if (req.amr_payload_len < 0) {
-			LOGP(DLMUX, LOGL_NOTICE, "AMR payload invalid\n");
+			LOGMUXCID(link, req.circuit, LOGL_NOTICE, "AMR payload invalid\n");
 			goto err_free;
 		}
 
@@ -649,7 +668,7 @@ int osmux_xfrm_input(struct osmux_in_handle *h, struct msgb *msg, int ccid)
 				* Malformed, duplicated, OOM. Drop it and tell
 				* the upper layer that we have digest it.
 				*/
-			LOGP(DLMUX, LOGL_DEBUG, "Dropping RTP packet instead of adding to batch\n");
+			LOGMUXCID(link, req.circuit, LOGL_DEBUG, "Dropping RTP packet instead of adding to batch\n");
 			goto err_free;
 		}
 
@@ -708,8 +727,7 @@ struct osmux_in_handle *osmux_xfrm_input_alloc(void *ctx)
 
 	h->internal_data = (void *)link;
 
-	LOGP(DLMUX, LOGL_DEBUG, "[%s] Initialized osmux input converter\n",
-	     link->name);
+	LOGMUXLK(link, LOGL_DEBUG, "Initialized osmux input converter\n");
 
 	talloc_set_destructor(h, osmux_xfrm_input_talloc_destructor);
 	return h;
@@ -735,8 +753,7 @@ void osmux_xfrm_input_init(struct osmux_in_handle *h)
 
 	h->internal_data = (void *)link;
 
-	LOGP(DLMUX, LOGL_DEBUG, "[%s] Initialized osmux input converter\n",
-	     link->name);
+	LOGMUXLK(link, LOGL_DEBUG, "Initialized osmux input converter\n");
 }
 
 int osmux_xfrm_input_set_batch_factor(struct osmux_in_handle *h, uint8_t batch_factor)
@@ -786,13 +803,13 @@ int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
 
 	circuit = osmux_link_find_circuit(link, ccid);
 	if (circuit != NULL) {
-		LOGP(DLMUX, LOGL_ERROR, "circuit %u already exists!\n", ccid);
+		LOGMUXLK(link, LOGL_ERROR, "circuit %u already exists!\n", ccid);
 		return -1;
 	}
 
 	circuit = talloc_zero(osmux_ctx, struct osmux_circuit);
 	if (circuit == NULL) {
-		LOGP(DLMUX, LOGL_ERROR, "OOM on circuit %u\n", ccid);
+		LOGMUXLK(link, LOGL_ERROR, "OOM on circuit %u\n", ccid);
 		return -1;
 	}
 
@@ -809,6 +826,7 @@ int osmux_xfrm_input_open_circuit(struct osmux_in_handle *h, int ccid,
 			osmo_timer_schedule(&link->timer, 0,
 					    h->batch_factor * DELTA_RTP_MSG);
 	}
+	LOGMUXCID(link, circuit, LOGL_INFO, "Circuit opened successfully\n");
 	return 0;
 }
 
@@ -819,10 +837,12 @@ void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid)
 
 	circuit = osmux_link_find_circuit(link, ccid);
 	if (circuit == NULL) {
-		LOGP(DLMUX, LOGL_NOTICE, "Unable to close circuit %d: Not found\n",
+		LOGMUXLK(link, LOGL_NOTICE, "Unable to close circuit %d: Not found\n",
 		     ccid);
 		return;
 	}
+
+	LOGMUXCID(link, circuit, LOGL_INFO, "Closing circuit\n");
 
 	osmux_link_del_circuit(link, circuit);
 }

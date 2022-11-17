@@ -1,9 +1,13 @@
-DLMUX [input-0] Initialized osmux input converter
+DLMUX [input-0,0/1472] Initialized osmux input converter
+DLMUX [first,0/1472][CID=0,batched=0/4] Circuit opened successfully
+DLMUX [first,0/1472][CID=1,batched=0/4] Circuit opened successfully
+DLMUX [first,0/1472][CID=2,batched=0/4] Circuit opened successfully
+DLMUX [first,0/1472][CID=3,batched=0/4] Circuit opened successfully
 sys={23.444242}, mono={0.020000}: clock_override_add
 sys={23.464242}, mono={0.040000}: clock_override_add
 sys={23.484242}, mono={0.060000}: clock_override_add
 sys={23.504242}, mono={0.080000}: clock_override_add
-DLMUX Batch is full for RTP sssrc=1644169479
+DLMUX [first,256/1472][CID=0,batched=4/4] Batch is full for RTP sssrc=1644169479
 sys={23.504242}, mono={0.080000}: OSMUX message (len=256): OSMUX seq=000 ccid=000 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=001 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=003 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={23.504242}, mono={0.080000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=1 ext=0 csrc_count=0 sequence=9158 timestamp=1681692777 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={23.504242}, mono={0.080000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=1 ext=0 csrc_count=0 sequence=9158 timestamp=1681692777 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -18,7 +22,7 @@ sys={23.584242}, mono={0.160000}: clock_override_add
 sys={23.604242}, mono={0.180000}: clock_override_add
 sys={23.624242}, mono={0.200000}: clock_override_add
 sys={23.644242}, mono={0.220000}: clock_override_add
-DLMUX Batch is full for RTP sssrc=1644169479
+DLMUX [first,256/1472][CID=0,batched=4/4] Batch is full for RTP sssrc=1644169479
 sys={23.644242}, mono={0.220000}: OSMUX message (len=256): OSMUX seq=003 ccid=000 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=003 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=003 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=003 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={23.664242}, mono={0.240000}: clock_override_add
 sys={23.664242}, mono={0.240000}: OSMUX message (len=106): OSMUX seq=004 ccid=000 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=004 ccid=001 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=004 ccid=002 ft=1 rtp_m=0 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=004 ccid=003 ft=1 rtp_m=1 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -29,7 +33,7 @@ sys={23.724242}, mono={0.300000}: clock_override_add
 sys={23.744242}, mono={0.320000}: clock_override_add
 sys={23.764242}, mono={0.340000}: clock_override_add
 sys={23.784242}, mono={0.360000}: clock_override_add
-DLMUX Batch is full for RTP sssrc=1644169479
+DLMUX [first,256/1472][CID=0,batched=4/4] Batch is full for RTP sssrc=1644169479
 sys={23.784242}, mono={0.360000}: OSMUX message (len=256): OSMUX seq=006 ccid=000 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=006 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=006 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=006 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={23.804242}, mono={0.380000}: clock_override_add
 sys={23.804242}, mono={0.380000}: OSMUX message (len=106): OSMUX seq=007 ccid=000 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=007 ccid=001 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=007 ccid=002 ft=1 rtp_m=0 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=007 ccid=003 ft=1 rtp_m=1 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -40,7 +44,7 @@ sys={23.864242}, mono={0.440000}: clock_override_add
 sys={23.884242}, mono={0.460000}: clock_override_add
 sys={23.904242}, mono={0.480000}: clock_override_add
 sys={23.924242}, mono={0.500000}: clock_override_add
-DLMUX Batch is full for RTP sssrc=1644169479
+DLMUX [first,256/1472][CID=0,batched=4/4] Batch is full for RTP sssrc=1644169479
 sys={23.924242}, mono={0.500000}: OSMUX message (len=256): OSMUX seq=009 ccid=000 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=009 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=009 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=009 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={23.944242}, mono={0.520000}: clock_override_add
 sys={23.944242}, mono={0.520000}: OSMUX message (len=106): OSMUX seq=010 ccid=000 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=010 ccid=001 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=010 ccid=002 ft=1 rtp_m=0 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=010 ccid=003 ft=1 rtp_m=1 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -51,7 +55,7 @@ sys={24.004242}, mono={0.580000}: clock_override_add
 sys={24.024242}, mono={0.600000}: clock_override_add
 sys={24.044242}, mono={0.620000}: clock_override_add
 sys={24.064242}, mono={0.640000}: clock_override_add
-DLMUX Batch is full for RTP sssrc=1644169479
+DLMUX [first,256/1472][CID=0,batched=4/4] Batch is full for RTP sssrc=1644169479
 sys={24.064242}, mono={0.640000}: OSMUX message (len=256): OSMUX seq=012 ccid=000 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=012 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=012 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=012 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={24.084242}, mono={0.660000}: clock_override_add
 sys={24.084242}, mono={0.660000}: OSMUX message (len=106): OSMUX seq=013 ccid=000 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=013 ccid=001 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=013 ccid=002 ft=1 rtp_m=0 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=013 ccid=003 ft=1 rtp_m=1 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -62,7 +66,7 @@ sys={24.144242}, mono={0.720000}: clock_override_add
 sys={24.164242}, mono={0.740000}: clock_override_add
 sys={24.184242}, mono={0.760000}: clock_override_add
 sys={24.204242}, mono={0.780000}: clock_override_add
-DLMUX Batch is full for RTP sssrc=1644169479
+DLMUX [first,256/1472][CID=0,batched=4/4] Batch is full for RTP sssrc=1644169479
 sys={24.204242}, mono={0.780000}: OSMUX message (len=256): OSMUX seq=015 ccid=000 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=015 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=015 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=015 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={24.224242}, mono={0.800000}: clock_override_add
 sys={24.224242}, mono={0.800000}: OSMUX message (len=106): OSMUX seq=016 ccid=000 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=016 ccid=001 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=016 ccid=002 ft=1 rtp_m=0 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=016 ccid=003 ft=1 rtp_m=1 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -73,7 +77,7 @@ sys={24.284242}, mono={0.860000}: clock_override_add
 sys={24.304242}, mono={0.880000}: clock_override_add
 sys={24.324242}, mono={0.900000}: clock_override_add
 sys={24.344242}, mono={0.920000}: clock_override_add
-DLMUX Batch is full for RTP sssrc=1644169479
+DLMUX [first,256/1472][CID=0,batched=4/4] Batch is full for RTP sssrc=1644169479
 sys={24.344242}, mono={0.920000}: OSMUX message (len=256): OSMUX seq=018 ccid=000 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=018 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=018 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=018 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={24.364242}, mono={0.940000}: clock_override_add
 sys={24.364242}, mono={0.940000}: OSMUX message (len=106): OSMUX seq=019 ccid=000 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=019 ccid=001 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=019 ccid=002 ft=1 rtp_m=0 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=019 ccid=003 ft=1 rtp_m=1 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -84,7 +88,7 @@ sys={24.424242}, mono={1.000000}: clock_override_add
 sys={24.444242}, mono={1.020000}: clock_override_add
 sys={24.464242}, mono={1.040000}: clock_override_add
 sys={24.484242}, mono={1.060000}: clock_override_add
-DLMUX Batch is full for RTP sssrc=1644169479
+DLMUX [first,256/1472][CID=0,batched=4/4] Batch is full for RTP sssrc=1644169479
 sys={24.484242}, mono={1.060000}: OSMUX message (len=256): OSMUX seq=021 ccid=000 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=021 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=021 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=021 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={24.504242}, mono={1.080000}: clock_override_add
 sys={24.504242}, mono={1.080000}: OSMUX message (len=106): OSMUX seq=022 ccid=000 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=022 ccid=001 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=022 ccid=002 ft=1 rtp_m=0 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=022 ccid=003 ft=1 rtp_m=1 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -95,7 +99,7 @@ sys={24.564242}, mono={1.140000}: clock_override_add
 sys={24.584242}, mono={1.160000}: clock_override_add
 sys={24.604242}, mono={1.180000}: clock_override_add
 sys={24.624242}, mono={1.200000}: clock_override_add
-DLMUX Batch is full for RTP sssrc=1644169479
+DLMUX [first,256/1472][CID=0,batched=4/4] Batch is full for RTP sssrc=1644169479
 sys={24.624242}, mono={1.200000}: OSMUX message (len=256): OSMUX seq=024 ccid=000 ft=1 rtp_m=1 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=024 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=024 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=024 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={24.644242}, mono={1.220000}: clock_override_add
 sys={24.644242}, mono={1.220000}: OSMUX message (len=106): OSMUX seq=025 ccid=000 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=025 ccid=001 ft=1 rtp_m=0 ctr=1 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=025 ccid=002 ft=1 rtp_m=0 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=025 ccid=003 ft=1 rtp_m=1 ctr=0 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -358,13 +362,21 @@ sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9219 timestamp=1681702537 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9220 timestamp=1681702697 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=1 ext=0 csrc_count=0 sequence=9221 timestamp=1681702857 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX [input-1] Initialized osmux input converter
+DLMUX [first,0/1472][CID=0,batched=0/4] Closing circuit
+DLMUX [first,0/1472][CID=1,batched=0/4] Closing circuit
+DLMUX [first,0/1472][CID=2,batched=0/4] Closing circuit
+DLMUX [first,0/1472][CID=3,batched=0/4] Closing circuit
+DLMUX [input-1,0/1472] Initialized osmux input converter
+DLMUX [second,0/1472][CID=0,batched=0/4] Circuit opened successfully
+DLMUX [second,0/1472][CID=1,batched=0/4] Circuit opened successfully
+DLMUX [second,0/1472][CID=2,batched=0/4] Circuit opened successfully
+DLMUX [second,0/1472][CID=3,batched=0/4] Circuit opened successfully
 sys={26.704242}, mono={3.280000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=1 ext=0 csrc_count=0 sequence=16396 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.704242}, mono={3.280000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=1 ext=0 csrc_count=0 sequence=16397 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.704242}, mono={3.280000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16398 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16396 -> 16398 (1 lost packets, 1/4 batched)
+DLMUX [second,38/1472][CID=1,batched=1/4] RTP seq jump detected: 16396 -> 16398 (1 lost packets)
 sys={26.704242}, mono={3.280000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16399 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16397 -> 16399 (1 lost packets, 1/4 batched)
+DLMUX [second,68/1472][CID=0,batched=1/4] RTP seq jump detected: 16397 -> 16399 (1 lost packets)
 sys={26.704242}, mono={3.280000}: OSMUX message (len=242): OSMUX seq=000 ccid=000 ft=1 rtp_m=1 ctr=2 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=001 ft=1 rtp_m=1 ctr=2 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=1 ext=0 csrc_count=0 sequence=9222 timestamp=1681703017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.704242}, mono={3.280000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=1 ext=0 csrc_count=0 sequence=9222 timestamp=1681703017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -373,13 +385,13 @@ sys={26.724242}, mono={3.300000}: extracted packet: RTP ver=2 ssrc=117440513 typ
 sys={26.724242}, mono={3.300000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9223 timestamp=1681703177 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.744242}, mono={3.320000}: clock_override_add
 sys={26.744242}, mono={3.320000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16400 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16398 -> 16400 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16398 -> 16400 (1 lost packets)
 sys={26.744242}, mono={3.320000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16401 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16399 -> 16401 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16399 -> 16401 (1 lost packets)
 sys={26.744242}, mono={3.320000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16402 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16400 -> 16402 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16400 -> 16402 (1 lost packets)
 sys={26.744242}, mono={3.320000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16403 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16401 -> 16403 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16401 -> 16403 (1 lost packets)
 sys={26.744242}, mono={3.320000}: OSMUX message (len=272): OSMUX seq=001 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=001 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={26.744242}, mono={3.320000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9224 timestamp=1681703337 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.744242}, mono={3.320000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9225 timestamp=1681703497 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -390,13 +402,13 @@ sys={26.764242}, mono={3.340000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={26.764242}, mono={3.340000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9226 timestamp=1681703657 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.784242}, mono={3.360000}: clock_override_add
 sys={26.784242}, mono={3.360000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16404 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16402 -> 16404 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16402 -> 16404 (1 lost packets)
 sys={26.784242}, mono={3.360000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16405 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16403 -> 16405 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16403 -> 16405 (1 lost packets)
 sys={26.784242}, mono={3.360000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16406 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16404 -> 16406 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16404 -> 16406 (1 lost packets)
 sys={26.784242}, mono={3.360000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16407 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16405 -> 16407 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16405 -> 16407 (1 lost packets)
 sys={26.784242}, mono={3.360000}: OSMUX message (len=272): OSMUX seq=002 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=002 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={26.784242}, mono={3.360000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9227 timestamp=1681703817 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.784242}, mono={3.360000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9228 timestamp=1681703977 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -409,13 +421,13 @@ sys={26.804242}, mono={3.380000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={26.804242}, mono={3.380000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9230 timestamp=1681704297 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.824242}, mono={3.400000}: clock_override_add
 sys={26.824242}, mono={3.400000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16408 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16406 -> 16408 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16406 -> 16408 (1 lost packets)
 sys={26.824242}, mono={3.400000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16409 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16407 -> 16409 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16407 -> 16409 (1 lost packets)
 sys={26.824242}, mono={3.400000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16410 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16408 -> 16410 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16408 -> 16410 (1 lost packets)
 sys={26.824242}, mono={3.400000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16411 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16409 -> 16411 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16409 -> 16411 (1 lost packets)
 sys={26.824242}, mono={3.400000}: OSMUX message (len=272): OSMUX seq=003 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=003 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={26.824242}, mono={3.400000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9231 timestamp=1681704457 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.824242}, mono={3.400000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9232 timestamp=1681704617 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -428,13 +440,13 @@ sys={26.844242}, mono={3.420000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={26.844242}, mono={3.420000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9234 timestamp=1681704937 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.864242}, mono={3.440000}: clock_override_add
 sys={26.864242}, mono={3.440000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16412 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16410 -> 16412 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16410 -> 16412 (1 lost packets)
 sys={26.864242}, mono={3.440000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16413 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16411 -> 16413 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16411 -> 16413 (1 lost packets)
 sys={26.864242}, mono={3.440000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16414 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16412 -> 16414 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16412 -> 16414 (1 lost packets)
 sys={26.864242}, mono={3.440000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16415 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16413 -> 16415 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16413 -> 16415 (1 lost packets)
 sys={26.864242}, mono={3.440000}: OSMUX message (len=272): OSMUX seq=004 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=004 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={26.864242}, mono={3.440000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9235 timestamp=1681705097 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.864242}, mono={3.440000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9236 timestamp=1681705257 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -447,13 +459,13 @@ sys={26.884242}, mono={3.460000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={26.884242}, mono={3.460000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9238 timestamp=1681705577 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.904242}, mono={3.480000}: clock_override_add
 sys={26.904242}, mono={3.480000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16416 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16414 -> 16416 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16414 -> 16416 (1 lost packets)
 sys={26.904242}, mono={3.480000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16417 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16415 -> 16417 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16415 -> 16417 (1 lost packets)
 sys={26.904242}, mono={3.480000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16418 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16416 -> 16418 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16416 -> 16418 (1 lost packets)
 sys={26.904242}, mono={3.480000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16419 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16417 -> 16419 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16417 -> 16419 (1 lost packets)
 sys={26.904242}, mono={3.480000}: OSMUX message (len=272): OSMUX seq=005 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=005 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={26.904242}, mono={3.480000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9239 timestamp=1681705737 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.904242}, mono={3.480000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9240 timestamp=1681705897 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -466,13 +478,13 @@ sys={26.924242}, mono={3.500000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={26.924242}, mono={3.500000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9242 timestamp=1681706217 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.944242}, mono={3.520000}: clock_override_add
 sys={26.944242}, mono={3.520000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16420 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16418 -> 16420 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16418 -> 16420 (1 lost packets)
 sys={26.944242}, mono={3.520000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16421 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16419 -> 16421 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16419 -> 16421 (1 lost packets)
 sys={26.944242}, mono={3.520000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16422 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16420 -> 16422 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16420 -> 16422 (1 lost packets)
 sys={26.944242}, mono={3.520000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16423 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16421 -> 16423 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16421 -> 16423 (1 lost packets)
 sys={26.944242}, mono={3.520000}: OSMUX message (len=272): OSMUX seq=006 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=006 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={26.944242}, mono={3.520000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9243 timestamp=1681706377 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.944242}, mono={3.520000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9244 timestamp=1681706537 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -485,13 +497,13 @@ sys={26.964242}, mono={3.540000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={26.964242}, mono={3.540000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9246 timestamp=1681706857 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.984242}, mono={3.560000}: clock_override_add
 sys={26.984242}, mono={3.560000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16424 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16422 -> 16424 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16422 -> 16424 (1 lost packets)
 sys={26.984242}, mono={3.560000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16425 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16423 -> 16425 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16423 -> 16425 (1 lost packets)
 sys={26.984242}, mono={3.560000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16426 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16424 -> 16426 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16424 -> 16426 (1 lost packets)
 sys={26.984242}, mono={3.560000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16427 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16425 -> 16427 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16425 -> 16427 (1 lost packets)
 sys={26.984242}, mono={3.560000}: OSMUX message (len=272): OSMUX seq=007 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=007 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={26.984242}, mono={3.560000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9247 timestamp=1681707017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={26.984242}, mono={3.560000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9248 timestamp=1681707177 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -504,13 +516,13 @@ sys={27.004242}, mono={3.580000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={27.004242}, mono={3.580000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9250 timestamp=1681707497 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.024242}, mono={3.600000}: clock_override_add
 sys={27.024242}, mono={3.600000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16428 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16426 -> 16428 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16426 -> 16428 (1 lost packets)
 sys={27.024242}, mono={3.600000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16429 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16427 -> 16429 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16427 -> 16429 (1 lost packets)
 sys={27.024242}, mono={3.600000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16430 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16428 -> 16430 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16428 -> 16430 (1 lost packets)
 sys={27.024242}, mono={3.600000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16431 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16429 -> 16431 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16429 -> 16431 (1 lost packets)
 sys={27.024242}, mono={3.600000}: OSMUX message (len=272): OSMUX seq=008 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=008 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={27.024242}, mono={3.600000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9251 timestamp=1681707657 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.024242}, mono={3.600000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9252 timestamp=1681707817 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -523,13 +535,13 @@ sys={27.044242}, mono={3.620000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={27.044242}, mono={3.620000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9254 timestamp=1681708137 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.064242}, mono={3.640000}: clock_override_add
 sys={27.064242}, mono={3.640000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16432 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16430 -> 16432 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16430 -> 16432 (1 lost packets)
 sys={27.064242}, mono={3.640000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16433 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16431 -> 16433 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16431 -> 16433 (1 lost packets)
 sys={27.064242}, mono={3.640000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16434 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16432 -> 16434 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16432 -> 16434 (1 lost packets)
 sys={27.064242}, mono={3.640000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16435 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16433 -> 16435 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16433 -> 16435 (1 lost packets)
 sys={27.064242}, mono={3.640000}: OSMUX message (len=272): OSMUX seq=009 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=009 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={27.064242}, mono={3.640000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9255 timestamp=1681708297 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.064242}, mono={3.640000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9256 timestamp=1681708457 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -542,13 +554,13 @@ sys={27.084242}, mono={3.660000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={27.084242}, mono={3.660000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9258 timestamp=1681708777 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.104242}, mono={3.680000}: clock_override_add
 sys={27.104242}, mono={3.680000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16436 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16434 -> 16436 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16434 -> 16436 (1 lost packets)
 sys={27.104242}, mono={3.680000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16437 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16435 -> 16437 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16435 -> 16437 (1 lost packets)
 sys={27.104242}, mono={3.680000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16438 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16436 -> 16438 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16436 -> 16438 (1 lost packets)
 sys={27.104242}, mono={3.680000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16439 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16437 -> 16439 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16437 -> 16439 (1 lost packets)
 sys={27.104242}, mono={3.680000}: OSMUX message (len=272): OSMUX seq=010 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=010 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={27.104242}, mono={3.680000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9259 timestamp=1681708937 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.104242}, mono={3.680000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9260 timestamp=1681709097 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -561,13 +573,13 @@ sys={27.124242}, mono={3.700000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={27.124242}, mono={3.700000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9262 timestamp=1681709417 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.144242}, mono={3.720000}: clock_override_add
 sys={27.144242}, mono={3.720000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16440 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16438 -> 16440 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16438 -> 16440 (1 lost packets)
 sys={27.144242}, mono={3.720000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16441 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16439 -> 16441 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16439 -> 16441 (1 lost packets)
 sys={27.144242}, mono={3.720000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16442 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16440 -> 16442 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16440 -> 16442 (1 lost packets)
 sys={27.144242}, mono={3.720000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16443 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16441 -> 16443 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16441 -> 16443 (1 lost packets)
 sys={27.144242}, mono={3.720000}: OSMUX message (len=272): OSMUX seq=011 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=011 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={27.144242}, mono={3.720000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9263 timestamp=1681709577 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.144242}, mono={3.720000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9264 timestamp=1681709737 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -580,13 +592,13 @@ sys={27.164242}, mono={3.740000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={27.164242}, mono={3.740000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9266 timestamp=1681710057 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.184242}, mono={3.760000}: clock_override_add
 sys={27.184242}, mono={3.760000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16444 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16442 -> 16444 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16442 -> 16444 (1 lost packets)
 sys={27.184242}, mono={3.760000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16445 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16443 -> 16445 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16443 -> 16445 (1 lost packets)
 sys={27.184242}, mono={3.760000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16446 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16444 -> 16446 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16444 -> 16446 (1 lost packets)
 sys={27.184242}, mono={3.760000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16447 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16445 -> 16447 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16445 -> 16447 (1 lost packets)
 sys={27.184242}, mono={3.760000}: OSMUX message (len=272): OSMUX seq=012 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=012 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={27.184242}, mono={3.760000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9267 timestamp=1681710217 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.184242}, mono={3.760000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9268 timestamp=1681710377 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -599,13 +611,13 @@ sys={27.204242}, mono={3.780000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={27.204242}, mono={3.780000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9270 timestamp=1681710697 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.224242}, mono={3.800000}: clock_override_add
 sys={27.224242}, mono={3.800000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16448 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16446 -> 16448 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16446 -> 16448 (1 lost packets)
 sys={27.224242}, mono={3.800000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16449 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16447 -> 16449 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16447 -> 16449 (1 lost packets)
 sys={27.224242}, mono={3.800000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16450 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16448 -> 16450 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16448 -> 16450 (1 lost packets)
 sys={27.224242}, mono={3.800000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16451 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16449 -> 16451 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16449 -> 16451 (1 lost packets)
 sys={27.224242}, mono={3.800000}: OSMUX message (len=272): OSMUX seq=013 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=013 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={27.224242}, mono={3.800000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9271 timestamp=1681710857 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.224242}, mono={3.800000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9272 timestamp=1681711017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -618,13 +630,13 @@ sys={27.244242}, mono={3.820000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={27.244242}, mono={3.820000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9274 timestamp=1681711337 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.264242}, mono={3.840000}: clock_override_add
 sys={27.264242}, mono={3.840000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16452 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16450 -> 16452 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16450 -> 16452 (1 lost packets)
 sys={27.264242}, mono={3.840000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16453 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16451 -> 16453 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16451 -> 16453 (1 lost packets)
 sys={27.264242}, mono={3.840000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16454 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16452 -> 16454 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16452 -> 16454 (1 lost packets)
 sys={27.264242}, mono={3.840000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16455 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16453 -> 16455 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16453 -> 16455 (1 lost packets)
 sys={27.264242}, mono={3.840000}: OSMUX message (len=272): OSMUX seq=014 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=014 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={27.264242}, mono={3.840000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9275 timestamp=1681711497 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.264242}, mono={3.840000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9276 timestamp=1681711657 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -637,13 +649,13 @@ sys={27.284242}, mono={3.860000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={27.284242}, mono={3.860000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9278 timestamp=1681711977 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.304242}, mono={3.880000}: clock_override_add
 sys={27.304242}, mono={3.880000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16456 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16454 -> 16456 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16454 -> 16456 (1 lost packets)
 sys={27.304242}, mono={3.880000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16457 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16455 -> 16457 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16455 -> 16457 (1 lost packets)
 sys={27.304242}, mono={3.880000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16458 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16456 -> 16458 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16456 -> 16458 (1 lost packets)
 sys={27.304242}, mono={3.880000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16459 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16457 -> 16459 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16457 -> 16459 (1 lost packets)
 sys={27.304242}, mono={3.880000}: OSMUX message (len=272): OSMUX seq=015 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=015 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=002 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00, OSMUX seq=000 ccid=003 ft=2 rtp_m=0 ctr=3 amr_f=0 amr_q=0 amr_ft=03 amr_cmr=00
 sys={27.304242}, mono={3.880000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9279 timestamp=1681712137 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.304242}, mono={3.880000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9280 timestamp=1681712297 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -658,9 +670,9 @@ sys={27.344242}, mono={3.920000}: clock_override_add
 sys={27.344242}, mono={3.920000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=1 ext=0 csrc_count=0 sequence=16460 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.344242}, mono={3.920000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=1 ext=0 csrc_count=0 sequence=16461 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.344242}, mono={3.920000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16462 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16460 -> 16462 (1 lost packets, 1/4 batched)
+DLMUX [second,38/1472][CID=3,batched=1/4] RTP seq jump detected: 16460 -> 16462 (1 lost packets)
 sys={27.344242}, mono={3.920000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16463 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16461 -> 16463 (1 lost packets, 1/4 batched)
+DLMUX [second,68/1472][CID=2,batched=1/4] RTP seq jump detected: 16461 -> 16463 (1 lost packets)
 sys={27.344242}, mono={3.920000}: OSMUX message (len=98): OSMUX seq=000 ccid=002 ft=1 rtp_m=1 ctr=2 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=003 ft=1 rtp_m=1 ctr=2 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.344242}, mono={3.920000}: extracted packet: RTP ver=2 ssrc=117440514 type=98 marker=1 ext=0 csrc_count=0 sequence=9222 timestamp=1681703017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.344242}, mono={3.920000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=1 ext=0 csrc_count=0 sequence=9222 timestamp=1681703017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -673,13 +685,13 @@ sys={27.364242}, mono={3.940000}: extracted packet: RTP ver=2 ssrc=117440515 typ
 sys={27.364242}, mono={3.940000}: extracted packet: RTP ver=2 ssrc=117440514 type=98 marker=0 ext=0 csrc_count=0 sequence=9223 timestamp=1681703177 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.384242}, mono={3.960000}: clock_override_add
 sys={27.384242}, mono={3.960000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16464 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16462 -> 16464 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16462 -> 16464 (1 lost packets)
 sys={27.384242}, mono={3.960000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16465 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16463 -> 16465 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16463 -> 16465 (1 lost packets)
 sys={27.384242}, mono={3.960000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16466 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16464 -> 16466 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16464 -> 16466 (1 lost packets)
 sys={27.384242}, mono={3.960000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16467 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16465 -> 16467 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16465 -> 16467 (1 lost packets)
 sys={27.384242}, mono={3.960000}: OSMUX message (len=128): OSMUX seq=001 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=001 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.384242}, mono={3.960000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9224 timestamp=1681703337 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.384242}, mono={3.960000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9225 timestamp=1681703497 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -690,13 +702,13 @@ sys={27.404242}, mono={3.980000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.404242}, mono={3.980000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9226 timestamp=1681703657 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.424242}, mono={4.000000}: clock_override_add
 sys={27.424242}, mono={4.000000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16468 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16466 -> 16468 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16466 -> 16468 (1 lost packets)
 sys={27.424242}, mono={4.000000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16469 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16467 -> 16469 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16467 -> 16469 (1 lost packets)
 sys={27.424242}, mono={4.000000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16470 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16468 -> 16470 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16468 -> 16470 (1 lost packets)
 sys={27.424242}, mono={4.000000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16471 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16469 -> 16471 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16469 -> 16471 (1 lost packets)
 sys={27.424242}, mono={4.000000}: OSMUX message (len=128): OSMUX seq=002 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=002 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.424242}, mono={4.000000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9227 timestamp=1681703817 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.424242}, mono={4.000000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9228 timestamp=1681703977 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -709,13 +721,13 @@ sys={27.444242}, mono={4.020000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.444242}, mono={4.020000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9230 timestamp=1681704297 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.464242}, mono={4.040000}: clock_override_add
 sys={27.464242}, mono={4.040000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16472 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16470 -> 16472 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16470 -> 16472 (1 lost packets)
 sys={27.464242}, mono={4.040000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16473 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16471 -> 16473 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16471 -> 16473 (1 lost packets)
 sys={27.464242}, mono={4.040000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16474 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16472 -> 16474 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16472 -> 16474 (1 lost packets)
 sys={27.464242}, mono={4.040000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16475 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16473 -> 16475 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16473 -> 16475 (1 lost packets)
 sys={27.464242}, mono={4.040000}: OSMUX message (len=128): OSMUX seq=003 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=003 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.464242}, mono={4.040000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9231 timestamp=1681704457 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.464242}, mono={4.040000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9232 timestamp=1681704617 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -728,13 +740,13 @@ sys={27.484242}, mono={4.060000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.484242}, mono={4.060000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9234 timestamp=1681704937 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.504242}, mono={4.080000}: clock_override_add
 sys={27.504242}, mono={4.080000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16476 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16474 -> 16476 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16474 -> 16476 (1 lost packets)
 sys={27.504242}, mono={4.080000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16477 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16475 -> 16477 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16475 -> 16477 (1 lost packets)
 sys={27.504242}, mono={4.080000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16478 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16476 -> 16478 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16476 -> 16478 (1 lost packets)
 sys={27.504242}, mono={4.080000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16479 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16477 -> 16479 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16477 -> 16479 (1 lost packets)
 sys={27.504242}, mono={4.080000}: OSMUX message (len=128): OSMUX seq=004 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=004 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.504242}, mono={4.080000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9235 timestamp=1681705097 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.504242}, mono={4.080000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9236 timestamp=1681705257 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -747,13 +759,13 @@ sys={27.524242}, mono={4.100000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.524242}, mono={4.100000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9238 timestamp=1681705577 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.544242}, mono={4.120000}: clock_override_add
 sys={27.544242}, mono={4.120000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16480 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16478 -> 16480 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16478 -> 16480 (1 lost packets)
 sys={27.544242}, mono={4.120000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16481 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16479 -> 16481 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16479 -> 16481 (1 lost packets)
 sys={27.544242}, mono={4.120000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16482 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16480 -> 16482 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16480 -> 16482 (1 lost packets)
 sys={27.544242}, mono={4.120000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16483 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16481 -> 16483 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16481 -> 16483 (1 lost packets)
 sys={27.544242}, mono={4.120000}: OSMUX message (len=128): OSMUX seq=005 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=005 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.544242}, mono={4.120000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9239 timestamp=1681705737 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.544242}, mono={4.120000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9240 timestamp=1681705897 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -766,13 +778,13 @@ sys={27.564242}, mono={4.140000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.564242}, mono={4.140000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9242 timestamp=1681706217 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.584242}, mono={4.160000}: clock_override_add
 sys={27.584242}, mono={4.160000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16484 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16482 -> 16484 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16482 -> 16484 (1 lost packets)
 sys={27.584242}, mono={4.160000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16485 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16483 -> 16485 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16483 -> 16485 (1 lost packets)
 sys={27.584242}, mono={4.160000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16486 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16484 -> 16486 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16484 -> 16486 (1 lost packets)
 sys={27.584242}, mono={4.160000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16487 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16485 -> 16487 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16485 -> 16487 (1 lost packets)
 sys={27.584242}, mono={4.160000}: OSMUX message (len=128): OSMUX seq=006 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=006 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.584242}, mono={4.160000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9243 timestamp=1681706377 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.584242}, mono={4.160000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9244 timestamp=1681706537 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -785,13 +797,13 @@ sys={27.604242}, mono={4.180000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.604242}, mono={4.180000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9246 timestamp=1681706857 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.624242}, mono={4.200000}: clock_override_add
 sys={27.624242}, mono={4.200000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16488 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16486 -> 16488 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16486 -> 16488 (1 lost packets)
 sys={27.624242}, mono={4.200000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16489 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16487 -> 16489 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16487 -> 16489 (1 lost packets)
 sys={27.624242}, mono={4.200000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16490 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16488 -> 16490 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16488 -> 16490 (1 lost packets)
 sys={27.624242}, mono={4.200000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16491 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16489 -> 16491 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16489 -> 16491 (1 lost packets)
 sys={27.624242}, mono={4.200000}: OSMUX message (len=128): OSMUX seq=007 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=007 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.624242}, mono={4.200000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9247 timestamp=1681707017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.624242}, mono={4.200000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9248 timestamp=1681707177 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -804,13 +816,13 @@ sys={27.644242}, mono={4.220000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.644242}, mono={4.220000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9250 timestamp=1681707497 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.664242}, mono={4.240000}: clock_override_add
 sys={27.664242}, mono={4.240000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16492 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16490 -> 16492 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16490 -> 16492 (1 lost packets)
 sys={27.664242}, mono={4.240000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16493 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16491 -> 16493 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16491 -> 16493 (1 lost packets)
 sys={27.664242}, mono={4.240000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16494 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16492 -> 16494 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16492 -> 16494 (1 lost packets)
 sys={27.664242}, mono={4.240000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16495 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16493 -> 16495 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16493 -> 16495 (1 lost packets)
 sys={27.664242}, mono={4.240000}: OSMUX message (len=128): OSMUX seq=008 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=008 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.664242}, mono={4.240000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9251 timestamp=1681707657 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.664242}, mono={4.240000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9252 timestamp=1681707817 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -823,13 +835,13 @@ sys={27.684242}, mono={4.260000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.684242}, mono={4.260000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9254 timestamp=1681708137 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.704242}, mono={4.280000}: clock_override_add
 sys={27.704242}, mono={4.280000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16496 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16494 -> 16496 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16494 -> 16496 (1 lost packets)
 sys={27.704242}, mono={4.280000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16497 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16495 -> 16497 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16495 -> 16497 (1 lost packets)
 sys={27.704242}, mono={4.280000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16498 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16496 -> 16498 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16496 -> 16498 (1 lost packets)
 sys={27.704242}, mono={4.280000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16499 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16497 -> 16499 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16497 -> 16499 (1 lost packets)
 sys={27.704242}, mono={4.280000}: OSMUX message (len=128): OSMUX seq=009 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=009 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.704242}, mono={4.280000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9255 timestamp=1681708297 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.704242}, mono={4.280000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9256 timestamp=1681708457 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -842,13 +854,13 @@ sys={27.724242}, mono={4.300000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.724242}, mono={4.300000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9258 timestamp=1681708777 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.744242}, mono={4.320000}: clock_override_add
 sys={27.744242}, mono={4.320000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16500 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16498 -> 16500 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16498 -> 16500 (1 lost packets)
 sys={27.744242}, mono={4.320000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16501 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16499 -> 16501 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16499 -> 16501 (1 lost packets)
 sys={27.744242}, mono={4.320000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16502 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16500 -> 16502 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16500 -> 16502 (1 lost packets)
 sys={27.744242}, mono={4.320000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16503 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16501 -> 16503 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16501 -> 16503 (1 lost packets)
 sys={27.744242}, mono={4.320000}: OSMUX message (len=128): OSMUX seq=010 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=010 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.744242}, mono={4.320000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9259 timestamp=1681708937 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.744242}, mono={4.320000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9260 timestamp=1681709097 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -861,13 +873,13 @@ sys={27.764242}, mono={4.340000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.764242}, mono={4.340000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9262 timestamp=1681709417 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.784242}, mono={4.360000}: clock_override_add
 sys={27.784242}, mono={4.360000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16504 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16502 -> 16504 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16502 -> 16504 (1 lost packets)
 sys={27.784242}, mono={4.360000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16505 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16503 -> 16505 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16503 -> 16505 (1 lost packets)
 sys={27.784242}, mono={4.360000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16506 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16504 -> 16506 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16504 -> 16506 (1 lost packets)
 sys={27.784242}, mono={4.360000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16507 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16505 -> 16507 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16505 -> 16507 (1 lost packets)
 sys={27.784242}, mono={4.360000}: OSMUX message (len=128): OSMUX seq=011 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=011 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.784242}, mono={4.360000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9263 timestamp=1681709577 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.784242}, mono={4.360000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9264 timestamp=1681709737 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -880,13 +892,13 @@ sys={27.804242}, mono={4.380000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.804242}, mono={4.380000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9266 timestamp=1681710057 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.824242}, mono={4.400000}: clock_override_add
 sys={27.824242}, mono={4.400000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16508 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16506 -> 16508 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16506 -> 16508 (1 lost packets)
 sys={27.824242}, mono={4.400000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16509 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16507 -> 16509 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16507 -> 16509 (1 lost packets)
 sys={27.824242}, mono={4.400000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16510 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16508 -> 16510 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16508 -> 16510 (1 lost packets)
 sys={27.824242}, mono={4.400000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16511 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16509 -> 16511 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16509 -> 16511 (1 lost packets)
 sys={27.824242}, mono={4.400000}: OSMUX message (len=128): OSMUX seq=012 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=012 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.824242}, mono={4.400000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9267 timestamp=1681710217 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.824242}, mono={4.400000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9268 timestamp=1681710377 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -899,13 +911,13 @@ sys={27.844242}, mono={4.420000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.844242}, mono={4.420000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9270 timestamp=1681710697 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.864242}, mono={4.440000}: clock_override_add
 sys={27.864242}, mono={4.440000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16512 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16510 -> 16512 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16510 -> 16512 (1 lost packets)
 sys={27.864242}, mono={4.440000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16513 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16511 -> 16513 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16511 -> 16513 (1 lost packets)
 sys={27.864242}, mono={4.440000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16514 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16512 -> 16514 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16512 -> 16514 (1 lost packets)
 sys={27.864242}, mono={4.440000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16515 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16513 -> 16515 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16513 -> 16515 (1 lost packets)
 sys={27.864242}, mono={4.440000}: OSMUX message (len=128): OSMUX seq=013 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=013 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.864242}, mono={4.440000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9271 timestamp=1681710857 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.864242}, mono={4.440000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9272 timestamp=1681711017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -918,13 +930,13 @@ sys={27.884242}, mono={4.460000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.884242}, mono={4.460000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9274 timestamp=1681711337 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.904242}, mono={4.480000}: clock_override_add
 sys={27.904242}, mono={4.480000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16516 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16514 -> 16516 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16514 -> 16516 (1 lost packets)
 sys={27.904242}, mono={4.480000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16517 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16515 -> 16517 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16515 -> 16517 (1 lost packets)
 sys={27.904242}, mono={4.480000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16518 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16516 -> 16518 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16516 -> 16518 (1 lost packets)
 sys={27.904242}, mono={4.480000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16519 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16517 -> 16519 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16517 -> 16519 (1 lost packets)
 sys={27.904242}, mono={4.480000}: OSMUX message (len=128): OSMUX seq=014 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=014 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.904242}, mono={4.480000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9275 timestamp=1681711497 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.904242}, mono={4.480000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9276 timestamp=1681711657 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -937,13 +949,13 @@ sys={27.924242}, mono={4.500000}: extracted packet: RTP ver=2 ssrc=117440514 typ
 sys={27.924242}, mono={4.500000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9278 timestamp=1681711977 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.944242}, mono={4.520000}: clock_override_add
 sys={27.944242}, mono={4.520000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16520 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16518 -> 16520 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=3,batched=0/4] RTP seq jump detected: 16518 -> 16520 (1 lost packets)
 sys={27.944242}, mono={4.520000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16521 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16519 -> 16521 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=2,batched=0/4] RTP seq jump detected: 16519 -> 16521 (1 lost packets)
 sys={27.944242}, mono={4.520000}: adding to ccid=3 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16522 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16520 -> 16522 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=3,batched=2/4] RTP seq jump detected: 16520 -> 16522 (1 lost packets)
 sys={27.944242}, mono={4.520000}: adding to ccid=2 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16523 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16521 -> 16523 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=2,batched=2/4] RTP seq jump detected: 16521 -> 16523 (1 lost packets)
 sys={27.944242}, mono={4.520000}: OSMUX message (len=128): OSMUX seq=015 ccid=002 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=015 ccid=003 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.944242}, mono={4.520000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9279 timestamp=1681712137 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.944242}, mono={4.520000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9280 timestamp=1681712297 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -955,12 +967,18 @@ sys={27.964242}, mono={4.540000}: clock_override_add
 sys={27.964242}, mono={4.540000}: extracted packet: RTP ver=2 ssrc=117440514 type=98 marker=0 ext=0 csrc_count=0 sequence=9282 timestamp=1681712617 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.964242}, mono={4.540000}: extracted packet: RTP ver=2 ssrc=117440515 type=98 marker=0 ext=0 csrc_count=0 sequence=9282 timestamp=1681712617 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.984242}, mono={4.560000}: clock_override_add
+DLMUX [second,0/1472][CID=0,batched=0/4] Closing circuit
+DLMUX [second,0/1472][CID=1,batched=0/4] Closing circuit
+DLMUX [second,0/1472][CID=2,batched=0/4] Closing circuit
+DLMUX [second,0/1472][CID=3,batched=0/4] Closing circuit
+DLMUX [second,0/1472][CID=0,batched=0/4] Circuit opened successfully
+DLMUX [second,0/1472][CID=1,batched=0/4] Circuit opened successfully
 sys={27.984242}, mono={4.560000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=1 ext=0 csrc_count=0 sequence=16524 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.984242}, mono={4.560000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=1 ext=0 csrc_count=0 sequence=16525 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.984242}, mono={4.560000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16526 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16524 -> 16526 (1 lost packets, 1/4 batched)
+DLMUX [second,38/1472][CID=1,batched=1/4] RTP seq jump detected: 16524 -> 16526 (1 lost packets)
 sys={27.984242}, mono={4.560000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16527 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16525 -> 16527 (1 lost packets, 1/4 batched)
+DLMUX [second,68/1472][CID=0,batched=1/4] RTP seq jump detected: 16525 -> 16527 (1 lost packets)
 sys={27.984242}, mono={4.560000}: OSMUX message (len=98): OSMUX seq=000 ccid=000 ft=1 rtp_m=1 ctr=2 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=000 ccid=001 ft=1 rtp_m=1 ctr=2 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.984242}, mono={4.560000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=1 ext=0 csrc_count=0 sequence=9285 timestamp=1681713097 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={27.984242}, mono={4.560000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=1 ext=0 csrc_count=0 sequence=9285 timestamp=1681713097 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -973,13 +991,13 @@ sys={28.004242}, mono={4.580000}: extracted packet: RTP ver=2 ssrc=117440513 typ
 sys={28.004242}, mono={4.580000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9286 timestamp=1681713257 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.024242}, mono={4.600000}: clock_override_add
 sys={28.024242}, mono={4.600000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16528 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16526 -> 16528 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16526 -> 16528 (1 lost packets)
 sys={28.024242}, mono={4.600000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16529 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16527 -> 16529 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16527 -> 16529 (1 lost packets)
 sys={28.024242}, mono={4.600000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16530 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16528 -> 16530 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16528 -> 16530 (1 lost packets)
 sys={28.024242}, mono={4.600000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16531 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16529 -> 16531 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16529 -> 16531 (1 lost packets)
 sys={28.024242}, mono={4.600000}: OSMUX message (len=128): OSMUX seq=001 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=001 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.024242}, mono={4.600000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9287 timestamp=1681713417 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.024242}, mono={4.600000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9288 timestamp=1681713577 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -990,13 +1008,13 @@ sys={28.044242}, mono={4.620000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.044242}, mono={4.620000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9289 timestamp=1681713737 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.064242}, mono={4.640000}: clock_override_add
 sys={28.064242}, mono={4.640000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16532 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16530 -> 16532 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16530 -> 16532 (1 lost packets)
 sys={28.064242}, mono={4.640000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16533 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16531 -> 16533 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16531 -> 16533 (1 lost packets)
 sys={28.064242}, mono={4.640000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16534 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16532 -> 16534 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16532 -> 16534 (1 lost packets)
 sys={28.064242}, mono={4.640000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16535 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16533 -> 16535 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16533 -> 16535 (1 lost packets)
 sys={28.064242}, mono={4.640000}: OSMUX message (len=128): OSMUX seq=002 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=002 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.064242}, mono={4.640000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9290 timestamp=1681713897 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.064242}, mono={4.640000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9291 timestamp=1681714057 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1009,13 +1027,13 @@ sys={28.084242}, mono={4.660000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.084242}, mono={4.660000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9293 timestamp=1681714377 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.104242}, mono={4.680000}: clock_override_add
 sys={28.104242}, mono={4.680000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16536 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16534 -> 16536 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16534 -> 16536 (1 lost packets)
 sys={28.104242}, mono={4.680000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16537 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16535 -> 16537 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16535 -> 16537 (1 lost packets)
 sys={28.104242}, mono={4.680000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16538 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16536 -> 16538 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16536 -> 16538 (1 lost packets)
 sys={28.104242}, mono={4.680000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16539 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16537 -> 16539 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16537 -> 16539 (1 lost packets)
 sys={28.104242}, mono={4.680000}: OSMUX message (len=128): OSMUX seq=003 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=003 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.104242}, mono={4.680000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9294 timestamp=1681714537 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.104242}, mono={4.680000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9295 timestamp=1681714697 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1028,13 +1046,13 @@ sys={28.124242}, mono={4.700000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.124242}, mono={4.700000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9297 timestamp=1681715017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.144242}, mono={4.720000}: clock_override_add
 sys={28.144242}, mono={4.720000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16540 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16538 -> 16540 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16538 -> 16540 (1 lost packets)
 sys={28.144242}, mono={4.720000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16541 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16539 -> 16541 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16539 -> 16541 (1 lost packets)
 sys={28.144242}, mono={4.720000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16542 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16540 -> 16542 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16540 -> 16542 (1 lost packets)
 sys={28.144242}, mono={4.720000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16543 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16541 -> 16543 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16541 -> 16543 (1 lost packets)
 sys={28.144242}, mono={4.720000}: OSMUX message (len=128): OSMUX seq=004 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=004 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.144242}, mono={4.720000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9298 timestamp=1681715177 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.144242}, mono={4.720000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9299 timestamp=1681715337 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1047,13 +1065,13 @@ sys={28.164242}, mono={4.740000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.164242}, mono={4.740000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9301 timestamp=1681715657 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.184242}, mono={4.760000}: clock_override_add
 sys={28.184242}, mono={4.760000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16544 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16542 -> 16544 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16542 -> 16544 (1 lost packets)
 sys={28.184242}, mono={4.760000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16545 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16543 -> 16545 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16543 -> 16545 (1 lost packets)
 sys={28.184242}, mono={4.760000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16546 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16544 -> 16546 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16544 -> 16546 (1 lost packets)
 sys={28.184242}, mono={4.760000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16547 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16545 -> 16547 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16545 -> 16547 (1 lost packets)
 sys={28.184242}, mono={4.760000}: OSMUX message (len=128): OSMUX seq=005 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=005 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.184242}, mono={4.760000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9302 timestamp=1681715817 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.184242}, mono={4.760000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9303 timestamp=1681715977 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1066,13 +1084,13 @@ sys={28.204242}, mono={4.780000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.204242}, mono={4.780000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9305 timestamp=1681716297 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.224242}, mono={4.800000}: clock_override_add
 sys={28.224242}, mono={4.800000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16548 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16546 -> 16548 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16546 -> 16548 (1 lost packets)
 sys={28.224242}, mono={4.800000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16549 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16547 -> 16549 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16547 -> 16549 (1 lost packets)
 sys={28.224242}, mono={4.800000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16550 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16548 -> 16550 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16548 -> 16550 (1 lost packets)
 sys={28.224242}, mono={4.800000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16551 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16549 -> 16551 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16549 -> 16551 (1 lost packets)
 sys={28.224242}, mono={4.800000}: OSMUX message (len=128): OSMUX seq=006 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=006 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.224242}, mono={4.800000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9306 timestamp=1681716457 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.224242}, mono={4.800000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9307 timestamp=1681716617 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1085,13 +1103,13 @@ sys={28.244242}, mono={4.820000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.244242}, mono={4.820000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9309 timestamp=1681716937 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.264242}, mono={4.840000}: clock_override_add
 sys={28.264242}, mono={4.840000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16552 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16550 -> 16552 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16550 -> 16552 (1 lost packets)
 sys={28.264242}, mono={4.840000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16553 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16551 -> 16553 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16551 -> 16553 (1 lost packets)
 sys={28.264242}, mono={4.840000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16554 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16552 -> 16554 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16552 -> 16554 (1 lost packets)
 sys={28.264242}, mono={4.840000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16555 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16553 -> 16555 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16553 -> 16555 (1 lost packets)
 sys={28.264242}, mono={4.840000}: OSMUX message (len=128): OSMUX seq=007 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=007 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.264242}, mono={4.840000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9310 timestamp=1681717097 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.264242}, mono={4.840000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9311 timestamp=1681717257 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1104,13 +1122,13 @@ sys={28.284242}, mono={4.860000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.284242}, mono={4.860000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9313 timestamp=1681717577 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.304242}, mono={4.880000}: clock_override_add
 sys={28.304242}, mono={4.880000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16556 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16554 -> 16556 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16554 -> 16556 (1 lost packets)
 sys={28.304242}, mono={4.880000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16557 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16555 -> 16557 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16555 -> 16557 (1 lost packets)
 sys={28.304242}, mono={4.880000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16558 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16556 -> 16558 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16556 -> 16558 (1 lost packets)
 sys={28.304242}, mono={4.880000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16559 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16557 -> 16559 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16557 -> 16559 (1 lost packets)
 sys={28.304242}, mono={4.880000}: OSMUX message (len=128): OSMUX seq=008 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=008 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.304242}, mono={4.880000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9314 timestamp=1681717737 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.304242}, mono={4.880000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9315 timestamp=1681717897 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1123,13 +1141,13 @@ sys={28.324242}, mono={4.900000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.324242}, mono={4.900000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9317 timestamp=1681718217 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.344242}, mono={4.920000}: clock_override_add
 sys={28.344242}, mono={4.920000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16560 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16558 -> 16560 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16558 -> 16560 (1 lost packets)
 sys={28.344242}, mono={4.920000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16561 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16559 -> 16561 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16559 -> 16561 (1 lost packets)
 sys={28.344242}, mono={4.920000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16562 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16560 -> 16562 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16560 -> 16562 (1 lost packets)
 sys={28.344242}, mono={4.920000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16563 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16561 -> 16563 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16561 -> 16563 (1 lost packets)
 sys={28.344242}, mono={4.920000}: OSMUX message (len=128): OSMUX seq=009 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=009 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.344242}, mono={4.920000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9318 timestamp=1681718377 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.344242}, mono={4.920000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9319 timestamp=1681718537 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1142,13 +1160,13 @@ sys={28.364242}, mono={4.940000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.364242}, mono={4.940000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9321 timestamp=1681718857 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.384242}, mono={4.960000}: clock_override_add
 sys={28.384242}, mono={4.960000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16564 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16562 -> 16564 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16562 -> 16564 (1 lost packets)
 sys={28.384242}, mono={4.960000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16565 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16563 -> 16565 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16563 -> 16565 (1 lost packets)
 sys={28.384242}, mono={4.960000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16566 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16564 -> 16566 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16564 -> 16566 (1 lost packets)
 sys={28.384242}, mono={4.960000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16567 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16565 -> 16567 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16565 -> 16567 (1 lost packets)
 sys={28.384242}, mono={4.960000}: OSMUX message (len=128): OSMUX seq=010 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=010 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.384242}, mono={4.960000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9322 timestamp=1681719017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.384242}, mono={4.960000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9323 timestamp=1681719177 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1161,13 +1179,13 @@ sys={28.404242}, mono={4.980000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.404242}, mono={4.980000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9325 timestamp=1681719497 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.424242}, mono={5.000000}: clock_override_add
 sys={28.424242}, mono={5.000000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16568 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16566 -> 16568 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16566 -> 16568 (1 lost packets)
 sys={28.424242}, mono={5.000000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16569 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16567 -> 16569 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16567 -> 16569 (1 lost packets)
 sys={28.424242}, mono={5.000000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16570 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16568 -> 16570 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16568 -> 16570 (1 lost packets)
 sys={28.424242}, mono={5.000000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16571 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16569 -> 16571 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16569 -> 16571 (1 lost packets)
 sys={28.424242}, mono={5.000000}: OSMUX message (len=128): OSMUX seq=011 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=011 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.424242}, mono={5.000000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9326 timestamp=1681719657 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.424242}, mono={5.000000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9327 timestamp=1681719817 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1180,13 +1198,13 @@ sys={28.444242}, mono={5.020000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.444242}, mono={5.020000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9329 timestamp=1681720137 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.464242}, mono={5.040000}: clock_override_add
 sys={28.464242}, mono={5.040000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16572 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16570 -> 16572 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16570 -> 16572 (1 lost packets)
 sys={28.464242}, mono={5.040000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16573 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16571 -> 16573 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16571 -> 16573 (1 lost packets)
 sys={28.464242}, mono={5.040000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16574 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16572 -> 16574 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16572 -> 16574 (1 lost packets)
 sys={28.464242}, mono={5.040000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16575 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16573 -> 16575 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16573 -> 16575 (1 lost packets)
 sys={28.464242}, mono={5.040000}: OSMUX message (len=128): OSMUX seq=012 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=012 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.464242}, mono={5.040000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9330 timestamp=1681720297 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.464242}, mono={5.040000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9331 timestamp=1681720457 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1199,13 +1217,13 @@ sys={28.484242}, mono={5.060000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.484242}, mono={5.060000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9333 timestamp=1681720777 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.504242}, mono={5.080000}: clock_override_add
 sys={28.504242}, mono={5.080000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16576 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16574 -> 16576 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16574 -> 16576 (1 lost packets)
 sys={28.504242}, mono={5.080000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16577 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16575 -> 16577 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16575 -> 16577 (1 lost packets)
 sys={28.504242}, mono={5.080000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16578 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16576 -> 16578 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16576 -> 16578 (1 lost packets)
 sys={28.504242}, mono={5.080000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16579 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16577 -> 16579 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16577 -> 16579 (1 lost packets)
 sys={28.504242}, mono={5.080000}: OSMUX message (len=128): OSMUX seq=013 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=013 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.504242}, mono={5.080000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9334 timestamp=1681720937 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.504242}, mono={5.080000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9335 timestamp=1681721097 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1218,13 +1236,13 @@ sys={28.524242}, mono={5.100000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.524242}, mono={5.100000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9337 timestamp=1681721417 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.544242}, mono={5.120000}: clock_override_add
 sys={28.544242}, mono={5.120000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16580 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16578 -> 16580 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16578 -> 16580 (1 lost packets)
 sys={28.544242}, mono={5.120000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16581 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16579 -> 16581 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16579 -> 16581 (1 lost packets)
 sys={28.544242}, mono={5.120000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16582 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16580 -> 16582 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16580 -> 16582 (1 lost packets)
 sys={28.544242}, mono={5.120000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16583 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16581 -> 16583 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16581 -> 16583 (1 lost packets)
 sys={28.544242}, mono={5.120000}: OSMUX message (len=128): OSMUX seq=014 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=014 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.544242}, mono={5.120000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9338 timestamp=1681721577 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.544242}, mono={5.120000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9339 timestamp=1681721737 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1237,13 +1255,13 @@ sys={28.564242}, mono={5.140000}: extracted packet: RTP ver=2 ssrc=117440512 typ
 sys={28.564242}, mono={5.140000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9341 timestamp=1681722057 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.584242}, mono={5.160000}: clock_override_add
 sys={28.584242}, mono={5.160000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16584 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16582 -> 16584 (1 lost packets, 0/4 batched)
+DLMUX [second,0/1472][CID=1,batched=0/4] RTP seq jump detected: 16582 -> 16584 (1 lost packets)
 sys={28.584242}, mono={5.160000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16585 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16583 -> 16585 (1 lost packets, 0/4 batched)
+DLMUX [second,34/1472][CID=0,batched=0/4] RTP seq jump detected: 16583 -> 16585 (1 lost packets)
 sys={28.584242}, mono={5.160000}: adding to ccid=1 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16586 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16584 -> 16586 (1 lost packets, 2/4 batched)
+DLMUX [second,68/1472][CID=1,batched=2/4] RTP seq jump detected: 16584 -> 16586 (1 lost packets)
 sys={28.584242}, mono={5.160000}: adding to ccid=0 RTP ver=2 ssrc=118030434 type=98 marker=0 ext=0 csrc_count=0 sequence=16587 timestamp=108399 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
-DLMUX RTP seq jump detected: 16585 -> 16587 (1 lost packets, 2/4 batched)
+DLMUX [second,98/1472][CID=0,batched=2/4] RTP seq jump detected: 16585 -> 16587 (1 lost packets)
 sys={28.584242}, mono={5.160000}: OSMUX message (len=128): OSMUX seq=015 ccid=000 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ], OSMUX seq=015 ccid=001 ft=1 rtp_m=0 ctr=3 amr_f=0 amr_q=1 amr_ft=02 amr_cmr=02 [ ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.584242}, mono={5.160000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9342 timestamp=1681722217 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.584242}, mono={5.160000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9343 timestamp=1681722377 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
@@ -1255,6 +1273,8 @@ sys={28.604242}, mono={5.180000}: clock_override_add
 sys={28.604242}, mono={5.180000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9345 timestamp=1681722697 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.604242}, mono={5.180000}: extracted packet: RTP ver=2 ssrc=117440513 type=98 marker=0 ext=0 csrc_count=0 sequence=9345 timestamp=1681722697 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.624242}, mono={5.200000}: clock_override_add
+DLMUX [second,0/1472][CID=0,batched=0/4] Closing circuit
+DLMUX [second,0/1472][CID=1,batched=0/4] Closing circuit
 sys={28.624242}, mono={5.200000}: Flushing CID 0
 sys={28.624242}, mono={5.200000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9346 timestamp=1681722857 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
 sys={28.624242}, mono={5.200000}: extracted packet: RTP ver=2 ssrc=117440512 type=98 marker=0 ext=0 csrc_count=0 sequence=9347 timestamp=1681723017 [20 14 ff d4 f9 ff fb e7 eb f9 9f f8 f2 26 33 65 54 ]
