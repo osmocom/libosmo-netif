@@ -1377,6 +1377,8 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 {
 	struct osmo_stream_srv *conn;
 
+	OSMO_ASSERT(link);
+
 	conn = talloc_zero(ctx, struct osmo_stream_srv);
 	if (conn == NULL) {
 		LOGP(DLINP, LOGL_ERROR, "cannot allocate new peer in srv, "
