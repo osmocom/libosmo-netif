@@ -264,6 +264,7 @@ static void test_last_amr_cmr_f_q_used_osmux_deliver_cb(struct msgb *batch_msg, 
 
 	/* We expect 1 batch: */
 	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh);
 	OSMO_ASSERT(osmuxh->ft == OSMUX_FT_VOICE_AMR);
 	/* Check CMR and Q values are the ones from the last message: */
 	OSMO_ASSERT(osmuxh->amr_f == 0);
@@ -357,6 +358,7 @@ static void test_initial_osmux_seqnum_osmux_deliver_cb(struct msgb *batch_msg, v
 
 	/* We expect 1 batch: */
 	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh);
 	/* Check seqnum is the one configured beforehand: */
 	OSMO_ASSERT(osmuxh->seq == 123);
 
@@ -425,6 +427,7 @@ static void test_rtp_dup_osmux_deliver_cb(struct msgb *batch_msg, void *data)
 
 	/* We expect 1 batch: */
 	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh);
 	/* Check seqnum is the one configured beforehand: */
 	OSMO_ASSERT(osmuxh->seq == 123);
 	osmux_pl = (uint8_t *)osmuxh + sizeof(*osmuxh);
@@ -503,6 +506,7 @@ static void test_rtp_pkt_gap_osmux_deliver_cb(struct msgb *batch_msg, void *data
 
 	/* We expect 1 batch: */
 	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh);
 	/* Check seqnum is the one configured beforehand: */
 	OSMO_ASSERT(osmuxh->seq == 123);
 	/* Check four AMR payloads appear: */
@@ -587,6 +591,7 @@ static void test_rtp_pkt_gap_bigger_than_batch_factor_osmux_deliver_cb(struct ms
 
 	/* We expect 1 batch: */
 	osmuxh = osmux_xfrm_output_pull(batch_msg);
+	OSMO_ASSERT(osmuxh);
 	/* Check seqnum is the one configured beforehand: */
 	OSMO_ASSERT(osmuxh->seq == (123 + *osmux_transmitted - 1));
 	/* Check four AMR payloads appear: */
