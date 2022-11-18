@@ -68,6 +68,11 @@ next:
 		case OSMUX_FT_VOICE_AMR:
 			break;
 		case OSMUX_FT_DUMMY:
+			if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
+				LOGP(DLMUX, LOGL_ERROR, "Discarding bad Dummy FT: amr_ft=%u\n",
+				     osmuxh->amr_ft);
+				return NULL;
+			}
 			len = osmux_ft_dummy_size(osmuxh->amr_ft, osmuxh->ctr + 1);
 			if (msgb_length(msg) < len) {
 				LOGP(DLMUX, LOGL_ERROR, "Discarding bad Dummy FT: %s\n",
