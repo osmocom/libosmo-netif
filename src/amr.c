@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdbool.h>
+
+#include <osmocom/core/utils.h>
 #include <osmocom/netif/amr.h>
 
 /* According to TS 26.101:
@@ -56,11 +58,13 @@ static size_t amr_ft_to_bytes[AMR_FT_MAX] = {
 
 size_t osmo_amr_bits(uint8_t amr_ft)
 {
+	OSMO_ASSERT(amr_ft < AMR_FT_MAX);
 	return amr_ft_to_bits[amr_ft];
 }
 
 size_t osmo_amr_bytes(uint8_t amr_ft)
 {
+	OSMO_ASSERT(amr_ft < AMR_FT_MAX);
 	return amr_ft_to_bytes[amr_ft];
 }
 
