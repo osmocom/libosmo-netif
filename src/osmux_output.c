@@ -57,58 +57,53 @@ static uint32_t osmux_ft_dummy_size(uint8_t amr_ft, uint8_t batch_factor)
 struct osmux_hdr *osmux_xfrm_output_pull(struct msgb *msg)
 {
 	struct osmux_hdr *osmuxh;
+	size_t len;
+
 next:
-	osmuxh = NULL;
-	if (msg->len > sizeof(struct osmux_hdr)) {
-		size_t len;
+	if (msgb_length(msg) == 0)
+		return NULL; /* base case, we drained the msg successfully, tell user it is done. */
 
-		osmuxh = (struct osmux_hdr *)msg->data;
+	if (msgb_length(msg) < sizeof(struct osmux_hdr)) {
+		LOGP(DLMUX, LOGL_ERROR, "remaining %d bytes, broken osmuxhdr?\n", msgb_length(msg));
+		return NULL;
+	}
 
-		switch (osmuxh->ft) {
-		case OSMUX_FT_VOICE_AMR:
-			break;
-		case OSMUX_FT_DUMMY:
-			if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
-				LOGP(DLMUX, LOGL_ERROR, "Discarding bad Dummy FT: amr_ft=%u\n",
-				     osmuxh->amr_ft);
-				return NULL;
-			}
-			len = osmux_ft_dummy_size(osmuxh->amr_ft, osmuxh->ctr + 1);
-			if (msgb_length(msg) < len) {
-				LOGP(DLMUX, LOGL_ERROR, "Discarding bad Dummy FT: %s\n",
-					osmo_hexdump(msg->data, msgb_length(msg)));
-				return NULL;
-			}
-			msgb_pull(msg, len);
-			goto next;
-		default:
-			LOGP(DLMUX, LOGL_ERROR, "Discarding unsupported Osmux FT %d\n",
-			     osmuxh->ft);
-			return NULL;
-		}
+	osmuxh = (struct osmux_hdr *)msgb_data(msg);
+	switch (osmuxh->ft) {
+	case OSMUX_FT_VOICE_AMR:
 		if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
-			LOGP(DLMUX, LOGL_ERROR, "Discarding bad AMR FT %d\n",
-			     osmuxh->amr_ft);
+			LOGP(DLMUX, LOGL_ERROR, "Discarding bad AMR FT %d\n", osmuxh->amr_ft);
 			return NULL;
 		}
-
-		len = osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1) +
-			sizeof(struct osmux_hdr);
-
+		len = osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr + 1) + sizeof(struct osmux_hdr);
 		if (msgb_length(msg) < len) {
 			LOGP(DLMUX, LOGL_ERROR,
 				"Discarding malformed OSMUX message: %s\n",
-				osmo_hexdump(msg->data, msgb_length(msg)));
+				osmo_hexdump(msgb_data(msg), msgb_length(msg)));
 			return NULL;
 		}
-
 		msgb_pull(msg, len);
-	} else if (msg->len > 0) {
-		LOGP(DLMUX, LOGL_ERROR,
-			"remaining %d bytes, broken osmuxhdr?\n", msg->len);
-	}
+		return osmuxh;
 
-	return osmuxh;
+	case OSMUX_FT_DUMMY:
+		if (!osmo_amr_ft_valid(osmuxh->amr_ft)) {
+			LOGP(DLMUX, LOGL_ERROR, "Discarding bad Dummy FT: amr_ft=%u\n", osmuxh->amr_ft);
+			return NULL;
+		}
+		len = osmux_ft_dummy_size(osmuxh->amr_ft, osmuxh->ctr + 1);
+		if (msgb_length(msg) < len) {
+			LOGP(DLMUX, LOGL_ERROR, "Discarding bad Dummy FT: %s\n",
+			     osmo_hexdump(msgb_data(msg), msgb_length(msg)));
+			return NULL;
+		}
+		msgb_pull(msg, len);
+		goto next;
+
+	default:
+		LOGP(DLMUX, LOGL_ERROR, "Discarding unsupported Osmux FT %d\n",
+			osmuxh->ft);
+		return NULL;
+	}
 }
 
 static struct msgb *
