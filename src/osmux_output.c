@@ -294,6 +294,18 @@ static int osmux_xfrm_output_talloc_destructor(struct osmux_out_handle *h)
 	return 0;
 }
 
+/* Placeholder to avoid init code duplication while keeping backward
+ * compatilbility with deprecated osmux_xfrm_output_init{2}() APIs. */
+static void _osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint8_t rtp_payload_type)
+{
+	h->rtp_seq = (uint16_t)random();
+	h->rtp_timestamp = (uint32_t)random();
+	h->rtp_ssrc = rtp_ssrc;
+	h->rtp_payload_type = rtp_payload_type;
+	INIT_LLIST_HEAD(&h->list);
+	osmo_timer_setup(&h->timer, osmux_xfrm_output_trigger, h);
+}
+
 /*! \brief Allocate a new osmux out handle
  *  \param[in] ctx talloc context to use when allocating the returned struct
  *  \return Allocated osmux out handle
@@ -310,12 +322,7 @@ struct osmux_out_handle *osmux_xfrm_output_alloc(void *ctx)
 	h = talloc_zero(ctx, struct osmux_out_handle);
 	OSMO_ASSERT(h);
 
-	h->rtp_seq = (uint16_t)random();
-	h->rtp_timestamp = (uint32_t)random();
-	h->rtp_ssrc = (uint32_t)random();
-	h->rtp_payload_type = 98;
-	INIT_LLIST_HEAD(&h->list);
-	osmo_timer_setup(&h->timer, osmux_xfrm_output_trigger, h);
+	_osmux_xfrm_output_init(h, (uint32_t)random(), 98);
 
 	talloc_set_destructor(h, osmux_xfrm_output_talloc_destructor);
 	return h;
@@ -325,19 +332,15 @@ struct osmux_out_handle *osmux_xfrm_output_alloc(void *ctx)
 void osmux_xfrm_output_init2(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint8_t rtp_payload_type)
 {
 	memset(h, 0, sizeof(*h));
-	h->rtp_seq = (uint16_t)random();
-	h->rtp_timestamp = (uint32_t)random();
-	h->rtp_ssrc = rtp_ssrc;
-	h->rtp_payload_type = rtp_payload_type;
-	INIT_LLIST_HEAD(&h->list);
-	osmo_timer_setup(&h->timer, osmux_xfrm_output_trigger, h);
+	_osmux_xfrm_output_init(h, rtp_ssrc, rtp_payload_type);
 }
 
 /* DEPRECATED: Use osmux_xfrm_output_alloc() and osmux_xfrm_output_set_rtp_*() instead */
 void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
 {
 	/* backward compatibility with old users, where 98 was harcoded in osmux_rebuild_rtp()  */
-	osmux_xfrm_output_init2(h, rtp_ssrc, 98);
+	memset(h, 0, sizeof(*h));
+	_osmux_xfrm_output_init(h, rtp_ssrc, 98);
 }
 
 /*! \brief Set transmission callback to call when a generated RTP packet is to be transmitted
