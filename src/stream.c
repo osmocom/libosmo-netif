@@ -1267,16 +1267,27 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 	return 0;
 }
 
+/*! \brief Check whether the stream server link is opened
+ *  \param[in] link Stream Server Link to check */
+bool osmo_stream_srv_link_is_opened(const struct osmo_stream_srv_link *link)
+{
+	if (!link)
+		return false;
+
+	if (link->ofd.fd == -1)
+		return false;
+
+	return true;
+}
+
 /*! \brief Close the stream server link and unregister from select loop
  *  Does not destroy the server link, merely closes it!
  *  \param[in] link Stream Server Link to close */
 void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 {
-	if (!link)
+	if (!osmo_stream_srv_link_is_opened(link))
 		return;
 
-	if (link->ofd.fd == -1)
-		return;
 	osmo_fd_unregister(&link->ofd);
 	close(link->ofd.fd);
 	link->ofd.fd = -1;
