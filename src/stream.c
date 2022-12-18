@@ -1272,6 +1272,9 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
  *  \param[in] link Stream Server Link to close */
 void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 {
+	if (!link)
+		return;
+
 	if (link->ofd.fd == -1)
 		return;
 	osmo_fd_unregister(&link->ofd);
