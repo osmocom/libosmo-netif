@@ -194,7 +194,7 @@ int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 	/* The header is only valid after shifting first two bytes to OA mode */
 	struct amr_hdr *oa_hdr;
 	unsigned int i;
-	int oa_payload_len;
+	unsigned int oa_payload_len;
 
 	memset(buf, 0, sizeof(buf));
 
