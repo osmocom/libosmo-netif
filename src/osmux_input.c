@@ -196,9 +196,11 @@ static int osmux_link_put(struct osmux_link *link, struct osmux_input_state *sta
 	link->osmuxh->amr_f = state->amrh->f;
 	link->osmuxh->amr_q = state->amrh->q;
 
-	memcpy(state->out_msg->tail, osmo_amr_get_payload(state->amrh),
-	       state->amr_payload_len);
-	msgb_put(state->out_msg, state->amr_payload_len);
+	if (state->amr_payload_len > 0) {
+		memcpy(state->out_msg->tail, osmo_amr_get_payload(state->amrh),
+		state->amr_payload_len);
+		msgb_put(state->out_msg, state->amr_payload_len);
+	}
 
 	/* Update circuit state of last transmitted incoming RTP seqnum/ts: */
 	state->circuit->last_transmitted_rtp_seq = rtp_seqnum;

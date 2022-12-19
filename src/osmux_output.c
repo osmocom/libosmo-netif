@@ -158,8 +158,10 @@ osmux_rebuild_rtp(struct osmux_out_handle *h, struct osmux_hdr *osmuxh,
 	msgb_put(out_msg, sizeof(struct amr_hdr));
 
 	/* add AMR speech data */
-	memcpy(out_msg->tail, payload, payload_len);
-	msgb_put(out_msg, payload_len);
+	if (payload_len > 0) {
+		memcpy(out_msg->tail, payload, payload_len);
+		msgb_put(out_msg, payload_len);
+	}
 
 	/* bump last RTP sequence number and timestamp that has been used */
 	h->rtp_seq++;
