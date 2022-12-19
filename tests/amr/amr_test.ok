@@ -157,6 +157,13 @@ Sample No.: 21
    rc: 14
 
 Sample No.: 22
+   octet aligned: a070ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc
+                  101000000111000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111100
+   bw-efficient:  
+                  (no data)
+   rc: -1
+
+Sample No.: 23
    octet aligned: a078ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc
                   101000000111100011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111100
    bw-efficient:  
@@ -310,6 +317,7 @@ Sample No.: 19... AMR mode: 0, OA: 14 bytes, BE: 14 bytes, OA: 14 bytes
 Sample No.: 20... AMR mode: 0, OA: 14 bytes, BE: 14 bytes, OA: 14 bytes
 Sample No.: 21... AMR mode: 0, OA: 14 bytes, BE: 14 bytes, OA: 14 bytes
 Sample No.: 22... skipping a sample with a wrong FT
+Sample No.: 23... skipping a sample with a wrong FT
 
 
 Testing conversion from IuUP to bw-efficient and inverse:
@@ -342,6 +350,7 @@ Sample No.: 19 ==>octet aligned
 Sample No.: 20 ==>octet aligned
 Sample No.: 21 ==>octet aligned
 Sample No.: 22 ==>bandwith efficient
+Sample No.: 23 ==>bandwith efficient
 Sample No.: 0 ==>bandwith efficient
 Sample No.: 1 ==>bandwith efficient
 Sample No.: 2 ==>bandwith efficient

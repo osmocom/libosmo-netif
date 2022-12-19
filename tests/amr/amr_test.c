@@ -48,7 +48,8 @@ char *oa_amr_samples[] = {
 	"0004f89d67f1160935bde1996840",
 	"0004633cc7f0630439ffe0000000",
 	"0004eb81fc0758973b9edc782550",
-	"a078ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc",	/* sample with invalid FT, will be detected as bandwith-efficient */
+	"a070ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc",	/* sample with invalid FT=14, will be detected as bandwith-efficient */
+	"a078ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc",   /* sample with invalid FT=15, will be detected as bandwith-efficient */
 	"END",
 };
 
