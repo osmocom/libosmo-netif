@@ -1,6 +1,9 @@
 #ifndef _OSMO_AMR_H_
 #define _OSMO_AMR_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <osmocom/core/endian.h>
 
 /* As defined by RFC3267: Adaptive Multi-Rate (AMR) */
