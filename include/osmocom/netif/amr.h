@@ -15,6 +15,34 @@
  */
 
 /*
+ * 4.3. Bandwidth-Efficient Mode:
+ *
+ * Summary from 4.3.4: Same as Octet aligned (see below) but without padding after header and ToC:
+ *  0               1
+ *  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ * |  CMR  |F|  FT   |Q|X X X X X X|
+ * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+ *
+ * X means AMR payload (padding in case of FT=NO_DATA).
+ */
+struct amr_hdr_bwe {
+#if OSMO_IS_LITTLE_ENDIAN
+	uint8_t ft_hi:3, /* coding mode highest part */
+		f:1,
+		cmr:4;	/* Codec Mode Request */
+	uint8_t data_start:6,
+		q:1,	/* OK (not damaged) at origin? */
+		ft_lo:1;	/* coding mode lowest bit */
+#elif OSMO_IS_BIG_ENDIAN
+/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
+	uint8_t cmr:4, f:1, ft_hi:3;
+	uint8_t ft_lo:1, q:1, data_start:6;
+#endif
+	uint8_t data[0];
+} __attribute__((packed));
+
+/*
  * 4.4. Octet-aligned Mode:
  *
  * 4.4.1. The Payload Header:
