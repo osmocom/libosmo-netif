@@ -18,7 +18,7 @@
 #include <osmocom/core/utils.h>
 #include <osmocom/netif/amr.h>
 
-/* According to TS 26.101:
+/* According to TS 26.101 Table A.1b:
  *
  * Frame type    AMR code    bits  bytes
  *      0          4.75       95    12
@@ -29,19 +29,33 @@
  *      5          7.95      159    20
  *      6         10.20      204    26
  *      7         12.20      244    31
- *      8           SID       39     5
+ *      8       AMR SID       39     5
+ *      9   GSM-EFR SID       43     5
+ *      10 TDMA-EFR SID       38     5
+ *      11  PDC-EFR SID       37     5
+ *      12     NOT USED
+ *      13     NOT USED
+ *      14     NOT USED
+ *      15      NO DATA       0      0
  */
 
-static size_t amr_ft_to_bits[AMR_FT_MAX] = {
-	[AMR_FT_0]	= AMR_FT_0_LEN_BITS,
-	[AMR_FT_1]	= AMR_FT_1_LEN_BITS,
-	[AMR_FT_2]	= AMR_FT_2_LEN_BITS,
-	[AMR_FT_3]	= AMR_FT_3_LEN_BITS,
-	[AMR_FT_4]	= AMR_FT_4_LEN_BITS,
-	[AMR_FT_5]	= AMR_FT_5_LEN_BITS,
-	[AMR_FT_6]	= AMR_FT_6_LEN_BITS,
-	[AMR_FT_7]	= AMR_FT_7_LEN_BITS,
-	[AMR_FT_SID]	= AMR_FT_SID_LEN_BITS,
+static int amr_ft_to_bits[AMR_FT_MAX] = {
+	[AMR_FT_0]		= AMR_FT_0_LEN_BITS,
+	[AMR_FT_1]		= AMR_FT_1_LEN_BITS,
+	[AMR_FT_2]		= AMR_FT_2_LEN_BITS,
+	[AMR_FT_3]		= AMR_FT_3_LEN_BITS,
+	[AMR_FT_4]		= AMR_FT_4_LEN_BITS,
+	[AMR_FT_5]		= AMR_FT_5_LEN_BITS,
+	[AMR_FT_6]		= AMR_FT_6_LEN_BITS,
+	[AMR_FT_7]		= AMR_FT_7_LEN_BITS,
+	[AMR_FT_SID]		= AMR_FT_SID_LEN_BITS,
+	[AMR_FT_GSM_EFR_SID]	= AMR_FT_GSM_EFR_SID_LEN_BITS,
+	[AMR_FT_TDMA_EFR_SID]	= AMR_FT_TDMA_EFR_SID_LEN_BITS,
+	[AMR_FT_PDC_EFR_SID]	= AMR_FT_PDC_EFR_SID_LEN_BITS,
+	[12] = 0, /* for future use */
+	[13] = 0, /* for future use */
+	[14] = 0, /* for future use */
+	[AMR_FT_NO_DATA]	= AMR_FT_NO_DATA_LEN_BITS,
 };
 
 static size_t amr_ft_to_bytes[AMR_FT_MAX] = {
@@ -54,6 +68,13 @@ static size_t amr_ft_to_bytes[AMR_FT_MAX] = {
 	[AMR_FT_6]	= AMR_FT_6_LEN,
 	[AMR_FT_7]	= AMR_FT_7_LEN,
 	[AMR_FT_SID]	= AMR_FT_SID_LEN,
+	[AMR_FT_GSM_EFR_SID]	= AMR_FT_GSM_EFR_SID_LEN,
+	[AMR_FT_TDMA_EFR_SID]	= AMR_FT_TDMA_EFR_SID_LEN,
+	[AMR_FT_PDC_EFR_SID]	= AMR_FT_PDC_EFR_SID_LEN,
+	[12] = 0, /* for future use */
+	[13] = 0, /* for future use */
+	[14] = 0, /* for future use */
+	[AMR_FT_NO_DATA]	= AMR_FT_NO_DATA_LEN,
 };
 
 size_t osmo_amr_bits(uint8_t amr_ft)
@@ -72,30 +93,20 @@ int osmo_amr_bytes_to_ft(size_t bytes)
 {
 	int ft;
 
-	for (ft = 0; ft < AMR_FT_MAX; ft++) {
+	for (ft = 0; ft < AMR_FT_PDC_EFR_SID; ft++) {
 		if (amr_ft_to_bytes[ft] == bytes)
 			return ft;
 	}
+	/* 12-14 not used, jump to 15 (AMR_FT_NO_DATA): */
+	if (amr_ft_to_bytes[AMR_FT_NO_DATA] == bytes)
+		return AMR_FT_NO_DATA;
+
 	return -1;
 }
 
 int osmo_amr_ft_valid(uint8_t amr_ft)
 {
-	/*
-	 * Extracted from RFC3267:
-	 *
-	 * "... with a FT value in the range 9-14 for AMR ... the whole packet
-	 *  SHOULD be discarded."
-	 *
-	 * "... packets containing only NO_DATA frames (FT=15) SHOULD NOT be
-	 *  transmitted."
-	 *
-	 * So, let's discard frames with a AMR FT >= 9.
-	 */
-	if (amr_ft >= AMR_FT_MAX)
-		return 0;
-
-	return 1;
+	return amr_ft <= AMR_FT_PDC_EFR_SID || amr_ft == AMR_FT_NO_DATA;
 }
 
 /*! Check if an AMR frame is octet aligned by looking at the padding bits.

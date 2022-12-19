@@ -164,11 +164,11 @@ Sample No.: 22
    rc: -1
 
 Sample No.: 23
-   octet aligned: a078ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc
-                  101000000111100011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111100
-   bw-efficient:  
-                  (no data)
-   rc: -1
+   octet aligned: a078
+                  1010000001111000
+   bw-efficient:  a780
+                  1010011110000000
+   rc: 2
 
 
 Testing conversion from bw-efficient to octet-aligned:
@@ -288,9 +288,16 @@ Sample No.: 15
 Sample No.: 16
    bw-efficient:  a7bfc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03f
                   1010011110111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111110000000011111111000000001111111100000000111111
-   octet aligned: 
-                  (no data)
-   rc: -1
+   octet aligned: a078
+                  1010000001111000
+   rc: 2
+
+Sample No.: 17
+   bw-efficient:  4780
+                  0100011110000000
+   octet aligned: 4078
+                  0100000001111000
+   rc: 2
 
 
 Testing conversion from octet-aligned to bw-efficient and inverse:
@@ -317,7 +324,7 @@ Sample No.: 19... AMR mode: 0, OA: 14 bytes, BE: 14 bytes, OA: 14 bytes
 Sample No.: 20... AMR mode: 0, OA: 14 bytes, BE: 14 bytes, OA: 14 bytes
 Sample No.: 21... AMR mode: 0, OA: 14 bytes, BE: 14 bytes, OA: 14 bytes
 Sample No.: 22... skipping a sample with a wrong FT
-Sample No.: 23... skipping a sample with a wrong FT
+Sample No.: 23... AMR mode: 15, OA: 2 bytes, BE: 2 bytes, OA: 2 bytes
 
 
 Testing conversion from IuUP to bw-efficient and inverse:
@@ -350,7 +357,7 @@ Sample No.: 19 ==>octet aligned
 Sample No.: 20 ==>octet aligned
 Sample No.: 21 ==>octet aligned
 Sample No.: 22 ==>bandwith efficient
-Sample No.: 23 ==>bandwith efficient
+Sample No.: 23 ==>octet aligned
 Sample No.: 0 ==>bandwith efficient
 Sample No.: 1 ==>bandwith efficient
 Sample No.: 2 ==>bandwith efficient
@@ -368,4 +375,5 @@ Sample No.: 13 ==>bandwith efficient
 Sample No.: 14 ==>bandwith efficient
 Sample No.: 15 ==>bandwith efficient
 Sample No.: 16 ==>bandwith efficient
+Sample No.: 17 ==>bandwith efficient
 OK: Test passed

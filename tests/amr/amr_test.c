@@ -49,7 +49,7 @@ char *oa_amr_samples[] = {
 	"0004633cc7f0630439ffe0000000",
 	"0004eb81fc0758973b9edc782550",
 	"a070ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc",	/* sample with invalid FT=14, will be detected as bandwith-efficient */
-	"a078ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00fc",   /* sample with invalid FT=15, will be detected as bandwith-efficient */
+	"a078",	/* sample with FT=15 NO_DATA */
 	"END",
 };
 
@@ -72,6 +72,7 @@ char *bwe_amr_samples[] = {
 	"f3c381bc7061c9f8507f6029de6115c16e5fa470c243b21b6e35dbb48bd84c00",
 	"73c901b7a2004be7f85284b6ab7142acfe6872b1ae1c107d0588b551de7be650",
 	"a7bfc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03fc03f",	/* sample with invalid FT */
+	"4780", /* FT=15 NO_DATA */
 	"END",
 };
 
