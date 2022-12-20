@@ -335,16 +335,14 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	struct sctp_sndrcvinfo sinfo;
 #endif
 	struct msgb *msg;
-	struct llist_head *lh;
 	int ret;
 
 	if (llist_empty(&cli->tx_queue)) {
 		osmo_fd_write_disable(&cli->ofd);
 		return 0;
 	}
-	lh = cli->tx_queue.next;
-	llist_del(lh);
-	msg = llist_entry(lh, struct msgb, list);
+	msg = llist_first_entry(&cli->tx_queue, struct msgb, list);
+	llist_del(&msg->list);
 
 	if (!osmo_stream_cli_is_connected(cli)) {
 		LOGSCLI(cli, LOGL_ERROR, "not connected, dropping data!\n");
@@ -379,13 +377,20 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	default:
 		ret = -ENOTSUP;
 	}
+
+	if (ret >= 0 && ret < msgb_length(msg)) {
+		LOGP(DLINP, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
+		/* Update msgb and re-add it at the start of the queue: */
+		msgb_pull(msg, ret);
+		llist_add(&msg->list, &cli->tx_queue);
+		return 0;
+	}
+
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ENOTCONN) {
 			osmo_stream_cli_reconnect(cli);
 		}
 		LOGSCLI(cli, LOGL_ERROR, "error %d to send\n", ret);
-	} else if (ret < msgb_length(msg)) {
-		LOGP(DLINP, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
 	}
 
 	msgb_free(msg);
@@ -1309,16 +1314,14 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	struct sctp_sndrcvinfo sinfo;
 #endif
 	struct msgb *msg;
-	struct llist_head *lh;
 	int ret;
 
 	if (llist_empty(&conn->tx_queue)) {
 		osmo_fd_write_disable(&conn->ofd);
 		return;
 	}
-	lh = conn->tx_queue.next;
-	llist_del(lh);
-	msg = llist_entry(lh, struct msgb, list);
+	msg = llist_first_entry(&conn->tx_queue, struct msgb, list);
+	llist_del(&msg->list);
 
 	LOGP(DLINP, LOGL_DEBUG, "sending %u bytes of data\n", msg->len);
 
@@ -1349,10 +1352,17 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 		ret = -1;
 		errno = ENOTSUP;
 	}
+
+	if (ret >= 0 && ret < msgb_length(msg)) {
+		LOGP(DLINP, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
+		/* Update msgb and re-add it at the start of the queue: */
+		msgb_pull(msg, ret);
+		llist_add(&msg->list, &conn->tx_queue);
+		return;
+	}
+
 	if (ret == -1) /* send(): On error -1 is returned, and errno is set appropriately */
 		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", strerror(errno));
-	else if (ret < msgb_length(msg))
-		LOGP(DLINP, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
 
 	msgb_free(msg);
 
