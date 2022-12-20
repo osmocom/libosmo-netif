@@ -1356,7 +1356,7 @@ static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
 	struct osmo_stream_srv *conn = ofd->data;
 	int rc = 0;
 
-	LOGP(DLINP, LOGL_DEBUG, "connected read/write\n");
+	LOGP(DLINP, LOGL_DEBUG, "connected read/write (what=0x%x)\n", what);
 	if (what & OSMO_FD_READ)
 		rc = osmo_stream_srv_read(conn);
 	if (rc != -EBADF && (what & OSMO_FD_WRITE))
