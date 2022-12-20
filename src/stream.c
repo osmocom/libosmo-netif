@@ -355,7 +355,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 
 	switch (cli->sk_domain) {
 	case AF_UNIX:
-		ret = send(cli->ofd.fd, msg->data, msg->len, 0);
+		ret = send(cli->ofd.fd, msgb_data(msg), msgb_length(msg), 0);
 		break;
 	case AF_UNSPEC:
 	case AF_INET:
@@ -366,13 +366,13 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 			memset(&sinfo, 0, sizeof(sinfo));
 			sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
 			sinfo.sinfo_stream = msgb_sctp_stream(msg);
-			ret = sctp_send(cli->ofd.fd, msg->data, msgb_length(msg),
+			ret = sctp_send(cli->ofd.fd, msgb_data(msg), msgb_length(msg),
 					&sinfo, MSG_NOSIGNAL);
 			break;
 #endif
 		case IPPROTO_TCP:
 		default:
-			ret = send(cli->ofd.fd, msg->data, msgb_length(msg), 0);
+			ret = send(cli->ofd.fd, msgb_data(msg), msgb_length(msg), 0);
 			break;
 		}
 		break;
@@ -1317,7 +1317,7 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 
 	switch (conn->srv->sk_domain) {
 	case AF_UNIX:
-		ret = send(conn->ofd.fd, msg->data, msg->len, 0);
+		ret = send(conn->ofd.fd, msgb_data(msg), msgb_length(msg), 0);
 		break;
 	case AF_INET:
 	case AF_INET6:
@@ -1328,13 +1328,13 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 			memset(&sinfo, 0, sizeof(sinfo));
 			sinfo.sinfo_ppid = htonl(msgb_sctp_ppid(msg));
 			sinfo.sinfo_stream = msgb_sctp_stream(msg);
-			ret = sctp_send(conn->ofd.fd, msg->data, msgb_length(msg),
+			ret = sctp_send(conn->ofd.fd, msgb_data(msg), msgb_length(msg),
 					&sinfo, MSG_NOSIGNAL);
 			break;
 #endif
 		case IPPROTO_TCP:
 		default:
-			ret = send(conn->ofd.fd, msg->data, msg->len, 0);
+			ret = send(conn->ofd.fd, msgb_data(msg), msgb_length(msg), 0);
 			break;
 		}
 		break;
