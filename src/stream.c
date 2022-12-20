@@ -387,7 +387,12 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	} else if (ret < msgb_length(msg)) {
 		LOGP(DLINP, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
 	}
+
 	msgb_free(msg);
+
+	if (llist_empty(&cli->tx_queue))
+		osmo_fd_write_disable(&cli->ofd);
+
 	return 0;
 }
 
@@ -1351,8 +1356,11 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 
 	msgb_free(msg);
 
-	if (llist_empty(&conn->tx_queue) && (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY))
-		osmo_stream_srv_destroy(conn);
+	if (llist_empty(&conn->tx_queue)) {
+		osmo_fd_write_disable(&conn->ofd);
+		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY)
+			osmo_stream_srv_destroy(conn);
+	}
 }
 
 static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
