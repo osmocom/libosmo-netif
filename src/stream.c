@@ -384,6 +384,8 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 			osmo_stream_cli_reconnect(cli);
 		}
 		LOGSCLI(cli, LOGL_ERROR, "error %d to send\n", ret);
+	} else if (ret < msgb_length(msg)) {
+		LOGP(DLINP, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
 	}
 	msgb_free(msg);
 	return 0;
@@ -1344,6 +1346,8 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	}
 	if (ret == -1) /* send(): On error -1 is returned, and errno is set appropriately */
 		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", strerror(errno));
+	else if (ret < msgb_length(msg))
+		LOGP(DLINP, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
 
 	msgb_free(msg);
 
