@@ -221,6 +221,8 @@ int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 	ft = (bwe_hdr->ft_hi << 1) | bwe_hdr->ft_lo;
 	if (!osmo_amr_ft_valid(ft))
 		return -1;
+	if (OSMO_BYTES_FOR_BITS(AMR_HDR_BWE_LEN_BITS + osmo_amr_bits(ft)) > payload_len)
+		return -1;
 
 	memset(buf, 0, sizeof(buf));
 	oa_hdr = (struct amr_hdr *)buf;
