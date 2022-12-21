@@ -113,7 +113,7 @@ int osmo_amr_ft_valid(uint8_t amr_ft)
  *  \param[inout] payload user provided memory containing the AMR payload.
  *  \param[in] payload_len overall length of the AMR payload.
  *  \returns true when the payload is octet aligned. */
-bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len)
+bool osmo_amr_is_oa(const uint8_t *payload, unsigned int payload_len)
 {
 	/* NOTE: The distinction between octet-aligned and bandwith-efficient
 	 * mode normally relys on out of band methods that explicitly select

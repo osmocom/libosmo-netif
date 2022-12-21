@@ -159,7 +159,7 @@ int osmo_amr_ft_valid(uint8_t amr_ft);
 size_t osmo_amr_bytes(uint8_t amr_cmr);
 size_t osmo_amr_bits(uint8_t amr_ft);
 
-bool osmo_amr_is_oa(uint8_t *payload, unsigned int payload_len);
+bool osmo_amr_is_oa(const uint8_t *payload, unsigned int payload_len);
 int osmo_amr_oa_to_bwe(uint8_t *payload, unsigned int payload_len);
 int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 		       unsigned int payload_maxlen);
