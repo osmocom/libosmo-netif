@@ -1,7 +1,7 @@
 AUTOMAKE_OPTIONS = foreign dist-bzip2 1.6
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = include src examples tests
+SUBDIRS = include src examples utils tests
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libosmo-netif.pc

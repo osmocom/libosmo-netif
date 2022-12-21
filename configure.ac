@@ -91,6 +91,7 @@ AM_CONFIG_HEADER(config.h)
 
 PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.7.0)
 PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.7.0)
+PKG_CHECK_MODULES(LIBOSMOCODEC, libosmocodec >= 1.7.0)
 
 AC_ARG_ENABLE([lapd_examples],
 	[AS_HELP_STRING(
@@ -144,6 +145,7 @@ AC_OUTPUT(
 	include/osmocom/netif/Makefile
 	src/Makefile
 	examples/Makefile
+	utils/Makefile
 	tests/Makefile
 	Doxyfile
 	Makefile
