@@ -203,11 +203,14 @@ int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 {
 	uint8_t buf[256];
 	/* The header is only valid after shifting first two bytes to OA mode */
+	struct amr_hdr_bwe *bwe_hdr = (struct amr_hdr_bwe *)payload;
 	struct amr_hdr *oa_hdr;
 	unsigned int i;
 	unsigned int oa_payload_len;
+	uint8_t ft;
 
-	memset(buf, 0, sizeof(buf));
+	if (payload_len < sizeof(struct amr_hdr_bwe))
+		return -1;
 
 	if (payload_len + 1 > payload_maxlen)
 		return -1;
@@ -215,15 +218,19 @@ int osmo_amr_bwe_to_oa(uint8_t *payload, unsigned int payload_len,
 	if (payload_len + 1 > sizeof(buf))
 		return -1;
 
-	buf[0] = payload[0] & 0xf0;
-	buf[1] = payload[0] << 4;
-	buf[1] |= (payload[1] >> 4) & 0x0c;
+	ft = (bwe_hdr->ft_hi << 1) | bwe_hdr->ft_lo;
+	if (!osmo_amr_ft_valid(ft))
+		return -1;
+
+	memset(buf, 0, sizeof(buf));
+	oa_hdr = (struct amr_hdr *)buf;
+	oa_hdr->cmr = bwe_hdr->cmr;
+	oa_hdr->f = bwe_hdr->f;
+	oa_hdr->ft = ft;
+	oa_hdr->q = bwe_hdr->q;
 
 	/* Calculate new payload length */
-	oa_hdr = (struct amr_hdr *)buf;
-	if (!osmo_amr_ft_valid(oa_hdr->ft))
-		return -1;
-	oa_payload_len = 2 + osmo_amr_bytes(oa_hdr->ft);
+	oa_payload_len = 2 + osmo_amr_bytes(ft);
 
 	for (i = 2; i < oa_payload_len - 1; i++) {
 		buf[i] = payload[i - 1] << 2;
