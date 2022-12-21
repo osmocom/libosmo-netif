@@ -43,6 +43,9 @@ struct amr_hdr_bwe {
 	uint8_t data[0];
 } __attribute__((packed));
 
+/* See diagram above: CMR (4) + F (1) + FT (4) + Q (1) = 10 */
+#define AMR_HDR_BWE_LEN_BITS 10
+
 /*
  * 4.4. Octet-aligned Mode:
  *

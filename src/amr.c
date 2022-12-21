@@ -188,7 +188,7 @@ int osmo_amr_oa_to_bwe(uint8_t *payload, unsigned int payload_len)
 	}
 
 	/* Calculate new payload length */
-	bwe_payload_len = (10 + osmo_amr_bits(ft) + 7) / 8;
+	bwe_payload_len = (AMR_HDR_BWE_LEN_BITS + osmo_amr_bits(ft) + 7) / 8;
 
 	return bwe_payload_len;
 }
@@ -266,7 +266,8 @@ int osmo_amr_bwe_to_iuup(uint8_t *payload, unsigned int payload_len)
 	amr_speech_len_bits = osmo_amr_bits(ft);
 	amr_speech_len_bytes = osmo_amr_bytes(ft);
 
-	required_len_bits = amr_speech_len_bits + 10; /* shift of 10 bits */
+	/* shift of AMR_HDR_BWE_LEN_BITS (10) bits, aka remove BWE Hdr + ToC: */
+	required_len_bits = AMR_HDR_BWE_LEN_BITS + amr_speech_len_bits;
 	if (payload_len < (required_len_bits + 7)/8)
 		return -1;
 
@@ -288,7 +289,7 @@ int osmo_amr_bwe_to_iuup(uint8_t *payload, unsigned int payload_len)
 int osmo_amr_iuup_to_bwe(uint8_t *payload, unsigned int payload_len,
 			 unsigned int payload_maxlen)
 {
-	/* shift all bits by 10 */
+	/* shift all bits by AMR_HDR_BWE_LEN_BITS (10) */
 	unsigned int i, required_len_bits, required_len_bytes;
 
 	int ft = osmo_amr_bytes_to_ft(payload_len);
@@ -303,7 +304,7 @@ int osmo_amr_iuup_to_bwe(uint8_t *payload, unsigned int payload_len,
 	i = payload_len + 1;
 	payload[i] = (payload[i - 2] << 6);
 	for (i = payload_len; i >= 2; i--) {
-		/* we have to shift the payload by 10 bits to get only the Class A, B, C bits */
+		/* we have to shift the payload by AMR_HDR_BWE_LEN_BITS (10) bits to prepend BWE Hdr + ToC */
 		payload[i] = (payload[i - 1] >> 2) | (payload[i - 2] << 6);
 	}
 	payload[i] = (payload[i - 1] >> 2);
