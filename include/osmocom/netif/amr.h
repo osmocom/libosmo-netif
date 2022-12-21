@@ -139,20 +139,20 @@ static inline void *osmo_amr_get_payload(struct amr_hdr *amrh)
  *
  * NOTE: These constants refer to the length of one AMR speech frame-block,
  * not counting CMR, TOC. */
-#define AMR_FT_0_LEN	((AMR_FT_0_LEN_BITS+7)/8)	/* 4.75 */
-#define AMR_FT_1_LEN	((AMR_FT_1_LEN_BITS+7)/8)	/* 5.15 */
-#define AMR_FT_2_LEN	((AMR_FT_2_LEN_BITS+7)/8)	/* 5.90 */
-#define AMR_FT_3_LEN	((AMR_FT_3_LEN_BITS+7)/8)	/* 6.70 */
-#define AMR_FT_4_LEN	((AMR_FT_4_LEN_BITS+7)/8)	/* 7.40 */
-#define AMR_FT_5_LEN	((AMR_FT_5_LEN_BITS+7)/8)	/* 7.95 */
-#define AMR_FT_6_LEN	((AMR_FT_6_LEN_BITS+7)/8)	/* 10.2 */
-#define AMR_FT_7_LEN	((AMR_FT_7_LEN_BITS+7)/8)	/* 12.2 */
-#define AMR_FT_SID_LEN	((AMR_FT_SID_LEN_BITS+7)/8)	/* SID */
-#define AMR_FT_GSM_EFR_SID_LEN	43	/* GSM-EFR SID */
-#define AMR_FT_TDMA_EFR_SID_LEN	38	/* TDMA-EFR SID */
-#define AMR_FT_PDC_EFR_SID_LEN	37	/* PDC-EFR SID */
+#define AMR_FT_0_LEN		((AMR_FT_0_LEN_BITS+7)/8)		/* 4.75 */
+#define AMR_FT_1_LEN		((AMR_FT_1_LEN_BITS+7)/8)		/* 5.15 */
+#define AMR_FT_2_LEN		((AMR_FT_2_LEN_BITS+7)/8)		/* 5.90 */
+#define AMR_FT_3_LEN		((AMR_FT_3_LEN_BITS+7)/8)		/* 6.70 */
+#define AMR_FT_4_LEN		((AMR_FT_4_LEN_BITS+7)/8)		/* 7.40 */
+#define AMR_FT_5_LEN		((AMR_FT_5_LEN_BITS+7)/8)		/* 7.95 */
+#define AMR_FT_6_LEN		((AMR_FT_6_LEN_BITS+7)/8)		/* 10.2 */
+#define AMR_FT_7_LEN		((AMR_FT_7_LEN_BITS+7)/8)		/* 12.2 */
+#define AMR_FT_SID_LEN		((AMR_FT_SID_LEN_BITS+7)/8)		/* SID */
+#define AMR_FT_GSM_EFR_SID_LEN	((AMR_FT_GSM_EFR_SID_LEN_BITS+7)/8)	/* GSM-EFR SID */
+#define AMR_FT_TDMA_EFR_SID_LEN	((AMR_FT_TDMA_EFR_SID_LEN_BITS+7)/8)	/* TDMA-EFR SID */
+#define AMR_FT_PDC_EFR_SID_LEN	((AMR_FT_PDC_EFR_SID_LEN_BITS+7)/8)	/* PDC-EFR SID */
 /* version 16.0.0 Release 16: 12-14 for future use */
-#define AMR_FT_NO_DATA_LEN	0	/* NO_DATA */
+#define AMR_FT_NO_DATA_LEN	((AMR_FT_NO_DATA_LEN_BITS+7)/8)		/* NO_DATA */
 
 int osmo_amr_ft_valid(uint8_t amr_ft);
 size_t osmo_amr_bytes(uint8_t amr_cmr);
