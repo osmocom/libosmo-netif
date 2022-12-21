@@ -2,6 +2,7 @@
 #define _OSMO_AMR_H_
 
 #include <stddef.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <osmocom/core/endian.h>
