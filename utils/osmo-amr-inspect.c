@@ -241,26 +241,32 @@ free_ret:
 static int read_stdin(void)
 {
 	ssize_t rc;
+	size_t hex_buflen;
 	char hex_buf[4096];
 	uint8_t buf[2048];
-	rc = read(0, hex_buf, sizeof(hex_buf));
+	rc = read(0, hex_buf, sizeof(hex_buf) - 1);
 	if (rc < 0) {
 		fprintf(stderr, "Failed reading stdin: %s\n", strerror(errno));
 		return -EIO;
 	}
-	if (rc == sizeof(hex_buf)) {
-		fprintf(stderr, "Failed parsing (input too long)\n");
+	hex_buflen = rc;
+	hex_buf[hex_buflen] = '\0';
+
+	if (hex_buflen == sizeof(hex_buf) - 1) {
+		fprintf(stderr, "Failed parsing (input too long > %lu): %s\n", hex_buflen, hex_buf);
 		return -ENOMEM;
 	}
-	rc = osmo_hexparse(hex_buf, buf, rc);
+
+	rc = osmo_hexparse(hex_buf, buf, sizeof(buf));
 	if (rc < 0) {
 		fprintf(stderr, "Failed parsing (hexparse error): %s\n", hex_buf);
 		return -1;
 	}
 	if (rc < 2) {
-		fprintf(stderr, "Too short to be an AMR buffer (%ld bytes): %s\n", rc, buf);
+		fprintf(stderr, "Too short to be an AMR buffer (%ld bytes): %s\n", rc, hex_buf);
 		return -1;
 	}
+
 	inspect_amr(0, buf, rc);
 	return 0;
 }
