@@ -217,6 +217,20 @@ static int setsockopt_nodelay(int fd, int proto, int on)
 	return rc;
 }
 
+#ifdef HAVE_LIBSCTP
+static int sctp_send_abort(int fd, uint32_t ppid, uint16_t stream_no)
+{
+	/* sctp_sendmsg doesn't work for SOCK_STREAM, sadly */
+	//return sctp_sendmsg(fd, NULL, 0, NULL, 0, ppid, SCTP_ABORT, stream_no, 0, 0);
+
+	/* Section 8.1.4 of RFC6458 */
+	struct linger li = {
+		.l_onoff = 1,
+		.l_linger = 0,
+	};
+	return setsockopt(fd, SOL_SOCKET, SO_LINGER, &li, sizeof(li));
+}
+#endif
 
 /*
  * Client side.
@@ -240,6 +254,7 @@ static const struct value_string stream_cli_state_names[] = {
 
 #define OSMO_STREAM_CLI_F_RECONF	(1 << 0)
 #define OSMO_STREAM_CLI_F_NODELAY	(1 << 1)
+#define OSMO_STREAM_CLI_F_SCTP_ABORT	(1 << 2)
 
 #ifdef HAVE_LIBSCTP
 #define OSMO_STREAM_MAX_ADDRS OSMO_SOCK_MAX_ADDRS
@@ -309,6 +324,11 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 	if (cli->ofd.fd == -1)
 		return;
 	osmo_fd_unregister(&cli->ofd);
+#ifdef HAVE_LIBSCTP
+	if (cli->proto == IPPROTO_SCTP && cli->flags & OSMO_STREAM_CLI_F_SCTP_ABORT) {
+		sctp_send_abort(cli->ofd.fd, 0, 0);
+	}
+#endif
 	close(cli->ofd.fd);
 	cli->ofd.fd = -1;
 
@@ -736,6 +756,16 @@ void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 	talloc_free(cli);
 }
 
+#ifdef HAVE_LIBSCTP
+void osmo_stream_cli_set_sctp_abort(struct osmo_stream_cli *cli, bool use_abort)
+{
+	if (use_abort)
+		cli->flags |= OSMO_STREAM_CLI_F_SCTP_ABORT;
+	else
+		cli->flags &= ~OSMO_STREAM_CLI_F_SCTP_ABORT;
+}
+#endif
+
 /*! \brief DEPRECATED: use osmo_stream_cli_set_reconnect_timeout() or osmo_stream_cli_reconnect() instead!
  * Open connection of an Osmocom stream client
  *  \param[in] cli Stream Client to connect
@@ -939,6 +969,7 @@ void osmo_stream_cli_clear_tx_queue(struct osmo_stream_cli *cli)
 
 #define OSMO_STREAM_SRV_F_RECONF	(1 << 0)
 #define OSMO_STREAM_SRV_F_NODELAY	(1 << 1)
+#define OSMO_STREAM_SRV_F_SCTP_ABORT	(1 << 2)
 
 struct osmo_stream_srv_link {
 	struct osmo_fd		ofd;
@@ -1057,6 +1088,16 @@ void osmo_stream_srv_link_set_nodelay(struct osmo_stream_srv_link *link, bool no
 	else
 		link->flags &= ~OSMO_STREAM_SRV_F_NODELAY;
 }
+
+#ifdef HAVE_LIBSCTP
+void osmo_stream_srv_link_set_sctp_abort(struct osmo_stream_srv_link *link, bool use_abort)
+{
+	if (use_abort)
+		link->flags |= OSMO_STREAM_CLI_F_SCTP_ABORT;
+	else
+		link->flags &= ~OSMO_STREAM_CLI_F_SCTP_ABORT;
+}
+#endif
 
 /*! \brief Set the local address to which we bind
  *  \param[in] link Stream Server Link to modify
@@ -1296,6 +1337,11 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 		return;
 
 	osmo_fd_unregister(&link->ofd);
+#ifdef HAVE_LIBSCTP
+	if (link->proto == IPPROTO_SCTP && link->flags & OSMO_STREAM_SRV_F_SCTP_ABORT) {
+		sctp_send_abort(link->ofd.fd, 0, 0);
+	}
+#endif
 	close(link->ofd.fd);
 	link->ofd.fd = -1;
 }
@@ -1431,6 +1477,9 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	conn->read_cb = read_cb;
 	conn->closed_cb = closed_cb;
 	conn->data = data;
+	/* inherit the SCTP_ABORT flag */
+	if (link->flags & OSMO_STREAM_SRV_F_SCTP_ABORT)
+		conn->flags |= OSMO_STREAM_SRV_F_SCTP_ABORT;
 	INIT_LLIST_HEAD(&conn->tx_queue);
 
 	if (osmo_fd_register(&conn->ofd) < 0) {
@@ -1450,6 +1499,16 @@ void osmo_stream_srv_set_flush_and_destroy(struct osmo_stream_srv *conn)
 {
 	conn->flags |= OSMO_STREAM_SRV_F_FLUSH_DESTROY;
 }
+
+#ifdef HAVE_LIBSCTP
+void osmo_stream_srv_set_sctp_abort(struct osmo_stream_srv *conn, bool use_abort)
+{
+	if (use_abort)
+		conn->flags |= OSMO_STREAM_SRV_F_SCTP_ABORT;
+	else
+		conn->flags &= ~OSMO_STREAM_SRV_F_SCTP_ABORT;
+}
+#endif
 
 /*! \brief Set application private data of the stream server
  *  \param[in] conn Stream Server to modify
@@ -1495,6 +1554,11 @@ struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *
 void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 {
 	osmo_fd_unregister(&conn->ofd);
+#ifdef HAVE_LIBSCTP
+	if (conn->srv->proto == IPPROTO_SCTP && conn->srv->flags & OSMO_STREAM_SRV_F_SCTP_ABORT) {
+		sctp_send_abort(conn->ofd.fd, 0, 0);
+	}
+#endif
 	close(conn->ofd.fd);
 	conn->ofd.fd = -1;
 	if (conn->closed_cb)
