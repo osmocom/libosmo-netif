@@ -7,7 +7,3 @@
 # If any interfaces have been added since the last public release: c:r:a + 1.
 # If any interfaces have been removed or changed since the last public release: c:r:0.
 #library	what		description / commit summary line
-libosmo-netif   osmux           new osmux_xfrm_output_* APIs
-libosmo-netif   osmux           new osmux_xfrm_input_* APIs
-libosmo-netif   osmux           new struct osmux_hdr->data[0] field
-libosmo-netif   stream          new APIs osmo_stream_{cli,srv}_clear_tx_queue()

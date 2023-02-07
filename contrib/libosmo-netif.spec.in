@@ -24,26 +24,26 @@ BuildRequires:  automake
 BuildRequires:  libtool >= 2
 BuildRequires:  lksctp-tools-devel
 BuildRequires:  pkgconfig >= 0.20
-BuildRequires:  pkgconfig(libosmocore) >= 1.7.0
-BuildRequires:  pkgconfig(libosmogsm) >= 1.7.0
-BuildRequires:  pkgconfig(libosmocodec) >= 1.7.0
+BuildRequires:  pkgconfig(libosmocore) >= 1.8.0
+BuildRequires:  pkgconfig(libosmogsm) >= 1.8.0
+BuildRequires:  pkgconfig(libosmocodec) >= 1.8.0
 
 %description
 Network interface demuxer library for OsmoCom projects.
 
-%package -n libosmonetif8
+%package -n libosmonetif11
 Summary:        Osmocom library for muxed audio
 License:        AGPL-3.0-or-later
 Group:          System/Libraries
 
-%description -n libosmonetif8
+%description -n libosmonetif11
 Network interface demuxer library for OsmoCom projects.
 
 %package -n libosmonetif-devel
 Summary:        Development files for the Osmocom muxed audio library
 License:        AGPL-3.0-or-later
 Group:          Development/Libraries/C and C++
-Requires:       libosmonetif8 = %{version}
+Requires:       libosmonetif11 = %{version}
 
 %description -n libosmonetif-devel
 Network interface demuxer library for OsmoCom projects.
@@ -67,11 +67,11 @@ find %{buildroot} -type f -name "*.la" -delete -print
 %check
 make %{?_smp_mflags} check || (find . -name testsuite.log -exec cat {} +)
 
-%post   -n libosmonetif8 -p /sbin/ldconfig
-%postun -n libosmonetif8 -p /sbin/ldconfig
+%post   -n libosmonetif11 -p /sbin/ldconfig
+%postun -n libosmonetif11 -p /sbin/ldconfig
 
-%files -n libosmonetif8
-%{_libdir}/libosmonetif.so.8*
+%files -n libosmonetif11
+%{_libdir}/libosmonetif.so.11*
 
 %files -n libosmonetif-devel
 %license COPYING

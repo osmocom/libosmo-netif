@@ -1,6 +1,6 @@
 # This is _NOT_ the library release version, it's an API version.
 # Please read Chapter 6 "Library interface versions" of the libtool documentation before making any modification
-LIBVERSION=10:0:2
+LIBVERSION=11:0:0
 
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)
 AM_CFLAGS= -fPIC -Wall $(LIBOSMOCORE_CFLAGS) $(LIBOSMOGSM_CFLAGS) $(LIBOSMOABIS_CFLAGS) $(COVERAGE_CFLAGS) $(LIBSCTP_CFLAGS)

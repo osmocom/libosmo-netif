@@ -1,3 +1,129 @@
+libosmo-netif (1.3.0) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * rtp: Delay rtph ptr assign after validating length
+  * stream: assert params are not NULL in send/recv functions
+  * stream: getsockopt ret socklen_t is unsigned
+  * osmux.h: Add missing msgb.h header
+  * osmux.h: Define default Osmux port
+  * rtp: Avoid memcpy(len=0)
+  * examples/osmux-test-output: Avoid using deprecated Osmux API
+  * osmux: Drop long time deprecated APIs
+  * osmux: Move osmux_xfrm_output_set_tx_cb() further down to the xfrm_output section
+  * osmux: Allocate struct osmux_out_handle through API
+  * osmux: Allow the user to alloc msgbs used to provide generated RTP packets
+  * osmux: osmux_xfrm_input_close_circuit(): Log circuit not found
+  * stream: Fix typos in log messages
+  * stream: Unset fd value after close() before calling closed_cb()
+  * stream: Provide caller with SCTP flags during osmo_stream_*_recv()
+  * tests/osmo-pcap-test/osmux_test: Fix return condition check for osmux_xfrm_input()
+  * osmux: Improve logging non-usual conditions
+  * osmux: osmux_xfrm_input(): Propagate error code to inform caller
+  * osmux: Avoid duplicated RTP msg trigger Tx of osmux frame
+  * osmux: Change order of lines to follow packet fill order
+  * cosmetic: osmux: Fix typo in comment
+  * osmux: Unify return codes of osmux_batch_add() and osmux_batch_enqueue()
+  * osmux: Early return on error or batch full during osmux_replay_lost_packets()
+  * osmux: assert no batch factor greater than 8 is used
+  * tests/osmux_test2: Document unit tests
+  * tests/osmux: Always run with fake time
+  * tests: rename test osmux_test2 -> osmux_output_test
+  * osmux: Print osmux_hdr rtp_m field in osmux_snprintf()
+  * amr: Add data[0] field to amr_hdr
+  * osmux: Proper encoding of osmux frames when when AMR FT changes
+  * tests/osmux: Add new osmux_input_test to validate AMR FT changes
+  * osmux: Fix AMR F,Q,CMR fields not properly encoded in osmux header
+  * cosmetic: osmux: Properly separate expressions with whitespace
+  * cosmetic: osmux: Fix typo in comment
+  * osmux: Fix osmux seqnum incremented globally instead of per circuit
+  * tests/osmux: Properly flush and free out_handle in osmux_test
+  * tests/osmux: Test rx of osmux seqnum wrap around
+  * osmux: Fix unwanted RTP marker bit upon rx of osmux seqnum wrap around
+  * stream: Set proper msgb length when returning sctp_notification
+  * stream: Erase sctp_msg_flags if receiving user data
+  * stream: Log rx of sctp notification SCTP_SEND_FAILED
+  * stream: Set sctp_ppid and sctp_stream when sctp notifciation is received
+  * stream: Remove unneeded break statement
+  * stream: Return 0 when receiving sctp notification SCTP_COMM_LOST
+  * stream: Document osmo_stream_srv_recv() SCTP specialties
+  * osmux: join osmux_xfrm_input_open_circuit() and osmux_batch_add_circuit()
+  * osmux: Take into account configured osmux_in_handle->osmux_seq field
+  * osmux: Split input and output code into separate files
+  * cosmetic: osmux: Make linter happy
+  * tests/osmo-pcap/osmux: Replace deprecated API osmux_xfrm_output_init2()
+  * osmux: Allocate struct osmux_out_handle through API
+  * osmux: Replace deprecated osmux_xfrm_input_* APIs in examples & tests
+  * osmux: Introduce API osmux_xfrm_input_get_deliver_cb_data()
+  * stream: Improve logging of SCTP_PEER_ADDR_CHANGE notification
+  * cosmetic: stream: Fix parameter name
+  * stream: Introduce APIs osmo_stream_{cli,srv}_clear_tx_queue()
+  * cosmetic: Fix indentation whitespace
+  * amr: Document SID frame length from spec
+  * osmux: Rework log formatting when replaying detected RTP gaps
+  * osmux: Use msgb_copy() API in osmux_replay_lost_packets()
+  * osmux: Log AMR FT when incorrect AMR payload size detected
+  * osmux: Fix naming of functions operating on osmux circuits
+  * osmux: rename internal struct osmux_batch -> osmux_link
+  * osmux: Add internal backpointer to in_handle to simplify param passing
+  * osmux: Fix endianness logging duplicaed seqnum
+  * osmux: Use internal struct to cache parsing state of rtp pkt from user
+  * osmux: dup in RTP pkt: check before applying queue flush due to Marker bit
+  * osmux: dup in RTP pkt: Replace potentially internally forged pkt with incoming one
+  * osmux: recreate lost RTP pkts before handling newest one
+  * osmux: Drop marker bit in forged RTP packets to fill gaps
+  * osmux: Add data[0] field to osmux_hdr
+  * osmux: Drop noop OR during assignment
+  * tests/osmux: Test replay of one lost RTP packet when generating osmux batches
+  * tests/osmux: Test incoming RTP stream with seqnum jumps during wraparound
+  * tests/osmux: Test big seqnum holes (>batch_factor) in incoming RTP stream
+  * osmux: Obey current batch_size restrictions when creating forged RTP packets to fill holes
+  * osmux: Use better rationale when limiting amount of lost & forged RTP incoming packets
+  * osmux: Avoid filling in seqnum holes upon rx of RTP pkt with M bit set
+  * osmux: Set M bit in osmuxhdr if seqnum hole found encoding RTP pkts
+  * osmux: Support recreating lost RTP packets at start of the batch
+  * osmux: Introduce API osmux_xfrm_input_set_name()
+  * osmux: Improve logging of osmux_xfrm_input
+  * tests/osmux: Add extra asserts to validate osmux header is pulled correctly
+  * amr: Guard against incorrect AMR FT passed to osmo_amr_{bits,bytes}()
+  * osmux: Check received osmuxh->amr_ft is correct before using it
+  * osmux: Refactor osmux_xfrm_output_pull() to simplify code flow
+  * osmux_output: Refactor init code to avoid calling deprecated APIs internally
+  * amr.h: Fix missing include dependencies
+  * amr: osmo_amr_bwe_to_oa(): Modify loop to allow osmo_amr_bytes()=0 (NO_DATA)
+  * amr: osmo_amr_bwe_to_oa() define variable as unsigned
+  * amr: Add struct definition for AMR BWE header
+  * tests/amr: Add test case for unused FT=14
+  * amr: Support all SID and NO_DATA amr formats
+  * osmux: Allow forwarding AMR NO_DATA frames
+  * stream: Log read/write flags
+  * stream: osmo_stream_*_write: Unifiy way to get data and length
+  * stream: Log error on short send
+  * stream: Avoid useless polling if tx_queue becomes empty
+  * stream: Fix tx data dropped upon show socket write
+  * amr.h: Fix AMR_FT_{GSM,TDMA,PDC}_EFR_SID_LEN
+  * amr: Add missing header stdbool.h
+  * amr: constify input buffer in osmo_amr_is_oa()
+  * amr: use struct bwe_hdr in osmo_amr_bwe_to_oa()
+  * amr: Clarify size of AMR BWE header and ToC
+  * amr: use OSMO_BYTES_FOR_BITS()
+  * amr: osmo_amr_bwe_to_oa(): validate input data is long enough
+  * Introduce utils/osmo-amr-inspect program
+  * osmo-amr-inspect: Improve robustness reading from stdin
+
+  [ Vadim Yanitskiy ]
+  * tests/amr: fix less-than-zero comparison of an unsigned value
+
+  [ Max ]
+  * Log more details in osmo_stream_srv_write()
+  * Properly handle send() return code
+  * Better handling of send() error
+  * Add assert for link check to osmo_stream_srv_create()
+
+  [ Harald Welte ]
+  * Support building with -Werror=strict-prototypes / -Werror=old-style-definition
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 07 Feb 2023 13:28:19 +0100
+
 libosmo-netif (1.2.0) unstable; urgency=medium
 
   [ Pau Espin Pedrol ]

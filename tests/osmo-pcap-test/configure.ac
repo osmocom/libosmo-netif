@@ -16,7 +16,7 @@ PKG_PROG_PKG_CONFIG([0.20])
 dnl kernel style compile messages
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.7.0)
+PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.8.0)
 
 AC_PROG_CC
 AC_DISABLE_STATIC
