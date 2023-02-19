@@ -1507,6 +1507,7 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 	OSMO_ASSERT(msg);
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
 		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring new outgoing message\n");
+		msgb_free(msg);
 		return;
 	}
 
