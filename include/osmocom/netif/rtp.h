@@ -82,4 +82,6 @@ int osmo_rtp_snprintf(char *buf, size_t size, struct msgb *msg);
 
 #define RTP_PT_AMR			98
 
+#define RTP_PT_CSDATA			120	/* 3GPP TS 48.103 table 5.4.2.2.1 */
+
 #endif
