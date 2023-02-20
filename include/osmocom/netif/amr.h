@@ -36,7 +36,7 @@ struct amr_hdr_bwe {
 		q:1,	/* OK (not damaged) at origin? */
 		ft_lo:1;	/* coding mode lowest bit */
 #elif OSMO_IS_BIG_ENDIAN
-/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
+/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianness.py) */
 	uint8_t cmr:4, f:1, ft_hi:3;
 	uint8_t ft_lo:1, q:1, data_start:6;
 #endif
@@ -88,7 +88,7 @@ struct amr_hdr {
 		ft:4,	/* coding mode */
 		f:1;	/* followed by another speech frame? */
 #elif OSMO_IS_BIG_ENDIAN
-/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
+/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianness.py) */
 	uint8_t cmr:4, pad1:4;
 	uint8_t f:1, ft:4, q:1, pad2:2;
 #endif

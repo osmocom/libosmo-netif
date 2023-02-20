@@ -40,7 +40,7 @@ struct osmux_hdr {
 		ft:2,
 		rtp_m:1;
 #elif OSMO_IS_BIG_ENDIAN
-/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
+/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianness.py) */
 	uint8_t rtp_m:1, ft:2, ctr:3, amr_f:1, amr_q:1;
 #endif
 	uint8_t seq;
@@ -50,7 +50,7 @@ struct osmux_hdr {
 	uint8_t amr_cmr:4,
 		amr_ft:4;
 #elif OSMO_IS_BIG_ENDIAN
-/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianess.py) */
+/* auto-generated from the little endian part above (libosmocore/contrib/struct_endianness.py) */
 	uint8_t amr_ft:4, amr_cmr:4;
 #endif
 	uint8_t data[0];
