@@ -321,6 +321,11 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 	cli->state = STREAM_CLI_STATE_CLOSED;
 }
 
+static inline int osmo_stream_cli_fd(const struct osmo_stream_cli *cli)
+{
+	return cli->ofd.fd;
+}
+
 static void osmo_stream_cli_read(struct osmo_stream_cli *cli)
 {
 	LOGSCLI(cli, LOGL_DEBUG, "message received\n");
@@ -406,7 +411,7 @@ static int _setsockopt_nosigpipe(struct osmo_stream_cli *cli)
 #ifdef SO_NOSIGPIPE
 	int ret;
 	int val = 1;
-	ret = setsockopt(cli->ofd.fd, SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val));
+	ret = setsockopt(osmo_stream_cli_fd(cli), SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val));
 	if (ret < 0)
 		LOGSCLI(cli, LOGL_DEBUG, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
 	return ret;
@@ -678,7 +683,7 @@ char *osmo_stream_cli_get_sockname(const struct osmo_stream_cli *cli)
 {
 	static char buf[OSMO_SOCK_NAME_MAXLEN];
 
-	osmo_sock_get_name_buf(buf, OSMO_SOCK_NAME_MAXLEN, cli->ofd.fd);
+	osmo_sock_get_name_buf(buf, OSMO_SOCK_NAME_MAXLEN, osmo_stream_cli_fd(cli));
 
 	return buf;
 }
@@ -811,10 +816,10 @@ void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay)
  *  \return negative on error, 0 on success */
 int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 {
-	int ret;
+	int ret, fd = -1;
 
 	/* we are reconfiguring this socket, close existing first. */
-	if ((cli->flags & OSMO_STREAM_CLI_F_RECONF) && cli->ofd.fd >= 0)
+	if ((cli->flags & OSMO_STREAM_CLI_F_RECONF) && osmo_stream_cli_fd(cli) >= 0)
 		osmo_stream_cli_close(cli);
 
 	cli->flags &= ~OSMO_STREAM_CLI_F_RECONF;
@@ -850,14 +855,16 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		osmo_stream_cli_reconnect(cli);
 		return ret;
 	}
-	osmo_fd_setup(&cli->ofd, ret, OSMO_FD_READ | OSMO_FD_WRITE, cli->ofd.cb, cli->ofd.data, cli->ofd.priv_nr);
+
+	fd = ret;
 
 	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
-		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
+		ret = setsockopt_nodelay(fd, cli->proto, 1);
 		if (ret < 0)
 			goto error_close_socket;
 	}
 
+	osmo_fd_setup(&cli->ofd, fd, OSMO_FD_READ | OSMO_FD_WRITE, cli->ofd.cb, cli->ofd.data, cli->ofd.priv_nr);
 	if (osmo_fd_register(&cli->ofd) < 0)
 		goto error_close_socket;
 
