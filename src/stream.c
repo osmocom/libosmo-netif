@@ -261,10 +261,10 @@ struct osmo_stream_cli {
 	int				sk_domain;
 	int				sk_type;
 	uint16_t			proto;
-	int (*connect_cb)(struct osmo_stream_cli *srv);
-	int (*disconnect_cb)(struct osmo_stream_cli *srv);
-	int (*read_cb)(struct osmo_stream_cli *srv);
-	int (*write_cb)(struct osmo_stream_cli *srv);
+	int (*connect_cb)(struct osmo_stream_cli *cli);
+	int (*disconnect_cb)(struct osmo_stream_cli *cli);
+	int (*read_cb)(struct osmo_stream_cli *cli);
+	int (*write_cb)(struct osmo_stream_cli *cli);
 	void				*data;
 	int				flags;
 	int				reconnect_timeout;
