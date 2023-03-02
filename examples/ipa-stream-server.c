@@ -1,4 +1,5 @@
 /* IPA stream srv example */
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,7 +62,7 @@ int read_cb(struct osmo_stream_srv *conn)
 		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot receive message\n");
 		osmo_stream_srv_destroy(conn);
 		msgb_free(msg);
-		return 0;
+		return -EBADF;
 	}
 	if (osmo_ipa_process_msg(msg) < 0) {
 		LOGP(DSTREAMTEST, LOGL_ERROR, "Bad IPA message\n");
