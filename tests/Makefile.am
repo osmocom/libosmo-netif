@@ -1,5 +1,6 @@
-AM_CFLAGS = -Wall -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS) -g
-AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS) -no-install
+AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CFLAGS = -Wall $(LIBOSMOCORE_CFLAGS) -g
+AM_LDFLAGS = -no-install
 
 LDADD = \
 	$(top_builddir)/src/libosmonetif.la \
