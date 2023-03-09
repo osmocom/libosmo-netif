@@ -8,10 +8,10 @@ AM_CFLAGS = \
         $(NULL)
 
 LDADD = \
+        $(top_builddir)/src/libosmonetif.la \
         $(LIBOSMOCORE_LIBS) \
         $(LIBOSMOCODEC_LIBS) \
         $(LIBOSMOGSM_LIBS) \
-        $(top_builddir)/src/libosmonetif.la \
         $(NULL)
 
 noinst_PROGRAMS = osmo-amr-inspect

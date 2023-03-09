@@ -1,6 +1,12 @@
 AM_CFLAGS = -Wall -I$(top_srcdir)/include $(LIBOSMOCORE_CFLAGS) -g
 AM_LDFLAGS = $(LIBOSMOCORE_LDFLAGS) -no-install
 
+LDADD = \
+	$(top_builddir)/src/libosmonetif.la \
+	$(LIBOSMOCORE_LIBS) \
+	$(LIBOSMOGSM_LIBS) \
+	$(NULL)
+
 check_PROGRAMS = \
 	osmux/osmux_test \
 	osmux/osmux_output_test \
@@ -12,22 +18,11 @@ check_PROGRAMS = \
 check_HEADERS =
 
 osmux_osmux_test_SOURCES = osmux/osmux_test.c
-osmux_osmux_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
-
 osmux_osmux_output_test_SOURCES = osmux/osmux_output_test.c
-osmux_osmux_output_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
-
 osmux_osmux_input_test_SOURCES = osmux/osmux_input_test.c
-osmux_osmux_input_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
-
 stream_stream_test_SOURCES = stream/stream_test.c
-stream_stream_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
-
 jibuf_jibuf_test_SOURCES = jibuf/jibuf_test.c
-jibuf_jibuf_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
-
 amr_amr_test_SOURCES = amr/amr_test.c
-amr_amr_test_LDADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(top_builddir)/src/libosmonetif.la
 
 if HAVE_PCAP
 check_PROGRAMS += jibuf/jibuf_tool
@@ -45,11 +40,7 @@ jibuf_jibuf_tool_SOURCES = \
 	osmo-pcap-test/l4_udp.c \
 	osmo-pcap-test/pcap.c
 
-jibuf_jibuf_tool_LDADD = \
-	$(LIBOSMOCORE_LIBS) \
-	$(LIBOSMOGSM_LIBS) \
-	$(top_builddir)/src/libosmonetif.la \
-	-lpcap
+jibuf_jibuf_tool_LDADD = $(LDADD) -lpcap
 endif
 
 # The `:;' works around a Bash 3.2 bug when the output is not writeable.
