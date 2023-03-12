@@ -9,7 +9,7 @@ AM_LDFLAGS = $(COVERAGE_LDFLAGS)
 lib_LTLIBRARIES = libosmonetif.la
 
 libosmonetif_la_LIBADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBSCTP_LIBS)
-libosmonetif_la_LDFLAGS = -version-info $(LIBVERSION) -no-undefined
+libosmonetif_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(LIBVERSION) -no-undefined
 
 libosmonetif_la_SOURCES = amr.c			\
 			  datagram.c		\
