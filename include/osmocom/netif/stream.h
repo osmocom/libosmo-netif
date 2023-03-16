@@ -45,6 +45,7 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link);
 struct osmo_stream_srv;
 
 struct osmo_stream_srv *osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd, int (*read_cb)(struct osmo_stream_srv *conn), int (*closed_cb)(struct osmo_stream_srv *conn), void *data);
+struct osmo_stream_srv *osmo_stream_srv_create_iofd(void *ctx, const char *name, struct osmo_stream_srv_link *link, int fd, int (*read_cb)(struct osmo_stream_srv *conn, struct msgb *msg), int (*closed_cb)(struct osmo_stream_srv *conn), void *data);
 void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn);
 struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *conn);
 struct osmo_fd *osmo_stream_srv_get_ofd(struct osmo_stream_srv *srv);
@@ -79,10 +80,12 @@ struct osmo_fd *osmo_stream_cli_get_ofd(struct osmo_stream_cli *cli);
 void osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli, int (*connect_cb)(struct osmo_stream_cli *cli));
 void osmo_stream_cli_set_disconnect_cb(struct osmo_stream_cli *cli, int (*disconnect_cb)(struct osmo_stream_cli *cli));
 void osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli, int (*read_cb)(struct osmo_stream_cli *cli));
+void osmo_stream_cli_set_iofd_read_cb(struct osmo_stream_cli *cli, int (*read_cb)(struct osmo_stream_cli *cli, struct msgb *msg));
 void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli);
 bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli);
 
 struct osmo_stream_cli *osmo_stream_cli_create(void *ctx);
+struct osmo_stream_cli *osmo_stream_cli_create_iofd(void *ctx, const char *name);
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli);
 
 int osmo_stream_cli_open(struct osmo_stream_cli *cli);
