@@ -47,23 +47,10 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-int read_cb(struct osmo_stream_srv *conn)
+int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
 {
-	struct msgb *msg;
+	LOGP(DSTREAMTEST, LOGL_DEBUG, "received message from stream (len=%d)\n", msgb_length(msg));
 
-	LOGP(DSTREAMTEST, LOGL_DEBUG, "received message from stream\n");
-
-	msg = osmo_ipa_msg_alloc(0);
-	if (msg == NULL) {
-		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
-		return 0;
-	}
-	if (osmo_stream_srv_recv(conn, msg) <= 0) {
-		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot receive message\n");
-		osmo_stream_srv_destroy(conn);
-		msgb_free(msg);
-		return -EBADF;
-	}
 	if (osmo_ipa_process_msg(msg) < 0) {
 		LOGP(DSTREAMTEST, LOGL_ERROR, "Bad IPA message\n");
 		msgb_free(msg);
@@ -84,11 +71,11 @@ static int accept_cb(struct osmo_stream_srv_link *srv, int fd)
 {
 	if (conn != NULL) {
 		LOGP(DSTREAMTEST, LOGL_ERROR, "Sorry, this example only "
-			"support one client simultaneously\n");
+			"supports one client simultaneously\n");
 		return -1;
 	}
 
-	conn = osmo_stream_srv_create(tall_test, srv, fd,
+	conn = osmo_stream_srv_create_iofd(tall_test, "srv link", srv, fd,
 				       read_cb, close_cb, NULL);
 	if (conn == NULL) {
 		LOGP(DSTREAMTEST, LOGL_ERROR,
@@ -104,7 +91,7 @@ int main(void)
 	tall_test = talloc_named_const(NULL, 1, "osmo_stream_srv_test");
 	msgb_talloc_ctx_init(tall_test, 0);
 	osmo_init_logging2(tall_test, &osmo_stream_srv_test_log_info);
-	log_set_log_level(osmo_stderr_target, LOGL_NOTICE);
+	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	/*
 	 * initialize stream srv.
