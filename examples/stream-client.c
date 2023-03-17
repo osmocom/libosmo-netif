@@ -50,27 +50,11 @@ static int disconnect_cb(struct osmo_stream_cli *conn)
 	return 0;
 }
 
-static int read_cb(struct osmo_stream_cli *conn)
+static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
 {
-	int bytes;
-	struct msgb *msg;
-
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "receiving message from stream... ");
 
-	msg = msgb_alloc(1024, "STREAMCLIENT/test");
-	if (msg == NULL) {
-		LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
-		return 0;
-	}
-
-	bytes = osmo_stream_cli_recv(conn, msg);
-
-	if (bytes < 0) {
-		LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot receive message\n");
-		return 0;
-	}
-
-	LOGPC(DSTREAMTEST, LOGL_NOTICE, "got %d (%d) bytes: %s\n", bytes, msg->len, msgb_hexdump(msg));
+	LOGPC(DSTREAMTEST, LOGL_NOTICE, "got %d bytes: %s\n", msg->len, msgb_hexdump(msg));
 
 	msgb_free(msg);
 	return 0;
@@ -120,7 +104,7 @@ int main(void)
 	 * initialize stream cli.
 	 */
 
-	conn = osmo_stream_cli_create(tall_test);
+	conn = osmo_stream_cli_create2(tall_test, "stream_client");
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create cli\n");
 		exit(EXIT_FAILURE);
@@ -129,7 +113,7 @@ int main(void)
 	osmo_stream_cli_set_port(conn, 10000);
 	osmo_stream_cli_set_connect_cb(conn, connect_cb);
 	osmo_stream_cli_set_disconnect_cb(conn, disconnect_cb);
-	osmo_stream_cli_set_read_cb(conn, read_cb);
+	osmo_stream_cli_set_read_cb2(conn, read_cb);
 
 	if (osmo_stream_cli_open(conn) < 0) {
 		fprintf(stderr, "cannot open cli\n");

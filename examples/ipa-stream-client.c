@@ -103,21 +103,10 @@ static int connect_cb(struct osmo_stream_cli *conn)
 	return 0;
 }
 
-static int read_cb(struct osmo_stream_cli *conn)
+static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
 {
-	struct msgb *msg;
+	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream (len=%d)\n", msgb_length(msg));
 
-	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream\n");
-
-	msg = osmo_ipa_msg_alloc(0);
-	if (msg == NULL) {
-		LOGP(DIPATEST, LOGL_ERROR, "cannot allocate message\n");
-		return 0;
-	}
-	if (osmo_stream_cli_recv(conn, msg) <= 0) {
-		LOGP(DIPATEST, LOGL_ERROR, "cannot receive message\n");
-		return 0;
-	}
 	if (osmo_ipa_process_msg(msg) < 0) {
 		LOGP(DIPATEST, LOGL_ERROR, "bad IPA message\n");
 		return 0;
@@ -175,7 +164,7 @@ int main(int argc, char *argv[])
 	 * initialize stream client.
 	 */
 
-	conn = osmo_stream_cli_create(tall_test);
+	conn = osmo_stream_cli_create2(tall_test, "ipa_test_client");
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create client\n");
 		exit(EXIT_FAILURE);
@@ -184,7 +173,7 @@ int main(int argc, char *argv[])
 	osmo_stream_cli_set_port(conn, 10000);
 	osmo_stream_cli_set_connect_cb(conn, connect_cb);
 	osmo_stream_cli_set_disconnect_cb(conn, disconnect_cb);
-	osmo_stream_cli_set_read_cb(conn, read_cb);
+	osmo_stream_cli_set_read_cb2(conn, read_cb);
 	osmo_stream_cli_set_data(conn, &num_msgs);
 	osmo_stream_cli_set_nodelay(conn, true);
 

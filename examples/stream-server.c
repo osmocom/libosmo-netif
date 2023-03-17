@@ -42,29 +42,11 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-int read_cb(struct osmo_stream_srv *conn)
+int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
 {
-	int bytes;
-	struct msgb *msg;
-
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "receiving message from stream... ");
 
-	msg = msgb_alloc(1024, "STREAMSERVER/test");
-	if (msg == NULL) {
-		LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot allocate message\n");
-		return 0;
-	}
-
-	bytes = osmo_stream_srv_recv(conn, msg);
-
-	if (bytes <= 0) {
-		if (bytes < 0)
-			LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot receive message: %s\n", strerror(-bytes));
-		else
-			LOGPC(DSTREAMTEST, LOGL_ERROR, "client closed connection\n");
-		osmo_stream_srv_destroy(conn);
-	} else
-		LOGPC(DSTREAMTEST, LOGL_NOTICE, "got %d (%d) bytes: %s\n", bytes, msg->len, msgb_hexdump(msg));
+	LOGPC(DSTREAMTEST, LOGL_NOTICE, "got %d bytes: %s\n", msg->len, msgb_hexdump(msg));
 
 	msgb_free(msg);
 	return 0;
@@ -72,6 +54,7 @@ int read_cb(struct osmo_stream_srv *conn)
 
 static int close_cb(struct osmo_stream_srv *dummy)
 {
+	LOGPC(DSTREAMTEST, LOGL_ERROR, "client closed connection\n");
 	conn = NULL;
 	return 0;
 }
@@ -86,13 +69,14 @@ static int accept_cb(struct osmo_stream_srv_link *srv, int fd)
 		return -1;
 	}
 
-	conn = osmo_stream_srv_create(tall_test, srv, fd, read_cb,
-					 close_cb, NULL);
+	conn = osmo_stream_srv_create2(tall_test, "stream_server", srv, fd, NULL);
 	if (conn == NULL) {
 		LOGP(DSTREAMTEST, LOGL_ERROR,
 			"error while creating connection\n");
 		return -1;
 	}
+	osmo_stream_srv_set_read_cb(conn, read_cb);
+	osmo_stream_srv_set_closed_cb(conn, close_cb);
 
 	osmo_sock_get_name_buf(buf, OSMO_SOCK_NAME_MAXLEN, fd);
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "accepted client: %s\n", buf);
