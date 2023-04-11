@@ -1373,6 +1373,62 @@ osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link,
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
 }
 
+#define OSMO_STREAM_SRV_F_FLUSH_DESTROY	(1 << 0)
+
+struct osmo_stream_srv {
+	struct osmo_stream_srv_link	*srv;
+	enum osmo_stream_mode mode;
+	union {
+		struct osmo_fd			ofd;
+		struct osmo_io_fd		*iofd;
+	};
+	struct llist_head		tx_queue;
+	int (*closed_cb)(struct osmo_stream_srv *peer);
+	int (*read_cb)(struct osmo_stream_srv *peer);
+	int (*iofd_read_cb)(struct osmo_stream_srv *peer, struct msgb *msg);
+	void				*data;
+	int				flags;
+};
+
+static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
+{
+	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
+	LOGP(DLINP, LOGL_DEBUG, "message received (res=%d)\n", res);
+
+	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
+		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring received message\n");
+		msgb_free(msg);
+		return;
+	}
+
+	if (res <= 0) {
+		osmo_stream_srv_set_flush_and_destroy(conn);
+		if (osmo_iofd_txqueue_len(iofd) == 0)
+			osmo_stream_srv_destroy(conn);
+	} else if (conn->iofd_read_cb) {
+		conn->iofd_read_cb(conn, msg); // TODO: Handle return value?
+	}
+
+	return;
+}
+
+static void stream_srv_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
+{
+	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
+	LOGP(DLINP, LOGL_DEBUG, "connected write\n");
+
+	if (res == -1)
+		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", strerror(errno));
+
+	if (osmo_iofd_txqueue_len(iofd) == 0)
+		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY)
+			osmo_stream_srv_destroy(conn);
+}
+
+static struct osmo_io_ops srv_ioops = {
+	.read_cb = stream_srv_iofd_read_cb,
+	.write_cb = stream_srv_iofd_write_cb,
+};
 
 /*! \brief Set the socket type for the stream server link
  *  \param[in] link Stream Server Link to modify
@@ -1557,23 +1613,6 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 	link->ofd.fd = -1;
 }
 
-#define OSMO_STREAM_SRV_F_FLUSH_DESTROY	(1 << 0)
-
-struct osmo_stream_srv {
-	struct osmo_stream_srv_link	*srv;
-	enum osmo_stream_mode mode;
-	union {
-		struct osmo_fd			ofd;
-		struct osmo_io_fd		*iofd;
-	};
-	struct llist_head		tx_queue;
-	int (*closed_cb)(struct osmo_stream_srv *peer);
-	int (*read_cb)(struct osmo_stream_srv *peer);
-	int (*iofd_read_cb)(struct osmo_stream_srv *peer, struct msgb *msg);
-	void				*data;
-	int				flags;
-};
-
 static int osmo_stream_srv_read(struct osmo_stream_srv *conn)
 {
 	int rc = 0;
@@ -1705,46 +1744,6 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	}
 	return conn;
 }
-
-static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
-{
-	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
-	LOGP(DLINP, LOGL_DEBUG, "message received (res=%d)\n", res);
-
-	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
-		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring received message\n");
-		msgb_free(msg);
-		return;
-	}
-
-	if (res <= 0) {
-		osmo_stream_srv_set_flush_and_destroy(conn);
-		if (osmo_iofd_txqueue_len(iofd) == 0)
-			osmo_stream_srv_destroy(conn);
-	} else if (conn->iofd_read_cb) {
-		conn->iofd_read_cb(conn, msg); // TODO: Handle return value?
-	}
-
-	return;
-}
-
-static void stream_srv_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
-{
-	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
-	LOGP(DLINP, LOGL_DEBUG, "connected write\n");
-
-	if (res == -1)
-		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", strerror(errno));
-
-	if (osmo_iofd_txqueue_len(iofd) == 0)
-		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY)
-			osmo_stream_srv_destroy(conn);
-}
-
-static struct osmo_io_ops srv_ioops = {
-	.read_cb = stream_srv_iofd_read_cb,
-	.write_cb = stream_srv_iofd_write_cb,
-};
 
 struct osmo_stream_srv *
 osmo_stream_srv_create_iofd(void *ctx, const char *name,
