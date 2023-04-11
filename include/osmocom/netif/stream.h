@@ -21,6 +21,18 @@
 /*! \brief Osmocom Stream Server Link: A server socket listening/accepting */
 struct osmo_stream_srv_link;
 
+/*! \brief Type of protocol transported by the data stream */
+enum osmo_stream_proto {
+	OSMO_STREAM_UNSPECIFIED = -1,
+	OSMO_STREAM_IPAC = 0,
+	/* TODO: Add protocols for which libosmo-netif should be able to handle segmentation */
+	_NUM_OSMO_STREAM_PROTOS
+};
+
+/*! \brief Shortcut for unsetting the stream protocol (gets rid of segmentation pertaining to stream protocol) */
+#define osmo_stream_srv_link_unset_stream_proto(struct_osmo_stream_srv_link_ptr)\
+	osmo_stream_srv_link_set_stream_proto(struct_osmo_stream_srv_link_ptr, OSMO_STREAM_UNSPECIFIED)
+
 struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx);
 void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link);
 
@@ -29,6 +41,7 @@ void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link, const char
 int osmo_stream_srv_link_set_addrs(struct osmo_stream_srv_link *link, const char **addr, size_t addrcnt);
 void osmo_stream_srv_link_set_port(struct osmo_stream_srv_link *link, uint16_t port);
 void osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link, uint16_t proto);
+void osmo_stream_srv_link_set_stream_proto(struct osmo_stream_srv_link *link, enum osmo_stream_proto osp);
 int osmo_stream_srv_link_set_type(struct osmo_stream_srv_link *link, int type);
 int osmo_stream_srv_link_set_domain(struct osmo_stream_srv_link *link, int domain);
 void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link, int (*accept_cb)(struct osmo_stream_srv_link *link, int fd));

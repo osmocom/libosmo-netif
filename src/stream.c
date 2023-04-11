@@ -36,6 +36,7 @@
 #include <osmocom/core/select.h>
 #include <osmocom/core/utils.h>
 #include <osmocom/gsm/tlv.h>
+#include <osmocom/gsm/ipa.h>
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/osmo_io.h>
 #include <osmocom/core/panic.h>
@@ -77,6 +78,19 @@
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+
+//enum cb_type {
+//	CB_TYPE_SEGM = 0,
+//	CB_TYPE_READ,
+//	CB_TYPE_WRITE,
+//	_NUM_CB_TYPES
+//};
+
+//static int (*segmentation_cbs[_NUM_OSMO_STREAM_PROTOS][_NUM_CB_TYPES])(struct msgb *, int) = {
+//	[OSMO_STREAM_IPAC][CB_TYPE_SEGM] = ipa_segmentation_cb,
+static int (*segmentation_cbs[_NUM_OSMO_STREAM_PROTOS])(struct msgb *, int) = {
+	[OSMO_STREAM_IPAC] = ipa_segmentation_cb,
+};
 
 /* is any of the bytes from offset .. u8_size in 'u8' non-zero? return offset or -1 if all zero */
 static int byte_nonzero(const uint8_t *u8, unsigned int offset, unsigned int u8_size)
@@ -1189,6 +1203,7 @@ struct osmo_stream_srv_link {
 	int			sk_domain;
 	int			sk_type;
 	uint16_t		proto;
+	enum osmo_stream_proto	stream_proto;
 	int (*accept_cb)(struct osmo_stream_srv_link *srv, int fd);
 	void			*data;
 	int			flags;
@@ -1279,22 +1294,7 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	link->sk_domain = AF_UNSPEC;
 	link->sk_type = SOCK_STREAM;
 	link->proto = IPPROTO_TCP;
-	osmo_fd_setup(&link->ofd, -1, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_srv_ofd_cb, link, 0);
-
-	return link;
-}
-
-struct osmo_stream_srv_link *osmo_stream_srv_link_create_iofd(void *ctx, const char *name)
-{
-	struct osmo_stream_srv_link *link;
-
-	link = talloc_zero(ctx, struct osmo_stream_srv_link);
-	if (!link)
-		return NULL;
-
-	link->sk_domain = AF_UNSPEC;
-	link->sk_type = SOCK_STREAM;
-	link->proto = IPPROTO_TCP;
+	link->stream_proto = OSMO_STREAM_UNSPECIFIED;
 	osmo_fd_setup(&link->ofd, -1, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_srv_ofd_cb, link, 0);
 
 	return link;
@@ -1429,6 +1429,26 @@ static struct osmo_io_ops srv_ioops = {
 	.read_cb = stream_srv_iofd_read_cb,
 	.write_cb = stream_srv_iofd_write_cb,
 };
+
+/*! \brief Set the protocol transported by the stream for the stream server link
+ *  \param[in] link Stream Server Link to modify
+ *  \param[in] proto Protocol (like IPPROTO_TCP (default), IPPROTO_SCTP, ...).
+ */
+void osmo_stream_srv_link_set_stream_proto(struct osmo_stream_srv_link *link,
+					   enum osmo_stream_proto osp)
+{
+	if (!(OSMO_STREAM_UNSPECIFIED <= osp && osp < _NUM_OSMO_STREAM_PROTOS)) {
+		LOGP(DLINP, LOGL_ERROR, "Unexpected value (%d) for variable of type "
+		     "'enum osmo_stream_proto'\n", osp);
+		return;
+	}
+	link->stream_proto = osp;
+	if (osp != OSMO_STREAM_UNSPECIFIED)
+		srv_ioops.segmentation_cb = segmentation_cbs[osp];
+	else
+		srv_ioops.segmentation_cb = NULL;
+	link->flags |= OSMO_STREAM_SRV_F_RECONF;
+}
 
 /*! \brief Set the socket type for the stream server link
  *  \param[in] link Stream Server Link to modify
@@ -1764,7 +1784,8 @@ osmo_stream_srv_create_iofd(void *ctx, const char *name,
 	}
 	conn->mode = OSMO_STREAM_MODE_OSMO_IO;
 	conn->srv = link;
-	conn->iofd = osmo_iofd_setup(conn, fd, name, OSMO_IO_FD_MODE_READ_WRITE, &srv_ioops, conn);
+	conn->iofd = osmo_iofd_setup(conn, fd, name, OSMO_IO_FD_MODE_READ_WRITE,
+					    &srv_ioops, conn);
 	conn->iofd_read_cb = read_cb;
 	conn->closed_cb = closed_cb;
 	conn->data = data;

@@ -8,18 +8,24 @@
  * (at your option) any later version.
  */
 
+#include <inttypes.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <errno.h>
 
+#include <osmocom/core/byteswap.h>
 #include <osmocom/core/select.h>
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/msgb.h>
 #include <osmocom/core/logging.h>
 #include <osmocom/core/application.h>
 #include <osmocom/core/timer.h>
+#include <osmocom/gsm/protocol/ipaccess.h>
 
 #include <osmocom/netif/stream.h>
 
@@ -363,6 +369,235 @@ static void test_recon(void *ctx, const char *host, unsigned port, unsigned step
 	printf("{%lu.%06lu} %s test complete.\n\n", tv.tv_sec, tv.tv_usec, ASTR(autoreconnect));
 }
 
+struct ipa_head {
+	uint16_t len;
+	uint8_t proto;
+	uint8_t data[0];
+} __attribute__ ((packed));
+
+#define IPAC_MSG_PING_LEN 0x01
+static const uint8_t ipac_msg_ping[] = {
+	0x00, IPAC_MSG_PING_LEN,
+	IPAC_PROTO_IPACCESS,
+	IPAC_MSGT_PING
+};
+#define IPAC_MSG_PONG_LEN 0x01
+static const uint8_t ipac_msg_pong[] = {
+	0x00, IPAC_MSG_PONG_LEN,
+	IPAC_PROTO_IPACCESS,
+	IPAC_MSGT_PONG
+};
+#define IPAC_MSG_ID_REQ_LEN 0x03
+static const uint8_t ipac_msg_idreq[] = {
+	0x00, IPAC_MSG_PING_LEN,
+	IPAC_PROTO_IPACCESS,
+	IPAC_MSGT_ID_GET,
+	0x01, IPAC_IDTAG_UNITNAME
+};
+#define ipac_msg_idreq_half (sizeof (ipac_msg_idreq)/2)
+#define ipac_msg_idreq_other_half (sizeof (ipac_msg_idreq) - ipac_msg_idreq_half)
+#define IPAC_MSG_ID_RESP_LEN 0x07
+static const uint8_t ipac_msg_idresp[] = {
+	0x00, IPAC_MSG_PING_LEN,
+	IPAC_PROTO_IPACCESS,
+	IPAC_MSGT_ID_RESP,
+	0x01, IPAC_IDTAG_UNITNAME, 0xde, 0xad, 0xbe, 0xef
+};
+
+#define put_ipa_msg(unsigned_char_ptr, struct_msgb_ptr, byte_array) do {\
+	(unsigned_char_ptr) = msgb_put(struct_msgb_ptr, sizeof (byte_array));\
+	memcpy(unsigned_char_ptr, byte_array, sizeof (byte_array));\
+} while (0)
+
+static int test_segmentation_cli_connect_cb(struct osmo_stream_cli *cli)
+{
+	printf("Connect callback triggered (segmentation test)\n");
+
+	unsigned char *data;
+	void *recon = osmo_stream_cli_get_data(cli);
+	struct msgb *m = msgb_alloc_headroom(128, 0, "IPA messages");
+	if (m == NULL) {
+		fprintf(stderr, "Cannot allocate message\n");
+		return -ENOMEM;
+	}
+
+	/* Send 4 and 1/2 messages */
+	put_ipa_msg(data, m, ipac_msg_ping);
+	put_ipa_msg(data, m, ipac_msg_pong);
+	put_ipa_msg(data, m, ipac_msg_idreq);
+	put_ipa_msg(data, m, ipac_msg_idresp);
+	data = msgb_put(m, ipac_msg_idreq_half);
+	memcpy(data, ipac_msg_idreq, ipac_msg_idreq_half);
+	osmo_stream_cli_send(cli, m);
+
+	if (recon) {
+		printf("Closing connection\n");
+		osmo_stream_cli_close(cli);
+	} else
+		printf("Connect callback\n");
+
+	return 0;
+}
+
+static int ipa_process_msg(struct msgb *msg)
+{
+	struct ipa_head *h = (struct ipa_head *)msg->data;
+	int len;
+	size_t ipa_msg_len = osmo_ntohs(h->len);
+	if (msg->len < sizeof (struct ipa_head)) {
+		fprintf(stderr, "IPA message too small\n");
+		return -EIO;
+	}
+	len = sizeof (struct ipa_head) + ipa_msg_len;
+	if (len > msg->len) {
+		fprintf(stderr, "Bad IPA message header "
+				"hdrlen=%u < datalen=%u\n",
+			len, msg->len);
+		return -EIO;
+	}
+	/* msg->l2h = msg->data + sizeof (struct ipa_head); */
+	return 0;
+}
+
+/* Array indices correspond to enum values stringified on the right */
+static const char *IPAC_MSG_TYPES[] = {
+	[0] = "IPAC_MSGT_PING",
+	[1] = "IPAC_MSGT_PONG",
+	[2] = "UNEXPECTED VALUE",
+	[3] = "UNEXPECTED VALUE",
+	[4] = "IPAC_MSGT_ID_GET",
+	[5] = "IPAC_MSGT_ID_RESP",
+};
+
+static bool all_msgs_sent = false;
+
+static int test_segmentation_stream_cli_read_cb(struct osmo_stream_cli *osc, struct msgb *m)
+{
+	unsigned char *data;
+	struct ipa_head *h = (struct ipa_head *) m->data;
+	int rc;
+	uint8_t ipa_msg_type = h->data[0];
+	if ((rc = ipa_process_msg(m)) < 0)
+		return rc;
+	printf("Received message from stream (len=%" PRIu16 ")\n", msgb_length(m));
+	if (ipa_msg_type < 0 || 5 < ipa_msg_type) {
+		fprintf(stderr, "Received message from stream (len=%" PRIu16 ")\n",
+			msgb_length(m));
+		return -ENOMSG;
+	}
+	printf("Type: %s\n", IPAC_MSG_TYPES[ipa_msg_type]);
+	if (ipa_msg_type == IPAC_MSGT_ID_GET) {
+		printf("Got back IPAC_MSGT_ID_GET from server."
+		       "Sending second half of IPAC_MSGT_ID_RESP\n");
+		data = msgb_put(m, ipac_msg_idreq_other_half);
+		memcpy(data, ipac_msg_idreq + ipac_msg_idreq_other_half,
+		       ipac_msg_idreq_other_half);
+		osmo_stream_cli_send(osc, m);
+		all_msgs_sent = true;
+	} else if (ipa_msg_type == IPAC_MSGT_ID_RESP) {
+		printf("result=  %s\n", osmo_hexdump(m->data, m->len));
+		printf("expected=%s\n",
+		       osmo_hexdump(ipac_msg_idresp, sizeof(ipac_msg_idresp)));
+	}
+	return 0;
+}
+
+static void *test_segmentation_run_client()
+{
+	struct osmo_stream_cli *osc;
+	struct timespec start, now;
+	int rc;
+	void *ctx = talloc_named_const(NULL, 0, "test_segmentation_run_client");
+
+	(void) msgb_talloc_ctx_init(ctx, 0);
+	osc = osmo_stream_cli_create_iofd(ctx, "IPA test client");
+	if (osc == NULL) {
+		fprintf(stderr, "osmo_stream_cli_create_iofd()\n");
+		return NULL;
+	}
+	osmo_stream_cli_set_addr(osc, "127.0.0.11");
+	osmo_stream_cli_set_port(osc, 1111);
+	osmo_stream_cli_set_connect_cb(osc, test_segmentation_cli_connect_cb);
+	osmo_stream_cli_set_data(osc, ctx);
+	osmo_stream_cli_set_iofd_read_cb(osc, test_segmentation_stream_cli_read_cb);
+	osmo_stream_cli_set_nodelay(osc, true);
+	if (osmo_stream_cli_open(osc) < 0) {
+		fprintf(stderr, "Cannot open stream client\n");
+		return NULL;
+	}
+
+	rc = clock_gettime(CLOCK_MONOTONIC, &start);
+	if (rc < 0) {
+		fprintf(stderr, "clock_gettime(): %s\n", strerror(errno));
+		return NULL;
+	}
+	// int tdiff_secs = 0;
+	// while (!all_msgs_sent && tdiff_secs < 1) {
+	// for (; !all_msgs_sent;);
+
+	return NULL; // Adapt?
+}
+
+static void test_segmentation_ipa(void *ctx, const char *host, unsigned port,
+				  struct osmo_stream_srv_link *srv)
+{
+	int rc;
+	struct timespec start, now;
+	osmo_stream_srv_link_set_stream_proto(srv, OSMO_STREAM_IPAC);
+	osmo_stream_srv_link_set_data(srv, ctx);
+	pthread_t pt;
+	test_segmentation_run_client();
+	// rc = pthread_create(&pt, NULL, test_segmentation_run_client, (void *)srv);
+	// if (rc != 0) {
+	// 	fprintf(stderr, "pthread_create(): %s\n", strerror(errno));
+	// 	return;
+	// }
+
+	rc = clock_gettime(CLOCK_MONOTONIC, &start);
+	if (rc < 0) {
+		fprintf(stderr, "clock_gettime(): %s\n", strerror(errno));
+		return;
+	}
+	int tdiff_secs = 0;
+	// while (!all_msgs_sent && tdiff_secs < 1) {
+	while (!all_msgs_sent) {
+		osmo_gettimeofday_override_add(0, 1); /* small increment to easily spot iterations */
+		osmo_select_main(0);
+		rc = clock_gettime(CLOCK_MONOTONIC, &now);
+		if (rc < 0) {
+			fprintf(stderr, "clock_gettime(): %s\n", strerror(errno));
+			return;
+		}
+		tdiff_secs = now.tv_sec - start.tv_sec;
+	}
+
+	osmo_stream_srv_link_unset_stream_proto(srv);
+	return;
+}
+
+int test_segmentation_stream_srv_read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
+{
+	LOGP(DSTREAMTEST, LOGL_DEBUG, "received message from stream (len=%d)\n", msgb_length(msg));
+	ipa_process_msg(msg);
+	osmo_stream_srv_send(conn, msg);
+	return 0;
+}
+
+
+static int test_segmentation_stream_srv_accept_cb(struct osmo_stream_srv_link *srv, int fd)
+{
+	void *ctx = talloc_named_const(NULL, 0, "test_segmentation_stream_srv_accept_cb");
+	struct osmo_stream_srv *oss =
+		osmo_stream_srv_create_iofd(ctx, "srv link", srv, fd,
+					    test_segmentation_stream_srv_read_cb,
+					    close_cb_srv, NULL);
+	if (oss == NULL) {
+		fprintf(stderr, "Error while creating connection\n");
+		return -1;
+	}
+
+	return 0;
+}
 
 int main(void)
 {
@@ -401,8 +636,13 @@ int main(void)
 
 	test_recon(tall_test, host, port, 12, srv, true);
 	test_recon(tall_test, host, port, 8, srv, false);
-
 	osmo_stream_srv_link_destroy(srv);
+
+	osmo_stream_srv_link_set_accept_cb(srv,
+		test_segmentation_stream_srv_accept_cb);
+	test_segmentation_ipa(tall_test, host, port, srv);
+
+
 	printf("Stream tests completed\n");
 
 	return EXIT_SUCCESS;
