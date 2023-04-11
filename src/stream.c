@@ -286,6 +286,7 @@ struct osmo_stream_cli {
 	int				sk_domain;
 	int				sk_type;
 	uint16_t			proto;
+	enum osmo_stream_proto		stream_proto;
 	int (*connect_cb)(struct osmo_stream_cli *cli);
 	int (*disconnect_cb)(struct osmo_stream_cli *cli);
 	int (*read_cb)(struct osmo_stream_cli *cli);
@@ -693,6 +694,7 @@ struct osmo_stream_cli *osmo_stream_cli_create_iofd(void *ctx, const char *name)
 	cli->sk_domain = AF_UNSPEC;
 	cli->sk_type = SOCK_STREAM;
 	cli->proto = IPPROTO_TCP;
+	cli->stream_proto = OSMO_STREAM_UNSPECIFIED;
 
 	cli->iofd = osmo_iofd_setup(ctx, -1, name, OSMO_IO_FD_MODE_READ_WRITE, &osmo_stream_cli_ioops, cli);
 
@@ -804,6 +806,16 @@ void
 osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
 {
 	cli->proto = proto;
+	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+}
+
+/*! \brief Set the protocol streamed on the client socket
+ *  \param[in] cli Stream Client to modify
+ *  \param[in] osp Protocol being streamed
+ */
+void osmo_stream_cli_set_stream_proto(struct osmo_stream_cli *cli, enum osmo_stream_proto osp)
+{
+	cli->stream_proto = osp;
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
