@@ -89,6 +89,7 @@
 //static int (*segmentation_cbs[_NUM_OSMO_STREAM_PROTOS][_NUM_CB_TYPES])(struct msgb *, int) = {
 //	[OSMO_STREAM_IPAC][CB_TYPE_SEGM] = ipa_segmentation_cb,
 static int (*segmentation_cbs[_NUM_OSMO_STREAM_PROTOS])(struct msgb *) = {
+	[OSMO_STREAM_UNSPECIFIED] = NULL,
 	[OSMO_STREAM_IPAC] = ipa_segmentation_cb,
 };
 
@@ -814,7 +815,15 @@ osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
  */
 void osmo_stream_cli_set_stream_proto(struct osmo_stream_cli *cli, enum osmo_stream_proto osp)
 {
+	if (!(OSMO_STREAM_UNSPECIFIED <= osp && osp < _NUM_OSMO_STREAM_PROTOS)) {
+		LOGSCLI(cli, LOGL_ERROR, "Unexpected value (%d) for variable of type "
+			"'enum osmo_stream_proto'\n", osp);
+		return;
+	}
 	cli->stream_proto = osp;
+	struct osmo_io_ops client_ops = osmo_stream_cli_ioops;
+	client_ops.segmentation_cb = segmentation_cbs[osp];
+	osmo_iofd_set_ioops(cli->iofd, &client_ops);
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
@@ -1455,10 +1464,7 @@ void osmo_stream_srv_link_set_stream_proto(struct osmo_stream_srv_link *link,
 		return;
 	}
 	link->stream_proto = osp;
-	if (osp != OSMO_STREAM_UNSPECIFIED)
-		srv_ioops.segmentation_cb = segmentation_cbs[osp];
-	else
-		srv_ioops.segmentation_cb = NULL;
+	srv_ioops.segmentation_cb = segmentation_cbs[osp];
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
 }
 

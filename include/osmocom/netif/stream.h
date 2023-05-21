@@ -23,8 +23,8 @@ struct osmo_stream_srv_link;
 
 /*! \brief Type of protocol transported by the data stream */
 enum osmo_stream_proto {
-	OSMO_STREAM_UNSPECIFIED = -1,
-	OSMO_STREAM_IPAC = 0,
+	OSMO_STREAM_UNSPECIFIED = 0,
+	OSMO_STREAM_IPAC,
 	/* TODO: Add protocols for which libosmo-netif should be able to handle segmentation */
 	_NUM_OSMO_STREAM_PROTOS
 };
