@@ -88,7 +88,7 @@
 
 //static int (*segmentation_cbs[_NUM_OSMO_STREAM_PROTOS][_NUM_CB_TYPES])(struct msgb *, int) = {
 //	[OSMO_STREAM_IPAC][CB_TYPE_SEGM] = ipa_segmentation_cb,
-static int (*segmentation_cbs[_NUM_OSMO_STREAM_PROTOS])(struct msgb *, int) = {
+static int (*segmentation_cbs[_NUM_OSMO_STREAM_PROTOS])(struct msgb *) = {
 	[OSMO_STREAM_IPAC] = ipa_segmentation_cb,
 };
 
@@ -655,7 +655,7 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 	}
 }
 
-static void stream_cli_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
+static void stream_cli_iofd_write_cb(struct osmo_io_fd *iofd, int res, const struct msgb *msg)
 {
 	struct osmo_stream_cli *cli = osmo_iofd_get_data(iofd);
 
@@ -677,7 +677,6 @@ static void stream_cli_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct ms
 static struct osmo_io_ops osmo_stream_cli_ioops = {
 	.read_cb = stream_cli_iofd_read_cb,
 	.write_cb = stream_cli_iofd_write_cb,
-
 	.segmentation_cb = NULL,
 };
 
@@ -1424,7 +1423,7 @@ static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 	return;
 }
 
-static void stream_srv_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
+static void stream_srv_iofd_write_cb(struct osmo_io_fd *iofd, int res, const struct msgb *msg)
 {
 	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
 	LOGP(DLINP, LOGL_DEBUG, "connected write\n");
