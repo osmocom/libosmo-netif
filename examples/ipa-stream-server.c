@@ -106,6 +106,7 @@ int main(void)
 	osmo_stream_srv_link_set_port(srv, 10000);
 	osmo_stream_srv_link_set_accept_cb(srv, accept_cb);
 	osmo_stream_srv_link_set_nodelay(srv, true);
+	osmo_stream_srv_link_set_stream_proto(srv, OSMO_STREAM_IPAC);
 
 	if (osmo_stream_srv_link_open(srv) < 0) {
 		fprintf(stderr, "cannot open client\n");

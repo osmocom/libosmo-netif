@@ -176,6 +176,7 @@ int main(int argc, char *argv[])
 	osmo_stream_cli_set_iofd_read_cb(conn, read_cb);
 	osmo_stream_cli_set_data(conn, &num_msgs);
 	osmo_stream_cli_set_nodelay(conn, true);
+	osmo_stream_cli_set_stream_proto(conn, OSMO_STREAM_IPAC);
 
 	if (osmo_stream_cli_open(conn) < 0) {
 		fprintf(stderr, "cannot open client\n");
