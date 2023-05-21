@@ -1409,6 +1409,7 @@ static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
 		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring received message\n");
 		msgb_free(msg);
+		osmo_stream_srv_destroy(conn);
 		return;
 	}
 
