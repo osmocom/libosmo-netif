@@ -825,6 +825,7 @@ void osmo_stream_cli_set_stream_proto(struct osmo_stream_cli *cli, enum osmo_str
 	client_ops.segmentation_cb = segmentation_cbs[osp];
 	osmo_iofd_set_ioops(cli->iofd, &client_ops);
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+	osmo_iofd_set_ioops(cli->iofd, &osmo_stream_cli_ioops);
 }
 
 /*! \brief Set the socket type for the stream server link
