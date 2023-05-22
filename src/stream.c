@@ -688,8 +688,11 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 	case STREAM_CLI_STATE_CONNECTED:
 		if (res == 0)
 			osmo_stream_cli_reconnect(cli);
-		else if (cli->iofd_read_cb)
+		else if (cli->iofd_read_cb) {
+			// if (cli->stream_proto == OSMO_STREAM_IPAC)
+			//	ipa_check_pull_headers(
 			cli->iofd_read_cb(cli, msg);
+		}
 		break;
 	default:
 		osmo_panic("osmo_stream_cli_write_cb() called with unexpected state %d\n", cli->state);

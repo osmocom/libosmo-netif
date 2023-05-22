@@ -74,7 +74,7 @@ static int connect_cb(struct osmo_stream_cli *conn)
 		char *ptr;
 		int x;
 
-		msg = osmo_ipa_msg_alloc(0);
+		msg = osmo_ipa_msg_alloc(sizeof(struct ipa_head_ext));
 		if (msg == NULL) {
 			LOGP(DLINP, LOGL_ERROR, "cannot alloc msg\n");
 			return -1;
@@ -93,6 +93,7 @@ static int connect_cb(struct osmo_stream_cli *conn)
 		msg_sent->num = i;
 		llist_add(&msg_sent->head, &msg_sent_list);
 
+		ipa_prepend_header_ext(msg, IPAC_PROTO_EXT_MGCP);
 		osmo_ipa_msg_push_header(msg, IPAC_PROTO_OSMO);
 
 		osmo_stream_cli_send(conn, msg);
@@ -115,7 +116,7 @@ static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
 	int num;
 	struct msg_sent *cur, *tmp, *found = NULL;
 
-	num = ntohl(*((int *)(msg->data + sizeof(struct ipa_head))));
+	num = ntohl(*((int *)(msg->data + sizeof(struct ipa_head) + sizeof(struct ipa_head_ext))));
 	LOGP(DLINP, LOGL_DEBUG, "received msg number %d\n", num);
 
 	llist_for_each_entry_safe(cur, tmp, &msg_sent_list, head) {
