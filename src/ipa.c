@@ -97,6 +97,11 @@ struct msgb *osmo_ipa_msg_alloc(int headroom)
 	return msg;
 }
 
+struct msgb *osmo_ipa_ext_msg_alloc(size_t headroom)
+{
+	return osmo_ipa_msg_alloc(sizeof(struct ipa_head_ext) + headroom);
+}
+
 void osmo_ipa_msg_push_header(struct msgb *msg, uint8_t proto)
 {
 	struct ipa_head *hh;
