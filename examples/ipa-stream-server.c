@@ -49,15 +49,9 @@ void sighandler(int foo)
 
 int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
 {
-	LOGP(DSTREAMTEST, LOGL_DEBUG, "received message from stream (len=%d)\n", msgb_length(msg));
+	LOGP(DSTREAMTEST, LOGL_DEBUG, "received message from stream (payload len=%d)\n", msgb_length(msg));
 
-	if (osmo_ipa_process_msg(msg) < 0) {
-		LOGP(DSTREAMTEST, LOGL_ERROR, "Bad IPA message\n");
-		msgb_free(msg);
-		return 0;
-	}
-
-	osmo_stream_srv_send(conn, msg);
+	osmo_stream_srv_send_ipa(conn, IPAC_PROTO_UNSPECIFIED, IPAC_PROTO_UNSPECIFIED, msg);
 	return 0;
 }
 

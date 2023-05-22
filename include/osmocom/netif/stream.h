@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include <osmocom/core/msgb.h>
+#include <osmocom/gsm/protocol/ipaccess.h>
 
 /*! \addtogroup stream
  *  @{
@@ -28,6 +29,8 @@ enum osmo_stream_proto {
 	/* TODO: Add protocols for which libosmo-netif should be able to handle segmentation */
 	_NUM_OSMO_STREAM_PROTOS
 };
+
+#define IPAC_PROTO_UNSPECIFIED -1
 
 /*! \brief Shortcut for unsetting the stream protocol (gets rid of segmentation pertaining to stream protocol) */
 #define osmo_stream_srv_link_unset_stream_proto(struct_osmo_stream_srv_link_ptr)\
@@ -68,6 +71,8 @@ void osmo_stream_srv_set_flush_and_destroy(struct osmo_stream_srv *conn);
 void osmo_stream_srv_set_data(struct osmo_stream_srv *conn, void *data);
 
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg);
+void osmo_stream_srv_send_ipa(struct osmo_stream_srv *conn, int ipaccess_proto,
+                              enum ipaccess_proto_ext pe, struct msgb *msg);
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg);
 
 void osmo_stream_srv_clear_tx_queue(struct osmo_stream_srv *conn);

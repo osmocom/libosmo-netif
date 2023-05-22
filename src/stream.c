@@ -44,6 +44,7 @@
 #include <osmocom/core/talloc.h>
 #include <osmocom/core/socket.h>
 
+#include <osmocom/netif/ipa.h>
 #include <osmocom/netif/stream.h>
 
 #include "config.h"
@@ -635,6 +636,45 @@ static void handle_connecting(struct osmo_stream_cli *cli, int res)
 	}
 	if (cli->connect_cb)
 		cli->connect_cb(cli);
+}
+
+#define LOG_CLI_OR_SRV(cli, level, fmt, args...) do {\
+	if (cli != NULL)\
+		LOGSCLI(cli, level, fmt, ## args);\
+	else\
+		LOGP(DLINP, level, fmt, ## args);\
+} while (0)
+
+/* Check and remove headers, in case of p == IPAC_PROTO_OSMO also the IPA extension header.
+ * Returns a negative number on error, otherwise the number of header octets removed */
+static inline int ipa_check_pull_headers(struct msgb *msg, struct osmo_stream_cli *cli)
+{
+	int ret;
+	size_t octets_removed = 0;
+	msg->l1h = msg->data;
+	struct ipa_head *ih = (struct ipa_head *)msg->data;
+	if ((ret = osmo_ipa_process_msg(msg)) < 0) {
+		LOG_CLI_OR_SRV(cli, LOGL_ERROR, "Error processing IPA message\n");
+		return ret;
+	}
+	msgb_pull(msg, sizeof(struct ipa_head));
+	octets_removed += sizeof(struct ipa_head);
+	if (ih->proto != IPAC_PROTO_OSMO) /* No extensions expected */
+		return octets_removed;
+	msg->l2h = msg->data;
+	msgb_pull(msg, sizeof(struct ipa_head_ext));
+	octets_removed += sizeof(struct ipa_head_ext);
+	return octets_removed;
+}
+
+/* Push IPA headers; if we have IPAC_PROTO_OSMO this also takes care of the
+ * extension header */
+static inline void ipa_push_headers(enum ipaccess_proto p, enum ipaccess_proto_ext pe,
+				    struct msgb *msg)
+{
+	if (p == IPAC_PROTO_OSMO)
+		ipa_prepend_header_ext(msg, pe);
+	osmo_ipa_msg_push_header(msg, p);
 }
 
 static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
@@ -1428,6 +1468,8 @@ static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 		if (osmo_iofd_txqueue_len(iofd) == 0)
 			osmo_stream_srv_destroy(conn);
 	} else if (conn->iofd_read_cb) {
+		if (conn->srv->stream_proto == OSMO_STREAM_IPAC)
+			ipa_check_pull_headers(msg, NULL);
 		conn->iofd_read_cb(conn, msg); // TODO: Handle return value?
 	}
 
@@ -1890,6 +1932,46 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 	if (conn->closed_cb)
 		conn->closed_cb(conn);
 	talloc_free(conn);
+}
+
+/* msgb_l1(msg) is expected to be set */
+static inline enum ipaccess_proto msg_get_ipa_proto(struct msgb *msg)
+{
+	struct ipa_head *ih = msgb_l1(msg);
+	OSMO_ASSERT(ih);
+	return ih->proto;
+}
+
+/* msgb->l1h is expected to be set, msgb->l2h is expected to be set if
+ * we have IPAC_PROTO_OSMO specified in the header.
+ * Returns the protocol extension (enum ipaccess_proto) or -ENOPROTOOPT if
+ * we don't have IPAC_PROTO_OSMO specified in the IPA header */
+static inline int msg_get_ipa_proto_ext(struct msgb *msg)
+{
+	if (msg_get_ipa_proto(msg) != IPAC_PROTO_OSMO)
+		return -ENOPROTOOPT;
+	struct ipa_head_ext *ihe = msgb_l2(msg);
+	OSMO_ASSERT(ihe);
+	return ihe->proto;
+}
+
+/*! \brief Enqueue IPA data to be sent via an Osmocom stream server
+ *  \param[in] conn Stream Server through which we want to send
+ *  \param[in] p   Protocol transported by IPA. When set to IPAC_PROTO_UNSPECIFIED, the protocol will be
+ *		   read from the msgb structure's l1 and possibly l2 headers.
+ *  \param[in] pe  Ignored, unless p == IPAC_PROTO_OSMO, in which case this specifies the
+ *		 Osmocom protocol extension
+ *  \param[in] msg Message buffer to enqueue in transmit queue */
+void osmo_stream_srv_send_ipa(struct osmo_stream_srv *conn, int ipaccess_proto,
+			      enum ipaccess_proto_ext pe, struct msgb *msg)
+{
+	OSMO_ASSERT(msg);
+	if (ipaccess_proto == IPAC_PROTO_UNSPECIFIED) {
+		ipaccess_proto = msg_get_ipa_proto(msg);
+		pe = msg_get_ipa_proto_ext(msg);
+	}
+	ipa_push_headers(ipaccess_proto, pe, msg);
+	osmo_stream_srv_send(conn, msg);
 }
 
 /*! \brief Enqueue data to be sent via an Osmocom stream server
