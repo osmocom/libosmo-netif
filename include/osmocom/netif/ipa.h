@@ -19,6 +19,8 @@ struct ipa_head_ext {
 } __attribute__ ((packed));
 
 struct msgb *osmo_ipa_msg_alloc(int headroom);
+struct msgb *osmo_ipa_ext_msg_alloc(int headroom);
+
 void osmo_ipa_msg_push_header(struct msgb *msg, uint8_t proto);
 
 int osmo_ipa_process_msg(struct msgb *msg);
