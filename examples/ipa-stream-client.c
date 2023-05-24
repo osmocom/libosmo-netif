@@ -106,11 +106,6 @@ static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
 {
 	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream (payload len=%d)\n", msgb_length(msg));
 
-	if (osmo_ipa_process_msg(msg) < 0) {
-		LOGP(DIPATEST, LOGL_ERROR, "bad IPA message\n");
-		return 0;
-	}
-
 	int num;
 	struct msg_sent *cur, *tmp, *found = NULL;
 
