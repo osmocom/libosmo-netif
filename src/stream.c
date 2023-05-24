@@ -1184,6 +1184,27 @@ static void cli_timer_cb(void *data)
 	osmo_stream_cli_open(cli);
 }
 
+/* msgb_l1(msg) is expected to be set */
+static inline enum ipaccess_proto msg_get_ipa_proto(struct msgb *msg)
+{
+	struct ipa_head *ih = msgb_l1(msg);
+	OSMO_ASSERT(ih);
+	return ih->proto;
+}
+
+/* msgb->l1h is expected to be set, msgb->l2h is expected to be set if
+ * we have IPAC_PROTO_OSMO specified in the header.
+ * Returns the protocol extension (enum ipaccess_proto) or -ENOPROTOOPT if
+ * we don't have IPAC_PROTO_OSMO specified in the IPA header */
+static inline int msg_get_ipa_proto_ext(struct msgb *msg)
+{
+	if (msg_get_ipa_proto(msg) != IPAC_PROTO_OSMO)
+		return -ENOPROTOOPT;
+	struct ipa_head_ext *ihe = msgb_l2(msg);
+	OSMO_ASSERT(ihe);
+	return ihe->proto;
+}
+
 /*! \brief Enqueue data to be sent via an Osmocom stream client
  *  \param[in] cli Stream Client through which we want to send
  *  \param[in] msg Message buffer to enqueue in transmit queue */
@@ -1935,27 +1956,6 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 	if (conn->closed_cb)
 		conn->closed_cb(conn);
 	talloc_free(conn);
-}
-
-/* msgb_l1(msg) is expected to be set */
-static inline enum ipaccess_proto msg_get_ipa_proto(struct msgb *msg)
-{
-	struct ipa_head *ih = msgb_l1(msg);
-	OSMO_ASSERT(ih);
-	return ih->proto;
-}
-
-/* msgb->l1h is expected to be set, msgb->l2h is expected to be set if
- * we have IPAC_PROTO_OSMO specified in the header.
- * Returns the protocol extension (enum ipaccess_proto) or -ENOPROTOOPT if
- * we don't have IPAC_PROTO_OSMO specified in the IPA header */
-static inline int msg_get_ipa_proto_ext(struct msgb *msg)
-{
-	if (msg_get_ipa_proto(msg) != IPAC_PROTO_OSMO)
-		return -ENOPROTOOPT;
-	struct ipa_head_ext *ihe = msgb_l2(msg);
-	OSMO_ASSERT(ihe);
-	return ihe->proto;
 }
 
 /*! \brief Enqueue IPA data to be sent via an Osmocom stream server
