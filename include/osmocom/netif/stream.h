@@ -72,7 +72,7 @@ void osmo_stream_srv_set_data(struct osmo_stream_srv *conn, void *data);
 
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg);
 void osmo_stream_srv_send_ipa(struct osmo_stream_srv *conn, int ipaccess_proto,
-                              enum ipaccess_proto_ext pe, struct msgb *msg);
+			      enum ipaccess_proto_ext pe, struct msgb *msg);
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg);
 
 void osmo_stream_srv_clear_tx_queue(struct osmo_stream_srv *conn);
@@ -113,6 +113,8 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect) \
 void osmo_stream_cli_close(struct osmo_stream_cli *cli);
 
 void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg);
+void osmo_stream_cli_send_ipa(struct osmo_stream_cli *cli, int ipaccess_proto,
+			      enum ipaccess_proto_ext pe, struct msgb *msg);
 int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg);
 
 void osmo_stream_cli_clear_tx_queue(struct osmo_stream_cli *cli);

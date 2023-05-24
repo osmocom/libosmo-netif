@@ -93,10 +93,8 @@ static int connect_cb(struct osmo_stream_cli *conn)
 		msg_sent->num = i;
 		llist_add(&msg_sent->head, &msg_sent_list);
 
-		ipa_prepend_header_ext(msg, IPAC_PROTO_EXT_MGCP);
-		osmo_ipa_msg_push_header(msg, IPAC_PROTO_OSMO);
-
-		osmo_stream_cli_send(conn, msg);
+		osmo_stream_cli_send_ipa(conn, IPAC_PROTO_OSMO,
+					 IPAC_PROTO_EXT_MGCP,  msg);
 
 		LOGP(DIPATEST, LOGL_DEBUG, "enqueueing msg %d of "
 			"%d bytes to be sent\n", i, msg->len);
@@ -106,7 +104,7 @@ static int connect_cb(struct osmo_stream_cli *conn)
 
 static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
 {
-	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream (len=%d)\n", msgb_length(msg));
+	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream (payload len=%d)\n", msgb_length(msg));
 
 	if (osmo_ipa_process_msg(msg) < 0) {
 		LOGP(DIPATEST, LOGL_ERROR, "bad IPA message\n");
@@ -116,7 +114,7 @@ static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
 	int num;
 	struct msg_sent *cur, *tmp, *found = NULL;
 
-	num = ntohl(*((int *)(msg->data + sizeof(struct ipa_head) + sizeof(struct ipa_head_ext))));
+	num = ntohl(*((int *)(msg->data)));
 	LOGP(DLINP, LOGL_DEBUG, "received msg number %d\n", num);
 
 	llist_for_each_entry_safe(cur, tmp, &msg_sent_list, head) {

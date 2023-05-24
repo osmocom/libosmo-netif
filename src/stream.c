@@ -689,8 +689,8 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 		if (res == 0)
 			osmo_stream_cli_reconnect(cli);
 		else if (cli->iofd_read_cb) {
-			// if (cli->stream_proto == OSMO_STREAM_IPAC)
-			//	ipa_check_pull_headers(
+			if (cli->stream_proto == OSMO_STREAM_IPAC)
+				ipa_check_pull_headers(msg, cli);
 			cli->iofd_read_cb(cli, msg);
 		}
 		break;
@@ -868,7 +868,6 @@ void osmo_stream_cli_set_stream_proto(struct osmo_stream_cli *cli, enum osmo_str
 	client_ops.segmentation_cb = segmentation_cbs[osp];
 	osmo_iofd_set_ioops(cli->iofd, &client_ops);
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
-	osmo_iofd_set_ioops(cli->iofd, &osmo_stream_cli_ioops);
 }
 
 /*! \brief Set the socket type for the stream server link
@@ -1203,6 +1202,25 @@ static inline int msg_get_ipa_proto_ext(struct msgb *msg)
 	struct ipa_head_ext *ihe = msgb_l2(msg);
 	OSMO_ASSERT(ihe);
 	return ihe->proto;
+}
+
+/*! \brief Enqueue data to be sent via an Osmocom stream client
+ *  \param[in] cli Stream Client through which we want to send
+ *  \param[in] p   Protocol transported by IPA. When set to IPAC_PROTO_UNSPECIFIED, the protocol will be
+ *		   read from the msgb structure's l1 and possibly l2 headers.
+ *  \param[in] pe  Ignored, unless p == IPAC_PROTO_OSMO, in which case this specifies the
+ *		 Osmocom protocol extension
+ *  \param[in] msg Message buffer to enqueue in transmit queue */
+void osmo_stream_cli_send_ipa(struct osmo_stream_cli *cli, int ipaccess_proto,
+			      enum ipaccess_proto_ext pe, struct msgb *msg)
+{
+	OSMO_ASSERT(msg);
+	if (ipaccess_proto == IPAC_PROTO_UNSPECIFIED) {
+		ipaccess_proto = msg_get_ipa_proto(msg);
+		pe = msg_get_ipa_proto_ext(msg);
+	}
+	ipa_push_headers(ipaccess_proto, pe, msg);
+	osmo_stream_cli_send(cli, msg);
 }
 
 /*! \brief Enqueue data to be sent via an Osmocom stream client
