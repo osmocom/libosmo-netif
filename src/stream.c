@@ -293,7 +293,7 @@ void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 	osmo_stream_cli_close(cli);
 
 	if (cli->reconnect_timeout < 0) {
-		LOGSCLI(cli, LOGL_INFO, "not reconnecting, disabled.\n");
+		LOGSCLI(cli, LOGL_INFO, "not reconnecting, disabled\n");
 		return;
 	}
 
@@ -437,7 +437,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 		if (errno == EPIPE || errno == ENOTCONN) {
 			osmo_stream_cli_reconnect(cli);
 		}
-		LOGSCLI(cli, LOGL_ERROR, "error %d to send\n", ret);
+		LOGSCLI(cli, LOGL_ERROR, "received error %d in response to send\n", errno);
 	}
 
 	msgb_free(msg);
@@ -481,7 +481,7 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 		if (llist_empty(&cli->tx_queue))
 			osmo_fd_write_disable(&cli->ofd);
 
-		LOGSCLI(cli, LOGL_DEBUG, "connection done.\n");
+		LOGSCLI(cli, LOGL_DEBUG, "connection established\n");
 		cli->state = STREAM_CLI_STATE_CONNECTED;
 		switch (cli->sk_domain) {
 		case AF_UNIX:
@@ -561,7 +561,7 @@ static inline void osmo_stream_cli_handle_connecting(struct osmo_stream_cli *cli
 		return;
 	}
 
-	LOGSCLI(cli, LOGL_DEBUG, "connection done.\n");
+	LOGSCLI(cli, LOGL_DEBUG, "connection established\n");
 	cli->state = STREAM_CLI_STATE_CONNECTED;
 	switch (cli->sk_domain) {
 	case AF_UNIX:
@@ -599,7 +599,7 @@ static void handle_connecting(struct osmo_stream_cli *cli, int res)
 		return;
 	}
 
-	LOGSCLI(cli, LOGL_DEBUG, "connection done.\n");
+	LOGSCLI(cli, LOGL_DEBUG, "connection established\n");
 	cli->state = STREAM_CLI_STATE_CONNECTED;
 	switch (cli->sk_domain) {
 	case AF_UNIX:
@@ -1104,7 +1104,7 @@ static void cli_timer_cb(void *data)
 {
 	struct osmo_stream_cli *cli = data;
 
-	LOGSCLI(cli, LOGL_DEBUG, "reconnecting.\n");
+	LOGSCLI(cli, LOGL_DEBUG, "reconnecting\n");
 	osmo_stream_cli_open(cli);
 }
 
@@ -1564,7 +1564,7 @@ static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 	LOGP(DLINP, LOGL_DEBUG, "message received (res=%d)\n", res);
 
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
-		LOGP(DLINP, LOGL_NOTICE, "Connection is being flushed and closed; ignoring received message\n");
+		LOGP(DLINP, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
 		msgb_free(msg);
 		return;
 	}
@@ -1602,7 +1602,7 @@ static int osmo_stream_srv_read(struct osmo_stream_srv *conn)
 	LOGP(DLINP, LOGL_DEBUG, "message received\n");
 
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
-		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring received message\n");
+		LOGP(DLINP, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
 		return 0;
 	}
 
@@ -1707,11 +1707,9 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	OSMO_ASSERT(link->mode == OSMO_STREAM_MODE_OSMO_FD);
 
 	conn = talloc_zero(ctx, struct osmo_stream_srv);
-	if (conn == NULL) {
-		LOGP(DLINP, LOGL_ERROR, "cannot allocate new peer in srv, "
-			"reason=`%s'\n", strerror(errno));
+	if (conn == NULL)
 		return NULL;
-	}
+
 	conn->srv = link;
 	osmo_fd_setup(&conn->ofd, fd, OSMO_FD_READ, osmo_stream_srv_cb, conn, 0);
 	conn->read_cb = read_cb;
