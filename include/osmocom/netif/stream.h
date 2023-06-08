@@ -44,7 +44,7 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link);
  * osmo_stream_srv_link */
 struct osmo_stream_srv;
 
-struct osmo_stream_srv *osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd, int (*cb)(struct osmo_stream_srv *conn), int (*closed_cb)(struct osmo_stream_srv *conn), void *data);
+struct osmo_stream_srv *osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd, int (*read_cb)(struct osmo_stream_srv *conn), int (*closed_cb)(struct osmo_stream_srv *conn), void *data);
 void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn);
 struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *conn);
 struct osmo_fd *osmo_stream_srv_get_ofd(struct osmo_stream_srv *srv);

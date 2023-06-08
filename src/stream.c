@@ -1307,7 +1307,7 @@ struct osmo_stream_srv {
 	struct osmo_fd			ofd;
 	struct llist_head		tx_queue;
 	int (*closed_cb)(struct osmo_stream_srv *peer);
-	int (*cb)(struct osmo_stream_srv *peer);
+	int (*read_cb)(struct osmo_stream_srv *peer);
 	void				*data;
 	int				flags;
 };
@@ -1323,8 +1323,8 @@ static int osmo_stream_srv_read(struct osmo_stream_srv *conn)
 		return 0;
 	}
 
-	if (conn->cb)
-		rc = conn->cb(conn);
+	if (conn->read_cb)
+		rc = conn->read_cb(conn);
 
 	return rc;
 }
@@ -1415,7 +1415,7 @@ static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
 struct osmo_stream_srv *
 osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	int fd,
-	int (*cb)(struct osmo_stream_srv *conn),
+	int (*read_cb)(struct osmo_stream_srv *conn),
 	int (*closed_cb)(struct osmo_stream_srv *conn), void *data)
 {
 	struct osmo_stream_srv *conn;
@@ -1430,7 +1430,7 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	}
 	conn->srv = link;
 	osmo_fd_setup(&conn->ofd, fd, OSMO_FD_READ, osmo_stream_srv_cb, conn, 0);
-	conn->cb = cb;
+	conn->read_cb = read_cb;
 	conn->closed_cb = closed_cb;
 	conn->data = data;
 	INIT_LLIST_HEAD(&conn->tx_queue);
