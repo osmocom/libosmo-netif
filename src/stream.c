@@ -953,7 +953,7 @@ struct osmo_stream_srv_link {
 	int			flags;
 };
 
-static int osmo_stream_srv_fd_cb(struct osmo_fd *ofd, unsigned int what)
+static int osmo_stream_srv_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 {
 	int ret;
 	int sock_fd;
@@ -1038,7 +1038,7 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	link->sk_domain = AF_UNSPEC;
 	link->sk_type = SOCK_STREAM;
 	link->proto = IPPROTO_TCP;
-	osmo_fd_setup(&link->ofd, -1, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_srv_fd_cb, link, 0);
+	osmo_fd_setup(&link->ofd, -1, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_srv_ofd_cb, link, 0);
 
 	return link;
 }
