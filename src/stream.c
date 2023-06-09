@@ -420,44 +420,56 @@ static int _setsockopt_nosigpipe(struct osmo_stream_cli *cli)
 #endif
 }
 
+static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
+{
+	int error, ret = res;
+	socklen_t len = sizeof(error);
+
+	int fd = osmo_stream_cli_fd(cli);
+
+	if (ret < 0) {
+		osmo_stream_cli_reconnect(cli);
+		return;
+	}
+	ret = getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len);
+	if (ret >= 0 && error > 0) {
+		osmo_stream_cli_reconnect(cli);
+		return;
+	}
+
+	/* If messages got enqueued while 'connecting', keep WRITE flag
+	   up to dispatch them upon next main loop step */
+	if (llist_empty(&cli->tx_queue))
+		osmo_fd_write_disable(&cli->ofd);
+
+	LOGSCLI(cli, LOGL_DEBUG, "connection established\n");
+	cli->state = STREAM_CLI_STATE_CONNECTED;
+	switch (cli->sk_domain) {
+	case AF_UNIX:
+		_setsockopt_nosigpipe(cli);
+		break;
+	case AF_UNSPEC:
+	case AF_INET:
+	case AF_INET6:
+		if (cli->proto == IPPROTO_SCTP) {
+			_setsockopt_nosigpipe(cli);
+			sctp_sock_activate_events(fd);
+		}
+		break;
+	default:
+		break;
+	}
+	if (cli->connect_cb)
+		cli->connect_cb(cli);
+}
+
 static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 {
 	struct osmo_stream_cli *cli = ofd->data;
-	int error, ret;
-	socklen_t len = sizeof(error);
 
-	switch(cli->state) {
+	switch (cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
-		ret = getsockopt(ofd->fd, SOL_SOCKET, SO_ERROR, &error, &len);
-		if (ret >= 0 && error > 0) {
-			osmo_stream_cli_reconnect(cli);
-			return 0;
-		}
-
-		/* If messages got enqueued while 'connecting', keep WRITE flag
-		   up to dispatch them upon next main loop step */
-		if (llist_empty(&cli->tx_queue))
-			osmo_fd_write_disable(&cli->ofd);
-
-		LOGSCLI(cli, LOGL_DEBUG, "connection established\n");
-		cli->state = STREAM_CLI_STATE_CONNECTED;
-		switch (cli->sk_domain) {
-		case AF_UNIX:
-			_setsockopt_nosigpipe(cli);
-			break;
-		case AF_UNSPEC:
-		case AF_INET:
-		case AF_INET6:
-			if (cli->proto == IPPROTO_SCTP) {
-				_setsockopt_nosigpipe(cli);
-				sctp_sock_activate_events(ofd->fd);
-			}
-			break;
-		default:
-			break;
-		}
-		if (cli->connect_cb)
-			cli->connect_cb(cli);
+		stream_cli_handle_connecting(cli, 0);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
 		if (what & OSMO_FD_READ) {
