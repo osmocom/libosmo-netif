@@ -306,7 +306,7 @@ bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli)
  *  abstraction and close the socket */
 void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 {
-	if (cli->ofd.fd == -1)
+	if (cli->state == STREAM_CLI_STATE_CLOSED)
 		return;
 	osmo_fd_unregister(&cli->ofd);
 	close(cli->ofd.fd);
