@@ -308,6 +308,12 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 {
 	if (cli->state == STREAM_CLI_STATE_CLOSED)
 		return;
+	if (cli->state == STREAM_CLI_STATE_WAIT_RECONNECT) {
+		osmo_timer_del(&cli->timer);
+		cli->state = STREAM_CLI_STATE_CLOSED;
+		return;
+	}
+
 	osmo_fd_unregister(&cli->ofd);
 	close(cli->ofd.fd);
 	cli->ofd.fd = -1;
