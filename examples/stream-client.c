@@ -97,8 +97,7 @@ int main(void)
 	tall_test = talloc_named_const(NULL, 1, "osmo_stream_cli_test");
 	msgb_talloc_ctx_init(tall_test, 0);
 	osmo_init_logging2(tall_test, &osmo_stream_cli_test_log_info);
-	log_set_log_level(osmo_stderr_target, 1);
-	log_set_category_filter(osmo_stderr_target, DLINP, 0, LOGL_INFO);
+	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	/*
 	 * initialize stream cli.

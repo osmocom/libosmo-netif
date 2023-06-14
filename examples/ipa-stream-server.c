@@ -92,7 +92,7 @@ int main(void)
 	tall_test = talloc_named_const(NULL, 1, "osmo_stream_srv_test");
 	msgb_talloc_ctx_init(tall_test, 0);
 	osmo_init_logging2(tall_test, &osmo_stream_srv_test_log_info);
-	log_set_log_level(osmo_stderr_target, LOGL_NOTICE);
+	log_set_log_level(osmo_stderr_target, LOGL_DEBUG);
 
 	/*
 	 * initialize stream srv.
