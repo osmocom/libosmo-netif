@@ -552,23 +552,7 @@ static void cli_timer_cb(void *data);
  */
 struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 {
-	struct osmo_stream_cli *cli;
-
-	cli = talloc_zero(ctx, struct osmo_stream_cli);
-	if (!cli)
-		return NULL;
-
-	cli->name = "";
-	cli->mode = OSMO_STREAM_MODE_UNKNOWN;
-	cli->sk_domain = AF_UNSPEC;
-	cli->sk_type = SOCK_STREAM;
-	cli->proto = IPPROTO_TCP;
-	cli->state = STREAM_CLI_STATE_CLOSED;
-	osmo_timer_setup(&cli->timer, cli_timer_cb, cli);
-	cli->reconnect_timeout = 5;	/* default is 5 seconds. */
-	INIT_LLIST_HEAD(&cli->tx_queue);
-
-	return cli;
+	return osmo_stream_cli_create2(ctx, "");
 }
 
 static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
