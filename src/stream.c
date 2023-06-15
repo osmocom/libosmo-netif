@@ -616,7 +616,13 @@ static struct osmo_io_ops osmo_stream_cli_ioops = {
 	.segmentation_cb = NULL,
 };
 
-
+/*! \brief Create an Osmocom stream client
+ *  \param[in] ctx talloc context from which to allocate memory
+ *  This function allocates a new \ref osmo_stream_cli and initializes
+ *  it with default values (5s reconnect timer, TCP protocol)
+ *  \param[in] name a description of the stream client. Will be used in logging
+ *  \return allocated stream client, or NULL in case of error
+ */
 struct osmo_stream_cli *osmo_stream_cli_create2(void *ctx, const char *name)
 {
 	struct osmo_stream_cli *cli;
