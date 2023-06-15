@@ -859,10 +859,6 @@ osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
 {
 	OSMO_ASSERT(cli->mode != OSMO_STREAM_MODE_OSMO_IO);
 	cli->mode = OSMO_STREAM_MODE_OSMO_FD;
-	cli->ofd.fd = -1;
-	cli->ofd.priv_nr = 0;
-	cli->ofd.cb = osmo_stream_cli_fd_cb;
-	cli->ofd.data = cli;
 	cli->read_cb = read_cb;
 }
 
@@ -926,7 +922,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 			osmo_stream_cli_reconnect(cli);
 		return ret;
 	}
-	osmo_fd_setup(&cli->ofd, ret, OSMO_FD_READ | OSMO_FD_WRITE, cli->ofd.cb, cli->ofd.data, cli->ofd.priv_nr);
+	osmo_fd_setup(&cli->ofd, ret, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_cli_fd_cb, cli, 0);
 
 	if (cli->flags & OSMO_STREAM_CLI_F_NODELAY) {
 		ret = setsockopt_nodelay(cli->ofd.fd, cli->proto, 1);
@@ -1019,7 +1015,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 
 	switch (cli->mode) {
 	case OSMO_STREAM_MODE_OSMO_FD:
-		osmo_fd_setup(&cli->ofd, fd, OSMO_FD_READ | OSMO_FD_WRITE, cli->ofd.cb, cli->ofd.data, cli->ofd.priv_nr);
+		osmo_fd_setup(&cli->ofd, fd, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_cli_fd_cb, cli, 0);
 		if (osmo_fd_register(&cli->ofd) < 0)
 			goto error_close_socket;
 		break;
