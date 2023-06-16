@@ -1155,36 +1155,27 @@ static int osmo_stream_srv_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 {
 	int ret;
 	int sock_fd;
-	char addrstr[128];
-	bool is_ipv6 = false;
-	struct sockaddr_storage sa;
-	socklen_t sa_len = sizeof(sa);
+	struct osmo_sockaddr osa;
+	socklen_t sa_len = sizeof(osa.u.sas);
 	struct osmo_stream_srv_link *link = ofd->data;
 
-	ret = accept(ofd->fd, (struct sockaddr *)&sa, &sa_len);
+	ret = accept(ofd->fd, &osa.u.sa, &sa_len);
 	if (ret < 0) {
-		LOGP(DLINP, LOGL_ERROR, "failed to accept from origin "
-			"peer, reason=`%s'\n", strerror(errno));
+		LOGP(DLINP, LOGL_ERROR, "failed to accept from origin peer, reason=`%s'\n",
+		     strerror(errno));
 		return ret;
 	}
 	sock_fd = ret;
 
-	is_ipv6 = false;
-	switch (((struct sockaddr *)&sa)->sa_family) {
+	switch (osa.u.sa.sa_family) {
 	case AF_UNIX:
 		LOGSLNK(link, LOGL_DEBUG, "accept()ed new link on fd %d\n",
 			sock_fd);
 		break;
 	case AF_INET6:
-		is_ipv6 = true;
-		/* fall through */
 	case AF_INET:
-		LOGSLNK(link, LOGL_DEBUG, "accept()ed new link from %s to port %u\n",
-			inet_ntop(is_ipv6 ? AF_INET6 : AF_INET,
-				  is_ipv6 ? (void *)&(((struct sockaddr_in6 *)&sa)->sin6_addr) :
-					    (void *)&(((struct sockaddr_in *)&sa)->sin_addr),
-				  addrstr, sizeof(addrstr)),
-			link->port);
+		LOGSLNK(link, LOGL_DEBUG, "accept()ed new link from %s\n",
+			osmo_sockaddr_to_str(&osa));
 
 		if (link->proto == IPPROTO_SCTP) {
 			ret = sctp_sock_activate_events(sock_fd);
@@ -1194,7 +1185,7 @@ static int osmo_stream_srv_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 		break;
 	default:
 		LOGSLNK(link, LOGL_DEBUG, "accept()ed unexpected address family %d\n",
-			((struct sockaddr *)&sa)->sa_family);
+			osa.u.sa.sa_family);
 		goto error_close_socket;
 	}
 
