@@ -103,11 +103,12 @@ int main(void)
 	 * initialize stream cli.
 	 */
 
-	conn = osmo_stream_cli_create2(tall_test, "stream_client");
+	conn = osmo_stream_cli_create(tall_test);
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create cli\n");
 		exit(EXIT_FAILURE);
 	}
+	osmo_stream_cli_set_name(conn, "stream_client");
 	osmo_stream_cli_set_addr(conn, "127.0.0.1");
 	osmo_stream_cli_set_port(conn, 10000);
 	osmo_stream_cli_set_connect_cb(conn, connect_cb);

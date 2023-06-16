@@ -576,7 +576,23 @@ static void cli_timer_cb(void *data);
  */
 struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 {
-	return osmo_stream_cli_create2(ctx, "");
+	struct osmo_stream_cli *cli;
+
+	cli = talloc_zero(ctx, struct osmo_stream_cli);
+	if (!cli)
+		return NULL;
+
+	cli->mode = OSMO_STREAM_MODE_UNKNOWN;
+	cli->sk_domain = AF_UNSPEC;
+	cli->sk_type = SOCK_STREAM;
+	cli->proto = IPPROTO_TCP;
+
+	cli->state = STREAM_CLI_STATE_CLOSED;
+	osmo_timer_setup(&cli->timer, cli_timer_cb, cli);
+	cli->reconnect_timeout = 5;	/* default is 5 seconds. */
+	INIT_LLIST_HEAD(&cli->tx_queue);
+
+	return cli;
 }
 
 static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
@@ -623,35 +639,6 @@ static struct osmo_io_ops osmo_stream_cli_ioops = {
 
 	.segmentation_cb = NULL,
 };
-
-/*! \brief Create an Osmocom stream client
- *  \param[in] ctx talloc context from which to allocate memory
- *  This function allocates a new \ref osmo_stream_cli and initializes
- *  it with default values (5s reconnect timer, TCP protocol)
- *  \param[in] name a description of the stream client. Will be used in logging
- *  \return allocated stream client, or NULL in case of error
- */
-struct osmo_stream_cli *osmo_stream_cli_create2(void *ctx, const char *name)
-{
-	struct osmo_stream_cli *cli;
-
-	cli = talloc_zero(ctx, struct osmo_stream_cli);
-	if (!cli)
-		return NULL;
-
-	cli->name = talloc_strdup(cli, name);
-	cli->mode = OSMO_STREAM_MODE_UNKNOWN;
-	cli->sk_domain = AF_UNSPEC;
-	cli->sk_type = SOCK_STREAM;
-	cli->proto = IPPROTO_TCP;
-
-	cli->state = STREAM_CLI_STATE_CLOSED;
-	osmo_timer_setup(&cli->timer, cli_timer_cb, cli);
-	cli->reconnect_timeout = 5;	/* default is 5 seconds. */
-	INIT_LLIST_HEAD(&cli->tx_queue);
-
-	return cli;
-}
 
 /*! \brief Set a name on the cli object (used during logging)
  *  \param[in] cli stream_cli whose name is to be set
@@ -875,7 +862,7 @@ void osmo_stream_cli_set_disconnect_cb(struct osmo_stream_cli *cli,
 }
 
 /*! \brief Set the call-back function called to read from the stream client socket
- *  Only for osmo_stream_cli created with osmo_stream_cli_create()
+ *  This function will configure osmo_stream_cli to use osmo_ofd internally.
  *  \param[in] cli Stream Client to modify
  *  \param[in] read_cb Call-back function to be called when we want to read */
 void
@@ -888,7 +875,7 @@ osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
 }
 
 /*! \brief Set the call-back function called to read from the stream client socket
- *  Only use this function for osmo_stream_cli created with osmo_stream_cli_create2()
+ *  This function will configure osmo_stream_cli to use osmo_iofd internally.
  *  \param[in] cli Stream Client to modify
  *  \param[in] read_cb Call-back function to be called when data was read from the socket */
 void

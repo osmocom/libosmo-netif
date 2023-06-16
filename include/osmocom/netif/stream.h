@@ -90,7 +90,6 @@ void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli);
 bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli);
 
 struct osmo_stream_cli *osmo_stream_cli_create(void *ctx);
-struct osmo_stream_cli *osmo_stream_cli_create2(void *ctx, const char *name);
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli);
 
 int osmo_stream_cli_open(struct osmo_stream_cli *cli);

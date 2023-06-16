@@ -164,11 +164,12 @@ int main(int argc, char *argv[])
 	 * initialize stream client.
 	 */
 
-	conn = osmo_stream_cli_create2(tall_test, "ipa_test_client");
+	conn = osmo_stream_cli_create(tall_test);
 	if (conn == NULL) {
 		fprintf(stderr, "cannot create client\n");
 		exit(EXIT_FAILURE);
 	}
+	osmo_stream_cli_set_name(conn, "ipa_test_client");
 	osmo_stream_cli_set_addr(conn, "127.0.0.1");
 	osmo_stream_cli_set_port(conn, 10000);
 	osmo_stream_cli_set_connect_cb(conn, connect_cb);
