@@ -69,12 +69,13 @@ static int accept_cb(struct osmo_stream_srv_link *srv, int fd)
 		return -1;
 	}
 
-	conn = osmo_stream_srv_create2(tall_test, "stream_server", srv, fd, NULL);
+	conn = osmo_stream_srv_create2(tall_test, srv, fd, NULL);
 	if (conn == NULL) {
 		LOGP(DSTREAMTEST, LOGL_ERROR,
 			"error while creating connection\n");
 		return -1;
 	}
+	osmo_stream_srv_set_name(conn, "stream_server");
 	osmo_stream_srv_set_read_cb(conn, read_cb);
 	osmo_stream_srv_set_closed_cb(conn, close_cb);
 

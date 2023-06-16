@@ -46,7 +46,7 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link);
 struct osmo_stream_srv;
 
 struct osmo_stream_srv *osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd, int (*read_cb)(struct osmo_stream_srv *conn), int (*closed_cb)(struct osmo_stream_srv *conn), void *data);
-struct osmo_stream_srv *osmo_stream_srv_create2(void *ctx, const char *name, struct osmo_stream_srv_link *link, int fd, void *data);
+struct osmo_stream_srv *osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, void *data);
 void osmo_stream_srv_set_name(struct osmo_stream_srv *conn, const char *name);
 void osmo_stream_srv_set_read_cb(struct osmo_stream_srv *conn, int (*read_cb)(struct osmo_stream_srv *conn, struct msgb *msg));
 void osmo_stream_srv_set_closed_cb(struct osmo_stream_srv *conn, int (*closed_cb)(struct osmo_stream_srv *conn));

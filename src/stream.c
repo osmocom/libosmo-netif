@@ -1703,14 +1703,12 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 
 /*! \brief Create a Stream Server inside the specified link
  *  \param[in] ctx talloc allocation context from which to allocate
- *  \param[in] name name of the connection
  *  \param[in] link Stream Server Link to which we belong
  *  \param[in] fd system file descriptor of the new connection
  *  \param[in] data User data to save in the new Stream Server struct
  *  \returns Stream Server in case of success; NULL on error */
 struct osmo_stream_srv *
-osmo_stream_srv_create2(void *ctx, const char *name,
-	struct osmo_stream_srv_link *link, int fd, void *data)
+osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, void *data)
 {
 	struct osmo_stream_srv *conn;
 
@@ -1723,11 +1721,9 @@ osmo_stream_srv_create2(void *ctx, const char *name,
 	conn->mode = OSMO_STREAM_MODE_OSMO_IO;
 	conn->srv = link;
 
-	if (name)
-		conn->name = talloc_strdup(conn, name);
 	osmo_sock_get_name_buf(conn->sockname, sizeof(conn->sockname), fd);
 
-	conn->iofd = osmo_iofd_setup(conn, fd, conn->name ? : conn->sockname,
+	conn->iofd = osmo_iofd_setup(conn, fd, conn->sockname,
 				     OSMO_IO_FD_MODE_READ_WRITE, &srv_ioops, conn);
 	if (!conn->iofd) {
 		talloc_free(conn);
