@@ -337,6 +337,8 @@ static void osmo_stream_cli_close_ofd(struct osmo_stream_cli *cli)
  *  abstraction and close the socket */
 void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 {
+	int old_state = cli->state;
+
 	if (cli->state == STREAM_CLI_STATE_CLOSED)
 		return;
 	if (cli->state == STREAM_CLI_STATE_WAIT_RECONNECT) {
@@ -357,13 +359,13 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 		OSMO_ASSERT(false);
 	}
 
-	if (cli->state == STREAM_CLI_STATE_CONNECTED) {
+	cli->state = STREAM_CLI_STATE_CLOSED;
+
+	if (old_state == STREAM_CLI_STATE_CONNECTED) {
 		LOGSCLI(cli, LOGL_DEBUG, "connection closed\n");
 		if (cli->disconnect_cb)
 			cli->disconnect_cb(cli);
 	}
-
-	cli->state = STREAM_CLI_STATE_CLOSED;
 }
 
 static inline int osmo_stream_cli_fd(const struct osmo_stream_cli *cli)
