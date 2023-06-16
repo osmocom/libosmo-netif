@@ -214,6 +214,7 @@ static struct osmo_stream_cli *make_client(void *ctx, const char *host, unsigned
 
 	printf("Prepare %s stream client...\n", ASTR(autoreconnect));
 
+	osmo_stream_cli_set_name(cli, "cli_test");
 	osmo_stream_cli_set_addr(cli, host);
 	osmo_stream_cli_set_port(cli, port);
 	osmo_stream_cli_set_connect_cb(cli, connect_cb_cli);
@@ -323,6 +324,7 @@ static int accept_cb_srv(struct osmo_stream_srv_link *lnk, int fd)
 		LOGLNK(lnk, "error while creating connection\n");
 		return -EINVAL;
 	}
+	osmo_stream_srv_set_name(srv, "srv_test");
 
 	return 0;
 }
@@ -390,6 +392,7 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 
+	osmo_stream_srv_link_set_name(srv, "srv_link_test");
 	osmo_stream_srv_link_set_addr(srv, host);
 	osmo_stream_srv_link_set_port(srv, port);
 	osmo_stream_srv_link_set_accept_cb(srv, accept_cb_srv);

@@ -53,8 +53,6 @@
 
 #include <osmocom/netif/sctp.h>
 
-#define LOGSCLI(cli, level, fmt, args...) \
-	LOGP(DLINP, level, "[%s] %s(): " fmt, get_value_string(stream_cli_state_names, (cli)->state), __func__, ## args)
 
 /*! \addtogroup stream Osmocom Stream Socket
  *  @{
@@ -77,6 +75,22 @@
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+
+#define LOGSCLI(cli, level, fmt, args...) \
+	LOGP(DLINP, level, "CLICONN(%s){%s} " fmt, \
+	     cli->name ? : "", \
+	     get_value_string(stream_cli_state_names, (cli)->state), \
+	     ## args)
+
+#define LOGSLNK(link, level, fmt, args...) \
+	LOGP(DLINP, level, "SRV(%s) " fmt, \
+	     link->name ? : "", \
+	      ## args)
+
+#define LOGSSRV(srv, level, fmt, args...) \
+	LOGP(DLINP, level, "SRVCONN(%s) " fmt, \
+	     srv->name ? : "", \
+	      ## args)
 
 /* is any of the bytes from offset .. u8_size in 'u8' non-zero? return offset or -1 if all zero */
 static int byte_nonzero(const uint8_t *u8, unsigned int offset, unsigned int u8_size)
@@ -300,7 +314,7 @@ void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 	}
 
 	cli->state = STREAM_CLI_STATE_WAIT_RECONNECT;
-	LOGSCLI(cli, LOGL_INFO, "retrying in %d seconds...\n",
+	LOGSCLI(cli, LOGL_INFO, "retrying reconnect in %d seconds...\n",
 		cli->reconnect_timeout);
 	osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
 }
@@ -406,7 +420,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	llist_del(&msg->list);
 
 	if (!osmo_stream_cli_is_connected(cli)) {
-		LOGSCLI(cli, LOGL_ERROR, "not connected, dropping data!\n");
+		LOGSCLI(cli, LOGL_ERROR, "send: not connected, dropping data!\n");
 		return 0;
 	}
 
@@ -440,7 +454,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	}
 
 	if (ret >= 0 && ret < msgb_length(msg)) {
-		LOGP(DLINP, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
+		LOGSCLI(cli, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
 		/* Update msgb and re-add it at the start of the queue: */
 		msgb_pull(msg, ret);
 		llist_add(&msg->list, &cli->tx_queue);
@@ -630,6 +644,17 @@ struct osmo_stream_cli *osmo_stream_cli_create2(void *ctx, const char *name)
 	INIT_LLIST_HEAD(&cli->tx_queue);
 
 	return cli;
+}
+
+/*! \brief Set a name on the cli object (used during logging)
+ *  \param[in] cli stream_cli whose name is to be set
+ *  \param[in] name the name to be set on cli
+ */
+void osmo_stream_cli_set_name(struct osmo_stream_cli *cli, const char *name)
+{
+	osmo_talloc_replace_string(cli, &cli->name, name);
+	if (cli->mode == OSMO_STREAM_MODE_OSMO_IO && cli->iofd)
+		osmo_iofd_set_name(cli->iofd, name);
 }
 
 /*! \brief Set the remote address to which we connect
@@ -1119,6 +1144,7 @@ void osmo_stream_cli_clear_tx_queue(struct osmo_stream_cli *cli)
 
 struct osmo_stream_srv_link {
 	struct osmo_fd		ofd;
+	char			*name;
 	char			*addr[OSMO_STREAM_MAX_ADDRS];
 	uint8_t			addrcnt;
 	uint16_t		port;
@@ -1151,14 +1177,14 @@ static int osmo_stream_srv_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 	is_ipv6 = false;
 	switch (((struct sockaddr *)&sa)->sa_family) {
 	case AF_UNIX:
-		LOGP(DLINP, LOGL_DEBUG, "accept()ed new link on fd %d\n",
-		     sock_fd);
+		LOGSLNK(link, LOGL_DEBUG, "accept()ed new link on fd %d\n",
+			sock_fd);
 		break;
 	case AF_INET6:
 		is_ipv6 = true;
 		/* fall through */
 	case AF_INET:
-		LOGP(DLINP, LOGL_DEBUG, "accept()ed new link from %s to port %u\n",
+		LOGSLNK(link, LOGL_DEBUG, "accept()ed new link from %s to port %u\n",
 			inet_ntop(is_ipv6 ? AF_INET6 : AF_INET,
 				  is_ipv6 ? (void *)&(((struct sockaddr_in6 *)&sa)->sin6_addr) :
 					    (void *)&(((struct sockaddr_in *)&sa)->sin_addr),
@@ -1172,8 +1198,8 @@ static int osmo_stream_srv_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 		}
 		break;
 	default:
-		LOGP(DLINP, LOGL_DEBUG, "accept()ed unexpected address family %d\n",
-		     ((struct sockaddr *)&sa)->sa_family);
+		LOGSLNK(link, LOGL_DEBUG, "accept()ed unexpected address family %d\n",
+			((struct sockaddr *)&sa)->sa_family);
 		goto error_close_socket;
 	}
 
@@ -1218,6 +1244,15 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	osmo_fd_setup(&link->ofd, -1, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_srv_ofd_cb, link, 0);
 
 	return link;
+}
+
+/*! \brief Set a name on the srv_link object (used during logging)
+ *  \param[in] link server link whose name is to be set
+ *  \param[in] name the name to be set on link
+ */
+void osmo_stream_srv_link_set_name(struct osmo_stream_srv_link *link, const char *name)
+{
+	osmo_talloc_replace_string(link, &link->name, name);
 }
 
 /*! \brief Set the NODELAY socket option to avoid Nagle-like behavior
@@ -1481,6 +1516,7 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 
 struct osmo_stream_srv {
 	struct osmo_stream_srv_link	*srv;
+	char				*name;
 	enum osmo_stream_mode mode;
 	union {
 		struct osmo_fd			ofd;
@@ -1497,10 +1533,10 @@ struct osmo_stream_srv {
 static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
 {
 	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
-	LOGP(DLINP, LOGL_DEBUG, "message received (res=%d)\n", res);
+	LOGSSRV(conn, LOGL_DEBUG, "message received (res=%d)\n", res);
 
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
-		LOGP(DLINP, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
+		LOGSSRV(conn, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
 		msgb_free(msg);
 		return;
 	}
@@ -1517,10 +1553,10 @@ static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 static void stream_srv_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
 {
 	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
-	LOGP(DLINP, LOGL_DEBUG, "connected write\n");
+	LOGSSRV(conn, LOGL_DEBUG, "connected write\n");
 
 	if (res == -1)
-		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", strerror(errno));
+		LOGSSRV(conn, LOGL_ERROR, "error to send: %s\n", strerror(errno));
 
 	if (osmo_iofd_txqueue_len(iofd) == 0)
 		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY)
@@ -1535,10 +1571,10 @@ static int osmo_stream_srv_read(struct osmo_stream_srv *conn)
 {
 	int rc = 0;
 
-	LOGP(DLINP, LOGL_DEBUG, "message received\n");
+	LOGSSRV(conn, LOGL_DEBUG, "message received\n");
 
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
-		LOGP(DLINP, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
+		LOGSSRV(conn, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
 		return 0;
 	}
 
@@ -1563,7 +1599,7 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	msg = llist_first_entry(&conn->tx_queue, struct msgb, list);
 	llist_del(&msg->list);
 
-	LOGP(DLINP, LOGL_DEBUG, "sending %u bytes of data\n", msg->len);
+	LOGSSRV(conn, LOGL_DEBUG, "sending %u bytes of data\n", msg->len);
 
 	switch (conn->srv->sk_domain) {
 	case AF_UNIX:
@@ -1594,7 +1630,7 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	}
 
 	if (ret >= 0 && ret < msgb_length(msg)) {
-		LOGP(DLINP, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
+		LOGSSRV(conn, LOGL_ERROR, "short send: %d < exp %u\n", ret, msgb_length(msg));
 		/* Update msgb and re-add it at the start of the queue: */
 		msgb_pull(msg, ret);
 		llist_add(&msg->list, &conn->tx_queue);
@@ -1602,7 +1638,7 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	}
 
 	if (ret == -1) /* send(): On error -1 is returned, and errno is set appropriately */
-		LOGP(DLINP, LOGL_ERROR, "error to send: %s\n", strerror(errno));
+		LOGSSRV(conn, LOGL_ERROR, "error to send: %s\n", strerror(errno));
 
 	msgb_free(msg);
 
@@ -1618,7 +1654,7 @@ static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
 	struct osmo_stream_srv *conn = ofd->data;
 	int rc = 0;
 
-	LOGP(DLINP, LOGL_DEBUG, "connected read/write (what=0x%x)\n", what);
+	LOGSSRV(conn, LOGL_DEBUG, "connected read/write (what=0x%x)\n", what);
 	if (what & OSMO_FD_READ)
 		rc = osmo_stream_srv_read(conn);
 	if (rc != -EBADF && (what & OSMO_FD_WRITE))
@@ -1658,7 +1694,7 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	INIT_LLIST_HEAD(&conn->tx_queue);
 
 	if (osmo_fd_register(&conn->ofd) < 0) {
-		LOGP(DLINP, LOGL_ERROR, "could not register FD\n");
+		LOGSSRV(conn, LOGL_ERROR, "could not register FD\n");
 		talloc_free(conn);
 		return NULL;
 	}
@@ -1686,6 +1722,7 @@ osmo_stream_srv_create2(void *ctx, const char *name,
 
 	conn->mode = OSMO_STREAM_MODE_OSMO_IO;
 	conn->srv = link;
+	conn->name = talloc_strdup(conn, name);
 	conn->iofd = osmo_iofd_setup(conn, fd, name, OSMO_IO_FD_MODE_READ_WRITE, &srv_ioops, conn);
 	if (!conn->iofd) {
 		talloc_free(conn);
@@ -1694,12 +1731,23 @@ osmo_stream_srv_create2(void *ctx, const char *name,
 	conn->data = data;
 
 	if (osmo_iofd_register(conn->iofd, fd) < 0) {
-		LOGP(DLINP, LOGL_ERROR, "could not register FD %d\n", fd);
+		LOGSSRV(conn, LOGL_ERROR, "could not register FD %d\n", fd);
 		talloc_free(conn);
 		return NULL;
 	}
 
 	return conn;
+}
+
+/*! \brief Set a name on the srv object (used during logging)
+ *  \param[in] conn server whose name is to be set
+ *  \param[in] name the name to be set on conn
+ */
+void osmo_stream_srv_set_name(struct osmo_stream_srv *conn, const char *name)
+{
+	osmo_talloc_replace_string(conn, &conn->name, name);
+	if (conn->mode == OSMO_STREAM_MODE_OSMO_IO && conn->iofd)
+		osmo_iofd_set_name(conn->iofd, name);
 }
 
 /*! \brief Set the call-back function when data was read from the stream server socket
@@ -1800,7 +1848,7 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 	OSMO_ASSERT(conn);
 	OSMO_ASSERT(msg);
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
-		LOGP(DLINP, LOGL_DEBUG, "Connection is being flushed and closed; ignoring new outgoing message\n");
+		LOGSSRV(conn, LOGL_DEBUG, "Connection is being flushed and closed; ignoring new outgoing message\n");
 		msgb_free(msg);
 		return;
 	}
@@ -1929,16 +1977,15 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ECONNRESET) {
-			LOGP(DLINP, LOGL_ERROR,
-				"lost connection with client\n");
+			LOGSSRV(conn, LOGL_ERROR, "lost connection with client\n");
 		}
 		return ret;
 	} else if (ret == 0) {
-		LOGP(DLINP, LOGL_ERROR, "connection closed with client\n");
+		LOGSSRV(conn, LOGL_ERROR, "connection closed with client\n");
 		return ret;
 	}
 	msgb_put(msg, ret);
-	LOGP(DLINP, LOGL_DEBUG, "received %d bytes from client\n", ret);
+	LOGSSRV(conn, LOGL_DEBUG, "received %d bytes from client\n", ret);
 	return ret;
 }
 
