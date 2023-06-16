@@ -480,6 +480,7 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 	socklen_t len = sizeof(error);
 
 	int fd = osmo_stream_cli_fd(cli);
+	OSMO_ASSERT(fd >= 0);
 
 	if (ret < 0) {
 		osmo_stream_cli_reconnect(cli);
