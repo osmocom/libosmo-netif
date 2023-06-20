@@ -77,19 +77,22 @@
 #endif
 
 #define LOGSCLI(cli, level, fmt, args...) \
-	LOGP(DLINP, level, "CLICONN(%s){%s} " fmt, \
+	LOGP(DLINP, level, "CLICONN(%s,%s){%s} " fmt, \
 	     cli->name ? : "", \
+	     cli->sockname, \
 	     get_value_string(stream_cli_state_names, (cli)->state), \
 	     ## args)
 
 #define LOGSLNK(link, level, fmt, args...) \
-	LOGP(DLINP, level, "SRV(%s) " fmt, \
+	LOGP(DLINP, level, "SRV(%s,%s) " fmt, \
 	     link->name ? : "", \
+	     link->sockname, \
 	      ## args)
 
 #define LOGSSRV(srv, level, fmt, args...) \
-	LOGP(DLINP, level, "SRVCONN(%s) " fmt, \
+	LOGP(DLINP, level, "SRVCONN(%s,%s) " fmt, \
 	     srv->name ? : "", \
+	     srv->sockname, \
 	      ## args)
 
 /* is any of the bytes from offset .. u8_size in 'u8' non-zero? return offset or -1 if all zero */
@@ -271,6 +274,7 @@ enum osmo_stream_mode {
 
 struct osmo_stream_cli {
 	char *name;
+	char sockname[OSMO_SOCK_NAME_MAXLEN];
 	enum osmo_stream_mode mode;
 	union {
 		struct osmo_fd			ofd;
@@ -512,6 +516,9 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 	   up to dispatch them upon next main loop step */
 	if (cli->mode == OSMO_STREAM_MODE_OSMO_FD && llist_empty(&cli->tx_queue))
 		osmo_fd_write_disable(&cli->ofd);
+
+	/* Update sockname based on socket info: */
+	osmo_sock_get_name_buf(cli->sockname, sizeof(cli->sockname), osmo_stream_cli_fd(cli));
 
 	LOGSCLI(cli, LOGL_DEBUG, "connection established\n");
 	cli->state = STREAM_CLI_STATE_CONNECTED;
@@ -1145,6 +1152,7 @@ void osmo_stream_cli_clear_tx_queue(struct osmo_stream_cli *cli)
 struct osmo_stream_srv_link {
 	struct osmo_fd		ofd;
 	char			*name;
+	char			sockname[OSMO_SOCK_NAME_MAXLEN];
 	char			*addr[OSMO_STREAM_MAX_ADDRS];
 	uint8_t			addrcnt;
 	uint16_t		port;
@@ -1483,6 +1491,8 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 		link->ofd.fd = -1;
 		return -EIO;
 	}
+
+	OSMO_STRLCPY_ARRAY(link->sockname, osmo_stream_srv_link_get_sockname(link));
 	return 0;
 }
 
@@ -1517,6 +1527,7 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 struct osmo_stream_srv {
 	struct osmo_stream_srv_link	*srv;
 	char				*name;
+	char				sockname[OSMO_SOCK_NAME_MAXLEN];
 	enum osmo_stream_mode mode;
 	union {
 		struct osmo_fd			ofd;
@@ -1693,6 +1704,8 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	conn->data = data;
 	INIT_LLIST_HEAD(&conn->tx_queue);
 
+	osmo_sock_get_name_buf(conn->sockname, sizeof(conn->sockname), fd);
+
 	if (osmo_fd_register(&conn->ofd) < 0) {
 		LOGSSRV(conn, LOGL_ERROR, "could not register FD\n");
 		talloc_free(conn);
@@ -1722,8 +1735,13 @@ osmo_stream_srv_create2(void *ctx, const char *name,
 
 	conn->mode = OSMO_STREAM_MODE_OSMO_IO;
 	conn->srv = link;
-	conn->name = talloc_strdup(conn, name);
-	conn->iofd = osmo_iofd_setup(conn, fd, name, OSMO_IO_FD_MODE_READ_WRITE, &srv_ioops, conn);
+
+	if (name)
+		conn->name = talloc_strdup(conn, name);
+	osmo_sock_get_name_buf(conn->sockname, sizeof(conn->sockname), fd);
+
+	conn->iofd = osmo_iofd_setup(conn, fd, conn->name ? : conn->sockname,
+				     OSMO_IO_FD_MODE_READ_WRITE, &srv_ioops, conn);
 	if (!conn->iofd) {
 		talloc_free(conn);
 		return NULL;

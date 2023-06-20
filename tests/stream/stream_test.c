@@ -214,6 +214,7 @@ static struct osmo_stream_cli *make_client(void *ctx, const char *host, unsigned
 
 	printf("Prepare %s stream client...\n", ASTR(autoreconnect));
 
+	osmo_stream_cli_set_local_port(cli, 8976);
 	osmo_stream_cli_set_name(cli, "cli_test");
 	osmo_stream_cli_set_addr(cli, host);
 	osmo_stream_cli_set_port(cli, port);

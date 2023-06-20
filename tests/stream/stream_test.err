@@ -12,15 +12,15 @@
 {2.000006} autoreconnecting test step 6 [client OK, server OK], FD reg 1
 
 {2.000007} autoreconnecting test step 5 [client OK, server OK], FD reg 1
-CLICONN(cli_test){CONNECTED} connection closed with srv
-CLICONN(cli_test){WAIT_RECONNECT} retrying reconnect in 9 seconds...
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connection closed with srv
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){WAIT_RECONNECT} retrying reconnect in 9 seconds...
 
 {11.000008} autoreconnecting test step 4 [client OK, server OK], FD reg 0
 
 {11.000009} autoreconnecting test step 3 [client OK, server OK], FD reg 1
 
 {11.000010} autoreconnecting test step 2 [client OK, server OK], FD reg 0
-SRVCONN(srv_test) connection closed with client
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connection closed with client
 
 {11.000011} autoreconnecting test step 1 [client OK, server NA], FD reg 0
 
@@ -37,7 +37,7 @@ SRVCONN(srv_test) connection closed with client
 {11.000017} non-reconnecting test step 2 [client OK, server OK], FD reg 1
 
 {11.000018} non-reconnecting test step 1 [client OK, server OK], FD reg 1
-CLICONN(cli_test){CONNECTED} connection closed with srv
-CLICONN(cli_test){CLOSED} not reconnecting, disabled
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connection closed with srv
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CLOSED} not reconnecting, disabled
 
 {20.000019} non-reconnecting test step 0 [client OK, server OK], FD reg 0
