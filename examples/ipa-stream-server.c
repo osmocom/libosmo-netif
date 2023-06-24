@@ -57,7 +57,7 @@ int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
 		return 0;
 	}
 
-	osmo_stream_srv_send(conn, msg);
+	osmo_ipa_stream_srv_send(conn, IPAC_PROTO_UNSPECIFIED, IPAC_PROTO_UNSPECIFIED, msg);
 	return 0;
 }
 
