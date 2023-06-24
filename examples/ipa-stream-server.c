@@ -51,12 +51,6 @@ int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
 {
 	LOGP(DSTREAMTEST, LOGL_DEBUG, "received message from stream (len=%d)\n", msgb_length(msg));
 
-	if (osmo_ipa_process_msg(msg) < 0) {
-		LOGP(DSTREAMTEST, LOGL_ERROR, "Bad IPA message\n");
-		msgb_free(msg);
-		return 0;
-	}
-
 	osmo_stream_srv_send(conn, msg);
 	return 0;
 }
@@ -84,6 +78,7 @@ static int accept_cb(struct osmo_stream_srv_link *srv, int fd)
 	osmo_stream_srv_set_name(conn, "ipa_srv");
 	osmo_stream_srv_set_read_cb(conn, read_cb);
 	osmo_stream_srv_set_closed_cb(conn, close_cb);
+	osmo_stream_srv_set_segmentation_cb(conn, osmo_ipa_segmentation_cb);
 
 	return 0;
 }
