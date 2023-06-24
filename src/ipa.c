@@ -436,3 +436,15 @@ int osmo_ipa_segmentation_cb(struct msgb *msg)
 	}
 	return total_len;
 }
+
+/*! Push IPA headers to a message
+ *  If we have IPAC_PROTO_OSMO this also takes care of the extension header
+ *  \param[out] msg	Target message
+ *  \param p		Target IPA protocol
+ *  \param pe		Target IPA protocol extension. Ignored, unless p equals IPAC_PROTO_OSMO. */
+void osmo_ipa_msg_push_headers(struct msgb *msg, enum ipaccess_proto p, enum ipaccess_proto_ext pe)
+{
+	if (p == IPAC_PROTO_OSMO)
+		ipa_prepend_header_ext(msg, pe);
+	osmo_ipa_msg_push_header(msg, p);
+}

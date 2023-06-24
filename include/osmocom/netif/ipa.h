@@ -65,4 +65,6 @@ int osmo_ipa_parse_msg_id_resp(struct msgb *msg, struct ipaccess_unit *unit_data
 
 int osmo_ipa_segmentation_cb(struct msgb *msg);
 
+void osmo_ipa_msg_push_headers(struct msgb *msg, enum ipaccess_proto p, enum ipaccess_proto_ext pe);
+
 #endif

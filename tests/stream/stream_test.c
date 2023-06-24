@@ -384,12 +384,17 @@ static const uint8_t ipac_msg_pong[] = {
 	IPAC_PROTO_IPACCESS,
 	IPAC_MSGT_PONG
 };
+#define IPAC_MSG_IDREQ_PAYLOAD_INITIALIZER \
+	IPAC_MSGT_ID_GET, \
+	0x01, IPAC_IDTAG_UNITNAME
+static const uint8_t ipac_msg_idreq_payload[] = {
+	IPAC_MSG_IDREQ_PAYLOAD_INITIALIZER
+};
 #define IPAC_MSG_ID_REQ_LEN 0x03
 static const uint8_t ipac_msg_idreq[] = {
 	0x00, IPAC_MSG_ID_REQ_LEN,
 	IPAC_PROTO_IPACCESS,
-	IPAC_MSGT_ID_GET,
-	0x01, IPAC_IDTAG_UNITNAME
+	IPAC_MSG_IDREQ_PAYLOAD_INITIALIZER
 };
 #define ipac_msg_idreq_third (sizeof(ipac_msg_idreq)/3)
 #define ipac_msg_idreq_last_third (sizeof(ipac_msg_idreq) - 2 * ipac_msg_idreq_third)
@@ -574,7 +579,8 @@ int test_segm_ipa_stream_srv_srv_read_cb(struct osmo_stream_srv *conn, struct ms
 			fprintf(stderr, "Cannot allocate message\n");
 			return -ENOMEM;
 		}
-		put_ipa_msg(data, m, ipac_msg_idreq);
+		put_ipa_msg(data, m, ipac_msg_idreq_payload);
+		osmo_ipa_msg_push_headers(m, IPAC_PROTO_IPACCESS, -1);
 		osmo_stream_srv_send(conn, m);
 	} else if (msgnum_srv == 7 && *msgt == IPAC_MSGT_PONG) {
 		test_segm_ipa_stream_srv_all_msgs_processed = true;
@@ -766,7 +772,8 @@ static int test_segm_ipa_stream_cli_cli_read_cb(struct osmo_stream_cli *osc, str
 			fprintf(stderr, "Cannot allocate message\n");
 			return -ENOMEM;
 		}
-		put_ipa_msg(data, m, ipac_msg_idreq);
+		put_ipa_msg(data, m, ipac_msg_idreq_payload);
+		osmo_ipa_msg_push_headers(m, IPAC_PROTO_IPACCESS, -1);
 		osmo_stream_cli_send(osc, m);
 	} else if (msgnum_cli == 7 && *msgt == IPAC_MSGT_PONG) {
 		test_segm_ipa_stream_cli_all_msgs_processed = true;

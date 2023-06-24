@@ -51,9 +51,7 @@ int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
 {
 	LOGP(DSTREAMTEST, LOGL_DEBUG, "received message from stream (payload len=%d)\n", msgb_length(msg));
 
-	ipa_prepend_header_ext(msg, IPAC_PROTO_EXT_MGCP);
-	osmo_ipa_msg_push_header(msg, IPAC_PROTO_OSMO);
-
+	osmo_ipa_msg_push_headers(msg, osmo_ipa_msgb_cb_proto(msg), osmo_ipa_msgb_cb_proto_ext(msg));
 	osmo_stream_srv_send(conn, msg);
 	return 0;
 }
