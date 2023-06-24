@@ -490,14 +490,14 @@ static struct osmo_timer_list fragmented_send_tl_cli;
 static int test_segm_ipa_stream_srv_cli_read_cb(struct osmo_stream_cli *osc, struct msgb *msg)
 {
 	unsigned char *data;
-	struct ipa_head *h = (struct ipa_head *) msg->data;
-	uint8_t ipac_msg_type = ((uint8_t *)h)[sizeof(struct ipa_head)];
+	struct ipa_head *h = (struct ipa_head *) msg->l1h;
+	uint8_t ipac_msg_type = *msg->data;
 	struct msgb *reply = msgb_alloc_headroom(128, 0, "IPA reply");
 	if (reply == NULL) {
 		fprintf(stderr, "Cannot allocate message\n");
 		return -ENOMEM;
 	}
-	LOGCLI(osc, "Received message from stream (total len = %" PRIu16 ")\n", msgb_length(msg));
+	LOGCLI(osc, "Received message from stream (payload len = %" PRIu16 ")\n", msgb_length(msg));
 	if (ipac_msg_type < 0 || 5 < ipac_msg_type) {
 		fprintf(stderr, "Received unexpected IPAC message type %"PRIu8"\n", ipac_msg_type);
 		return -ENOMSG;
@@ -515,7 +515,7 @@ static int test_segm_ipa_stream_srv_cli_read_cb(struct osmo_stream_cli *osc, str
 		osmo_stream_cli_send(osc, reply);
 		osmo_timer_setup(&fragmented_send_tl_cli, send_last_third, osc);
 		osmo_timer_add(&fragmented_send_tl_cli);
-		osmo_timer_schedule(&fragmented_send_tl_cli, 0, 500000);
+		osmo_timer_schedule(&fragmented_send_tl_cli, 0, 125000);
 	} else if (ipac_msg_type == IPAC_MSGT_ID_RESP) {
 		LOGCLI(osc, "\tresult=  %s\n",
 		       osmo_hexdump((const unsigned char *)h, sizeof(*h) + h->len));
@@ -547,6 +547,7 @@ static void *test_segm_ipa_stream_srv_run_client(void)
 		fprintf(stderr, "Cannot open stream client\n");
 		return NULL;
 	}
+	osmo_stream_cli_set_segmentation_cb(osc, osmo_ipa_segmentation_cb);
 
 	return NULL;
 }
@@ -567,7 +568,7 @@ int test_segm_ipa_stream_srv_srv_read_cb(struct osmo_stream_srv *conn, struct ms
 	LOGSRV(conn, "\t(msg dump: %s)\n", osmo_hexdump(msg->l1h, msg->len + sizeof(struct ipa_head)));
 	if (*msgt == IPAC_MSGT_ID_RESP) { /*  */
 		LOGSRV(conn, "Send IPAC_MSGT_ID_GET to trigger client to send next third\n\n");
-		m = msgb_alloc_headroom(128, 0, "IPA messages");
+		m = osmo_ipa_msg_alloc(128);
 		if (m == NULL) {
 			fprintf(stderr, "Cannot allocate message\n");
 			return -ENOMEM;
@@ -640,6 +641,214 @@ static bool test_segm_ipa_stream_srv_run(void *ctx, const char *host, unsigned p
 	return EXIT_SUCCESS;
 }
 
+static struct osmo_timer_list fragmented_send_tl_srv;
+
+static unsigned test_segm_ipa_stream_cli_srv_msglognum = 0;
+
+/* Like CLI_APPEND_MSG, but for server side */
+#define SRV_APPEND_MSG(OSMO_STREAM_SRV_PTR, UCHAR_PTR_DST, STRUCT_MSGB_PTR, SRC_IPAC_MSG_BUF) do {\
+	LOGSRV(OSMO_STREAM_SRV_PTR, "[%u-srv] Appending msg of type %s into buffer\n",\
+		++test_segm_ipa_stream_cli_srv_msglognum, IPAC_MSG_TYPES[SRC_IPAC_MSG_BUF[IPAC_MSGT_OFFSET]]);\
+	LOGSRV(OSMO_STREAM_SRV_PTR, "\t(msg dump: %s)\n", osmo_hexdump(SRC_IPAC_MSG_BUF,\
+	       sizeof(SRC_IPAC_MSG_BUF)));\
+	put_ipa_msg(UCHAR_PTR_DST, STRUCT_MSGB_PTR, SRC_IPAC_MSG_BUF);\
+} while (0)
+
+static void send_last_third_srv(void *osmo_stream_srv_arg)
+{
+	struct osmo_stream_srv *oss = osmo_stream_srv_arg;
+	unsigned char *data;
+	struct msgb *reply = msgb_alloc_headroom(128, 0, "IPA delayed reply");
+
+	LOGSRV(oss, "Delay for sending last third of message is over\n");
+	if (reply == NULL) {
+		fprintf(stderr, "Cannot allocate message\n");
+		return;
+	}
+	LOGSRV(oss, "[%u-srv] Appending: Last third of IPAC_MSGT_ID_GET\n",
+	       ++test_segm_ipa_stream_cli_srv_msglognum);
+	data = msgb_put(reply, ipac_msg_idreq_last_third);
+	memcpy(data, ipac_msg_idreq + 2 * ipac_msg_idreq_third,
+	       ipac_msg_idreq_last_third);
+	/* Append two entire messages */
+	SRV_APPEND_MSG(oss, data, reply, ipac_msg_pong);
+	SRV_APPEND_MSG(oss, data, reply, ipac_msg_pong);
+	LOGSRV(oss, "\tSending:"
+		    "[ Last third of IPAC_MSGT_ID_GET | IPAC_MSGT_PONG | IPAC_MSGT_PONG ]\n");
+	LOGSRV(oss, "\t(msg dump: %s)\n\n", osmo_hexdump(reply->data, reply->len));
+	osmo_stream_srv_send(oss, reply);
+}
+
+int test_segm_ipa_stream_cli_srv_read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
+{
+	unsigned char *data;
+	struct ipa_head *h = (struct ipa_head *) msg->l1h;
+	uint8_t ipa_msg_type = ((uint8_t *)h)[sizeof(struct ipa_head)];
+	struct msgb *reply = msgb_alloc_headroom(128, 0, "IPA reply");
+	if (reply == NULL) {
+		fprintf(stderr, "Cannot allocate message\n");
+		return -ENOMEM;
+	}
+	LOGSRV(conn, "Received message from stream (total len including stripped headers = %lu)\n",
+	       osmo_ntohs(h->len) + sizeof(*h));
+	if (ipa_msg_type < 0 || 5 < ipa_msg_type) {
+		fprintf(stderr, "Received unexpected IPAC message type %"PRIu8"\n", ipa_msg_type);
+		return -ENOMSG;
+	}
+	LOGSRV(conn, "\tType: %s\n", IPAC_MSG_TYPES[ipa_msg_type]);
+	if (ipa_msg_type == IPAC_MSGT_ID_GET) {
+		LOGSRV(conn, "Got IPAC_MSGT_ID_GET from client\n");
+		LOGSRV(conn, "[(%u + 2/3) -srv] Appending: Second third of IPAC_MSGT_ID_GET\n",
+		       test_segm_ipa_stream_cli_srv_msglognum);
+		data = msgb_put(reply, ipac_msg_idreq_third);
+		memcpy(data, ipac_msg_idreq + ipac_msg_idreq_third,
+		       ipac_msg_idreq_third);
+		LOGSRV(conn, "\tSending: Second third of IPAC_MSGT_ID_GET\n");
+		LOGSRV(conn, "\t(msg dump: %s)\n", osmo_hexdump(reply->data, reply->len));
+		osmo_stream_srv_send(conn, reply);
+		osmo_timer_setup(&fragmented_send_tl_srv, send_last_third_srv, conn);
+		osmo_timer_add(&fragmented_send_tl_srv);
+		osmo_timer_schedule(&fragmented_send_tl_srv, 0, 125000);
+	} else if (ipa_msg_type == IPAC_MSGT_ID_RESP) {
+		LOGSRV(conn, "\tresult=  %s\n",
+		       osmo_hexdump((const unsigned char *)h, sizeof(*h) + h->len));
+		LOGSRV(conn, "\texpected=%s\n",
+		       osmo_hexdump(ipac_msg_idresp, sizeof(ipac_msg_idresp)));
+	}
+	printf("\n");
+	return 0;
+}
+
+static int test_segm_ipa_stream_cli_srv_accept_cb(struct osmo_stream_srv_link *srv, int fd)
+{
+	int (*test_segm_ipa_stream_cli_srv_close_cb)(struct osmo_stream_srv *conn) =
+		test_segm_ipa_stream_srv_srv_close_cb;
+	void *ctx = talloc_named_const(NULL, 0, __func__);
+	struct osmo_stream_srv *oss =
+		osmo_stream_srv_create2(ctx, srv, fd, NULL);
+	unsigned char *data;
+	struct msgb *m = msgb_alloc_headroom(128, 0, "IPA messages");
+	if (oss == NULL) {
+		fprintf(stderr, "Error while creating connection\n");
+		return -1;
+	}
+	if (m == NULL) {
+		fprintf(stderr, "Cannot allocate message\n");
+		return -ENOMEM;
+	}
+	osmo_stream_srv_set_segmentation_cb(oss, osmo_ipa_segmentation_cb);
+	osmo_stream_srv_set_read_cb(oss, test_segm_ipa_stream_cli_srv_read_cb);
+	/* cb for after connection close is the same as for test_segm_ipa_stream_srv_run() */
+	osmo_stream_srv_set_closed_cb(oss, test_segm_ipa_stream_cli_srv_close_cb);
+
+	/* Send 4 and 1/3 messages, as done analogously in test_segm_ipa_stream_srv_cli_connect_cb() */
+	/* Append 4 */
+	SRV_APPEND_MSG(oss, data, m, ipac_msg_ping);
+	SRV_APPEND_MSG(oss, data, m, ipac_msg_pong);
+	SRV_APPEND_MSG(oss, data, m, ipac_msg_ping);
+	SRV_APPEND_MSG(oss, data, m, ipac_msg_idresp);
+	/* Append 1/3 */
+	LOGSRV(oss, "[(0%u + 1/3)-srv] Appending 1st third of msg of type %s into buffer\n",
+	       test_segm_ipa_stream_cli_srv_msglognum, IPAC_MSG_TYPES[ipac_msg_idreq[3]]);
+	LOGSRV(oss, "\t(dump: %s)\n", osmo_hexdump(ipac_msg_idreq, ipac_msg_idreq_third));
+	data = msgb_put(m, ipac_msg_idreq_third);
+	memcpy(data, ipac_msg_idreq, ipac_msg_idreq_third);
+
+	LOGSRV(oss, "Sending 4 + 1/3 messages as one:\n");
+	LOGSRV(oss, "\t(msg dump: %s)\n\n", osmo_hexdump(m->data, m->len));
+	osmo_stream_srv_send(oss, m);
+	return 0;
+}
+
+static bool test_segm_ipa_stream_cli_all_msgs_processed = false;
+
+static int test_segm_ipa_stream_cli_cli_read_cb(struct osmo_stream_cli *osc, struct msgb *msg)
+{
+	static unsigned msgnum_cli = 0;
+	unsigned char *data;
+	struct msgb *m;
+	uint8_t *msgt = msg->data;
+	LOGCLI(osc, "[%u-cli] Received message from stream (len = %" PRIu16 ")\n",
+	       ++msgnum_cli, msgb_length(msg));
+	LOGCLI(osc, "\tmsg buff data: %s\n", osmo_hexdump(msg->data, msg->len));
+	LOGCLI(osc, "\tIPA payload: %s\n", osmo_hexdump(msg->data, msg->len));
+	LOGCLI(osc, "\tType: %s\n", IPAC_MSG_TYPES[*msgt]);
+	LOGCLI(osc, "\t(msg dump (including stripped headers): %s)\n",
+	       osmo_hexdump(msg->l1h, sizeof(struct ipa_head) + msg->len));
+	if (*msgt == IPAC_MSGT_ID_RESP) {
+		LOGCLI(osc, "Send IPAC_MSGT_ID_GET to trigger server to send next third\n\n");
+		m = msgb_alloc_headroom(128, sizeof(struct ipa_head) +
+					     sizeof(struct ipa_head_ext), "IPA messages");
+		if (m == NULL) {
+			fprintf(stderr, "Cannot allocate message\n");
+			return -ENOMEM;
+		}
+		put_ipa_msg(data, m, ipac_msg_idreq);
+		osmo_stream_cli_send(osc, m);
+	} else if (msgnum_cli == 7 && *msgt == IPAC_MSGT_PONG) {
+		test_segm_ipa_stream_cli_all_msgs_processed = true;
+	}
+	return 0;
+}
+
+static void *test_segm_ipa_stream_cli_run_client(void)
+{
+	struct osmo_stream_cli *osc;
+	void *ctx = talloc_named_const(NULL, 0, __func__);
+
+	(void) msgb_talloc_ctx_init(ctx, 0);
+	osc = osmo_stream_cli_create(ctx);
+	if (osc == NULL) {
+		fprintf(stderr, "osmo_stream_cli_create_iofd()\n");
+		return NULL;
+	}
+	osmo_stream_cli_set_addr(osc, "127.0.0.11");
+	osmo_stream_cli_set_port(osc, 1111);
+	osmo_stream_cli_set_data(osc, ctx);
+	osmo_stream_cli_set_read_cb2(osc, test_segm_ipa_stream_cli_cli_read_cb);
+	osmo_stream_cli_set_nodelay(osc, true);
+	osmo_stream_cli_set_segmentation_cb(osc, osmo_ipa_segmentation_cb);
+	if (osmo_stream_cli_open(osc) < 0) {
+		fprintf(stderr, "Cannot open stream client\n");
+		return NULL;
+	}
+
+	return NULL;
+}
+
+static bool test_segm_ipa_stream_cli_run(void *ctx, const char *host, unsigned port,
+				  struct osmo_stream_srv_link *srv)
+{
+	int rc;
+	const int max_test_duration = 2;
+	struct timespec start, now;
+	const char *testname = "test_segm_ipa_stream_cli";
+	test_segm_ipa_stream_cli_run_client();
+
+	printf("______________________________________Running test %s______________________________________\n", testname);
+	rc = clock_gettime(CLOCK_MONOTONIC, &start);
+	if (rc < 0) {
+		fprintf(stderr, "clock_gettime(): %s\n", strerror(errno));
+		return EXIT_FAILURE;
+	}
+	while (!test_segm_ipa_stream_cli_all_msgs_processed) {
+		osmo_gettimeofday_override_add(0, 1); /* small increment to easily spot iterations */
+		osmo_select_main(1);
+		rc = clock_gettime(CLOCK_MONOTONIC, &now);
+		if (rc < 0) {
+			fprintf(stderr, "clock_gettime(): %s\n", strerror(errno));
+			return EXIT_FAILURE;
+		}
+		if (now.tv_sec - start.tv_sec > max_test_duration) {
+			fprintf(stderr, "%s(): Timeout\n", __func__);
+			return EXIT_FAILURE;
+		}
+	}
+
+	printf("==================================Test %s complete========================================\n\n", testname);
+	return EXIT_SUCCESS;
+}
+
 int main(void)
 {
 	struct osmo_stream_srv_link *srv;
@@ -681,6 +890,16 @@ int main(void)
 	test_recon(tall_test, host, port, 8, srv, false);
 
 	rc = test_segm_ipa_stream_srv_run(tall_test, host, port, srv);
+	if (rc == EXIT_FAILURE)
+		return EXIT_FAILURE;
+
+	osmo_stream_srv_link_set_accept_cb(srv,
+		test_segm_ipa_stream_cli_srv_accept_cb);
+	if (osmo_stream_srv_link_open(srv) < 0) {
+		printf("Unable to open server\n");
+		return EXIT_FAILURE;
+	}
+	rc = test_segm_ipa_stream_cli_run(tall_test, host, port, srv);
 
 	printf("Stream tests completed\n");
 	return rc;
