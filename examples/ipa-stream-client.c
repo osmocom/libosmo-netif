@@ -106,7 +106,7 @@ static int connect_cb(struct osmo_stream_cli *conn)
 
 static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
 {
-	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream (len=%d)\n", msgb_length(msg));
+	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream (payload len=%d)\n", msgb_length(msg));
 
 	if (osmo_ipa_process_msg(msg) < 0) {
 		LOGP(DIPATEST, LOGL_ERROR, "bad IPA message\n");
@@ -116,7 +116,7 @@ static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
 	int num;
 	struct msg_sent *cur, *tmp, *found = NULL;
 
-	num = ntohl(*((int *)(msg->data + sizeof(struct ipa_head) + sizeof(struct ipa_head_ext))));
+	num = ntohl(*((int *)(msg->data)));
 	LOGP(DLINP, LOGL_DEBUG, "received msg number %d\n", num);
 
 	llist_for_each_entry_safe(cur, tmp, &msg_sent_list, head) {
@@ -183,6 +183,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "cannot open client\n");
 		exit(EXIT_FAILURE);
 	}
+
+	osmo_stream_cli_set_segmentation_cb(conn, osmo_ipa_segmentation_cb);
 
 	LOGP(DIPATEST, LOGL_NOTICE, "Entering main loop\n");
 
