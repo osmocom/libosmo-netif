@@ -58,6 +58,9 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn);
 void osmo_stream_srv_set_flush_and_destroy(struct osmo_stream_srv *conn);
 void osmo_stream_srv_set_data(struct osmo_stream_srv *conn, void *data);
 
+void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn,
+					int (*segmentation_cb)(struct msgb *msg));
+
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg);
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg);
 

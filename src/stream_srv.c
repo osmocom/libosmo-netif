@@ -753,6 +753,23 @@ osmo_stream_srv_set_data(struct osmo_stream_srv *conn,
 	conn->data = data;
 }
 
+/*! \brief Set the segmentation callback for target osmo_stream_srv structure.
+ * The connection has to have been established prior to calling this function.
+ *  \param[in,out] conn Target Stream Server to modify
+ *  \param[in] segmentation_cb Segmentation callback to be set */
+void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn,
+					int (*segmentation_cb)(struct msgb *msg))
+{
+	/* Note that the following implies that iofd != NULL, since
+	 * osmo_stream_srv_create2() creates the iofd member, too */
+	OSMO_ASSERT(conn->mode == OSMO_STREAM_MODE_OSMO_IO);
+	/* Copy default settings */
+	struct osmo_io_ops conn_ops = srv_ioops;
+	/* Set segmentation cb for this connection */
+	conn_ops.segmentation_cb = segmentation_cb;
+	osmo_iofd_set_ioops(conn->iofd, &conn_ops);
+}
+
 /*! \brief Get application private data of the stream server
  *  \param[in] conn Stream Server
  *  \returns Application private data, as set by \ref osmo_stream_srv_set_data() */
