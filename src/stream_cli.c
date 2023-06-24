@@ -119,6 +119,7 @@ struct osmo_stream_cli {
 	int (*read_cb)(struct osmo_stream_cli *cli);
 	int (*iofd_read_cb)(struct osmo_stream_cli *cli, struct msgb *msg);
 	int (*write_cb)(struct osmo_stream_cli *cli);
+	int (*segmentation_cb)(struct msgb *msg);
 	void				*data;
 	int				flags;
 	int				reconnect_timeout;
@@ -419,6 +420,7 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 	cli->state = STREAM_CLI_STATE_CLOSED;
 	osmo_timer_setup(&cli->timer, cli_timer_cb, cli);
 	cli->reconnect_timeout = 5;	/* default is 5 seconds. */
+	cli->segmentation_cb = NULL;
 	INIT_LLIST_HEAD(&cli->tx_queue);
 
 	cli->ma_pars.sctp.version = 0;
@@ -583,6 +585,29 @@ osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
 {
 	cli->proto = proto;
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
+}
+
+/* Configure client side segmentation for the iofd */
+static void configure_cli_segmentation_cb(struct osmo_io_fd *iofd,
+					       int (*segmentation_cb)(struct msgb *msg))
+{
+	/* Copy default settings */
+	struct osmo_io_ops client_ops = osmo_stream_cli_ioops;
+	/* Set segmentation cb for this client */
+	client_ops.segmentation_cb = segmentation_cb;
+	osmo_iofd_set_ioops(iofd, &client_ops);
+}
+
+/*! \brief Set the segmentation callback for the client
+ *  \param[in,out] cli Stream Client to modify
+ *  \param[in] segmentation_cb Target segmentation callback
+ */
+void osmo_stream_cli_set_segmentation_cb(struct osmo_stream_cli *cli,
+					 int (*segmentation_cb)(struct msgb *msg))
+{
+	cli->segmentation_cb = segmentation_cb;
+	if (cli->iofd) /* Otherwise, this will be done in osmo_stream_cli_open() */
+		configure_cli_segmentation_cb(cli->iofd, segmentation_cb);
 }
 
 /*! \brief Set the socket type for the stream server link
@@ -869,6 +894,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 			cli->iofd = osmo_iofd_setup(cli, fd, cli->name, OSMO_IO_FD_MODE_READ_WRITE, &osmo_stream_cli_ioops, cli);
 		if (!cli->iofd)
 			goto error_close_socket;
+		configure_cli_segmentation_cb(cli->iofd, cli->segmentation_cb);
 
 		if (osmo_iofd_register(cli->iofd, fd) < 0)
 			goto error_close_socket;
