@@ -84,7 +84,7 @@ ______________________________________Running test test_segm_ipa_stream_srv_____
 {20.000022} [NA|OK] Server's test_segm_ipa_stream_srv_srv_read_cb(): 	(msg dump: 00 07 fe 05 01 01 de ad be ef )
 {20.000022} [NA|OK] Server's test_segm_ipa_stream_srv_srv_read_cb(): Send IPAC_MSGT_ID_GET to trigger client to send next third
 
-{20.000024} [OK] Client's test_segm_ipa_stream_srv_cli_read_cb(): Received message from stream (total len = 6)
+{20.000024} [OK] Client's test_segm_ipa_stream_srv_cli_read_cb(): Received message from stream (payload len = 3)
 {20.000024} [OK] Client's test_segm_ipa_stream_srv_cli_read_cb(): 	Type: IPAC_MSGT_ID_GET
 {20.000024} [OK] Client's test_segm_ipa_stream_srv_cli_read_cb(): Got IPAC_MSGT_ID_GET from server
 {20.000024} [OK] Client's test_segm_ipa_stream_srv_cli_read_cb(): [(4 + 2/3) -cli] Appending: Second third of IPAC_MSGT_ID_GET
@@ -116,5 +116,74 @@ ______________________________________Running test test_segm_ipa_stream_srv_____
 {20.500026} [NA|OK] Server's test_segm_ipa_stream_srv_srv_read_cb(): 	Type: IPAC_MSGT_PONG
 {20.500026} [NA|OK] Server's test_segm_ipa_stream_srv_srv_read_cb(): 	(msg dump: 00 01 fe 01 )
 ==================================Test test_segm_ipa_stream_srv complete========================================
+
+______________________________________Running test test_segm_ipa_stream_cli______________________________________
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): [1-srv] Appending msg of type IPAC_MSGT_PING into buffer
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): 	(msg dump: 00 01 fe 00 )
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): [2-srv] Appending msg of type IPAC_MSGT_PONG into buffer
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): 	(msg dump: 00 01 fe 01 )
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): [3-srv] Appending msg of type IPAC_MSGT_PING into buffer
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): 	(msg dump: 00 01 fe 00 )
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): [4-srv] Appending msg of type IPAC_MSGT_ID_RESP into buffer
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): 	(msg dump: 00 07 fe 05 01 01 de ad be ef )
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): [(04 + 1/3)-srv] Appending 1st third of msg of type IPAC_MSGT_ID_GET into buffer
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): 	(dump: 00 03 )
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): Sending 4 + 1/3 messages as one:
+{20.500027} [NA|OK] Server's test_segm_ipa_stream_cli_srv_accept_cb(): 	(msg dump: 00 01 fe 00 00 01 fe 01 00 01 fe 00 00 07 fe 05 01 01 de ad be ef 00 03 )
+
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): [1-cli] Received message from stream (len = 1)
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	msg buff data: 00 
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	IPA payload: 00 
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	Type: IPAC_MSGT_PING
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	(msg dump (including stripped headers): 00 01 fe 00 )
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): [2-cli] Received message from stream (len = 1)
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	msg buff data: 01 
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	IPA payload: 01 
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	Type: IPAC_MSGT_PONG
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	(msg dump (including stripped headers): 00 01 fe 01 )
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): [3-cli] Received message from stream (len = 1)
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	msg buff data: 00 
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	IPA payload: 00 
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	Type: IPAC_MSGT_PING
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	(msg dump (including stripped headers): 00 01 fe 00 )
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): [4-cli] Received message from stream (len = 7)
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	msg buff data: 05 01 01 de ad be ef 
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	IPA payload: 05 01 01 de ad be ef 
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	Type: IPAC_MSGT_ID_RESP
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	(msg dump (including stripped headers): 00 07 fe 05 01 01 de ad be ef )
+{20.500029} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): Send IPAC_MSGT_ID_GET to trigger server to send next third
+
+{20.500031} [NA|OK] Server's test_segm_ipa_stream_cli_srv_read_cb(): Received message from stream (total len including stripped headers = 6)
+{20.500031} [NA|OK] Server's test_segm_ipa_stream_cli_srv_read_cb(): 	Type: IPAC_MSGT_ID_GET
+{20.500031} [NA|OK] Server's test_segm_ipa_stream_cli_srv_read_cb(): Got IPAC_MSGT_ID_GET from client
+{20.500031} [NA|OK] Server's test_segm_ipa_stream_cli_srv_read_cb(): [(4 + 2/3) -srv] Appending: Second third of IPAC_MSGT_ID_GET
+{20.500031} [NA|OK] Server's test_segm_ipa_stream_cli_srv_read_cb(): 	Sending: Second third of IPAC_MSGT_ID_GET
+{20.500031} [NA|OK] Server's test_segm_ipa_stream_cli_srv_read_cb(): 	(msg dump: fe 04 )
+
+{20.625031} [NA|OK] Server's send_last_third_srv(): Delay for sending last third of message is over
+{20.625031} [NA|OK] Server's send_last_third_srv(): [5-srv] Appending: Last third of IPAC_MSGT_ID_GET
+{20.625031} [NA|OK] Server's send_last_third_srv(): [6-srv] Appending msg of type IPAC_MSGT_PONG into buffer
+{20.625031} [NA|OK] Server's send_last_third_srv(): 	(msg dump: 00 01 fe 01 )
+{20.625031} [NA|OK] Server's send_last_third_srv(): [7-srv] Appending msg of type IPAC_MSGT_PONG into buffer
+{20.625031} [NA|OK] Server's send_last_third_srv(): 	(msg dump: 00 01 fe 01 )
+{20.625031} [NA|OK] Server's send_last_third_srv(): 	Sending:[ Last third of IPAC_MSGT_ID_GET | IPAC_MSGT_PONG | IPAC_MSGT_PONG ]
+{20.625031} [NA|OK] Server's send_last_third_srv(): 	(msg dump: 01 01 00 01 fe 01 00 01 fe 01 )
+
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): [5-cli] Received message from stream (len = 3)
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	msg buff data: 04 01 01 
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	IPA payload: 04 01 01 
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	Type: IPAC_MSGT_ID_GET
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	(msg dump (including stripped headers): 00 03 fe 04 01 01 )
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): [6-cli] Received message from stream (len = 1)
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	msg buff data: 01 
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	IPA payload: 01 
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	Type: IPAC_MSGT_PONG
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	(msg dump (including stripped headers): 00 01 fe 01 )
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): [7-cli] Received message from stream (len = 1)
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	msg buff data: 01 
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	IPA payload: 01 
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	Type: IPAC_MSGT_PONG
+{20.625033} [OK] Client's test_segm_ipa_stream_cli_cli_read_cb(): 	(msg dump (including stripped headers): 00 01 fe 01 )
+==================================Test test_segm_ipa_stream_cli complete========================================
 
 Stream tests completed
