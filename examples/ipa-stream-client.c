@@ -93,10 +93,8 @@ static int connect_cb(struct osmo_stream_cli *conn)
 		msg_sent->num = i;
 		llist_add(&msg_sent->head, &msg_sent_list);
 
-		ipa_prepend_header_ext(msg, IPAC_PROTO_EXT_MGCP);
-		osmo_ipa_msg_push_header(msg, IPAC_PROTO_OSMO);
-
-		osmo_stream_cli_send(conn, msg);
+		osmo_ipa_stream_cli_send(conn, osmo_ipa_msgb_cb_proto(msg),
+				    osmo_ipa_msgb_cb_proto_ext(msg),  msg);
 
 		LOGP(DIPATEST, LOGL_DEBUG, "enqueueing msg %d of "
 			"%d bytes to be sent\n", i, msg->len);

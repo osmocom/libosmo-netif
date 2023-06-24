@@ -3,6 +3,7 @@
 
 #include <osmocom/gsm/protocol/ipaccess.h>
 #include <osmocom/gsm/ipa.h>
+#include <osmocom/netif/stream.h>
 
 /* This is like 'struct ipaccess_head' in libosmocore, but 'ipa_head' is
  * actually the more apropriate name, so rather than making more code
@@ -53,4 +54,8 @@ int osmo_ipa_parse_msg_id_resp(struct msgb *msg, struct ipaccess_unit *unit_data
 
 int osmo_ipa_segmentation_cb(struct msgb *msg);
 
+void osmo_ipa_stream_srv_send(struct osmo_stream_srv *conn, enum ipaccess_proto p,
+			 enum ipaccess_proto_ext pe, struct msgb *msg);
+void osmo_ipa_stream_cli_send(struct osmo_stream_cli *cli, enum ipaccess_proto p,
+			 enum ipaccess_proto_ext pe, struct msgb *msg);
 #endif

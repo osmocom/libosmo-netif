@@ -436,3 +436,41 @@ int osmo_ipa_segmentation_cb(struct msgb *msg)
 	}
 	return total_len;
 }
+
+/* Push IPA headers; if we have IPAC_PROTO_OSMO this also takes care of the
+ * extension header */
+static inline void ipa_push_headers(enum ipaccess_proto p, enum ipaccess_proto_ext pe,
+				    struct msgb *msg)
+{
+	if (p == IPAC_PROTO_OSMO)
+		ipa_prepend_header_ext(msg, pe);
+	osmo_ipa_msg_push_header(msg, p);
+}
+
+/*! \brief Enqueue IPA data to be sent via an Osmocom stream server
+ *  \param[in] conn Stream Server through which we want to send
+ *  \param[in] p   Protocol transported by IPA.
+ *  \param[in] pe  Ignored, unless p == IPAC_PROTO_OSMO, in which case this specifies the
+ *		 Osmocom protocol extension
+ *  \param[in] msg Message buffer to enqueue in transmit queue */
+void osmo_ipa_stream_srv_send(struct osmo_stream_srv *conn, enum ipaccess_proto p,
+			      enum ipaccess_proto_ext pe, struct msgb *msg)
+{
+	OSMO_ASSERT(msg);
+	ipa_push_headers(p, pe, msg);
+	osmo_stream_srv_send(conn, msg);
+}
+
+/*! \brief Enqueue data to be sent via an Osmocom stream client
+ *  \param[in] cli Stream Client through which we want to send
+ *  \param[in] p   Protocol transported by IPA.
+ *  \param[in] pe  Ignored, unless p == IPAC_PROTO_OSMO, in which case this specifies the
+ *		   Osmocom protocol extension
+ *  \param[in] msg Message buffer to enqueue in transmit queue */
+void osmo_ipa_stream_cli_send(struct osmo_stream_cli *cli, enum ipaccess_proto p,
+			      enum ipaccess_proto_ext pe, struct msgb *msg)
+{
+	OSMO_ASSERT(msg);
+	ipa_push_headers(p, pe, msg);
+	osmo_stream_cli_send(cli, msg);
+}
