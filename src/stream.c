@@ -560,8 +560,9 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 		}
 		break;
 	default:
-		/* Only CONNECTING and CONNECTED states are expected, since they are the only states where FD exists: */
-		osmo_panic("osmo_stream_cli_fd_cb called with unexpected state %d\n", cli->state);
+		/* Only CONNECTING and CONNECTED states are expected, since they are the only states
+		 * where FD exists: */
+		osmo_panic("%s() called with unexpected state %d\n", __func__, cli->state);
 	}
 	return 0;
 }
@@ -610,7 +611,8 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 			cli->iofd_read_cb(cli, msg);
 		break;
 	default:
-		osmo_panic("osmo_stream_cli_write_cb() called with unexpected state %d\n", cli->state);
+		osmo_panic("%s() called with unexpected state %d\n",
+			   __func__, cli->state);
 	}
 }
 
@@ -629,7 +631,8 @@ static void stream_cli_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct ms
 		}
 		break;
 	default:
-		osmo_panic("osmo_stream_cli_write_cb() called with unexpected state %d\n", cli->state);
+		osmo_panic("%s() called with unexpected state %d\n",
+			   __func__, cli->state);
 	}
 }
 
