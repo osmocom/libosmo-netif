@@ -1039,6 +1039,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 
 		if (osmo_iofd_register(cli->iofd, fd) < 0)
 			goto error_close_socket;
+		osmo_iofd_notify_connected(cli->iofd);
 		break;
 	default:
 		OSMO_ASSERT(false);
