@@ -18,6 +18,15 @@ struct ipa_head_ext {
 	uint8_t data[0];
 } __attribute__ ((packed));
 
+struct osmo_ipa_msgb_cb {
+	uint8_t proto;
+	uint8_t proto_ext;
+} __attribute__ ((packed));
+
+#define OSMO_IPA_MSGB_CB(__msg)		((struct osmo_ipa_msgb_cb *)&((__msg)->cb[0]))
+#define osmo_ipa_msgb_cb_proto(__x)	OSMO_IPA_MSGB_CB(__x)->proto
+#define osmo_ipa_msgb_cb_proto_ext(__x)	OSMO_IPA_MSGB_CB(__x)->proto_ext
+
 struct msgb *osmo_ipa_msg_alloc(int headroom);
 struct msgb *osmo_ipa_ext_msg_alloc(size_t headroom);
 
@@ -41,5 +50,7 @@ struct msgb *ipa_cli_id_resp(struct osmo_ipa_unit *dev, uint8_t *data, int len);
 struct msgb *ipa_cli_id_ack(void);
 
 int osmo_ipa_parse_msg_id_resp(struct msgb *msg, struct ipaccess_unit *unit_data);
+
+int osmo_ipa_segmentation_cb(struct msgb *msg);
 
 #endif

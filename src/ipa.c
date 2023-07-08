@@ -371,3 +371,68 @@ osmo_ipa_parse_msg_id_resp(struct msgb *msg, struct ipaccess_unit *unit_data)
 
 	return 0;
 }
+
+#define MSG_CB_IPA_INFO_OFFSET 0
+
+/* Check and remove headers (in case of p == IPAC_PROTO_OSMO, also the IPA extension header).
+ * Returns a negative number on error, otherwise the number of octets removed */
+static inline int ipa_check_pull_headers(struct msgb *msg)
+{
+	int ret;
+	size_t octets_removed = 0;
+	msg->l1h = msg->data;
+	struct ipa_head *ih = (struct ipa_head *)msg->data;
+	osmo_ipa_msgb_cb_proto(msg) = ih->proto;
+
+	if ((ret = osmo_ipa_process_msg(msg)) < 0) {
+		LOGP(DLINP, LOGL_ERROR, "Error processing IPA message\n");
+		return -EIO;
+	}
+	msgb_pull(msg, sizeof(struct ipa_head));
+	octets_removed += sizeof(struct ipa_head);
+	msg->l2h = msg->data;
+	if (ih->proto != IPAC_PROTO_OSMO)
+		return octets_removed;
+
+	osmo_ipa_msgb_cb_proto_ext(msg) = msg->data[0];
+	msgb_pull(msg, sizeof(struct ipa_head_ext));
+	octets_removed += sizeof(struct ipa_head_ext);
+	return octets_removed;
+}
+
+/*! Segmentation callback used by libosmo-netif streaming backend
+ *  See definition of `struct osmo_io_ops` for callback semantics
+ *  \param[out] msg	Original `struct msgb` received via osmo_io
+ *  \returns		The total packet length indicated by the first header,
+ *			otherwise negative number on error. Constants:
+ *			-EAGAIN,  if the header has not been read yet,
+ *			-ENOBUFS, if the header declares a payload too large
+ */
+int osmo_ipa_segmentation_cb(struct msgb *msg)
+{
+	const struct ipa_head *hh = (const struct ipa_head *) msg->data;
+	size_t payload_len, total_len;
+	size_t available = msgb_length(msg) + msgb_tailroom(msg);
+	int removed_octets = 0;
+
+	if (msgb_length(msg) < sizeof(*hh)) {
+		/* Haven't even read the entire header */
+		return -EAGAIN;
+	}
+	payload_len = osmo_ntohs(hh->len);
+	total_len = sizeof(*hh) + payload_len;
+	if (OSMO_UNLIKELY(available < total_len)) {
+		LOGP(DLINP, LOGL_ERROR, "Not enough space left in message buffer. "
+					"Have %zu octets, but need %zu\n",
+					available, total_len);
+		return -ENOBUFS;
+	}
+	if (total_len <= msgb_length(msg)) {
+		removed_octets = ipa_check_pull_headers(msg);
+		if (removed_octets < 0) {
+			LOGP(DLINP, LOGL_ERROR, "Error pulling IPA headers\n");
+			return removed_octets;
+		}
+	}
+	return total_len;
+}
