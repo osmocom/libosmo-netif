@@ -22,6 +22,8 @@ libosmonetif_la_SOURCES = amr.c			\
 			  prim.c		\
 			  rs232.c		\
 			  rtp.c			\
+			  stream_cli.c		\
+			  stream_srv.c		\
 			  stream.c
 
 if ENABLE_LIBSCTP

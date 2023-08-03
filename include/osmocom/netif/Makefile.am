@@ -1,3 +1,7 @@
+noinst_HEADERS = \
+	stream_private.h \
+	$(NULL)
+
 osmonetif_HEADERS = amr.h		\
 		    datagram.h		\
 		    jibuf.h		\
