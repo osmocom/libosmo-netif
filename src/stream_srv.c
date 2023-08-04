@@ -830,78 +830,6 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 	}
 }
 
-#ifdef HAVE_LIBSCTP
-static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
-{
-	struct sctp_sndrcvinfo sinfo;
-	int flags = 0;
-	int ret;
-	uint8_t *data = msg->tail;
-
-	ret = sctp_recvmsg(fd, data, msgb_tailroom(msg),
-			NULL, NULL, &sinfo, &flags);
-	msgb_sctp_msg_flags(msg) = 0;
-	msgb_sctp_ppid(msg) = ntohl(sinfo.sinfo_ppid);
-	msgb_sctp_stream(msg) = sinfo.sinfo_stream;
-	if (flags & MSG_NOTIFICATION) {
-		union sctp_notification *notif = (union sctp_notification *)data;
-		LOGP(DLINP, LOGL_DEBUG, "NOTIFICATION %u flags=0x%x\n", notif->sn_header.sn_type, notif->sn_header.sn_flags);
-		msgb_put(msg, sizeof(union sctp_notification));
-		msgb_sctp_msg_flags(msg) = OSMO_STREAM_SCTP_MSG_FLAGS_NOTIFICATION;
-		switch (notif->sn_header.sn_type) {
-		case SCTP_ASSOC_CHANGE:
-			LOGP(DLINP, LOGL_DEBUG, "===> ASSOC CHANGE:");
-			switch (notif->sn_assoc_change.sac_state) {
-			case SCTP_COMM_UP:
-				LOGPC(DLINP, LOGL_DEBUG, " UP\n");
-				break;
-			case SCTP_COMM_LOST:
-				LOGPC(DLINP, LOGL_DEBUG, " COMM_LOST (err: %s)\n",
-				      osmo_sctp_sn_error_str(notif->sn_assoc_change.sac_error));
-				/* Handle this like a regular disconnect */
-				return 0;
-			case SCTP_RESTART:
-				LOGPC(DLINP, LOGL_DEBUG, " RESTART\n");
-				break;
-			case SCTP_SHUTDOWN_COMP:
-				LOGPC(DLINP, LOGL_DEBUG, " SHUTDOWN COMP\n");
-				break;
-			case SCTP_CANT_STR_ASSOC:
-				LOGPC(DLINP, LOGL_DEBUG, " CANT STR ASSOC\n");
-				break;
-			}
-			break;
-		case SCTP_SEND_FAILED:
-			LOGP(DLINP, LOGL_DEBUG, "===> SEND FAILED\n");
-			break;
-		case SCTP_PEER_ADDR_CHANGE:
-			{
-			char addr_str[INET6_ADDRSTRLEN + 10];
-			struct sockaddr_storage sa = notif->sn_paddr_change.spc_aaddr;
-			osmo_sockaddr_to_str_buf(addr_str, sizeof(addr_str),
-						 (const struct osmo_sockaddr *)&sa);
-			LOGP(DLINP, LOGL_DEBUG, "===> PEER ADDR CHANGE: %s %s err=%s\n",
-			     addr_str, osmo_sctp_paddr_chg_str(notif->sn_paddr_change.spc_state),
-			     (notif->sn_paddr_change.spc_state == SCTP_ADDR_UNREACHABLE) ?
-				osmo_sctp_sn_error_str(notif->sn_paddr_change.spc_error) : "None");
-			}
-			break;
-		case SCTP_SHUTDOWN_EVENT:
-			LOGP(DLINP, LOGL_DEBUG, "===> SHUTDOWN EVT\n");
-			/* RFC6458 3.1.4: Any attempt to send more data will cause sendmsg()
-			 * to return with an ESHUTDOWN error. */
-			break;
-		case SCTP_REMOTE_ERROR:
-			LOGP(DLINP, LOGL_DEBUG, "===> REMOTE ERROR: %s\n",
-			     osmo_sctp_op_error_str(ntohs(notif->sn_remote_error.sre_error)));
-			break;
-		}
-		return -EAGAIN;
-	}
-	return ret;
-}
-#endif
-
 /*! \brief Receive data via Osmocom stream server
  *  \param[in] conn Stream Server from which to receive
  *  \param msg pre-allocate message buffer to which received data is appended
@@ -933,8 +861,12 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 		switch (conn->srv->proto) {
 #ifdef HAVE_LIBSCTP
 		case IPPROTO_SCTP:
-			ret = _sctp_recvmsg_wrapper(conn->ofd.fd, msg);
+		{
+			char log_pfx[128];
+			snprintf(log_pfx, sizeof(log_pfx), "SRV(%s,%s)", conn->name ? : "", conn->sockname);
+			ret = stream_sctp_recvmsg_wrapper(conn->ofd.fd, msg, log_pfx);
 			break;
+		}
 #endif
 		case IPPROTO_TCP:
 		default:

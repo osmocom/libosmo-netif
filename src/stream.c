@@ -208,5 +208,84 @@ int stream_setsockopt_nodelay(int fd, int proto, int on)
 	return rc;
 }
 
+#ifdef HAVE_LIBSCTP
+#define LOGPFX(pfx, level, fmt, args...) \
+	LOGP(DLINP, level, "%s " fmt, pfx, ## args)
+int stream_sctp_recvmsg_wrapper(int fd, struct msgb *msg, const char *log_pfx)
+{
+	struct sctp_sndrcvinfo sinfo;
+	int flags = 0;
+	int ret;
+	uint8_t *data = msg->tail;
+
+	ret = sctp_recvmsg(fd, data, msgb_tailroom(msg), NULL, NULL, &sinfo, &flags);
+	msgb_sctp_msg_flags(msg) = 0;
+	msgb_sctp_ppid(msg) = ntohl(sinfo.sinfo_ppid);
+	msgb_sctp_stream(msg) = sinfo.sinfo_stream;
+
+	if (flags & MSG_NOTIFICATION) {
+		char buf[512];
+		struct osmo_strbuf sb = { .buf = buf, .len = sizeof(buf) };
+		int logl = LOGL_INFO;
+		union sctp_notification *notif = (union sctp_notification *)data;
+
+		OSMO_STRBUF_PRINTF(sb, "%s NOTIFICATION %s flags=0x%x", log_pfx,
+				   osmo_sctp_sn_type_str(notif->sn_header.sn_type), notif->sn_header.sn_flags);
+		msgb_put(msg, sizeof(union sctp_notification));
+		msgb_sctp_msg_flags(msg) = OSMO_STREAM_SCTP_MSG_FLAGS_NOTIFICATION;
+		ret = -EAGAIN;
+
+		switch (notif->sn_header.sn_type) {
+		case SCTP_ASSOC_CHANGE:
+			OSMO_STRBUF_PRINTF(sb, " %s", osmo_sctp_assoc_chg_str(notif->sn_assoc_change.sac_state));
+			switch (notif->sn_assoc_change.sac_state) {
+			case SCTP_COMM_UP:
+				break;
+			case SCTP_COMM_LOST:
+				OSMO_STRBUF_PRINTF(sb, " (err: %s)",
+						   osmo_sctp_sn_error_str(notif->sn_assoc_change.sac_error));
+				/* Handle this like a regular disconnect */
+				ret = 0;
+				break;
+			case SCTP_RESTART:
+			case SCTP_SHUTDOWN_COMP:
+				logl = LOGL_NOTICE;
+				break;
+			case SCTP_CANT_STR_ASSOC:
+				break;
+			}
+			break;
+		case SCTP_SEND_FAILED:
+			logl = LOGL_ERROR;
+			break;
+		case SCTP_PEER_ADDR_CHANGE:
+			{
+			char addr_str[INET6_ADDRSTRLEN + 10];
+			struct sockaddr_storage sa = notif->sn_paddr_change.spc_aaddr;
+			osmo_sockaddr_to_str_buf(addr_str, sizeof(addr_str),
+						 (const struct osmo_sockaddr *)&sa);
+			OSMO_STRBUF_PRINTF(sb, " %s %s err=%s",
+					   osmo_sctp_paddr_chg_str(notif->sn_paddr_change.spc_state), addr_str,
+					   (notif->sn_paddr_change.spc_state == SCTP_ADDR_UNREACHABLE) ?
+						osmo_sctp_sn_error_str(notif->sn_paddr_change.spc_error) : "None");
+			}
+			break;
+		case SCTP_SHUTDOWN_EVENT:
+			logl = LOGL_NOTICE;
+			/* RFC6458 3.1.4: Any attempt to send more data will cause sendmsg()
+			 * to return with an ESHUTDOWN error. */
+			break;
+		case SCTP_REMOTE_ERROR:
+			logl = LOGL_NOTICE;
+			OSMO_STRBUF_PRINTF(sb, " %s", osmo_sctp_op_error_str(ntohs(notif->sn_remote_error.sre_error)));
+			break;
+		}
+		LOGP(DLINP, logl, "%s\n", buf);
+		return ret;
+	}
+	return ret;
+}
+#endif
+
 
 /*! @} */

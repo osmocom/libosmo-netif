@@ -33,5 +33,6 @@ enum osmo_stream_mode {
 
 int stream_sctp_sock_activate_events(int fd);
 int stream_setsockopt_nodelay(int fd, int proto, int on);
+int stream_sctp_recvmsg_wrapper(int fd, struct msgb *msg, const char *log_pfx);
 
 /*! @} */
