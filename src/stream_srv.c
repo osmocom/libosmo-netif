@@ -891,6 +891,10 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 			/* RFC6458 3.1.4: Any attempt to send more data will cause sendmsg()
 			 * to return with an ESHUTDOWN error. */
 			break;
+		case SCTP_REMOTE_ERROR:
+			LOGP(DLINP, LOGL_DEBUG, "===> REMOTE ERROR: %s\n",
+			     osmo_sctp_op_error_str(ntohs(notif->sn_remote_error.sre_error)));
+			break;
 		}
 		return -EAGAIN;
 	}

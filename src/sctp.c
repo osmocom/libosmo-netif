@@ -51,3 +51,21 @@ const struct value_string osmo_sctp_sn_error_strs[] = {
 	{ SCTP_PEER_FAULTY,		"PEER_FAULTY" },
 	{ 0, NULL }
 };
+
+/* rfc4960 section 3.3.10 "Operation Error", in host byte order */
+const struct value_string osmo_sctp_op_error_strs[] = {
+	{ OSMO_SCTP_OP_ERR_INVALID_STREAM_ID,	"Invalid Stream Identifier" },
+	{ OSMO_SCTP_OP_ERR_MISS_MAND_PARAM,	"Missing Mandatory Parameter" },
+	{ OSMO_SCTP_OP_ERR_STALE_COOKIE,	"Stale Cookie Error" },
+	{ OSMO_SCTP_OP_ERR_NO_RESOURCES,	"Out of Resource" },
+	{ OSMO_SCTP_OP_ERR_UNRESOLV_ADDR,	"Unresolvable Address" },
+	{ OSMO_SCTP_OP_ERR_UNKN_CHUNK_TYPE,	"Unrecognized Chunk Type" },
+	{ OSMO_SCTP_OP_ERR_INVALID_MAND_PARAM,	"Invalid Mandatory Parameter" },
+	{ OSMO_SCTP_OP_ERR_UNKN_PARAM,		"Unrecognized Parameters" },
+	{ OSMO_SCTP_OP_ERR_NO_USER_DATA,	"No User Data" },
+	{ OSMO_SCTP_OP_ERR_COOKIE_RX_WHILE_SHUTDOWN,	"Cookie Received While Shutting Down" },
+	{ OSMO_SCTP_OP_ERR_RESTART_ASSC_NEW_ADDR,	"Restart of an Association with New Addresses" },
+	{ OSMO_SCTP_OP_ERR_UNER_INITED_ABORT,	"User Initiated Abort" },
+	{ OSMO_SCTP_OP_ERR_PROTO_VERSION,	"Protocol Violation" },
+	{ 0, NULL }
+};
