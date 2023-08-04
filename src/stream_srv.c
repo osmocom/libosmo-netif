@@ -107,8 +107,8 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 
 	ret = accept(ofd->fd, &osa.u.sa, &sa_len);
 	if (ret < 0) {
-		LOGP(DLINP, LOGL_ERROR, "failed to accept from origin peer, reason=`%s'\n",
-		     strerror(errno));
+		LOGSLNK(link, LOGL_ERROR, "failed to accept from origin peer, reason=`%s'\n",
+			strerror(errno));
 		return ret;
 	}
 	sock_fd = ret;
