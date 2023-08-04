@@ -1,3 +1,4 @@
+SRV(srv_link_test,127.0.0.11:1111) accept()ed new link from 127.0.0.1:8976
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTING} connection established
 
 {2.000001} autoreconnecting test step 11 [client NA, server OK], FD reg 1
@@ -19,12 +20,14 @@ CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){WAIT_RECONNECT} retrying 
 {11.000008} autoreconnecting test step 4 [client OK, server OK], FD reg 0
 
 {11.000009} autoreconnecting test step 3 [client OK, server OK], FD reg 1
+SRV(srv_link_test,127.0.0.11:1111) accept()ed new link from 127.0.0.1:8976
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTING} connection established
 
 {11.000010} autoreconnecting test step 2 [client OK, server OK], FD reg 0
 SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connection closed with client
 
 {11.000011} autoreconnecting test step 1 [client OK, server NA], FD reg 0
+SRV(srv_link_test,127.0.0.11:1111) accept()ed new link from 127.0.0.1:8976
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTING} connection established
 
 {11.000012} non-reconnecting test step 7 [client NA, server OK], FD reg 1

@@ -129,13 +129,13 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 
 	switch (osa.u.sa.sa_family) {
 	case AF_UNIX:
-		LOGSLNK(link, LOGL_DEBUG, "accept()ed new link on fd %d\n",
+		LOGSLNK(link, LOGL_INFO, "accept()ed new link on fd %d\n",
 			sock_fd);
 		_setsockopt_nosigpipe(link, sock_fd);
 		break;
 	case AF_INET6:
 	case AF_INET:
-		LOGSLNK(link, LOGL_DEBUG, "accept()ed new link from %s\n",
+		LOGSLNK(link, LOGL_INFO, "accept()ed new link from %s\n",
 			osmo_sockaddr_to_str(&osa));
 
 		if (link->proto == IPPROTO_SCTP) {
@@ -146,7 +146,7 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 		}
 		break;
 	default:
-		LOGSLNK(link, LOGL_DEBUG, "accept()ed unexpected address family %d\n",
+		LOGSLNK(link, LOGL_ERROR, "accept()ed unexpected address family %d\n",
 			osa.u.sa.sa_family);
 		goto error_close_socket;
 	}
