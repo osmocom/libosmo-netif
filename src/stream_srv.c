@@ -856,7 +856,8 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 				LOGPC(DLINP, LOGL_DEBUG, " UP\n");
 				break;
 			case SCTP_COMM_LOST:
-				LOGPC(DLINP, LOGL_DEBUG, " LOST\n");
+				LOGPC(DLINP, LOGL_DEBUG, " COMM_LOST (err: %s)\n",
+				      osmo_sctp_sn_error_str(notif->sn_assoc_change.sac_error));
 				/* Handle this like a regular disconnect */
 				return 0;
 			case SCTP_RESTART:
