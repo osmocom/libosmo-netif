@@ -341,7 +341,7 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 	/* Update sockname based on socket info: */
 	osmo_sock_get_name_buf(cli->sockname, sizeof(cli->sockname), osmo_stream_cli_fd(cli));
 
-	LOGSCLI(cli, LOGL_DEBUG, "connection established\n");
+	LOGSCLI(cli, LOGL_INFO, "connection established\n");
 	cli->state = STREAM_CLI_STATE_CONNECTED;
 	switch (cli->sk_domain) {
 	case AF_UNIX:
