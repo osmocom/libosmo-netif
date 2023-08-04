@@ -588,8 +588,18 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 		return;
 	}
 
-	if (ret == -1) /* send(): On error -1 is returned, and errno is set appropriately */
-		LOGSSRV(conn, LOGL_ERROR, "error to send: %s\n", strerror(errno));
+	if (ret == -1) {/* send(): On error -1 is returned, and errno is set appropriately */
+		int err = errno;
+		LOGSSRV(conn, LOGL_ERROR, "send(len=%u) error: %s\n", msgb_length(msg), strerror(err));
+		if (err == EAGAIN) {
+			/* Re-add at the start of the queue to re-attempt: */
+			llist_add(&msg->list, &conn->tx_queue);
+			return;
+		}
+		msgb_free(msg);
+		osmo_stream_srv_destroy(conn);
+		return;
+	}
 
 	msgb_free(msg);
 
@@ -877,8 +887,9 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 			break;
 		case SCTP_SHUTDOWN_EVENT:
 			LOGP(DLINP, LOGL_DEBUG, "===> SHUTDOWN EVT\n");
-			/* Handle this like a regular disconnect */
-			return 0;
+			/* RFC6458 3.1.4: Any attempt to send more data will cause sendmsg()
+			 * to return with an ESHUTDOWN error. */
+			break;
 		}
 		return -EAGAIN;
 	}
