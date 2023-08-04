@@ -2,6 +2,12 @@
 
 #include <osmocom/core/utils.h>
 
+/* Relevant SCTP RFCs:
+ * rfc9260 (obsoletes rfc4960): SCTP protocol
+ * rfc5061: SCTP Dynamic Address Reconfiguration
+ * rfc6458: SCTP Sockets API Extensions
+ */
+
 enum sctp_sac_state;
 extern const struct value_string osmo_sctp_assoc_chg_strs[];
 static inline const char *osmo_sctp_assoc_chg_str(enum sctp_sac_state val)
