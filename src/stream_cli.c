@@ -288,9 +288,15 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 	}
 
 	if (ret < 0) {
-		if (errno == EPIPE || errno == ENOTCONN)
-			osmo_stream_cli_reconnect(cli);
-		LOGSCLI(cli, LOGL_ERROR, "received error %d in response to send\n", errno);
+		int err = errno;
+		LOGSCLI(cli, LOGL_ERROR, "send(len=%u) error: %s\n", msgb_length(msg), strerror(err));
+		if (err == EAGAIN) {
+			/* Re-add at the start of the queue to re-attempt: */
+			llist_add(&msg->list, &cli->tx_queue);
+			return 0;
+		}
+		msgb_free(msg);
+		osmo_stream_cli_reconnect(cli);
 	}
 
 	msgb_free(msg);
