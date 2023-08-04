@@ -308,7 +308,7 @@ static int _setsockopt_nosigpipe(struct osmo_stream_cli *cli)
 	int val = 1;
 	ret = setsockopt(osmo_stream_cli_fd(cli), SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val));
 	if (ret < 0)
-		LOGSCLI(cli, LOGL_DEBUG, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
+		LOGSCLI(cli, LOGL_ERROR, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
 	return ret;
 #else
 	return 0;

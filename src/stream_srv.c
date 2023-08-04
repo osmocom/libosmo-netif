@@ -97,6 +97,20 @@ struct osmo_stream_srv_link {
 	int			flags;
 };
 
+static int _setsockopt_nosigpipe(struct osmo_stream_srv_link *link, int new_fd)
+{
+#ifdef SO_NOSIGPIPE
+	int ret;
+	int val = 1;
+	ret = setsockopt(new_fd, SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val));
+	if (ret < 0)
+		LOGSLNK(link, LOGL_ERROR, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
+	return ret;
+#else
+	return 0;
+#endif
+}
+
 static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 {
 	int ret;
@@ -117,6 +131,7 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 	case AF_UNIX:
 		LOGSLNK(link, LOGL_DEBUG, "accept()ed new link on fd %d\n",
 			sock_fd);
+		_setsockopt_nosigpipe(link, sock_fd);
 		break;
 	case AF_INET6:
 	case AF_INET:
@@ -124,6 +139,7 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 			osmo_sockaddr_to_str(&osa));
 
 		if (link->proto == IPPROTO_SCTP) {
+			_setsockopt_nosigpipe(link, sock_fd);
 			ret = stream_sctp_sock_activate_events(sock_fd);
 			if (ret < 0)
 				goto error_close_socket;
