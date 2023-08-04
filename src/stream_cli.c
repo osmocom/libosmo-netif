@@ -916,15 +916,54 @@ void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 /*! \brief Receive data via an Osmocom stream client
  *  \param[in] cli Stream Client through which we want to send
  *  \param msg pre-allocate message buffer to which received data is appended
- *  \returns number of bytes read; <=0 in case of error */
+ *  \returns number of bytes read; <=0 in case of error
+ *
+ *  If conn is an SCTP connection, additional specific considerations shall be taken:
+ *  - msg->cb is always filled with SCTP ppid, and SCTP stream values, see msgb_sctp_*() APIs.
+ *  - If an SCTP notification was received when reading from the SCTP socket,
+ *    msgb_sctp_msg_flags(msg) will contain bit flag
+ *    OSMO_STREAM_SCTP_MSG_FLAGS_NOTIFICATION set, and the msgb will
+ *    contain a "union sctp_notification" instead of user data. In this case the
+ *    return code will be either 0 (if conn is considered dead after the
+ *    notification) or -EAGAIN (if conn is considered still alive after the
+ *    notification) resembling the standard recv() API.
+ */
 int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 {
 	int ret;
 	OSMO_ASSERT(cli);
 	OSMO_ASSERT(msg);
 
-	ret = recv(cli->ofd.fd, msg->tail, msgb_tailroom(msg), 0);
+	switch (cli->sk_domain) {
+	case AF_UNIX:
+		ret = recv(cli->ofd.fd, msg->tail, msgb_tailroom(msg), 0);
+		break;
+	case AF_INET:
+	case AF_INET6:
+	case AF_UNSPEC:
+		switch (cli->proto) {
+#ifdef HAVE_LIBSCTP
+		case IPPROTO_SCTP:
+		{
+			char log_pfx[128];
+			snprintf(log_pfx, sizeof(log_pfx), "CLICONN(%s,%s)", cli->name ? : "", cli->sockname);
+			ret = stream_sctp_recvmsg_wrapper(cli->ofd.fd, msg, log_pfx);
+			break;
+		}
+#endif
+		case IPPROTO_TCP:
+		default:
+			ret = recv(cli->ofd.fd, msg->tail, msgb_tailroom(msg), 0);
+			break;
+		}
+		break;
+	default:
+		ret = -ENOTSUP;
+	}
+
 	if (ret < 0) {
+		if (ret == -EAGAIN)
+			return ret;
 		if (errno == EPIPE || errno == ECONNRESET)
 			LOGSCLI(cli, LOGL_ERROR, "lost connection with srv\n");
 		osmo_stream_cli_reconnect(cli);
