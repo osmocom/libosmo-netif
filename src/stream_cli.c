@@ -917,7 +917,7 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 	OSMO_ASSERT(cli);
 	OSMO_ASSERT(msg);
 
-	ret = recv(cli->ofd.fd, msg->data, msg->data_len, 0);
+	ret = recv(cli->ofd.fd, msg->tail, msgb_tailroom(msg), 0);
 	if (ret < 0) {
 		if (errno == EPIPE || errno == ECONNRESET)
 			LOGSCLI(cli, LOGL_ERROR, "lost connection with srv\n");

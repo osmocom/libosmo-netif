@@ -826,14 +826,15 @@ static int _sctp_recvmsg_wrapper(int fd, struct msgb *msg)
 	struct sctp_sndrcvinfo sinfo;
 	int flags = 0;
 	int ret;
+	uint8_t *data = msg->tail;
 
-	ret = sctp_recvmsg(fd, msgb_data(msg), msgb_tailroom(msg),
+	ret = sctp_recvmsg(fd, data, msgb_tailroom(msg),
 			NULL, NULL, &sinfo, &flags);
 	msgb_sctp_msg_flags(msg) = 0;
 	msgb_sctp_ppid(msg) = ntohl(sinfo.sinfo_ppid);
 	msgb_sctp_stream(msg) = sinfo.sinfo_stream;
 	if (flags & MSG_NOTIFICATION) {
-		union sctp_notification *notif = (union sctp_notification *)msgb_data(msg);
+		union sctp_notification *notif = (union sctp_notification *)data;
 		LOGP(DLINP, LOGL_DEBUG, "NOTIFICATION %u flags=0x%x\n", notif->sn_header.sn_type, notif->sn_header.sn_flags);
 		msgb_put(msg, sizeof(union sctp_notification));
 		msgb_sctp_msg_flags(msg) = OSMO_STREAM_SCTP_MSG_FLAGS_NOTIFICATION;
@@ -908,7 +909,7 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 
 	switch (conn->srv->sk_domain) {
 	case AF_UNIX:
-		ret = recv(conn->ofd.fd, msgb_data(msg), msgb_tailroom(msg), 0);
+		ret = recv(conn->ofd.fd, msg->tail, msgb_tailroom(msg), 0);
 		break;
 	case AF_INET:
 	case AF_INET6:
@@ -921,7 +922,7 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 #endif
 		case IPPROTO_TCP:
 		default:
-			ret = recv(conn->ofd.fd, msgb_data(msg), msgb_tailroom(msg), 0);
+			ret = recv(conn->ofd.fd, msg->tail, msgb_tailroom(msg), 0);
 			break;
 		}
 		break;
