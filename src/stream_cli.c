@@ -747,7 +747,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 		ret = osmo_sock_init2_multiaddr(AF_UNSPEC, SOCK_STREAM, cli->proto,
 						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 						(const char **)cli->addr, cli->addrcnt, cli->port,
-						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK|OSMO_SOCK_F_SCTP_ASCONF_SUPPORTED);
 		break;
 #endif
 	default:
@@ -826,7 +826,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 			ret = osmo_sock_init2_multiaddr(cli->sk_domain, cli->sk_type, cli->proto,
 							(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 							(const char **)cli->addr, cli->addrcnt, cli->port,
-							OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+							OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK|OSMO_SOCK_F_SCTP_ASCONF_SUPPORTED);
 			break;
 #endif
 		default:

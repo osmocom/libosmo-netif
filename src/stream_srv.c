@@ -411,7 +411,7 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 		case IPPROTO_SCTP:
 			ret = osmo_sock_init2_multiaddr(link->sk_domain, link->sk_type, link->proto,
 							(const char **)link->addr, link->addrcnt, link->port,
-							NULL, 0, 0, OSMO_SOCK_F_BIND);
+							NULL, 0, 0, OSMO_SOCK_F_BIND|OSMO_SOCK_F_SCTP_ASCONF_SUPPORTED);
 			break;
 #endif
 		default:
