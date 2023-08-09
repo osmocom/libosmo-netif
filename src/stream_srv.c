@@ -693,6 +693,7 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 		return NULL;
 	}
 	conn->data = data;
+	osmo_iofd_set_txqueue_max_length(conn->iofd, 1024);
 
 	if (osmo_iofd_register(conn->iofd, fd) < 0) {
 		LOGSSRV(conn, LOGL_ERROR, "could not register FD %d\n", fd);
