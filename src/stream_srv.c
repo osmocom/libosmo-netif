@@ -486,17 +486,17 @@ static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
 	LOGSSRV(conn, LOGL_DEBUG, "message received (res=%d)\n", res);
 
-	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
-		LOGSSRV(conn, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
-		msgb_free(msg);
-		return;
-	}
-
 	if (res <= 0) {
-		osmo_stream_srv_set_flush_and_destroy(conn);
-		if (osmo_iofd_txqueue_len(iofd) == 0)
-			osmo_stream_srv_destroy(conn);
+		/* This connection is dead, destroy it. */
+		osmo_stream_srv_destroy(conn);
 	} else if (conn->iofd_read_cb) {
+		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
+			LOGSSRV(conn, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
+			msgb_free(msg);
+			if (osmo_iofd_txqueue_len(iofd) == 0)
+				osmo_stream_srv_destroy(conn);
+			return;
+		}
 		conn->iofd_read_cb(conn, msg);
 	}
 }
@@ -506,7 +506,7 @@ static void stream_srv_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct ms
 	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
 	LOGSSRV(conn, LOGL_DEBUG, "connected write\n");
 
-	if (res == -1)
+	if (res < 0)
 		LOGSSRV(conn, LOGL_ERROR, "error to send: %s\n", strerror(errno));
 
 	if (osmo_iofd_txqueue_len(iofd) == 0)
