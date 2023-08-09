@@ -39,7 +39,6 @@ const struct log_info osmo_stream_srv_test_log_info = {
 };
 
 static struct osmo_stream_srv_link *srv;
-static struct osmo_stream_srv *conn;
 
 void sighandler(int foo)
 {
@@ -57,25 +56,18 @@ int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
 
 static int close_cb(struct osmo_stream_srv *dummy)
 {
-	conn = NULL;
 	return 0;
 }
 
 static int accept_cb(struct osmo_stream_srv_link *srv, int fd)
 {
-	if (conn != NULL) {
-		LOGP(DSTREAMTEST, LOGL_ERROR, "Sorry, this example only "
-			"supports one client simultaneously\n");
-		return -1;
-	}
-
+	struct osmo_stream_srv *conn;
 	conn = osmo_stream_srv_create2(tall_test, srv, fd, NULL);
 	if (conn == NULL) {
 		LOGP(DSTREAMTEST, LOGL_ERROR,
 			"error while creating connection\n");
 		return -1;
 	}
-	osmo_stream_srv_set_name(conn, "ipa_srv");
 	osmo_stream_srv_set_read_cb(conn, read_cb);
 	osmo_stream_srv_set_closed_cb(conn, close_cb);
 	osmo_stream_srv_set_segmentation_cb(conn, osmo_ipa_segmentation_cb);
@@ -103,6 +95,7 @@ int main(void)
 	osmo_stream_srv_link_set_port(srv, 10000);
 	osmo_stream_srv_link_set_accept_cb(srv, accept_cb);
 	osmo_stream_srv_link_set_nodelay(srv, true);
+	osmo_stream_srv_link_set_name(srv, "ipa_link");
 
 	if (osmo_stream_srv_link_open(srv) < 0) {
 		fprintf(stderr, "cannot open client\n");
