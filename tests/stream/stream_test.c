@@ -538,6 +538,7 @@ static void *test_segm_ipa_stream_srv_run_client(void)
 		return NULL;
 	}
 	osmo_stream_cli_set_addr(osc, "127.0.0.11");
+	osmo_stream_cli_set_local_port(osc, 8977);
 	osmo_stream_cli_set_port(osc, 1111);
 	osmo_stream_cli_set_connect_cb(osc, test_segm_ipa_stream_srv_cli_connect_cb);
 	osmo_stream_cli_set_data(osc, ctx);
