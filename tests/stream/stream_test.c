@@ -63,9 +63,7 @@ static struct msgb *make_msgb(const char *m)
 
 /* client defs */
 #define LOGCLI(cli, fmt, args...) do { \
-		struct timeval tv; \
-		osmo_gettimeofday(&tv, NULL); \
-		printf("{%lu.%06lu} [%s] Client's %s(): " fmt, tv.tv_sec, tv.tv_usec, \
+		printf("[%s] Client's %s(): " fmt, \
 		       osmo_stream_cli_get_data(cli) ? "OK" : "NA", __func__, ##args); \
 	} while (0)
 
@@ -112,7 +110,6 @@ static int read_cb_cli(struct osmo_stream_cli *cli)
 		/* N. B: normally receiving 0 bytes means that we should close the connection and re-establish it
 		   but to test autoreconnection logic we ignore it in here to let the test run till completion */
 		LOGCLI(cli, "0-byte read, auto-reconnect will be triggered if enabled\n");
-		osmo_gettimeofday_override_add(RECONNECT_TIMEOUT_SECS, 0);
 	}
 
 	if (!cli_data) {
@@ -240,9 +237,7 @@ static struct osmo_stream_cli *make_client(void *ctx, const char *host, unsigned
 	printf("[%s] Server's %s(): " fmt, osmo_stream_srv_link_get_data(lnk) ? "OK" : "NA", __func__, ##args)
 
 #define LOGSRV(srv, fmt, args...) do { \
-		struct timeval tv; \
-		osmo_gettimeofday(&tv, NULL); \
-		printf("{%lu.%06lu} [%s|%s] Server's %s(): " fmt,  tv.tv_sec, tv.tv_usec, \
+		printf("[%s|%s] Server's %s(): " fmt,  \
 		       osmo_stream_srv_get_data(srv) ? "OK" : "NA", \
 		       osmo_stream_srv_link_get_data(osmo_stream_srv_get_master(srv)) ? "OK" : "NA", \
 		       __func__, ##args); \
@@ -339,7 +334,6 @@ static int accept_cb_srv(struct osmo_stream_srv_link *lnk, int fd)
 static void test_recon(void *ctx, const char *host, unsigned port, unsigned steps, struct osmo_stream_srv_link *lnk,
 		       bool autoreconnect)
 {
-	struct timeval tv;
 	struct osmo_stream_cli *cli = make_client(ctx, host, port, autoreconnect);
 	if (!cli)
 		return;
@@ -351,24 +345,21 @@ static void test_recon(void *ctx, const char *host, unsigned port, unsigned step
 	osmo_stream_srv_link_set_data(lnk, ctx);
 
 	while(steps--) {
-		osmo_gettimeofday_override_add(0, 1); /* small increment to easily spot iterations */
 		osmo_select_main(0);
-		osmo_gettimeofday(&tv, NULL);
-		fprintf(stderr, "\n{%lu.%06lu} %s test step %u [client %s, server %s], FD reg %u\n",
-			tv.tv_sec, tv.tv_usec, ASTR(autoreconnect), steps,
+		fprintf(stderr, "\n%s test step %u [client %s, server %s], FD reg %u\n",
+			ASTR(autoreconnect), steps,
 			osmo_stream_cli_get_data(cli) ? "OK" : "NA",
 			osmo_stream_srv_link_get_data(lnk) ? "OK" : "NA",
 			osmo_fd_is_registered(osmo_stream_cli_get_ofd(cli)));
 
 		if (test_stop_requested(lnk)) {
-			printf("{%lu.%06lu} Server requested test termination\n",
-			       tv.tv_sec, tv.tv_usec);
+			printf("Server requested test termination\n");
 			steps = 0;
 		}
 	}
 
 	osmo_stream_cli_destroy(cli);
-	printf("{%lu.%06lu} %s test complete.\n\n", tv.tv_sec, tv.tv_usec, ASTR(autoreconnect));
+	printf("%s test complete.\n\n", ASTR(autoreconnect));
 }
 
 /* Segmentation test code (using IPA) */
@@ -618,7 +609,6 @@ static void test_segm_ipa_stream_srv_run(void *ctx, const char *host, unsigned p
 	alarm(2);
 
 	while (!test_segm_ipa_stream_srv_all_msgs_processed) {
-		osmo_gettimeofday_override_add(0, 1); /* small increment to easily spot iterations */
 		osmo_select_main(1);
 	}
 	alarm(0);
@@ -643,10 +633,6 @@ int main(void)
 	char *host = "127.0.0.11";
 	unsigned port = 1111;
 	void *tall_test = talloc_named_const(NULL, 1, "osmo_stream_test");
-
-	osmo_gettimeofday_override = true;
-	osmo_gettimeofday_override_time.tv_sec = 2;
-	osmo_gettimeofday_override_time.tv_usec = 0;
 
 	msgb_talloc_ctx_init(tall_test, 0);
 	osmo_init_logging2(tall_test, &osmo_stream_test_log_info);
