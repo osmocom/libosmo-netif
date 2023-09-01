@@ -670,6 +670,7 @@ int main(void)
 
 	if (osmo_stream_srv_link_open(srv) < 0) {
 		printf("Unable to open server\n");
+		osmo_stream_srv_link_destroy(srv);
 		return EXIT_FAILURE;
 	}
 
@@ -679,5 +680,7 @@ int main(void)
 	test_segm_ipa_stream_srv_run(tall_test, host, port, srv);
 
 	printf("Stream tests completed\n");
+
+	osmo_stream_srv_link_destroy(srv);
 	return EXIT_SUCCESS;
 }
