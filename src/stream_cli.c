@@ -122,6 +122,7 @@ struct osmo_stream_cli {
 	void				*data;
 	int				flags;
 	int				reconnect_timeout;
+	struct osmo_sock_init2_multiaddr_pars ma_pars;
 };
 
 void osmo_stream_cli_close(struct osmo_stream_cli *cli);
@@ -419,6 +420,8 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 	osmo_timer_setup(&cli->timer, cli_timer_cb, cli);
 	cli->reconnect_timeout = 5;	/* default is 5 seconds. */
 	INIT_LLIST_HEAD(&cli->tx_queue);
+
+	cli->ma_pars.sctp.version = 0;
 
 	return cli;
 }
@@ -733,9 +736,6 @@ void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
  */
 int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 {
-#ifdef HAVE_LIBSCTP
-	struct osmo_sock_init2_multiaddr_pars ma_pars;
-#endif
 	int ret;
 
 	/* we are reconfiguring this socket, close existing first. */
@@ -747,18 +747,11 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
-		ma_pars = (struct osmo_sock_init2_multiaddr_pars){
-			.sctp = {
-				.version = 0,
-				.sockopt_auth_supported =   {.set = true, .abort_on_failure = false, .value = 1 },
-				.sockopt_asconf_supported = {.set = true, .abort_on_failure = false, .value = 1 },
-			}
-		};
 		ret = osmo_sock_init2_multiaddr2(AF_UNSPEC, SOCK_STREAM, cli->proto,
 						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 						(const char **)cli->addr, cli->addrcnt, cli->port,
 						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK,
-						&ma_pars);
+						&cli->ma_pars);
 		break;
 #endif
 	default:
@@ -816,9 +809,6 @@ void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay)
  *  \return negative on error, 0 on success */
 int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 {
-#ifdef HAVE_LIBSCTP
-	struct osmo_sock_init2_multiaddr_pars ma_pars;
-#endif
 	int ret, fd = -1;
 
 	/* we are reconfiguring this socket, close existing first. */
@@ -837,18 +827,11 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
 		case IPPROTO_SCTP:
-			ma_pars = (struct osmo_sock_init2_multiaddr_pars){
-				.sctp = {
-					.version = 0,
-					.sockopt_auth_supported =   {.set = true, .abort_on_failure = false, .value = 1 },
-					.sockopt_asconf_supported = {.set = true, .abort_on_failure = false, .value = 1 },
-				}
-			};
 			ret = osmo_sock_init2_multiaddr2(cli->sk_domain, cli->sk_type, cli->proto,
 							(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 							(const char **)cli->addr, cli->addrcnt, cli->port,
 							OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK,
-							&ma_pars);
+							&cli->ma_pars);
 			break;
 #endif
 		default:
@@ -1016,6 +999,34 @@ void osmo_stream_cli_clear_tx_queue(struct osmo_stream_cli *cli)
 	default:
 		OSMO_ASSERT(false);
 	}
+}
+
+int osmo_stream_cli_set_param(struct osmo_stream_cli *cli, enum osmo_stream_cli_param par, void *val, size_t val_len)
+{
+	OSMO_ASSERT(cli);
+	uint8_t val8;
+
+	switch (par) {
+	case OSMO_STREAM_CLI_PAR_SCTP_SOCKOPT_AUTH_SUPPORTED:
+		if (!val || val_len != sizeof(uint8_t))
+			return -EINVAL;
+		val8 = *(uint8_t *)val;
+		cli->ma_pars.sctp.sockopt_auth_supported.set = true;
+		cli->ma_pars.sctp.sockopt_auth_supported.abort_on_failure = val8 > 1;
+		cli->ma_pars.sctp.sockopt_auth_supported.value = (val8 == 1 || val8 == 3) ? 1 : 0;
+		break;
+	case OSMO_STREAM_CLI_PAR_SCTP_SOCKOPT_ASCONF_SUPPORTED:
+		if (!val || val_len != sizeof(uint8_t))
+			return -EINVAL;
+		val8 = *(uint8_t *)val;
+		cli->ma_pars.sctp.sockopt_asconf_supported.set = true;
+		cli->ma_pars.sctp.sockopt_asconf_supported.abort_on_failure = val8 > 1;
+		cli->ma_pars.sctp.sockopt_asconf_supported.value = (val8 == 1 || val8 == 3) ? 1 : 0;
+		break;
+	default:
+		return -ENOENT;
+	};
+	return 0;
 }
 
 /*! @} */

@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #include <osmocom/core/msgb.h>
 
@@ -40,6 +41,14 @@ struct osmo_fd *osmo_stream_srv_link_get_ofd(struct osmo_stream_srv_link *link);
 bool osmo_stream_srv_link_is_opened(const struct osmo_stream_srv_link *link);
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link);
 void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link);
+
+enum osmo_stream_srv_link_param {
+	OSMO_STREAM_SRV_LINK_PAR_SCTP_SOCKOPT_AUTH_SUPPORTED, /* uint8_t: 0 disable, 1 enable, 2 force disable, 3 force enable */
+	OSMO_STREAM_SRV_LINK_PAR_SCTP_SOCKOPT_ASCONF_SUPPORTED, /* uint8_t: 0 disable, 1 enable, 2 force disable, 3 force enable */
+};
+
+int osmo_stream_srv_link_set_param(struct osmo_stream_srv_link *link, enum osmo_stream_srv_link_param par,
+				   void *val, size_t val_len);
 
 /*! \brief Osmocom Stream Server: Single connection accept()ed via \ref
  * osmo_stream_srv_link */
@@ -104,5 +113,13 @@ void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg);
 int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg);
 
 void osmo_stream_cli_clear_tx_queue(struct osmo_stream_cli *cli);
+
+enum osmo_stream_cli_param {
+	OSMO_STREAM_CLI_PAR_SCTP_SOCKOPT_AUTH_SUPPORTED, /* uint8_t: 0 disable, 1 enable, 2 force disable, 3 force enable */
+	OSMO_STREAM_CLI_PAR_SCTP_SOCKOPT_ASCONF_SUPPORTED, /* uint8_t: 0 disable, 1 enable, 2 force disable, 3 force enable */
+};
+
+int osmo_stream_cli_set_param(struct osmo_stream_cli *cli, enum osmo_stream_cli_param par,
+			      void *val, size_t val_len);
 
 /*! @} */

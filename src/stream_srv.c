@@ -95,6 +95,7 @@ struct osmo_stream_srv_link {
 	int (*accept_cb)(struct osmo_stream_srv_link *srv, int fd);
 	void			*data;
 	int			flags;
+	struct osmo_sock_init2_multiaddr_pars ma_pars;
 };
 
 static int _setsockopt_nosigpipe(struct osmo_stream_srv_link *link, int new_fd)
@@ -190,6 +191,8 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	link->sk_type = SOCK_STREAM;
 	link->proto = IPPROTO_TCP;
 	osmo_fd_setup(&link->ofd, -1, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_srv_link_ofd_cb, link, 0);
+
+	link->ma_pars.sctp.version = 0;
 
 	return link;
 }
@@ -387,9 +390,6 @@ void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link)
  *  \return negative on error, 0 on success */
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 {
-#ifdef HAVE_LIBSCTP
-	struct osmo_sock_init2_multiaddr_pars ma_pars;
-#endif
 	int ret;
 
 	if (link->ofd.fd >= 0) {
@@ -412,16 +412,9 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 		switch (link->proto) {
 #ifdef HAVE_LIBSCTP
 		case IPPROTO_SCTP:
-			ma_pars = (struct osmo_sock_init2_multiaddr_pars){
-				.sctp = {
-					.version = 0,
-					.sockopt_auth_supported =   {.set = true, .abort_on_failure = false, .value = 1 },
-					.sockopt_asconf_supported = {.set = true, .abort_on_failure = false, .value = 1 },
-				}
-			};
 			ret = osmo_sock_init2_multiaddr2(link->sk_domain, link->sk_type, link->proto,
 							 (const char **)link->addr, link->addrcnt, link->port,
-							 NULL, 0, 0, OSMO_SOCK_F_BIND, &ma_pars);
+							 NULL, 0, 0, OSMO_SOCK_F_BIND, &link->ma_pars);
 			break;
 #endif
 		default:
@@ -470,6 +463,35 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 	osmo_fd_unregister(&link->ofd);
 	close(link->ofd.fd);
 	link->ofd.fd = -1;
+}
+
+int osmo_stream_srv_link_set_param(struct osmo_stream_srv_link *link, enum osmo_stream_srv_link_param par,
+				   void *val, size_t val_len)
+{
+	OSMO_ASSERT(link);
+	uint8_t val8;
+
+	switch (par) {
+	case OSMO_STREAM_SRV_LINK_PAR_SCTP_SOCKOPT_AUTH_SUPPORTED:
+		if (!val || val_len != sizeof(uint8_t))
+			return -EINVAL;
+		val8 = *(uint8_t *)val;
+		link->ma_pars.sctp.sockopt_auth_supported.set = true;
+		link->ma_pars.sctp.sockopt_auth_supported.abort_on_failure = val8 > 1;
+		link->ma_pars.sctp.sockopt_auth_supported.value = (val8 == 1 || val8 == 3) ? 1 : 0;
+		break;
+	case OSMO_STREAM_SRV_LINK_PAR_SCTP_SOCKOPT_ASCONF_SUPPORTED:
+		if (!val || val_len != sizeof(uint8_t))
+			return -EINVAL;
+		val8 = *(uint8_t *)val;
+		link->ma_pars.sctp.sockopt_asconf_supported.set = true;
+		link->ma_pars.sctp.sockopt_asconf_supported.abort_on_failure = val8 > 1;
+		link->ma_pars.sctp.sockopt_asconf_supported.value = (val8 == 1 || val8 == 3) ? 1 : 0;
+		break;
+	default:
+		return -ENOENT;
+	};
+	return 0;
 }
 
 #define OSMO_STREAM_SRV_F_FLUSH_DESTROY	(1 << 0)
