@@ -45,6 +45,8 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link);
 enum osmo_stream_srv_link_param {
 	OSMO_STREAM_SRV_LINK_PAR_SCTP_SOCKOPT_AUTH_SUPPORTED, /* uint8_t: 0 disable, 1 enable, 2 force disable, 3 force enable */
 	OSMO_STREAM_SRV_LINK_PAR_SCTP_SOCKOPT_ASCONF_SUPPORTED, /* uint8_t: 0 disable, 1 enable, 2 force disable, 3 force enable */
+	OSMO_STREAM_SRV_LINK_PAR_SCTP_INIT_NUM_OSTREAMS, /* uint16_t: amount of streams */
+	OSMO_STREAM_SRV_LINK_PAR_SCTP_INIT_MAX_INSTREAMS, /* uint16_t: amount of streams */
 };
 
 int osmo_stream_srv_link_set_param(struct osmo_stream_srv_link *link, enum osmo_stream_srv_link_param par,
@@ -117,6 +119,10 @@ void osmo_stream_cli_clear_tx_queue(struct osmo_stream_cli *cli);
 enum osmo_stream_cli_param {
 	OSMO_STREAM_CLI_PAR_SCTP_SOCKOPT_AUTH_SUPPORTED, /* uint8_t: 0 disable, 1 enable, 2 force disable, 3 force enable */
 	OSMO_STREAM_CLI_PAR_SCTP_SOCKOPT_ASCONF_SUPPORTED, /* uint8_t: 0 disable, 1 enable, 2 force disable, 3 force enable */
+	OSMO_STREAM_CLI_PAR_SCTP_INIT_NUM_OSTREAMS, /* uint16_t: amount of streams */
+	OSMO_STREAM_CLI_PAR_SCTP_INIT_MAX_INSTREAMS, /* uint16_t: amount of streams */
+	OSMO_STREAM_CLI_PAR_SCTP_INIT_MAX_ATTEMPTS, /* uint16_t: amount of attempts */
+	OSMO_STREAM_CLI_PAR_SCTP_INIT_TIMEOUT, /* uint16_t: milliseconds */
 };
 
 int osmo_stream_cli_set_param(struct osmo_stream_cli *cli, enum osmo_stream_cli_param par,

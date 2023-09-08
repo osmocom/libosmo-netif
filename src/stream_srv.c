@@ -488,6 +488,20 @@ int osmo_stream_srv_link_set_param(struct osmo_stream_srv_link *link, enum osmo_
 		link->ma_pars.sctp.sockopt_asconf_supported.abort_on_failure = val8 > 1;
 		link->ma_pars.sctp.sockopt_asconf_supported.value = (val8 == 1 || val8 == 3) ? 1 : 0;
 		break;
+	case OSMO_STREAM_SRV_LINK_PAR_SCTP_INIT_NUM_OSTREAMS:
+		if (!val || val_len != sizeof(uint16_t))
+			return -EINVAL;
+		link->ma_pars.sctp.sockopt_initmsg.set = true;
+		link->ma_pars.sctp.sockopt_initmsg.num_ostreams_present = true;
+		link->ma_pars.sctp.sockopt_initmsg.num_ostreams_value = *(uint16_t *)val;
+		break;
+	case OSMO_STREAM_SRV_LINK_PAR_SCTP_INIT_MAX_INSTREAMS:
+		if (!val || val_len != sizeof(uint16_t))
+			return -EINVAL;
+		link->ma_pars.sctp.sockopt_initmsg.set = true;
+		link->ma_pars.sctp.sockopt_initmsg.max_instreams_present = true;
+		link->ma_pars.sctp.sockopt_initmsg.max_instreams_value = *(uint16_t *)val;
+		break;
 	default:
 		return -ENOENT;
 	};

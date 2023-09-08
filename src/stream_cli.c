@@ -1023,6 +1023,34 @@ int osmo_stream_cli_set_param(struct osmo_stream_cli *cli, enum osmo_stream_cli_
 		cli->ma_pars.sctp.sockopt_asconf_supported.abort_on_failure = val8 > 1;
 		cli->ma_pars.sctp.sockopt_asconf_supported.value = (val8 == 1 || val8 == 3) ? 1 : 0;
 		break;
+	case OSMO_STREAM_CLI_PAR_SCTP_INIT_NUM_OSTREAMS:
+		if (!val || val_len != sizeof(uint16_t))
+			return -EINVAL;
+		cli->ma_pars.sctp.sockopt_initmsg.set = true;
+		cli->ma_pars.sctp.sockopt_initmsg.num_ostreams_present = true;
+		cli->ma_pars.sctp.sockopt_initmsg.num_ostreams_value = *(uint16_t *)val;
+		break;
+	case OSMO_STREAM_CLI_PAR_SCTP_INIT_MAX_INSTREAMS:
+		if (!val || val_len != sizeof(uint16_t))
+			return -EINVAL;
+		cli->ma_pars.sctp.sockopt_initmsg.set = true;
+		cli->ma_pars.sctp.sockopt_initmsg.max_instreams_present = true;
+		cli->ma_pars.sctp.sockopt_initmsg.max_instreams_value = *(uint16_t *)val;
+		break;
+	case OSMO_STREAM_CLI_PAR_SCTP_INIT_MAX_ATTEMPTS:
+		if (!val || val_len != sizeof(uint16_t))
+			return -EINVAL;
+		cli->ma_pars.sctp.sockopt_initmsg.set = true;
+		cli->ma_pars.sctp.sockopt_initmsg.max_attempts_present = true;
+		cli->ma_pars.sctp.sockopt_initmsg.max_attempts_value = *(uint16_t *)val;
+		break;
+	case OSMO_STREAM_CLI_PAR_SCTP_INIT_TIMEOUT:
+		if (!val || val_len != sizeof(uint16_t))
+			return -EINVAL;
+		cli->ma_pars.sctp.sockopt_initmsg.set = true;
+		cli->ma_pars.sctp.sockopt_initmsg.max_init_timeo_present = true;
+		cli->ma_pars.sctp.sockopt_initmsg.max_init_timeo_value = *(uint16_t *)val;
+		break;
 	default:
 		return -ENOENT;
 	};
