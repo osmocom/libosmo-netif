@@ -387,6 +387,9 @@ void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link)
  *  \return negative on error, 0 on success */
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 {
+#ifdef HAVE_LIBSCTP
+	struct osmo_sock_init2_multiaddr_pars ma_pars;
+#endif
 	int ret;
 
 	if (link->ofd.fd >= 0) {
@@ -409,9 +412,16 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 		switch (link->proto) {
 #ifdef HAVE_LIBSCTP
 		case IPPROTO_SCTP:
-			ret = osmo_sock_init2_multiaddr(link->sk_domain, link->sk_type, link->proto,
-							(const char **)link->addr, link->addrcnt, link->port,
-							NULL, 0, 0, OSMO_SOCK_F_BIND|OSMO_SOCK_F_SCTP_ASCONF_SUPPORTED);
+			ma_pars = (struct osmo_sock_init2_multiaddr_pars){
+				.sctp = {
+					.version = 0,
+					.sockopt_auth_supported =   {.set = true, .abort_on_failure = false, .value = 1 },
+					.sockopt_asconf_supported = {.set = true, .abort_on_failure = false, .value = 1 },
+				}
+			};
+			ret = osmo_sock_init2_multiaddr2(link->sk_domain, link->sk_type, link->proto,
+							 (const char **)link->addr, link->addrcnt, link->port,
+							 NULL, 0, 0, OSMO_SOCK_F_BIND, &ma_pars);
 			break;
 #endif
 		default:

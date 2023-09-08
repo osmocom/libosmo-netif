@@ -733,6 +733,9 @@ void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
  */
 int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 {
+#ifdef HAVE_LIBSCTP
+	struct osmo_sock_init2_multiaddr_pars ma_pars;
+#endif
 	int ret;
 
 	/* we are reconfiguring this socket, close existing first. */
@@ -744,10 +747,18 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
-		ret = osmo_sock_init2_multiaddr(AF_UNSPEC, SOCK_STREAM, cli->proto,
+		ma_pars = (struct osmo_sock_init2_multiaddr_pars){
+			.sctp = {
+				.version = 0,
+				.sockopt_auth_supported =   {.set = true, .abort_on_failure = false, .value = 1 },
+				.sockopt_asconf_supported = {.set = true, .abort_on_failure = false, .value = 1 },
+			}
+		};
+		ret = osmo_sock_init2_multiaddr2(AF_UNSPEC, SOCK_STREAM, cli->proto,
 						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 						(const char **)cli->addr, cli->addrcnt, cli->port,
-						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK|OSMO_SOCK_F_SCTP_ASCONF_SUPPORTED);
+						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK,
+						&ma_pars);
 		break;
 #endif
 	default:
@@ -805,6 +816,9 @@ void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay)
  *  \return negative on error, 0 on success */
 int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 {
+#ifdef HAVE_LIBSCTP
+	struct osmo_sock_init2_multiaddr_pars ma_pars;
+#endif
 	int ret, fd = -1;
 
 	/* we are reconfiguring this socket, close existing first. */
@@ -823,10 +837,18 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
 		case IPPROTO_SCTP:
-			ret = osmo_sock_init2_multiaddr(cli->sk_domain, cli->sk_type, cli->proto,
+			ma_pars = (struct osmo_sock_init2_multiaddr_pars){
+				.sctp = {
+					.version = 0,
+					.sockopt_auth_supported =   {.set = true, .abort_on_failure = false, .value = 1 },
+					.sockopt_asconf_supported = {.set = true, .abort_on_failure = false, .value = 1 },
+				}
+			};
+			ret = osmo_sock_init2_multiaddr2(cli->sk_domain, cli->sk_type, cli->proto,
 							(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 							(const char **)cli->addr, cli->addrcnt, cli->port,
-							OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK|OSMO_SOCK_F_SCTP_ASCONF_SUPPORTED);
+							OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK,
+							&ma_pars);
 			break;
 #endif
 		default:
