@@ -7,6 +7,3 @@
 # If any interfaces have been added since the last public release: c:r:a + 1.
 # If any interfaces have been removed or changed since the last public release: c:r:0.
 #library	what		description / commit summary line
-libosmocore		>1.8.0		osmo_iofd, osmo_sock_init2_multiaddr2()
-stream			NEW API		osmo_stream_srv_link_set_name(), osmo_stream_srv_set_name(), osmo_stream_cli_set_name()
-stream			NEW API		osmo_stream_srv_link_set_param(), osmo_stream_cli_set_param()

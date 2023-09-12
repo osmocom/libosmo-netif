@@ -89,9 +89,9 @@ AC_SUBST(SYMBOL_VISIBILITY)
 dnl Generate the output
 AM_CONFIG_HEADER(config.h)
 
-PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.8.0)
-PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.8.0)
-PKG_CHECK_MODULES(LIBOSMOCODEC, libosmocodec >= 1.8.0)
+PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.9.0)
+PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.9.0)
+PKG_CHECK_MODULES(LIBOSMOCODEC, libosmocodec >= 1.9.0)
 
 AC_ARG_ENABLE([lapd_examples],
 	[AS_HELP_STRING(
@@ -100,7 +100,7 @@ AC_ARG_ENABLE([lapd_examples],
 	)],
 	[lapd_examples=$enableval], [lapd_examples="no"])
 AS_IF([test "x$lapd_examples" = "xyes"], [
-	PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 1.4.0)
+	PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 1.5.0)
 	AC_DEFINE([ENABLE_LAPD], [1], [Enable LAPD examples])
 ])
 AM_CONDITIONAL(ENABLE_LAPD, test "x$lapd_examples" = "xyes")

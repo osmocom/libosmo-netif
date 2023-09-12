@@ -1,3 +1,77 @@
+libosmo-netif (1.4.0) unstable; urgency=medium
+
+  [ Max ]
+  * osmo_stream_srv_link_close(): properly handle NULL input
+  * Add osmo_stream_srv_link_is_opened()
+
+  [ Oliver Smith ]
+  * Run struct_endianness.py
+  * rtp.h: add RTP_PT_CSDATA
+  * debian: set compat level to 10
+
+  [ Neels Hofmeyr ]
+  * fix msgb leak on OSMO_STREAM_SRV_F_FLUSH_DESTROY
+
+  [ Vadim Yanitskiy ]
+  * {utils,tests}/Makefile.am: reorder libraries in LDADD
+  * tests/Makefile.am: clean up AM_* variables
+  * src/Makefile.am: do not overwrite AM_LDFLAGS
+
+  [ Daniel Willmann ]
+  * stream: Introduce and use osmo_stream_cli_fd() to get the fd
+  * stream: (typo) Change callback param name of struct osmo_stream_cli from srv to cli
+  * ipa-stream-server: Return -EBADF in read_cb after osmo_stream_srv_destroy()
+  * stream: Properly name osmo_stream_srv read callback
+  * cosmetic: Change name of osmo_stream_src_fd_cb()
+  * stream: Update log messages
+  * stream: Factor out reconnection handling
+  * stream: Use cli->state to check if cli is already closed
+  * stream: Correctly close osmo_stream_cli when in state WAIT_RECONNECT
+  * Add osmo_io support to osmo_stream_cli and osmo_stream_srv
+  * examples: Use new stream API in {ipa-,}stream-{client,server}
+  * stream: Setup ofd in osmo_stream_cli_open
+  * stream: Document osmo_stream_cli_create2()
+  * stream: Remove duplicated code in osmo_stream_cli_create()
+  * examples: Set logging level to DEBUG in {,ipa-}stream-{client,server}
+  * stream: Assert that fd is valid in stream_cli_handle_connecting()
+  * stream: Set state to closed before calling disconnect_cb()
+  * stream: Notify stream_cli on connect()
+
+  [ Pau Espin Pedrol ]
+  * stream: Allow setting name printed during logging
+  * stream: Print socket info as part of the logging context
+  * stream: Drop recently added API osmo_stream_cli_create2
+  * stream: Drop name param from recently added API osmo_stream_srv_create2()
+  * stream: srv cb: Use osmo_sockaddr and improve logging when cli connects
+  * stream: Rename static function to have correct prefix
+  * stream: Split cli/srv specific code out of stream.c
+  * stream_cli: Increase log level of established conn to INFO
+  * stream_srv: Use LOGSLNK() to print log line
+  * stream_srv: call setsockopt(SO_NOSIGPIPE) also in srv sockets
+  * stream_srv: Improve logging lines accepting new connections
+  * stream: Append data to current tail of message upon recv()
+  * stream_srv: Handle ESHUTDOWN and other write() errors destroying the socket
+  * stream_cli: Proper handling of send() socket errors
+  * sctp: Document relevant RFC specs
+  * stream_srv: sctp: Log error cause of COMM_LOST event
+  * stream_srv: Log SCTP REMOTE_ERROR events
+  * stream: Refactor sctp_recvmsg_wrapper() logging
+  * stream_cli: Forward SCTP MSG_NOTIFICATION to upper layers
+  * stream: Use new flag OSMO_SOCK_F_SCTP_ASCONF_SUPPORTED for SCTP sockets
+  * stream_test: Avoid leaking osmo_stream_srv_link
+  * stream: Use new libosmocore API osmo_sock_init2_multiaddr2()
+  * stream: Introduce API to set several transport parameters
+  * stream: Add new stream_{cli,srv_link} parameters to set SCTP_INITMSG sockopt values
+
+  [ arehbein ]
+  * stream: Fix osmo_panic log fmts
+  * examples: Add extension header octet to example
+  * ipa: Add segmentation callback
+  * stream: Add server-side (segmentation) support for IPA
+  * stream test: Fix test output check
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Tue, 12 Sep 2023 13:50:25 +0200
+
 libosmo-netif (1.3.0) unstable; urgency=medium
 
   [ Pau Espin Pedrol ]

@@ -24,9 +24,9 @@ BuildRequires:  automake
 BuildRequires:  libtool >= 2
 BuildRequires:  lksctp-tools-devel
 BuildRequires:  pkgconfig >= 0.20
-BuildRequires:  pkgconfig(libosmocore) >= 1.8.0
-BuildRequires:  pkgconfig(libosmogsm) >= 1.8.0
-BuildRequires:  pkgconfig(libosmocodec) >= 1.8.0
+BuildRequires:  pkgconfig(libosmocore) >= 1.9.0
+BuildRequires:  pkgconfig(libosmogsm) >= 1.9.0
+BuildRequires:  pkgconfig(libosmocodec) >= 1.9.0
 
 %description
 Network interface demuxer library for OsmoCom projects.
