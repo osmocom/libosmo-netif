@@ -23,7 +23,19 @@ struct osmo_ipa_msgb_cb {
 	uint8_t proto_ext;
 } __attribute__ ((packed));
 
-#define OSMO_IPA_MSGB_CB(__msg)		((struct osmo_ipa_msgb_cb *)&((__msg)->cb[0]))
+
+/* We don't just cast to 'struct osmo_ipa_msgb_cb *', because that would
+ * break the strict aliasing rule. Casting to a reference to a union with
+ * a compatible struct member seems to be allowed, though, see:
+ *	N1570 Committee Draft — April 12, 2011 ISO/IEC 9899:201x,
+ *	Section 6.5, §7 */
+#define OSMO_IPA_MSGB_CB(__msg)	(&((( \
+					union { \
+						unsigned long cb; \
+						struct osmo_ipa_msgb_cb _cb; \
+					} \
+				*)&((__msg)->cb[0]))->_cb))
+
 #define osmo_ipa_msgb_cb_proto(__x)	OSMO_IPA_MSGB_CB(__x)->proto
 #define osmo_ipa_msgb_cb_proto_ext(__x)	OSMO_IPA_MSGB_CB(__x)->proto_ext
 
