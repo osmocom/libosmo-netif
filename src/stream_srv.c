@@ -858,6 +858,7 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
 		osmo_iofd_free(conn->iofd);
+		conn->iofd = NULL;
 		break;
 	default:
 		OSMO_ASSERT(false);
