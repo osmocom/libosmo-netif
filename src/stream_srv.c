@@ -961,8 +961,19 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 
 void osmo_stream_srv_clear_tx_queue(struct osmo_stream_srv *conn)
 {
-	msgb_queue_free(&conn->tx_queue);
-	osmo_fd_write_disable(&conn->ofd);
+	switch (conn->mode) {
+	case OSMO_STREAM_MODE_OSMO_FD:
+		msgb_queue_free(&conn->tx_queue);
+		osmo_fd_write_disable(&conn->ofd);
+		break;
+	case OSMO_STREAM_MODE_OSMO_IO:
+		osmo_iofd_txqueue_clear(conn->iofd);
+		break;
+	case OSMO_STREAM_MODE_UNKNOWN:
+	default:
+		break;
+	}
+
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY)
 		osmo_stream_srv_destroy(conn);
 }
