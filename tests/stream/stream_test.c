@@ -667,6 +667,7 @@ int main(void)
 	osmo_stream_srv_link_set_addr(srv, host);
 	osmo_stream_srv_link_set_port(srv, port);
 	osmo_stream_srv_link_set_accept_cb(srv, accept_cb_srv);
+	osmo_stream_srv_link_set_nodelay(srv, true);
 
 	if (osmo_stream_srv_link_open(srv) < 0) {
 		printf("Unable to open server\n");
