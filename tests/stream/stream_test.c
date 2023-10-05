@@ -678,7 +678,7 @@ int test_segm_ipa_stream_cli_srv_read_cb(struct osmo_stream_srv *conn, struct ms
 	}
 	LOGSRV(conn, "Received message from stream (total len including stripped headers = %lu)\n",
 	       osmo_ntohs(h->len) + sizeof(*h));
-	if (ipa_msg_type < 0 || 5 < ipa_msg_type) {
+	if (5 < ipa_msg_type) {
 		fprintf(stderr, "Received unexpected IPAC message type %"PRIu8"\n", ipa_msg_type);
 		return -ENOMSG;
 	}
