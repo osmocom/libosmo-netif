@@ -121,6 +121,7 @@ static int read_cb_cli(struct osmo_stream_cli *cli)
 		osmo_stream_cli_set_data(cli, msg);
 		CLI_SND(cli, "Doh, responding to server :-D");
 	}
+	msgb_free(msg);
 
 	return 0;
 }
@@ -299,6 +300,7 @@ int read_cb_srv(struct osmo_stream_srv *srv)
 			   than it must be subsequent (after reconnect) call */
 			request_test_stop(srv);
 		}
+		msgb_free(msg);
 		osmo_stream_srv_destroy(srv);
 		return -EINVAL;
 	} else {
@@ -505,14 +507,11 @@ static int test_segm_ipa_stream_srv_cli_read_cb(struct osmo_stream_cli *osc, str
 	unsigned char *data;
 	struct ipa_head *h = (struct ipa_head *) msg->l1h;
 	uint8_t ipac_msg_type = *msg->data;
-	struct msgb *reply = msgb_alloc_headroom(128, 0, "IPA reply");
-	if (reply == NULL) {
-		fprintf(stderr, "Cannot allocate message\n");
-		return -ENOMEM;
-	}
+	struct msgb *reply;
 	LOGCLI(osc, "Received message from stream (payload len = %" PRIu16 ")\n", msgb_length(msg));
 	if (ipac_msg_type < 0 || 5 < ipac_msg_type) {
 		fprintf(stderr, "Received unexpected IPAC message type %"PRIu8"\n", ipac_msg_type);
+		msgb_free(msg);
 		return -ENOMSG;
 	}
 	LOGCLI(osc, "\tType: %s\n", IPAC_MSG_TYPES[ipac_msg_type]);
@@ -520,6 +519,11 @@ static int test_segm_ipa_stream_srv_cli_read_cb(struct osmo_stream_cli *osc, str
 		LOGCLI(osc, "Got IPAC_MSGT_ID_GET from server\n");
 		LOGCLI(osc, "[(%u + 2/3) -cli] Appending: Second third of IPAC_MSGT_ID_GET\n",
 		       test_segm_ipa_stream_srv_msglognum_cli);
+		reply = msgb_alloc_headroom(128, 0, "IPA reply");
+		if (reply == NULL) {
+			fprintf(stderr, "Cannot allocate message\n");
+			return -ENOMEM;
+		}
 		data = msgb_put(reply, ipac_msg_idreq_third);
 		memcpy(data, ipac_msg_idreq + ipac_msg_idreq_third,
 		       ipac_msg_idreq_third);
@@ -535,15 +539,14 @@ static int test_segm_ipa_stream_srv_cli_read_cb(struct osmo_stream_cli *osc, str
 		LOGCLI(osc, "\texpected=%s\n",
 		       osmo_hexdump(ipac_msg_idresp, sizeof(ipac_msg_idresp)));
 	}
+	msgb_free(msg);
 	printf("\n");
 	return 0;
 }
 
 struct osmo_stream_cli *test_segm_ipa_stream_srv_run_client(void *ctx)
 {
-	struct osmo_stream_cli *osc;
-
-	osc = osmo_stream_cli_create(ctx);
+	struct osmo_stream_cli *osc = osmo_stream_cli_create(ctx);
 	if (osc == NULL) {
 		fprintf(stderr, "osmo_stream_cli_create_iofd()\n");
 		return NULL;
@@ -589,6 +592,7 @@ int test_segm_ipa_stream_srv_srv_read_cb(struct osmo_stream_srv *conn, struct ms
 		osmo_stream_srv_send(conn, m);
 	} else if (msgnum_srv == 7 && *msgt == IPAC_MSGT_PONG) {
 		test_segm_ipa_stream_srv_all_msgs_processed = true;
+		osmo_stream_srv_destroy(conn);
 	}
 	return 0;
 }
@@ -631,6 +635,7 @@ static void test_segm_ipa_stream_srv_run(void *ctx, const char *host, unsigned p
 	printf("==================================Test %s complete========================================\n\n", testname);
 	if (osc)
 		osmo_stream_cli_destroy(osc);
+	osmo_stream_srv_link_close(srv);
 }
 
 static void sigalarm_handler(int _foo)
@@ -640,6 +645,7 @@ static void sigalarm_handler(int _foo)
 }
 
 static struct osmo_timer_list fragmented_send_tl_srv;
+static struct osmo_timer_list fragmented_send_tl_srv_destroy;
 
 static unsigned test_segm_ipa_stream_cli_srv_msglognum = 0;
 
@@ -651,6 +657,11 @@ static unsigned test_segm_ipa_stream_cli_srv_msglognum = 0;
 	       sizeof(SRC_IPAC_MSG_BUF)));\
 	put_ipa_msg(UCHAR_PTR_DST, STRUCT_MSGB_PTR, SRC_IPAC_MSG_BUF);\
 } while (0)
+
+static void destroy_conn(void *osmo_stream_srv_arg)
+{
+	osmo_stream_srv_destroy(osmo_stream_srv_arg);
+}
 
 static void send_last_third_srv(void *osmo_stream_srv_arg)
 {
@@ -675,6 +686,11 @@ static void send_last_third_srv(void *osmo_stream_srv_arg)
 		    "[ Last third of IPAC_MSGT_ID_GET | IPAC_MSGT_PONG | IPAC_MSGT_PONG ]\n");
 	LOGSRV(oss, "\t(msg dump: %s)\n\n", osmo_hexdump(reply->data, reply->len));
 	osmo_stream_srv_send(oss, reply);
+	osmo_timer_setup(&fragmented_send_tl_srv_destroy, destroy_conn, oss);
+	osmo_timer_add(&fragmented_send_tl_srv_destroy);
+	/* 2 select loop iterations needed, timing only 1 will leave the client side hanging while waiting
+	 * to receive the last messages */
+	osmo_timer_schedule(&fragmented_send_tl_srv_destroy, 0, 2);
 }
 
 int test_segm_ipa_stream_cli_srv_read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
@@ -786,11 +802,9 @@ static int test_segm_ipa_stream_cli_cli_read_cb(struct osmo_stream_cli *osc, str
 	return 0;
 }
 
-static void *test_segm_ipa_stream_cli_run_client(void *ctx)
+static struct osmo_stream_cli *test_segm_ipa_stream_cli_run_client(void *ctx)
 {
-	struct osmo_stream_cli *osc;
-
-	osc = osmo_stream_cli_create(ctx);
+	struct osmo_stream_cli *osc = osmo_stream_cli_create(ctx);
 	if (osc == NULL) {
 		fprintf(stderr, "osmo_stream_cli_create_iofd()\n");
 		return NULL;
@@ -806,13 +820,14 @@ static void *test_segm_ipa_stream_cli_run_client(void *ctx)
 		return NULL;
 	}
 
-	return NULL;
+	return osc;
 }
 
 static void test_segm_ipa_stream_cli_run(void *ctx, const char *host, unsigned port,
 				  struct osmo_stream_srv_link *srv)
 {
 	const char *testname = "test_segm_ipa_stream_cli";
+	struct osmo_stream_cli *osc = NULL;
 	osmo_stream_srv_link_set_accept_cb(srv,
 		test_segm_ipa_stream_cli_srv_accept_cb);
 	osmo_stream_srv_link_set_port(srv, 1112);
@@ -820,7 +835,7 @@ static void test_segm_ipa_stream_cli_run(void *ctx, const char *host, unsigned p
 		printf("Unable to open server\n");
 		exit(1);
 	}
-	test_segm_ipa_stream_cli_run_client(ctx);
+	osc = test_segm_ipa_stream_cli_run_client(ctx);
 
 	printf("______________________________________Running test %s______________________________________\n", testname);
 	alarm(2);
@@ -831,6 +846,9 @@ static void test_segm_ipa_stream_cli_run(void *ctx, const char *host, unsigned p
 	}
 	alarm(0);
 	printf("==================================Test %s complete========================================\n\n", testname);
+	if (osc)
+		osmo_stream_cli_destroy(osc);
+	osmo_stream_srv_link_close(srv);
 }
 
 int main(void)
@@ -850,7 +868,6 @@ int main(void)
 	osmo_gettimeofday_override_time.tv_sec = 2;
 	osmo_gettimeofday_override_time.tv_usec = 0;
 
-	msgb_talloc_ctx_init(tall_test, 0);
 	osmo_init_logging2(tall_test, &osmo_stream_test_log_info);
 	log_set_log_level(osmo_stderr_target, LOGL_INFO);
 	log_set_use_color(osmo_stderr_target, 0);
@@ -881,6 +898,7 @@ int main(void)
 	printf("Stream tests completed\n");
 
 	osmo_stream_srv_link_destroy(srv);
+	log_fini();
 	talloc_free(tall_test);
 	return EXIT_SUCCESS;
 }
