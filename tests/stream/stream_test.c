@@ -340,9 +340,16 @@ static void test_recon(void *ctx, const char *host, unsigned port, unsigned step
 		       bool autoreconnect)
 {
 	struct timeval tv;
-	struct osmo_stream_cli *cli = make_client(ctx, host, port, autoreconnect);
+	struct osmo_stream_cli *cli;
+	if (osmo_stream_srv_link_open(lnk) < 0) {
+		printf("Unable to open server\n");
+		osmo_stream_srv_link_destroy(lnk);
+		return;
+	}
+	cli = make_client(ctx, host, port, autoreconnect);
 	if (!cli)
 		return;
+
 
 	printf("=======================================\n");
 	printf("Client/Server entering %s event loop...\n", ASTR(autoreconnect));
@@ -368,6 +375,7 @@ static void test_recon(void *ctx, const char *host, unsigned port, unsigned step
 	}
 
 	osmo_stream_cli_destroy(cli);
+	osmo_stream_srv_link_close(lnk);
 	printf("{%lu.%06lu} %s test complete.\n\n", tv.tv_sec, tv.tv_usec, ASTR(autoreconnect));
 }
 
@@ -531,12 +539,10 @@ static int test_segm_ipa_stream_srv_cli_read_cb(struct osmo_stream_cli *osc, str
 	return 0;
 }
 
-struct osmo_stream_cli *test_segm_ipa_stream_srv_run_client(void)
+struct osmo_stream_cli *test_segm_ipa_stream_srv_run_client(void *ctx)
 {
 	struct osmo_stream_cli *osc;
-	void *ctx = talloc_named_const(NULL, 0, __func__);
 
-	(void) msgb_talloc_ctx_init(ctx, 0);
 	osc = osmo_stream_cli_create(ctx);
 	if (osc == NULL) {
 		fprintf(stderr, "osmo_stream_cli_create_iofd()\n");
@@ -546,7 +552,6 @@ struct osmo_stream_cli *test_segm_ipa_stream_srv_run_client(void)
 	osmo_stream_cli_set_local_port(osc, 8977);
 	osmo_stream_cli_set_port(osc, 1111);
 	osmo_stream_cli_set_connect_cb(osc, test_segm_ipa_stream_srv_cli_connect_cb);
-	osmo_stream_cli_set_data(osc, ctx);
 	osmo_stream_cli_set_read_cb2(osc, test_segm_ipa_stream_srv_cli_read_cb);
 	osmo_stream_cli_set_nodelay(osc, true);
 	if (osmo_stream_cli_open(osc) < 0) {
@@ -590,7 +595,7 @@ int test_segm_ipa_stream_srv_srv_read_cb(struct osmo_stream_srv *conn, struct ms
 
 static int test_segm_ipa_stream_srv_srv_accept_cb(struct osmo_stream_srv_link *srv, int fd)
 {
-	void *ctx = talloc_named_const(NULL, 0, __func__);
+	void *ctx = osmo_stream_srv_link_get_data(srv);
 	struct osmo_stream_srv *oss =
 		osmo_stream_srv_create2(ctx, srv, fd, NULL);
 	if (oss == NULL) {
@@ -613,7 +618,7 @@ static void test_segm_ipa_stream_srv_run(void *ctx, const char *host, unsigned p
 		printf("Unable to open server\n");
 		exit(1);
 	}
-	osc = test_segm_ipa_stream_srv_run_client();
+	osc = test_segm_ipa_stream_srv_run_client(ctx);
 
 	printf("______________________________________Running test %s______________________________________\n", testname);
 	alarm(2);
@@ -714,7 +719,7 @@ int test_segm_ipa_stream_cli_srv_read_cb(struct osmo_stream_srv *conn, struct ms
 
 static int test_segm_ipa_stream_cli_srv_accept_cb(struct osmo_stream_srv_link *srv, int fd)
 {
-	void *ctx = talloc_named_const(NULL, 0, __func__);
+	void *ctx = osmo_stream_srv_link_get_data(srv);
 	struct osmo_stream_srv *oss =
 		osmo_stream_srv_create2(ctx, srv, fd, NULL);
 	unsigned char *data;
@@ -781,12 +786,10 @@ static int test_segm_ipa_stream_cli_cli_read_cb(struct osmo_stream_cli *osc, str
 	return 0;
 }
 
-static void *test_segm_ipa_stream_cli_run_client(void)
+static void *test_segm_ipa_stream_cli_run_client(void *ctx)
 {
 	struct osmo_stream_cli *osc;
-	void *ctx = talloc_named_const(NULL, 0, __func__);
 
-	(void) msgb_talloc_ctx_init(ctx, 0);
 	osc = osmo_stream_cli_create(ctx);
 	if (osc == NULL) {
 		fprintf(stderr, "osmo_stream_cli_create_iofd()\n");
@@ -795,7 +798,6 @@ static void *test_segm_ipa_stream_cli_run_client(void)
 	osmo_stream_cli_set_addr(osc, "127.0.0.11");
 	osmo_stream_cli_set_local_port(osc, 8977);
 	osmo_stream_cli_set_port(osc, 1112);
-	osmo_stream_cli_set_data(osc, ctx);
 	osmo_stream_cli_set_read_cb2(osc, test_segm_ipa_stream_cli_cli_read_cb);
 	osmo_stream_cli_set_nodelay(osc, true);
 	osmo_stream_cli_set_segmentation_cb(osc, osmo_ipa_segmentation_cb);
@@ -818,7 +820,7 @@ static void test_segm_ipa_stream_cli_run(void *ctx, const char *host, unsigned p
 		printf("Unable to open server\n");
 		exit(1);
 	}
-	test_segm_ipa_stream_cli_run_client();
+	test_segm_ipa_stream_cli_run_client(ctx);
 
 	printf("______________________________________Running test %s______________________________________\n", testname);
 	alarm(2);
@@ -869,20 +871,16 @@ int main(void)
 	osmo_stream_srv_link_set_accept_cb(srv, accept_cb_srv);
 	osmo_stream_srv_link_set_nodelay(srv, true);
 
-	if (osmo_stream_srv_link_open(srv) < 0) {
-		printf("Unable to open server\n");
-		osmo_stream_srv_link_destroy(srv);
-		return EXIT_FAILURE;
-	}
-
 	test_recon(tall_test, host, port, 12, srv, true);
 	test_recon(tall_test, host, port, 8, srv, false);
 
+	osmo_stream_srv_link_set_data(srv, tall_test);
 	test_segm_ipa_stream_srv_run(tall_test, host, port, srv);
 	test_segm_ipa_stream_cli_run(tall_test, host, port, srv);
 
 	printf("Stream tests completed\n");
 
 	osmo_stream_srv_link_destroy(srv);
+	talloc_free(tall_test);
 	return EXIT_SUCCESS;
 }
