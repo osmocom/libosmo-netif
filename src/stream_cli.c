@@ -470,12 +470,44 @@ static void stream_cli_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct ms
 	}
 }
 
-static struct osmo_io_ops osmo_stream_cli_ioops = {
+static const struct osmo_io_ops osmo_stream_cli_ioops = {
 	.read_cb = stream_cli_iofd_read_cb,
 	.write_cb = stream_cli_iofd_write_cb,
 
 	.segmentation_cb = NULL,
 };
+
+#ifdef HAVE_LIBSCTP
+static void stream_cli_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg, const struct msghdr *msgh)
+{
+	struct osmo_stream_cli *cli  = osmo_iofd_get_data(iofd);
+
+	res = stream_iofd_sctp_recvmsg_trailer(iofd, msg, res, msgh);
+
+	switch (cli->state) {
+	case STREAM_CLI_STATE_CONNECTING:
+		stream_cli_handle_connecting(cli, res);
+		break;
+	case STREAM_CLI_STATE_CONNECTED:
+		if (res == 0)
+			osmo_stream_cli_reconnect(cli);
+		/* Forward message to read callback, also if the connection failed. */
+		if (cli->iofd_read_cb)
+			cli->iofd_read_cb(cli, msg);
+		break;
+	default:
+		osmo_panic("%s() called with unexpected state %d\n", __func__, cli->state);
+	}
+}
+
+static const struct osmo_io_ops osmo_stream_cli_ioops_sctp = {
+	.recvmsg_cb = stream_cli_iofd_recvmsg_cb,
+	.sendmsg_cb = stream_cli_iofd_write_cb,
+
+	.segmentation_cb = NULL,
+};
+#endif
+
 
 /*! \brief Set a name on the cli object (used during logging)
  *  \param[in] cli stream_cli whose name is to be set
@@ -592,14 +624,18 @@ osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
 }
 
 /* Configure client side segmentation for the iofd */
-static void configure_cli_segmentation_cb(struct osmo_io_fd *iofd,
+static void configure_cli_segmentation_cb(struct osmo_stream_cli *cli,
 					       int (*segmentation_cb)(struct msgb *msg))
 {
 	/* Copy default settings */
-	struct osmo_io_ops client_ops = osmo_stream_cli_ioops;
+	struct osmo_io_ops client_ops;
+	if (cli->proto == IPPROTO_SCTP)
+		client_ops = osmo_stream_cli_ioops_sctp;
+	else
+		client_ops = osmo_stream_cli_ioops;
 	/* Set segmentation cb for this client */
 	client_ops.segmentation_cb = segmentation_cb;
-	osmo_iofd_set_ioops(iofd, &client_ops);
+	osmo_iofd_set_ioops(cli->iofd, &client_ops);
 }
 
 /*! \brief Set the segmentation callback for the client
@@ -611,7 +647,7 @@ void osmo_stream_cli_set_segmentation_cb(struct osmo_stream_cli *cli,
 {
 	cli->segmentation_cb = segmentation_cb;
 	if (cli->iofd) /* Otherwise, this will be done in osmo_stream_cli_open() */
-		configure_cli_segmentation_cb(cli->iofd, segmentation_cb);
+		configure_cli_segmentation_cb(cli, segmentation_cb);
 }
 
 /*! \brief Set the socket type for the stream server link
@@ -904,11 +940,23 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 			goto error_close_socket;
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
-		if (!cli->iofd)
-			cli->iofd = osmo_iofd_setup(cli, fd, cli->name, OSMO_IO_FD_MODE_READ_WRITE, &osmo_stream_cli_ioops, cli);
+#ifdef HAVE_LIBSCTP
+		if (cli->proto == IPPROTO_SCTP) {
+			cli->iofd = osmo_iofd_setup(cli, fd, cli->name, OSMO_IO_FD_MODE_RECVMSG_SENDMSG,
+						    &osmo_stream_cli_ioops_sctp, cli);
+			if (cli->iofd)
+				osmo_iofd_set_cmsg_size(cli->iofd, CMSG_SPACE(sizeof(struct sctp_sndrcvinfo)));
+		} else {
+#else
+		if (true) {
+#endif
+			cli->iofd = osmo_iofd_setup(cli, fd, cli->name, OSMO_IO_FD_MODE_READ_WRITE,
+						    &osmo_stream_cli_ioops, cli);
+		}
 		if (!cli->iofd)
 			goto error_close_socket;
-		configure_cli_segmentation_cb(cli->iofd, cli->segmentation_cb);
+
+		configure_cli_segmentation_cb(cli, cli->segmentation_cb);
 
 		if (osmo_iofd_register(cli->iofd, fd) < 0)
 			goto error_close_socket;
@@ -951,7 +999,10 @@ void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 		osmo_fd_write_enable(&cli->ofd);
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
-		osmo_iofd_write_msgb(cli->iofd, msg);
+		if (cli->proto == IPPROTO_SCTP)
+			stream_iofd_sctp_send_msgb(cli->iofd, msg, MSG_NOSIGNAL);
+		else
+			osmo_iofd_write_msgb(cli->iofd, msg);
 		break;
 	default:
 		OSMO_ASSERT(false);

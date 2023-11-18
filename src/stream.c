@@ -209,25 +209,19 @@ int stream_setsockopt_nodelay(int fd, int proto, int on)
 }
 
 #ifdef HAVE_LIBSCTP
-#define LOGPFX(pfx, level, fmt, args...) \
-	LOGP(DLINP, level, "%s " fmt, pfx, ## args)
-int stream_sctp_recvmsg_wrapper(int fd, struct msgb *msg, const char *log_pfx)
+static int stream_sctp_recvmsg_trailer(const char *log_pfx, struct msgb *msg, int ret, const struct sctp_sndrcvinfo *sinfo, int flags)
 {
-	struct sctp_sndrcvinfo sinfo;
-	int flags = 0;
-	int ret;
-	uint8_t *data = msg->tail;
-
-	ret = sctp_recvmsg(fd, data, msgb_tailroom(msg), NULL, NULL, &sinfo, &flags);
 	msgb_sctp_msg_flags(msg) = 0;
-	msgb_sctp_ppid(msg) = ntohl(sinfo.sinfo_ppid);
-	msgb_sctp_stream(msg) = sinfo.sinfo_stream;
+	if (OSMO_LIKELY(sinfo)) {
+		msgb_sctp_ppid(msg) = ntohl(sinfo->sinfo_ppid);
+		msgb_sctp_stream(msg) = sinfo->sinfo_stream;
+	}
 
 	if (flags & MSG_NOTIFICATION) {
 		char buf[512];
 		struct osmo_strbuf sb = { .buf = buf, .len = sizeof(buf) };
 		int logl = LOGL_INFO;
-		union sctp_notification *notif = (union sctp_notification *)data;
+		union sctp_notification *notif = (union sctp_notification *) msg->data;
 
 		OSMO_STRBUF_PRINTF(sb, "%s NOTIFICATION %s flags=0x%x", log_pfx,
 				   osmo_sctp_sn_type_str(notif->sn_header.sn_type), notif->sn_header.sn_flags);
@@ -283,7 +277,75 @@ int stream_sctp_recvmsg_wrapper(int fd, struct msgb *msg, const char *log_pfx)
 		LOGP(DLINP, logl, "%s\n", buf);
 		return ret;
 	}
+
+	if (OSMO_UNLIKELY(ret > 0 && !sinfo))
+		LOGP(DLINP, LOGL_ERROR, "%s sctp_recvmsg without SNDRCV cmsg?!?\n", log_pfx);
+
 	return ret;
+}
+
+/*! wrapper for regular synchronous sctp_recvmsg(3) */
+int stream_sctp_recvmsg_wrapper(int fd, struct msgb *msg, const char *log_pfx)
+{
+	struct sctp_sndrcvinfo sinfo;
+	int flags = 0;
+	int ret;
+
+	ret = sctp_recvmsg(fd, msg->tail, msgb_tailroom(msg), NULL, NULL, &sinfo, &flags);
+	return stream_sctp_recvmsg_trailer(log_pfx, msg, ret, &sinfo, flags);
+}
+
+/*! wrapper for osmo_io asynchronous recvmsg response */
+int stream_iofd_sctp_recvmsg_trailer(struct osmo_io_fd *iofd, struct msgb *msg, int ret, const struct msghdr *msgh)
+{
+	const struct sctp_sndrcvinfo *sinfo = NULL;
+	struct cmsghdr *cmsg = NULL;
+
+	for (cmsg = CMSG_FIRSTHDR((struct msghdr *) msgh); cmsg != NULL;
+		cmsg = CMSG_NXTHDR((struct msghdr *) msgh, cmsg)) {
+		if (cmsg->cmsg_level == IPPROTO_SCTP && cmsg->cmsg_type == SCTP_SNDRCV) {
+			sinfo = (const struct sctp_sndrcvinfo *)CMSG_DATA(cmsg);
+			break;
+		}
+	}
+
+	return stream_sctp_recvmsg_trailer(osmo_iofd_get_name(iofd), msg, ret, sinfo, msgh->msg_flags);
+}
+
+/*! Send a message through a connected SCTP socket, similar to sctp_sendmsg().
+ *
+ *  Appends the message to the internal transmit queue.
+ *  If the function returns success (0), it will take ownership of the msgb and
+ *  internally call msgb_free() after the write request completes.
+ *  In case of an error the msgb needs to be freed by the caller.
+ *
+ *  \param[in] iofd file descriptor to write to
+ *  \param[in] msg message buffer to send; uses msgb_sctp_ppid/msg_sctp_stream
+ *  \param[in] sendmsg_flags Flags to pass to the send call
+ *  \returns 0 in case of success; a negative value in case of error
+ */
+int stream_iofd_sctp_send_msgb(struct osmo_io_fd *iofd, struct msgb *msg, int sendmsg_flags)
+{
+	struct msghdr outmsg = {};
+	char outcmsg[CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))];
+	struct sctp_sndrcvinfo *sinfo;
+	struct cmsghdr *cmsg;
+
+	outmsg.msg_control = outcmsg;
+	outmsg.msg_controllen = sizeof(outcmsg);
+
+	cmsg = CMSG_FIRSTHDR(&outmsg);
+	cmsg->cmsg_level = IPPROTO_SCTP;
+	cmsg->cmsg_type = SCTP_SNDRCV;
+	cmsg->cmsg_len = CMSG_LEN(sizeof(struct sctp_sndrcvinfo));
+
+	outmsg.msg_controllen = cmsg->cmsg_len;
+	sinfo = (struct sctp_sndrcvinfo *)CMSG_DATA(cmsg);
+	memset(sinfo, 0, sizeof(struct sctp_sndrcvinfo));
+	sinfo->sinfo_ppid =  htonl(msgb_sctp_ppid(msg));
+	sinfo->sinfo_stream = msgb_sctp_stream(msg);
+
+	return osmo_iofd_sendmsg_msgb(iofd, msg, sendmsg_flags, &outmsg);
 }
 #endif
 

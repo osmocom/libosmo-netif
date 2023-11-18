@@ -592,10 +592,46 @@ static void stream_srv_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct ms
 			osmo_stream_srv_destroy(conn);
 }
 
-static struct osmo_io_ops srv_ioops = {
+static const struct osmo_io_ops srv_ioops = {
 	.read_cb = stream_srv_iofd_read_cb,
 	.write_cb = stream_srv_iofd_write_cb,
 };
+
+#ifdef HAVE_LIBSCTP
+static void stream_srv_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg, const struct msghdr *msgh)
+{
+	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
+	LOGSSRV(conn, LOGL_DEBUG, "message received (res=%d)\n", res);
+
+	res = stream_iofd_sctp_recvmsg_trailer(iofd, msg, res, msgh);
+	if (res == -EAGAIN)
+		return;
+
+	if (OSMO_UNLIKELY(res <= 0)) {
+		/* This connection is dead, destroy it. */
+		osmo_stream_srv_destroy(conn);
+	} else {
+		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
+			LOGSSRV(conn, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
+			msgb_free(msg);
+			if (osmo_iofd_txqueue_len(iofd) == 0)
+				osmo_stream_srv_destroy(conn);
+			return;
+		}
+
+		if (conn->iofd_read_cb)
+			conn->iofd_read_cb(conn, msg);
+		else
+			msgb_free(msg);
+	}
+}
+
+static const struct osmo_io_ops srv_ioops_sctp = {
+	.recvmsg_cb = stream_srv_iofd_recvmsg_cb,
+	.sendmsg_cb = stream_srv_iofd_write_cb,
+};
+#endif
+
 static int osmo_stream_srv_read(struct osmo_stream_srv *conn)
 {
 	int rc = 0;
@@ -764,8 +800,15 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 
 	osmo_sock_get_name_buf(conn->sockname, sizeof(conn->sockname), fd);
 
-	conn->iofd = osmo_iofd_setup(conn, fd, conn->sockname,
-				     OSMO_IO_FD_MODE_READ_WRITE, &srv_ioops, conn);
+	if (link->proto == IPPROTO_SCTP) {
+		conn->iofd = osmo_iofd_setup(conn, fd, conn->sockname, OSMO_IO_FD_MODE_RECVMSG_SENDMSG,
+					     &srv_ioops_sctp, conn);
+		if (conn->iofd)
+			osmo_iofd_set_cmsg_size(conn->iofd, CMSG_SPACE(sizeof(struct sctp_sndrcvinfo)));
+	} else {
+		conn->iofd = osmo_iofd_setup(conn, fd, conn->sockname, OSMO_IO_FD_MODE_READ_WRITE,
+					     &srv_ioops, conn);
+	}
 	if (!conn->iofd) {
 		talloc_free(conn);
 		return NULL;
@@ -842,7 +885,11 @@ void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn,
 	 * osmo_stream_srv_create2() creates the iofd member, too */
 	OSMO_ASSERT(conn->mode == OSMO_STREAM_MODE_OSMO_IO);
 	/* Copy default settings */
-	struct osmo_io_ops conn_ops = srv_ioops;
+	struct osmo_io_ops conn_ops;
+	if (conn->srv->proto == IPPROTO_SCTP)
+		conn_ops = srv_ioops_sctp;
+	else
+		conn_ops = srv_ioops;
 	/* Set segmentation cb for this connection */
 	conn_ops.segmentation_cb = segmentation_cb;
 	osmo_iofd_set_ioops(conn->iofd, &conn_ops);
@@ -951,7 +998,10 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 		osmo_fd_write_enable(&conn->ofd);
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
-		osmo_iofd_write_msgb(conn->iofd, msg);
+		if (conn->srv->proto == IPPROTO_SCTP)
+			stream_iofd_sctp_send_msgb(conn->iofd, msg, MSG_NOSIGNAL);
+		else
+			osmo_iofd_write_msgb(conn->iofd, msg);
 		break;
 	default:
 		OSMO_ASSERT(false);

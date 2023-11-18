@@ -31,8 +31,14 @@ enum osmo_stream_mode {
 	OSMO_STREAM_MODE_OSMO_IO,
 };
 
+struct osmo_io_fd;
+struct msghdr;
+
 int stream_sctp_sock_activate_events(int fd);
 int stream_setsockopt_nodelay(int fd, int proto, int on);
 int stream_sctp_recvmsg_wrapper(int fd, struct msgb *msg, const char *log_pfx);
+
+int stream_iofd_sctp_send_msgb(struct osmo_io_fd *iofd, struct msgb *msg, int sendmsg_flags);
+int stream_iofd_sctp_recvmsg_trailer(struct osmo_io_fd *iofd, struct msgb *msg, int ret, const struct msghdr *msgh);
 
 /*! @} */
