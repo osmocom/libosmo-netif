@@ -10,3 +10,4 @@
 libosmocore >1.9.0  working osmo_sock_init2_multiaddr2() without setting flag OSMO_SOCK_F_BIND
 libosmocore >1.9.0  use osmo_sock_multiaddr_get_name_buf()
 libosmo-netif added  osmo_stream_srv_get_sockname()
+libosmo-netif	update-dependency	libosmocore > 1.9.0 required for I89eb519b22d21011d61a7855b2364bc3c295df82

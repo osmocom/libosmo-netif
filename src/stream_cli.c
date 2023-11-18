@@ -904,8 +904,12 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 			goto error_close_socket;
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
-		if (!cli->iofd)
-			cli->iofd = osmo_iofd_setup(cli, fd, cli->name, OSMO_IO_FD_MODE_READ_WRITE, &osmo_stream_cli_ioops, cli);
+		if (!cli->iofd) {
+			enum osmo_io_fd_mode iofd_mode = OSMO_IO_FD_MODE_READ_WRITE;
+			if (cli->proto == IPPROTO_SCTP)
+				iofd_mode = OSMO_IO_FD_MODE_SCTP_RECVMSG_SEND;
+			cli->iofd = osmo_iofd_setup(cli, fd, cli->name, iofd_mode, &osmo_stream_cli_ioops, cli);
+		}
 		if (!cli->iofd)
 			goto error_close_socket;
 		configure_cli_segmentation_cb(cli->iofd, cli->segmentation_cb);
@@ -951,7 +955,10 @@ void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 		osmo_fd_write_enable(&cli->ofd);
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
-		osmo_iofd_write_msgb(cli->iofd, msg);
+		if (cli->proto == IPPROTO_SCTP)
+			osmo_iofd_sctp_send_msgb(cli->iofd, msg, MSG_NOSIGNAL);
+		else
+			osmo_iofd_write_msgb(cli->iofd, msg);
 		break;
 	default:
 		OSMO_ASSERT(false);

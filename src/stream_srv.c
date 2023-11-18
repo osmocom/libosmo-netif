@@ -752,8 +752,12 @@ struct osmo_stream_srv *
 osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, void *data)
 {
 	struct osmo_stream_srv *conn;
+	enum osmo_io_fd_mode iofd_mode = OSMO_IO_FD_MODE_READ_WRITE;
 
 	OSMO_ASSERT(link);
+
+	if (link->proto == IPPROTO_SCTP)
+		iofd_mode = OSMO_IO_FD_MODE_SCTP_RECVMSG_SEND;
 
 	conn = talloc_zero(ctx, struct osmo_stream_srv);
 	if (conn == NULL)
@@ -764,8 +768,7 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 
 	osmo_sock_get_name_buf(conn->sockname, sizeof(conn->sockname), fd);
 
-	conn->iofd = osmo_iofd_setup(conn, fd, conn->sockname,
-				     OSMO_IO_FD_MODE_READ_WRITE, &srv_ioops, conn);
+	conn->iofd = osmo_iofd_setup(conn, fd, conn->sockname, iofd_mode, &srv_ioops, conn);
 	if (!conn->iofd) {
 		talloc_free(conn);
 		return NULL;
@@ -951,7 +954,10 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 		osmo_fd_write_enable(&conn->ofd);
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
-		osmo_iofd_write_msgb(conn->iofd, msg);
+		if (conn->srv->proto == IPPROTO_SCTP)
+			osmo_iofd_sctp_send_msgb(conn->iofd, msg, MSG_NOSIGNAL);
+		else
+			osmo_iofd_write_msgb(conn->iofd, msg);
 		break;
 	default:
 		OSMO_ASSERT(false);
