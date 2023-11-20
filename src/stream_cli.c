@@ -210,7 +210,11 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 	}
 }
 
-static inline int osmo_stream_cli_fd(const struct osmo_stream_cli *cli)
+/*! \brief Get file descriptor of the stream client socket
+ *  \param[in] cli Stream Client of which we want to obtain the file descriptor
+ *  \returns File descriptor or negative in case of error */
+int
+osmo_stream_cli_get_fd(const struct osmo_stream_cli *cli)
 {
 	switch (cli->mode) {
 	case OSMO_STREAM_MODE_OSMO_FD:
@@ -314,7 +318,7 @@ static int _setsockopt_nosigpipe(struct osmo_stream_cli *cli)
 #ifdef SO_NOSIGPIPE
 	int ret;
 	int val = 1;
-	ret = setsockopt(osmo_stream_cli_fd(cli), SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val));
+	ret = setsockopt(osmo_stream_cli_get_fd(cli), SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val));
 	if (ret < 0)
 		LOGSCLI(cli, LOGL_ERROR, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
 	return ret;
@@ -328,7 +332,7 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 	int error, ret = res;
 	socklen_t len = sizeof(error);
 
-	int fd = osmo_stream_cli_fd(cli);
+	int fd = osmo_stream_cli_get_fd(cli);
 	OSMO_ASSERT(fd >= 0);
 
 	if (ret < 0) {
@@ -347,7 +351,7 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 		osmo_fd_write_disable(&cli->ofd);
 
 	/* Update sockname based on socket info: */
-	osmo_sock_get_name_buf(cli->sockname, sizeof(cli->sockname), osmo_stream_cli_fd(cli));
+	osmo_sock_get_name_buf(cli->sockname, sizeof(cli->sockname), osmo_stream_cli_get_fd(cli));
 
 	LOGSCLI(cli, LOGL_INFO, "connection established\n");
 	cli->state = STREAM_CLI_STATE_CONNECTED;
@@ -683,7 +687,7 @@ char *osmo_stream_cli_get_sockname(const struct osmo_stream_cli *cli)
 {
 	static char buf[OSMO_SOCK_NAME_MAXLEN];
 
-	osmo_sock_get_name_buf(buf, OSMO_SOCK_NAME_MAXLEN, osmo_stream_cli_fd(cli));
+	osmo_sock_get_name_buf(buf, OSMO_SOCK_NAME_MAXLEN, osmo_stream_cli_get_fd(cli));
 
 	return buf;
 }
@@ -837,7 +841,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 	int ret, fd = -1;
 
 	/* we are reconfiguring this socket, close existing first. */
-	if ((cli->flags & OSMO_STREAM_CLI_F_RECONF) && osmo_stream_cli_fd(cli) >= 0)
+	if ((cli->flags & OSMO_STREAM_CLI_F_RECONF) && osmo_stream_cli_get_fd(cli) >= 0)
 		osmo_stream_cli_close(cli);
 
 	cli->flags &= ~OSMO_STREAM_CLI_F_RECONF;

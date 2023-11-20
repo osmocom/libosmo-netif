@@ -838,6 +838,24 @@ osmo_stream_srv_get_ofd(struct osmo_stream_srv *conn)
 	return &conn->ofd;
 }
 
+/*! \brief Get File Descriptor of the stream server
+ *  \param[in] conn Stream Server
+ *  \returns file descriptor or negative on error */
+int
+osmo_stream_srv_get_fd(const struct osmo_stream_srv *conn)
+{
+	switch (conn->mode) {
+	case OSMO_STREAM_MODE_OSMO_FD:
+		return conn->ofd.fd;
+	case OSMO_STREAM_MODE_OSMO_IO:
+		if (conn->iofd)
+			return osmo_iofd_get_fd(conn->iofd);
+	default:
+		break;
+	}
+	return -EINVAL;
+}
+
 /*! \brief Get the master (Link) from a Stream Server
  *  \param[in] conn Stream Server of which we want to know the Link
  *  \returns Link through which the given Stream Server is established */
