@@ -834,6 +834,7 @@ void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn)
 struct osmo_fd *
 osmo_stream_srv_get_ofd(struct osmo_stream_srv *conn)
 {
+	OSMO_ASSERT(conn->mode == OSMO_STREAM_MODE_OSMO_FD);
 	return &conn->ofd;
 }
 
