@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <netinet/in.h>
 
 #include <osmocom/core/select.h>
 #include <osmocom/core/talloc.h>
@@ -89,10 +90,21 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 	return 0;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
 	struct osmo_fd *kbd_ofd;
-	int rc;
+	bool use_sctp = false;
+	int opt, rc;
+
+	while ((opt = getopt(argc, argv, "s")) != -1) {
+		switch (opt) {
+		case 's':
+			use_sctp = true;
+			break;
+		default:
+			break;
+		}
+	}
 
 	tall_test = talloc_named_const(NULL, 1, "osmo_stream_cli_test");
 	msgb_talloc_ctx_init(tall_test, 0);
@@ -111,12 +123,16 @@ int main(void)
 	osmo_stream_cli_set_name(conn, "stream_client");
 	osmo_stream_cli_set_addr(conn, "127.0.0.1");
 	osmo_stream_cli_set_port(conn, 10000);
+	if (use_sctp)
+		osmo_stream_cli_set_proto(conn, IPPROTO_SCTP);
+
 	osmo_stream_cli_set_connect_cb(conn, connect_cb);
 	osmo_stream_cli_set_disconnect_cb(conn, disconnect_cb);
 	osmo_stream_cli_set_read_cb2(conn, read_cb);
 
-	if (osmo_stream_cli_open(conn) < 0) {
-		fprintf(stderr, "cannot open cli\n");
+	rc = osmo_stream_cli_open(conn);
+	if (rc < 0) {
+		fprintf(stderr, "cannot open cli: %d\n", rc);
 		exit(EXIT_FAILURE);
 	}
 
