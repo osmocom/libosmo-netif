@@ -117,9 +117,21 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 	return 0;
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
 	struct osmo_fd *kbd_ofd;
+	bool use_sctp = false;
+	int opt;
+
+	while ((opt = getopt(argc, argv, "s")) != -1) {
+		switch (opt) {
+		case 's':
+			use_sctp = true;
+			break;
+		default:
+			break;
+		}
+	}
 
 	tall_test = talloc_named_const(NULL, 1, "osmo_stream_srv_test");
 	msgb_talloc_ctx_init(tall_test, 0);
@@ -137,6 +149,8 @@ int main(void)
 	}
 	osmo_stream_srv_link_set_addr(srv, "127.0.0.1");
 	osmo_stream_srv_link_set_port(srv, 10000);
+	if (use_sctp)
+		osmo_stream_srv_link_set_proto(srv, IPPROTO_SCTP);
 	osmo_stream_srv_link_set_accept_cb(srv, accept_cb);
 
 	if (osmo_stream_srv_link_open(srv) < 0) {
