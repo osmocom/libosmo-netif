@@ -838,7 +838,9 @@ void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay)
  *  \return negative on error, 0 on success */
 int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 {
-	int ret, fd = -1;
+	int ret, flags;
+	int fd = -1;
+	unsigned int local_addrcnt;
 
 	/* we are reconfiguring this socket, close existing first. */
 	if ((cli->flags & OSMO_STREAM_CLI_F_RECONF) && osmo_stream_cli_get_fd(cli) >= 0)
@@ -856,11 +858,18 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
 		case IPPROTO_SCTP:
+			local_addrcnt = cli->local_addrcnt;
+			flags = OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_NONBLOCK;
+			if (cli->local_addrcnt > 0 || cli->local_port > 0) { /* explicit bind required? */
+				flags |= OSMO_SOCK_F_BIND;
+				/* If no local addr configured, use local_addr[0]=NULL by default when creating the socket. */
+				if (cli->local_addrcnt == 0)
+					local_addrcnt = 1;
+			}
 			ret = osmo_sock_init2_multiaddr2(cli->sk_domain, cli->sk_type, cli->proto,
-							(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
+							(const char **)cli->local_addr, local_addrcnt, cli->local_port,
 							(const char **)cli->addr, cli->addrcnt, cli->port,
-							OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK,
-							&cli->ma_pars);
+							flags, &cli->ma_pars);
 			break;
 #endif
 		default:
