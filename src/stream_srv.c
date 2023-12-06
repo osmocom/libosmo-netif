@@ -366,6 +366,14 @@ osmo_stream_srv_link_get_ofd(struct osmo_stream_srv_link *link)
 	return &link->ofd;
 }
 
+/*! \brief Get File Descriptor of the stream server link
+ *  \param[in] conn Stream Server Link
+ *  \returns file descriptor or negative on error */
+int osmo_stream_srv_link_get_fd(const struct osmo_stream_srv_link *link)
+{
+	return link->ofd.fd;
+}
+
 /*! \brief Set the accept() call-back of the stream server link
  *  \param[in] link Stream Server Link
  *  \param[in] accept_cb Call-back function executed upon accept() */

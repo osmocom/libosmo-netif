@@ -38,6 +38,7 @@ void osmo_stream_srv_link_set_data(struct osmo_stream_srv_link *link, void *data
 void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link);
 char *osmo_stream_srv_link_get_sockname(const struct osmo_stream_srv_link *link);
 struct osmo_fd *osmo_stream_srv_link_get_ofd(struct osmo_stream_srv_link *link);
+int osmo_stream_srv_link_get_fd(const struct osmo_stream_srv_link *link);
 bool osmo_stream_srv_link_is_opened(const struct osmo_stream_srv_link *link);
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link);
 void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link);
