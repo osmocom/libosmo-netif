@@ -64,6 +64,7 @@ void osmo_stream_srv_set_read_cb(struct osmo_stream_srv *conn, int (*read_cb)(st
 void osmo_stream_srv_set_closed_cb(struct osmo_stream_srv *conn, int (*closed_cb)(struct osmo_stream_srv *conn));
 void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn);
 struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *conn);
+const char *osmo_stream_srv_get_sockname(const struct osmo_stream_srv *conn);
 struct osmo_fd *osmo_stream_srv_get_ofd(struct osmo_stream_srv *srv);
 int osmo_stream_srv_get_fd(const struct osmo_stream_srv *srv);
 void osmo_stream_srv_destroy(struct osmo_stream_srv *conn);

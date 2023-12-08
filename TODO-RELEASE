@@ -9,3 +9,4 @@
 #library	what		description / commit summary line
 libosmocore >1.9.0  working osmo_sock_init2_multiaddr2() without setting flag OSMO_SOCK_F_BIND
 libosmocore >1.9.0  use osmo_sock_multiaddr_get_name_buf()
+libosmo-netif added  osmo_stream_srv_get_sockname()

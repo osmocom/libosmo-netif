@@ -836,6 +836,19 @@ void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn)
 	return conn->data;
 }
 
+/*! \brief Get the stream server socket description.
+ *  \param[in] cli Stream Server to examine
+ *  \returns Socket description or NULL in case of error */
+const char *osmo_stream_srv_get_sockname(const struct osmo_stream_srv *conn)
+{
+	static char buf[OSMO_STREAM_MAX_ADDRS * OSMO_SOCK_NAME_MAXLEN];
+
+	osmo_sock_multiaddr_get_name_buf(buf, sizeof(buf),
+					 osmo_stream_srv_get_fd(conn), conn->srv->proto);
+
+	return buf;
+}
+
 /*! \brief Get Osmocom File Descriptor of the stream server
  *  \param[in] conn Stream Server
  *  \returns Pointer to \ref osmo_fd */
