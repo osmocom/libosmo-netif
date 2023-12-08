@@ -85,7 +85,7 @@
 struct osmo_stream_srv_link {
 	struct osmo_fd		ofd;
 	char			*name;
-	char			sockname[OSMO_SOCK_NAME_MAXLEN];
+	char			sockname[OSMO_SOCK_MULTIADDR_PEER_STR_MAXLEN];
 	char			*addr[OSMO_STREAM_MAX_ADDRS];
 	uint8_t			addrcnt;
 	uint16_t		port;
@@ -338,22 +338,42 @@ void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link)
 	return link->data;
 }
 
+/* Similar to osmo_sock_multiaddr_get_name_buf(), but aimed at listening sockets (only local part): */
+static char *get_local_sockname_buf(char *buf, size_t buf_len, int fd, int proto)
+{
+	char hostbuf[OSMO_STREAM_MAX_ADDRS][INET6_ADDRSTRLEN];
+	size_t num_hostbuf = ARRAY_SIZE(hostbuf);
+	char portbuf[6];
+	struct osmo_strbuf sb = { .buf = buf, .len = buf_len };
+	bool need_more_bufs;
+	int rc;
+
+	rc = osmo_sock_multiaddr_get_ip_and_port(fd, proto, &hostbuf[0][0],
+						 &num_hostbuf, sizeof(hostbuf[0]),
+						 portbuf, sizeof(portbuf), true);
+	if (rc < 0)
+		return NULL;
+
+	need_more_bufs = num_hostbuf > ARRAY_SIZE(hostbuf);
+	if (need_more_bufs)
+		num_hostbuf = ARRAY_SIZE(hostbuf);
+	OSMO_STRBUF_APPEND(sb, osmo_multiaddr_ip_and_port_snprintf,
+			   &hostbuf[0][0], num_hostbuf, sizeof(hostbuf[0]), portbuf);
+	if (need_more_bufs)
+		OSMO_STRBUF_PRINTF(sb, "<need-more-bufs!>");
+
+	return buf;
+}
+
 /*! \brief Get description of the stream server link e. g. 127.0.0.1:1234
  *  \param[in] link Stream Server Link to examine
  *  \returns Link description or NULL in case of error */
 char *osmo_stream_srv_link_get_sockname(const struct osmo_stream_srv_link *link)
 {
-	static char buf[INET6_ADDRSTRLEN + 6];
-	int rc = osmo_sock_get_local_ip(link->ofd.fd, buf, INET6_ADDRSTRLEN);
-	if (rc < 0)
+	static char buf[sizeof(link->sockname)];
+
+	if (!get_local_sockname_buf(buf, sizeof(buf), link->ofd.fd, link->proto))
 		return NULL;
-
-	buf[strnlen(buf, INET6_ADDRSTRLEN + 6)] = ':';
-
-	rc = osmo_sock_get_local_ip_port(link->ofd.fd, buf + strnlen(buf, INET6_ADDRSTRLEN + 6), 6);
-	if (rc < 0)
-		return NULL;
-
 	return buf;
 }
 
@@ -443,7 +463,7 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 		return -EIO;
 	}
 
-	OSMO_STRLCPY_ARRAY(link->sockname, osmo_stream_srv_link_get_sockname(link));
+	get_local_sockname_buf(link->sockname, sizeof(link->sockname), link->ofd.fd, link->proto);
 	return 0;
 }
 
