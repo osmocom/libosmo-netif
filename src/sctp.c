@@ -79,3 +79,17 @@ const struct value_string osmo_sctp_spinfo_state_strs[] = {
 	{ SCTP_UNKNOWN,		"UNKNOWN" },
 	{ 0, NULL }
 };
+
+/* linux/sctp.h enum sctp_sstat_state */
+const struct value_string osmo_sctp_sstat_state_strs[] = {
+	{ SCTP_EMPTY,			"EMPTY" },
+	{ SCTP_CLOSED,			"CLOSED" },
+	{ SCTP_COOKIE_WAIT,		"COOKIE_WAIT" },
+	{ SCTP_COOKIE_ECHOED,		"COOKIE_ECHOED" },
+	{ SCTP_ESTABLISHED,		"ESTABLISHED" },
+	{ SCTP_SHUTDOWN_PENDING,	"SHUTDOWN_PENDING" },
+	{ SCTP_SHUTDOWN_SENT,		"SHUTDOWN_SENT" },
+	{ SCTP_SHUTDOWN_RECEIVED,	"SHUTDOWN_RECEIVED" },
+	{ SCTP_SHUTDOWN_ACK_SENT,	"SHUTDOWN_ACK_SENT" },
+	{ 0, NULL }
+};
