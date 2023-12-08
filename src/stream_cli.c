@@ -685,9 +685,10 @@ void *osmo_stream_cli_get_data(struct osmo_stream_cli *cli)
  *  \returns Socket description or NULL in case of error */
 char *osmo_stream_cli_get_sockname(const struct osmo_stream_cli *cli)
 {
-	static char buf[OSMO_SOCK_NAME_MAXLEN];
+	static char buf[OSMO_STREAM_MAX_ADDRS * OSMO_SOCK_NAME_MAXLEN];
 
-	osmo_sock_get_name_buf(buf, OSMO_SOCK_NAME_MAXLEN, osmo_stream_cli_get_fd(cli));
+	osmo_sock_multiaddr_get_name_buf(buf, sizeof(buf),
+					 osmo_stream_cli_get_fd(cli), cli->proto);
 
 	return buf;
 }

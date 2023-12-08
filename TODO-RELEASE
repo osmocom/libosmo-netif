@@ -8,3 +8,4 @@
 # If any interfaces have been removed or changed since the last public release: c:r:0.
 #library	what		description / commit summary line
 libosmocore >1.9.0  working osmo_sock_init2_multiaddr2() without setting flag OSMO_SOCK_F_BIND
+libosmocore >1.9.0  use osmo_sock_multiaddr_get_name_buf()
