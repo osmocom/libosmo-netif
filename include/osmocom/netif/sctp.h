@@ -48,3 +48,8 @@ enum osmo_sctp_op_error {
 extern const struct value_string osmo_sctp_op_error_strs[];
 static inline const char *osmo_sctp_op_error_str(enum osmo_sctp_op_error val)
 { return get_value_string(osmo_sctp_op_error_strs, val); }
+
+enum sctp_spinfo_state;
+extern const struct value_string osmo_sctp_spinfo_state_strs[];
+static inline const char *osmo_sctp_spinfo_state_str(enum sctp_spinfo_state val)
+{ return get_value_string(osmo_sctp_spinfo_state_strs, val); }

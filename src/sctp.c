@@ -69,3 +69,13 @@ const struct value_string osmo_sctp_op_error_strs[] = {
 	{ OSMO_SCTP_OP_ERR_PROTO_VERSION,	"Protocol Violation" },
 	{ 0, NULL }
 };
+
+/* linux/sctp.h enum sctp_spinfo_state */
+const struct value_string osmo_sctp_spinfo_state_strs[] = {
+	{ SCTP_INACTIVE,	"INACTIVE" },
+	{ SCTP_PF,		"POTENTIALLY_FAILED" },
+	{ SCTP_ACTIVE,		"ACTIVE" },
+	{ SCTP_UNCONFIRMED,	"UNCONFIRMED" },
+	{ SCTP_UNKNOWN,		"UNKNOWN" },
+	{ 0, NULL }
+};
