@@ -11,6 +11,7 @@ EXTRA_DIST = \
 	     README.md \
 	     contrib/libosmo-netif.spec.in \
 	     debian \
+	     git-version-gen \
 	     $(NULL)
 
 @RELMAKE@
