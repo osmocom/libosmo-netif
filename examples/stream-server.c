@@ -121,15 +121,19 @@ int main(int argc, char **argv)
 {
 	struct osmo_fd *kbd_ofd;
 	bool use_sctp = false;
+	const char *use_local_addr = "127.0.0.1";
 	int opt;
 
-	while ((opt = getopt(argc, argv, "s")) != -1) {
+	while ((opt = getopt(argc, argv, "sl:")) != -1) {
 		switch (opt) {
 		case 's':
 			use_sctp = true;
 			break;
-		default:
+		case 'l':
+			use_local_addr = optarg;
 			break;
+		default:
+			exit(0);
 		}
 	}
 
@@ -147,7 +151,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "cannot create server link\n");
 		exit(EXIT_FAILURE);
 	}
-	osmo_stream_srv_link_set_addr(srv, "127.0.0.1");
+	osmo_stream_srv_link_set_addr(srv, use_local_addr);
 	osmo_stream_srv_link_set_port(srv, 10000);
 	if (use_sctp)
 		osmo_stream_srv_link_set_proto(srv, IPPROTO_SCTP);
