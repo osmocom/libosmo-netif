@@ -94,15 +94,19 @@ int main(int argc, char **argv)
 {
 	struct osmo_fd *kbd_ofd;
 	bool use_sctp = false;
+	const char *use_remote_addr = "127.0.0.1";
 	int opt, rc;
 
-	while ((opt = getopt(argc, argv, "s")) != -1) {
+	while ((opt = getopt(argc, argv, "sr:")) != -1) {
 		switch (opt) {
 		case 's':
 			use_sctp = true;
 			break;
-		default:
+		case 'r':
+			use_remote_addr = optarg;
 			break;
+		default:
+			exit(0);
 		}
 	}
 
@@ -121,11 +125,10 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	osmo_stream_cli_set_name(conn, "stream_client");
-	osmo_stream_cli_set_addr(conn, "127.0.0.1");
+	osmo_stream_cli_set_addr(conn, use_remote_addr);
 	osmo_stream_cli_set_port(conn, 10000);
 	if (use_sctp)
 		osmo_stream_cli_set_proto(conn, IPPROTO_SCTP);
-
 	osmo_stream_cli_set_connect_cb(conn, connect_cb);
 	osmo_stream_cli_set_disconnect_cb(conn, disconnect_cb);
 	osmo_stream_cli_set_read_cb2(conn, read_cb);
