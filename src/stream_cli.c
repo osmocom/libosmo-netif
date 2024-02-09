@@ -946,6 +946,8 @@ static void cli_timer_cb(void *data)
  *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 {
+	int rc;
+
 	OSMO_ASSERT(cli);
 	OSMO_ASSERT(msg);
 
@@ -956,9 +958,11 @@ void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
 		if (cli->proto == IPPROTO_SCTP)
-			osmo_iofd_sctp_send_msgb(cli->iofd, msg, MSG_NOSIGNAL);
+			rc = osmo_iofd_sctp_send_msgb(cli->iofd, msg, MSG_NOSIGNAL);
 		else
-			osmo_iofd_write_msgb(cli->iofd, msg);
+			rc = osmo_iofd_write_msgb(cli->iofd, msg);
+		if (rc < 0)
+			msgb_free(msg);
 		break;
 	default:
 		OSMO_ASSERT(false);

@@ -940,6 +940,8 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
  *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 {
+	int rc;
+
 	OSMO_ASSERT(conn);
 	OSMO_ASSERT(msg);
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
@@ -955,9 +957,11 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
 		if (conn->srv->proto == IPPROTO_SCTP)
-			osmo_iofd_sctp_send_msgb(conn->iofd, msg, MSG_NOSIGNAL);
+			rc = osmo_iofd_sctp_send_msgb(conn->iofd, msg, MSG_NOSIGNAL);
 		else
-			osmo_iofd_write_msgb(conn->iofd, msg);
+			rc = osmo_iofd_write_msgb(conn->iofd, msg);
+		if (rc < 0)
+			msgb_free(msg);
 		break;
 	default:
 		OSMO_ASSERT(false);

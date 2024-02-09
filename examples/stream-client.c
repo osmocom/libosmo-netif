@@ -83,9 +83,9 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 	ptr = msgb_put(msg, ret);
 	memcpy(ptr, buf, ret);
 
-	osmo_stream_cli_send(conn, msg);
+	LOGP(DSTREAMTEST, LOGL_NOTICE, "sending %d bytes message: %s\n", msg->len, msgb_hexdump(msg));
 
-	LOGP(DSTREAMTEST, LOGL_NOTICE, "sent %d bytes message: %s\n", msg->len, msgb_hexdump(msg));
+	osmo_stream_cli_send(conn, msg);
 
 	return 0;
 }

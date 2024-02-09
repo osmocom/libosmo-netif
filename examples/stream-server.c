@@ -112,7 +112,7 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 	memcpy(ptr, buf, ret);
 	osmo_stream_srv_send(conn, msg);
 
-	LOGP(DSTREAMTEST, LOGL_NOTICE, "message of %d bytes sent\n", msg->len);
+	LOGP(DSTREAMTEST, LOGL_NOTICE, "message of %d bytes sent\n", ret);
 
 	return 0;
 }
