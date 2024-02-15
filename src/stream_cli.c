@@ -161,7 +161,8 @@ static void osmo_stream_cli_close_iofd(struct osmo_stream_cli *cli)
 	if (!cli->iofd)
 		return;
 
-	osmo_iofd_close(cli->iofd);
+	osmo_iofd_free(cli->iofd);
+	cli->iofd = NULL;
 }
 
 static void osmo_stream_cli_close_ofd(struct osmo_stream_cli *cli)
@@ -944,6 +945,8 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 			goto error_close_socket;
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
+		/* Be sure that previous osmo_io instance is freed before creating a new one. */
+		osmo_stream_cli_close_iofd(cli);
 #ifdef HAVE_LIBSCTP
 		if (cli->proto == IPPROTO_SCTP) {
 			cli->iofd = osmo_iofd_setup(cli, fd, cli->name, OSMO_IO_FD_MODE_RECVMSG_SENDMSG,
@@ -960,11 +963,12 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		if (!cli->iofd)
 			goto error_close_socket;
 
+		osmo_iofd_notify_connected(cli->iofd);
+
 		configure_cli_segmentation_cb(cli, cli->segmentation_cb);
 
 		if (osmo_iofd_register(cli->iofd, fd) < 0)
 			goto error_close_socket;
-		osmo_iofd_notify_connected(cli->iofd);
 		break;
 	default:
 		OSMO_ASSERT(false);
