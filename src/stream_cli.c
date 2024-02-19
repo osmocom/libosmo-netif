@@ -444,7 +444,8 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 	case STREAM_CLI_STATE_CONNECTED:
 		if (res == 0)
 			osmo_stream_cli_reconnect(cli);
-		else if (cli->iofd_read_cb)
+		/* Forward message to read callback, also if the connection failed. */
+		if (cli->iofd_read_cb)
 			cli->iofd_read_cb(cli, msg);
 		break;
 	default:
