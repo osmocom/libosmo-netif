@@ -90,6 +90,15 @@ static int kbd_cb(struct osmo_fd *fd, unsigned int what)
 	return 0;
 }
 
+static void signal_handler(int signum)
+{
+	switch (signum) {
+	case SIGUSR1:
+		talloc_report_full(tall_test, stdout);
+		break;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	struct osmo_fd *kbd_ofd;
@@ -109,6 +118,8 @@ int main(int argc, char **argv)
 			exit(0);
 		}
 	}
+
+	signal(SIGUSR1, &signal_handler);
 
 	tall_test = talloc_named_const(NULL, 1, "osmo_stream_cli_test");
 	msgb_talloc_ctx_init(tall_test, 0);
