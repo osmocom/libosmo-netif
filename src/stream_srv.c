@@ -886,10 +886,7 @@ void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn,
 	OSMO_ASSERT(conn->mode == OSMO_STREAM_MODE_OSMO_IO);
 	/* Copy default settings */
 	struct osmo_io_ops conn_ops;
-	if (conn->srv->proto == IPPROTO_SCTP)
-		conn_ops = srv_ioops_sctp;
-	else
-		conn_ops = srv_ioops;
+	osmo_iofd_get_ioops(conn->iofd, &conn_ops);
 	/* Set segmentation cb for this connection */
 	conn_ops.segmentation_cb = segmentation_cb;
 	osmo_iofd_set_ioops(conn->iofd, &conn_ops);

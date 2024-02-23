@@ -629,10 +629,7 @@ static void configure_cli_segmentation_cb(struct osmo_stream_cli *cli,
 {
 	/* Copy default settings */
 	struct osmo_io_ops client_ops;
-	if (cli->proto == IPPROTO_SCTP)
-		client_ops = osmo_stream_cli_ioops_sctp;
-	else
-		client_ops = osmo_stream_cli_ioops;
+	osmo_iofd_get_ioops(cli->iofd, &client_ops);
 	/* Set segmentation cb for this client */
 	client_ops.segmentation_cb = segmentation_cb;
 	osmo_iofd_set_ioops(cli->iofd, &client_ops);
