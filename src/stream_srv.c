@@ -562,6 +562,7 @@ static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 
 	if (OSMO_UNLIKELY(res <= 0)) {
 		/* This connection is dead, destroy it. */
+		msgb_free(msg);
 		osmo_stream_srv_destroy(conn);
 	} else {
 		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
@@ -609,6 +610,7 @@ static void stream_srv_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 
 	if (OSMO_UNLIKELY(res <= 0)) {
 		/* This connection is dead, destroy it. */
+		msgb_free(msg);
 		osmo_stream_srv_destroy(conn);
 	} else {
 		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {

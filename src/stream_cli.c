@@ -438,6 +438,7 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 
 	switch (cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
+		msgb_free(msg);
 		stream_cli_handle_connecting(cli, res);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
@@ -445,6 +446,8 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 			osmo_stream_cli_reconnect(cli);
 		else if (cli->iofd_read_cb)
 			cli->iofd_read_cb(cli, msg);
+		else
+			msgb_free(msg);
 		break;
 	default:
 		osmo_panic("%s() called with unexpected state %d\n", __func__, cli->state);
@@ -486,6 +489,7 @@ static void stream_cli_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 
 	switch (cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
+		msgb_free(msg);
 		stream_cli_handle_connecting(cli, res);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
@@ -494,6 +498,8 @@ static void stream_cli_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 		/* Forward message to read callback, also if the connection failed. */
 		if (cli->iofd_read_cb)
 			cli->iofd_read_cb(cli, msg);
+		else
+			msgb_free(msg);
 		break;
 	default:
 		osmo_panic("%s() called with unexpected state %d\n", __func__, cli->state);
