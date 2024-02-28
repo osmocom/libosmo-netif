@@ -35,11 +35,13 @@ const struct log_info osmo_stream_srv_test_log_info = {
 static struct osmo_stream_srv_link *srv;
 static struct osmo_stream_srv *conn;
 
+bool quit = false;
 
 void sighandler(int foo)
 {
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "closing STREAMSERVER.\n");
-	exit(EXIT_SUCCESS);
+	quit = true;
+	signal(SIGINT, SIG_DFL);
 }
 
 int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
@@ -181,9 +183,15 @@ int main(int argc, char **argv)
 	osmo_fd_setup(kbd_ofd, STDIN_FILENO, OSMO_FD_READ, kbd_cb, srv, 0);
 	osmo_fd_register(kbd_ofd);
 
+	signal(SIGINT, sighandler);
+
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "Entering main loop on %s\n", osmo_stream_srv_link_get_sockname(srv));
 
-	while(1) {
+	while (!quit) {
 		osmo_select_main(0);
 	}
+
+	osmo_fd_unregister(kbd_ofd);
+
+	osmo_stream_srv_link_destroy(srv);
 }

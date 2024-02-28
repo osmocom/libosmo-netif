@@ -32,10 +32,13 @@ const struct log_info osmo_stream_cli_test_log_info = {
 
 static struct osmo_stream_cli *conn;
 
+static bool quit = false;
+
 void sighandler(int foo)
 {
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "closing stream.\n");
-	exit(EXIT_SUCCESS);
+	quit = true;
+	signal(SIGINT, SIG_DFL);
 }
 
 static int connect_cb(struct osmo_stream_cli *conn)
@@ -162,9 +165,15 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	signal(SIGINT, sighandler);
+
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "Entering main loop\n");
 
-	while(1) {
+	while (!quit) {
 		osmo_select_main(0);
 	}
+
+	osmo_fd_unregister(kbd_ofd);
+
+	osmo_stream_cli_destroy(conn);
 }
