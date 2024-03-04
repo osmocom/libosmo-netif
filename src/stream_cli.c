@@ -303,6 +303,7 @@ static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
 		}
 		msgb_free(msg);
 		osmo_stream_cli_reconnect(cli);
+		return 0;
 	}
 
 	msgb_free(msg);
