@@ -275,6 +275,8 @@ int osmo_prim_srv_send(struct osmo_prim_srv *prim_srv, struct msgb *msg)
 	unsigned int primitive;
 	enum osmo_prim_operation operation;
 
+	OSMO_ASSERT(prim_srv);
+
 	/* Serialize the oph: */
 	oph = (struct osmo_prim_hdr *)msgb_data(msg);
 	OSMO_ASSERT(oph && msgb_length(msg) >= sizeof(*oph));
