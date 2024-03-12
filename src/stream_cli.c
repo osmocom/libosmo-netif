@@ -1003,12 +1003,20 @@ void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 	OSMO_ASSERT(cli);
 	OSMO_ASSERT(msg);
 
+	if (!osmo_stream_cli_is_connected(cli)) {
+		LOGSCLI(cli, LOGL_ERROR, "send: not connected, dropping data!\n");
+		msgb_free(msg);
+		return;
+	}
+
 	switch (cli->mode) {
 	case OSMO_STREAM_MODE_OSMO_FD:
 		msgb_enqueue(&cli->tx_queue, msg);
 		osmo_fd_write_enable(&cli->ofd);
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
+		/* whenever osmo_stream_cli_is_connected() [see above check], we should have an iofd */
+		OSMO_ASSERT(cli->iofd);
 		if (cli->proto == IPPROTO_SCTP)
 			rc = stream_iofd_sctp_send_msgb(cli->iofd, msg, MSG_NOSIGNAL);
 		else
