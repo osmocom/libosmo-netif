@@ -528,6 +528,15 @@ void osmo_stream_cli_set_name(struct osmo_stream_cli *cli, const char *name)
 		osmo_iofd_set_name(cli->iofd, name);
 }
 
+/*! \brief Retrieve name previously set on the cli object (see osmo_stream_cli_set_name())
+ *  \param[in] cli stream_cli whose name is to be retrieved
+ *  \returns The name to be set on cli; NULL if never set
+ */
+const char *osmo_stream_cli_get_name(const struct osmo_stream_cli *cli)
+{
+	return cli->name;
+}
+
 /*! \brief Set the remote address to which we connect
  *  \param[in] cli Stream Client to modify
  *  \param[in] addr Remote IP address

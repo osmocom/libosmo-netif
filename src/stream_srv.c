@@ -206,6 +206,15 @@ void osmo_stream_srv_link_set_name(struct osmo_stream_srv_link *link, const char
 	osmo_talloc_replace_string(link, &link->name, name);
 }
 
+/*! \brief Retrieve name previously set on the srv_link object (see osmo_stream_srv_link_set_name())
+ *  \param[in] link server link whose name is to be retrieved
+ *  \returns The name to be set on link; NULL if never set
+ */
+const char *osmo_stream_srv_link_get_name(const struct osmo_stream_srv_link *link)
+{
+	return link->name;
+}
+
 /*! \brief Set the NODELAY socket option to avoid Nagle-like behavior
  *  Setting this to nodelay=true will automatically set the NODELAY
  *  socket option on any socket established via this server link, before
@@ -835,6 +844,15 @@ void osmo_stream_srv_set_name(struct osmo_stream_srv *conn, const char *name)
 	osmo_talloc_replace_string(conn, &conn->name, name);
 	if (conn->mode == OSMO_STREAM_MODE_OSMO_IO && conn->iofd)
 		osmo_iofd_set_name(conn->iofd, name);
+}
+
+/*! \brief Retrieve name previously set on the srv object (see osmo_stream_srv_set_name())
+ *  \param[in] conn server whose name is to be retrieved
+ *  \returns The name to be set on conn; NULL if never set
+ */
+const char *osmo_stream_srv_get_name(const struct osmo_stream_srv *conn)
+{
+	return conn->name;
 }
 
 /*! \brief Set the call-back function when data was read from the stream server socket
