@@ -45,6 +45,7 @@ struct osmo_prim_hdr *osmo_prim_msgb_alloc(unsigned int sap, unsigned int primit
 
 struct osmo_prim_srv_link *osmo_prim_srv_link_alloc(void *ctx);
 void osmo_prim_srv_link_free(struct osmo_prim_srv_link *prim_link);
+void osmo_prim_srv_link_set_name(struct osmo_prim_srv_link *prim_link, const char *name);
 int osmo_prim_srv_link_set_addr(struct osmo_prim_srv_link *prim_link, const char *path);
 const char *osmo_prim_srv_link_get_addr(struct osmo_prim_srv_link *prim_link);
 void osmo_prim_srv_link_set_priv(struct osmo_prim_srv_link *prim_link, void *priv);
@@ -59,6 +60,7 @@ int osmo_prim_srv_link_open(struct osmo_prim_srv_link *prim_link);
 
 int osmo_prim_srv_send(struct osmo_prim_srv *prim_srv, struct msgb *msg);
 struct osmo_prim_srv_link *osmo_prim_srv_get_link(struct osmo_prim_srv *prims_srv);
+void osmo_prim_srv_set_name(struct osmo_prim_srv *prim_srv, const char *name);
 void osmo_prim_srv_set_priv(struct osmo_prim_srv *prim_srv, void *priv);
 void *osmo_prim_srv_get_priv(const struct osmo_prim_srv *prim_srv);
 void osmo_prim_srv_close(struct osmo_prim_srv *prim_srv);
