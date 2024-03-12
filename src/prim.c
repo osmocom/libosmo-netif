@@ -320,6 +320,11 @@ static void osmo_prim_srv_free(struct osmo_prim_srv *prim_srv)
 	talloc_free(prim_srv);
 }
 
+void osmo_prim_srv_set_name(struct osmo_prim_srv *prim_srv, const char *name)
+{
+	osmo_stream_srv_set_name(prim_srv->stream, name);
+}
+
 struct osmo_prim_srv_link *osmo_prim_srv_get_link(struct osmo_prim_srv *prim_srv)
 {
 	return prim_srv->link;
@@ -393,6 +398,11 @@ void osmo_prim_srv_link_free(struct osmo_prim_srv_link *prim_link)
 		prim_link->stream = NULL;
 	}
 	talloc_free(prim_link);
+}
+
+void osmo_prim_srv_link_set_name(struct osmo_prim_srv_link *prim_link, const char *name)
+{
+	osmo_stream_srv_link_set_name(prim_link->stream, name);
 }
 
 int osmo_prim_srv_link_set_addr(struct osmo_prim_srv_link *prim_link, const char *path)
