@@ -28,6 +28,7 @@
 #include <time.h>
 #include <sys/fcntl.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -348,30 +349,57 @@ void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link)
 }
 
 /* Similar to osmo_sock_multiaddr_get_name_buf(), but aimed at listening sockets (only local part): */
-static char *get_local_sockname_buf(char *buf, size_t buf_len, int fd, int proto)
+static char *get_local_sockname_buf(char *buf, size_t buf_len, const struct osmo_stream_srv_link *link)
 {
-	char hostbuf[OSMO_STREAM_MAX_ADDRS][INET6_ADDRSTRLEN];
-	size_t num_hostbuf = ARRAY_SIZE(hostbuf);
-	char portbuf[6];
 	struct osmo_strbuf sb = { .buf = buf, .len = buf_len };
-	bool need_more_bufs;
 	int rc;
 
-	rc = osmo_sock_multiaddr_get_ip_and_port(fd, proto, &hostbuf[0][0],
-						 &num_hostbuf, sizeof(hostbuf[0]),
-						 portbuf, sizeof(portbuf), true);
-	if (rc < 0)
+	if (buf_len > 0)
+		buf[0] = '\0';
+
+	switch (link->sk_domain) {
+	case AF_UNSPEC:
+		/* we assume INET(6) by default upon link creation: */
+	case AF_INET:
+	case AF_INET6:
+	{
+		char hostbuf[OSMO_STREAM_MAX_ADDRS][INET6_ADDRSTRLEN];
+		size_t num_hostbuf = ARRAY_SIZE(hostbuf);
+		char portbuf[6];
+		bool need_more_bufs;
+		rc = osmo_sock_multiaddr_get_ip_and_port(link->ofd.fd, link->proto, &hostbuf[0][0],
+							 &num_hostbuf, sizeof(hostbuf[0]),
+							 portbuf, sizeof(portbuf), true);
+		if (rc < 0)
+			return NULL;
+		need_more_bufs = num_hostbuf > ARRAY_SIZE(hostbuf);
+		if (need_more_bufs)
+			num_hostbuf = ARRAY_SIZE(hostbuf);
+		OSMO_STRBUF_APPEND(sb, osmo_multiaddr_ip_and_port_snprintf,
+				   &hostbuf[0][0], num_hostbuf, sizeof(hostbuf[0]), portbuf);
+		if (need_more_bufs)
+			OSMO_STRBUF_PRINTF(sb, "<need-more-bufs!>");
+		return buf;
+	}
+	case AF_UNIX:
+	{
+		struct osmo_sockaddr osa;
+		struct sockaddr_un *sun;
+		socklen_t len = sizeof(osa.u.sas);
+		rc = getsockname(link->ofd.fd, &osa.u.sa, &len);
+		if (rc < 0) {
+			OSMO_STRBUF_PRINTF(sb, "<error-in-getsockname>");
+			return buf;
+		}
+		/* Make sure sun_path is NULL terminated: */
+		sun = (struct sockaddr_un *)&osa.u.sa;
+		sun->sun_path[sizeof(sun->sun_path) - 1] = '\0';
+		OSMO_STRBUF_PRINTF(sb, "%s", sun->sun_path);
+		return buf;
+	}
+	default:
 		return NULL;
-
-	need_more_bufs = num_hostbuf > ARRAY_SIZE(hostbuf);
-	if (need_more_bufs)
-		num_hostbuf = ARRAY_SIZE(hostbuf);
-	OSMO_STRBUF_APPEND(sb, osmo_multiaddr_ip_and_port_snprintf,
-			   &hostbuf[0][0], num_hostbuf, sizeof(hostbuf[0]), portbuf);
-	if (need_more_bufs)
-		OSMO_STRBUF_PRINTF(sb, "<need-more-bufs!>");
-
-	return buf;
+	}
 }
 
 /*! \brief Get description of the stream server link e. g. 127.0.0.1:1234
@@ -381,7 +409,7 @@ char *osmo_stream_srv_link_get_sockname(const struct osmo_stream_srv_link *link)
 {
 	static char buf[sizeof(link->sockname)];
 
-	if (!get_local_sockname_buf(buf, sizeof(buf), link->ofd.fd, link->proto))
+	if (!get_local_sockname_buf(buf, sizeof(buf), link))
 		return NULL;
 	return buf;
 }
@@ -472,7 +500,7 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 		return -EIO;
 	}
 
-	get_local_sockname_buf(link->sockname, sizeof(link->sockname), link->ofd.fd, link->proto);
+	get_local_sockname_buf(link->sockname, sizeof(link->sockname), link);
 	return 0;
 }
 
