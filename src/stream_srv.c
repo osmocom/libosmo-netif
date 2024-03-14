@@ -58,7 +58,44 @@
  */
 
 /*! \file stream_srv.c
- *  \brief Osmocom stream socket helpers (server side)
+ *  Osmocom stream socket helpers (server side)
+ *
+ *  The Osmocom stream socket helper is an abstraction layer for connected SOCK_STREAM/SOCK_SEQPACKET sockets.
+ *  It encapsulates common functionality like binding, accepting client connections, etc.
+ *
+ *  osmo_stream_srv can operate in two different modes:
+ *  1. The legacy mode using osmo_fd (from libosmocore)
+ *  2. The modern (2023) mode using osmo_io (from libosmocore)
+ *
+ *  For any new applications, you definitely should use the modern mode, as it provides you with a higher
+ *  layer of abstraction and allows you to perform efficient I/O using the io_uring backend of osmo_io.
+ *
+ *  The two main objects are osmo_stream_srv_link (main server accept()ing incoming connections) and
+ *  osmo_stream_srv (a single given connection from a remote client).
+ *
+ *  A typical stream_srv usage would look like this:
+ *
+ *  * create new osmo_stream_srv_link using osmo_stream_srv_link_create()
+ *  * call osmo_stream_srv_link_set_addr() to set local bind address/port
+ *  * call osmo_stream_srv_link_set_accept_cb() to register the accept call-back
+ *  * optionally call further osmo_stream_srv_link_set_*() functions
+ *  * call osmo_stream_srv_link_open() to create socket and start listening
+ *
+ *  Whenever a client connects to your listening socket, the connection will now be automatically accept()ed
+ *  and the registered accept_cb call-back called.  From within that accept_cb, you then
+ *  * call osmo_stream_srv_create() to create a osmo_stream_srv for that specific connection
+ *  * call osmo_stream_srv_set_read_cb() to register the read call-back for incoming data
+ *  * call osmo_stream_srv_set_closed_cb() to register the closed call-back
+ *  * call osmo_stream_srv_set_data() to associate opaque application-layer state
+ *
+ *  Whenever data from a client arrives on a connection, your registered read_cb will be called together
+ *  with a message buffer containing the received data. Ownership of the message buffer is transferred
+ *  into the call-back, i.e. in your application.  It's your responsibility to eventually msgb_free()
+ *  it after usage.
+ *
+ *  Whenever your application wants to transmit something to a given connection, it uses the
+ *  osmo_stream_srv_send() function.
+ *
  */
 
 #define LOGSLNK(link, level, fmt, args...) \
@@ -170,11 +207,10 @@ error_close_socket:
 	return ret;
 }
 
-/*! \brief Create an Osmocom Stream Server Link
- *  A Stream Server Link is the listen()+accept() "parent" to individual
- *  Stream Servers
+/*! Create an Osmocom Stream Server Link.
+ *  A Stream Server Link is the listen()+accept() "parent" to individual connections from remote clients.
  *  \param[in] ctx talloc allocation context
- *  \returns Stream Server Link with default values (TCP)
+ *  \returns Stream Server Link with default values (AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP)
  */
 struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 {
@@ -194,8 +230,9 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	return link;
 }
 
-/*! \brief Set a name on the srv_link object (used during logging)
- *  \param[in] link server link whose name is to be set
+/*! Set a name on the srv_link object (used during logging).
+ *  \param[in] link server link whose name is to be set.  The name is copied into the osmo_stream_srv_link, so
+ *  the caller memory is not required to be valid beyond the call of this function.
  *  \param[in] name the name to be set on link
  */
 void osmo_stream_srv_link_set_name(struct osmo_stream_srv_link *link, const char *name)
@@ -203,7 +240,7 @@ void osmo_stream_srv_link_set_name(struct osmo_stream_srv_link *link, const char
 	osmo_talloc_replace_string(link, &link->name, name);
 }
 
-/*! \brief Retrieve name previously set on the srv_link object (see osmo_stream_srv_link_set_name())
+/*! Retrieve name previously set on the srv_link object (see osmo_stream_srv_link_set_name()).
  *  \param[in] link server link whose name is to be retrieved
  *  \returns The name to be set on link; NULL if never set
  */
@@ -212,7 +249,7 @@ const char *osmo_stream_srv_link_get_name(const struct osmo_stream_srv_link *lin
 	return link->name;
 }
 
-/*! \brief Set the NODELAY socket option to avoid Nagle-like behavior
+/*! Set the NODELAY socket option to avoid Nagle-like behavior.
  *  Setting this to nodelay=true will automatically set the NODELAY
  *  socket option on any socket established via this server link, before
  *  calling the accept_cb()
@@ -227,7 +264,8 @@ void osmo_stream_srv_link_set_nodelay(struct osmo_stream_srv_link *link, bool no
 		link->flags &= ~OSMO_STREAM_SRV_F_NODELAY;
 }
 
-/*! \brief Set the local address to which we bind
+/*! Set the local address to which we bind.
+ *  Any changes to this setting will only become active upon next (re)connect.
  *  \param[in] link Stream Server Link to modify
  *  \param[in] addr Local IP address
  */
@@ -237,8 +275,9 @@ void osmo_stream_srv_link_set_addr(struct osmo_stream_srv_link *link,
 	osmo_stream_srv_link_set_addrs(link, &addr, 1);
 }
 
-/*! \brief Set the local address set to which we bind.
+/*! Set the local address set to which we bind.
  *  Useful for protocols allowing bind on more than one address (such as SCTP)
+ *  Any changes to this setting will only become active upon next (re)connect.
  *  \param[in] link Stream Server Link to modify
  *  \param[in] addr Local IP address
  *  \return negative on error, 0 on success
@@ -262,7 +301,8 @@ int osmo_stream_srv_link_set_addrs(struct osmo_stream_srv_link *link, const char
 	return 0;
 }
 
-/*! \brief Set the local port number to which we bind
+/*! Set the local port number to which we bind.
+ *  Any changes to this setting will only become active upon next (re)connect.
  *  \param[in] link Stream Server Link to modify
  *  \param[in] port Local port number
  */
@@ -273,7 +313,8 @@ void osmo_stream_srv_link_set_port(struct osmo_stream_srv_link *link,
 	link->flags |= OSMO_STREAM_SRV_F_RECONF;
 }
 
-/*! \brief Set the protocol for the stream server link
+/*! Set the protocol for the stream server link.
+ *  Any changes to this setting will only become active upon next (re)connect.
  *  \param[in] link Stream Server Link to modify
  *  \param[in] proto Protocol (like IPPROTO_TCP (default), IPPROTO_SCTP, ...)
  */
@@ -286,7 +327,8 @@ osmo_stream_srv_link_set_proto(struct osmo_stream_srv_link *link,
 }
 
 
-/*! \brief Set the socket type for the stream server link
+/*! Set the socket type for the stream server link.
+ *  Any changes to this setting will only become active upon next (re)connect.
  *  \param[in] link Stream Server Link to modify
  *  \param[in] type Socket Type (like SOCK_STREAM (default), SOCK_SEQPACKET, ...)
  *  \returns zero on success, negative on error.
@@ -305,7 +347,8 @@ int osmo_stream_srv_link_set_type(struct osmo_stream_srv_link *link, int type)
 	return 0;
 }
 
-/*! \brief Set the socket type for the stream server link
+/*! Set the socket type for the stream server link.
+ *  Any changes to this setting will only become active upon next (re)connect.
  *  \param[in] link Stream Server Link to modify
  *  \param[in] type Socket Domain (like AF_UNSPEC (default for IP), AF_UNIX, AF_INET, ...)
  *  \returns zero on success, negative on error.
@@ -326,7 +369,7 @@ int osmo_stream_srv_link_set_domain(struct osmo_stream_srv_link *link, int domai
 	return 0;
 }
 
-/*! \brief Set application private data of the stream server link
+/*! Set application private data of the stream server link.
  *  \param[in] link Stream Server Link to modify
  *  \param[in] data User-specific data (available in call-back functions) */
 void
@@ -336,7 +379,7 @@ osmo_stream_srv_link_set_data(struct osmo_stream_srv_link *link,
 	link->data = data;
 }
 
-/*! \brief Get application private data of the stream server link
+/*! Retrieve application private data of the stream server link.
  *  \param[in] link Stream Server Link to modify
  *  \returns Application private data, as set by \ref osmo_stream_cli_set_data() */
 void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link)
@@ -398,7 +441,9 @@ static char *get_local_sockname_buf(char *buf, size_t buf_len, const struct osmo
 	}
 }
 
-/*! \brief Get description of the stream server link e. g. 127.0.0.1:1234
+/*! Retrieve description of the stream server link e. g. 127.0.0.1:1234.
+ *  Calling this function will build a string that describes the socket in terms of its local/remote
+ *  address/port.  The returned name is stored in a static buffer; it is hence not re-entrant or thread-safe.
  *  \param[in] link Stream Server Link to examine
  *  \returns Link description or NULL in case of error */
 char *osmo_stream_srv_link_get_sockname(const struct osmo_stream_srv_link *link)
@@ -410,7 +455,7 @@ char *osmo_stream_srv_link_get_sockname(const struct osmo_stream_srv_link *link)
 	return buf;
 }
 
-/*! \brief Get Osmocom File Descriptor of the stream server link
+/*! Retrieve Osmocom File Descriptor of the stream server link.
  *  \param[in] link Stream Server Link
  *  \returns Pointer to \ref osmo_fd */
 struct osmo_fd *
@@ -419,7 +464,7 @@ osmo_stream_srv_link_get_ofd(struct osmo_stream_srv_link *link)
 	return &link->ofd;
 }
 
-/*! \brief Get File Descriptor of the stream server link
+/*! Retrieve  File Descriptor of the stream server link.
  *  \param[in] conn Stream Server Link
  *  \returns file descriptor or negative on error */
 int osmo_stream_srv_link_get_fd(const struct osmo_stream_srv_link *link)
@@ -427,7 +472,10 @@ int osmo_stream_srv_link_get_fd(const struct osmo_stream_srv_link *link)
 	return link->ofd.fd;
 }
 
-/*! \brief Set the accept() call-back of the stream server link
+/*! Set the accept() call-back of the stream server link.
+ *  The provided call-back will be called whenever a new inbound connection
+ *  is accept()ed.  The call-back then typically creates a new osmo_stream_srv.
+ *  If the call-back returns a negative value, the file descriptor will be closed.
  *  \param[in] link Stream Server Link
  *  \param[in] accept_cb Call-back function executed upon accept() */
 void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link,
@@ -437,7 +485,7 @@ void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link,
 	link->accept_cb = accept_cb;
 }
 
-/*! \brief Destroy the stream server link. Closes + Releases Memory.
+/*! Destroy the stream server link. Closes + Releases Memory.
  *  \param[in] link Stream Server Link */
 void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link)
 {
@@ -445,8 +493,8 @@ void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link)
 	talloc_free(link);
 }
 
-/*! \brief Open the stream server link.  This actually initializes the
- *  underlying socket and binds it to the configured ip/port
+/*! Open the stream server link.  This actually initializes the
+ *  underlying socket and binds it to the configured ip/port.
  *  \param[in] link Stream Server Link to open
  *  \return negative on error, 0 on success */
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
@@ -500,7 +548,7 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 	return 0;
 }
 
-/*! \brief Check whether the stream server link is opened
+/*! Check whether the stream server link is opened.
  *  \param[in] link Stream Server Link to check */
 bool osmo_stream_srv_link_is_opened(const struct osmo_stream_srv_link *link)
 {
@@ -513,7 +561,7 @@ bool osmo_stream_srv_link_is_opened(const struct osmo_stream_srv_link *link)
 	return true;
 }
 
-/*! \brief Close the stream server link and unregister from select loop
+/*! Close the stream server link and unregister from select loop.
  *  Does not destroy the server link, merely closes it!
  *  \param[in] link Stream Server Link to close */
 void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
@@ -526,6 +574,12 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 	link->ofd.fd = -1;
 }
 
+/*! Set given parameter of stream_srv_link to given value.
+ *  \param[in] cli stream client on which to set parameter.
+ *  \param[in] par identifier of the parameter to be set.
+ *  \param[in] val value of the parameter to be set.
+ *  \param[in] val_len length of the parameter value.
+ *  \returns 0 in success; negative -errno on error. */
 int osmo_stream_srv_link_set_param(struct osmo_stream_srv_link *link, enum osmo_stream_srv_link_param par,
 				   void *val, size_t val_len)
 {
@@ -773,7 +827,15 @@ static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
 	return rc;
 }
 
-/*! \brief Create a Stream Server inside the specified link
+/*! Create a legacy osmo_fd mode Stream Server inside the specified link.
+ *
+ *  This is the function an application traditionally calls from within the
+ *  accept_cb call-back of the osmo_stream_srv_link.  It creates a new
+ *  osmo_stream_srv within that link.
+ *
+ *  New users/programs should use osmo_stream_srv_create2 to operate in osmo_io
+ *  mode instead.
+ *
  *  \param[in] ctx talloc allocation context from which to allocate
  *  \param[in] link Stream Server Link to which we belong
  *  \param[in] fd system file descriptor of the new connection
@@ -813,7 +875,12 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
 	return conn;
 }
 
-/*! \brief Create a Stream Server inside the specified link
+/*! Create an osmo_iofd mode Stream Server inside the specified link.
+ *
+ *  This is the function an application typically calls from within the
+ *  accept_cb call-back of the osmo_stream_srv_link.  It creates a new
+ *  osmo_stream_srv in osmo_io mode within that link.
+ *
  *  \param[in] ctx talloc allocation context from which to allocate
  *  \param[in] link Stream Server Link to which we belong
  *  \param[in] fd system file descriptor of the new connection
@@ -859,8 +926,9 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 	return conn;
 }
 
-/*! \brief Set a name on the srv object (used during logging)
- *  \param[in] conn server whose name is to be set
+/*! Set a name on the srv object (used during logging).
+ *  \param[in] conn server whose name is to be set. The name is copied into the osmo_stream_srv_link, so
+ *  the caller memory is not required to be valid beyond the call of this function.
  *  \param[in] name the name to be set on conn
  */
 void osmo_stream_srv_set_name(struct osmo_stream_srv *conn, const char *name)
@@ -870,7 +938,7 @@ void osmo_stream_srv_set_name(struct osmo_stream_srv *conn, const char *name)
 		osmo_iofd_set_name(conn->iofd, name);
 }
 
-/*! \brief Retrieve name previously set on the srv object (see osmo_stream_srv_set_name())
+/*! Retrieve name previously set on the srv object (see osmo_stream_srv_set_name()).
  *  \param[in] conn server whose name is to be retrieved
  *  \returns The name to be set on conn; NULL if never set
  */
@@ -879,8 +947,13 @@ const char *osmo_stream_srv_get_name(const struct osmo_stream_srv *conn)
 	return conn->name;
 }
 
-/*! \brief Set the call-back function when data was read from the stream server socket
- *  Only for osmo_stream_srv created with osmo_stream_srv_create2()
+/*! Set the call-back function for incoming data on an osmo_io stream_srv.
+ *
+ *  This function only works with osmo_stream_srv in osmo_io mode, created by osmo_stream_srv_create2()!
+ *
+ *  Whenever data is received on the osmo_stram_srv, the read_cb call-back function of the user application is
+ *  called.
+ *
  *  \param[in] conn Stream Server to modify
  *  \param[in] read_cb Call-back function to be called when data was read */
 void osmo_stream_srv_set_read_cb(struct osmo_stream_srv *conn, int (*read_cb)(struct osmo_stream_srv *conn, struct msgb *msg))
@@ -889,7 +962,10 @@ void osmo_stream_srv_set_read_cb(struct osmo_stream_srv *conn, int (*read_cb)(st
 	conn->iofd_read_cb = read_cb;
 }
 
-/*! \brief Set the call-back function called when the stream server socket was closed
+/*! Set the call-back function called when the stream server socket was closed.
+ *  Whenever the socket was closed (network error, client disconnect, etc.), the user-provided
+ *  call-back function given here is called.  This is typically used by the application to clean up any of its
+ *  internal state related to this specific client/connection.
  *  \param[in] conn Stream Server to modify
  *  \param[in] closed_cb Call-back function to be called when the connection was closed */
 void osmo_stream_srv_set_closed_cb(struct osmo_stream_srv *conn, int (*closed_cb)(struct osmo_stream_srv *conn))
@@ -898,7 +974,7 @@ void osmo_stream_srv_set_closed_cb(struct osmo_stream_srv *conn, int (*closed_cb
 	conn->closed_cb = closed_cb;
 }
 
-/*! \brief Prepare to send out all pending messages on the connection's Tx queue
+/*! Prepare to send out all pending messages on the connection's Tx queue.
  *  and then automatically destroy the stream with osmo_stream_srv_destroy().
  *  This function disables queuing of new messages on the connection and also
  *  disables reception of new messages on the connection.
@@ -908,7 +984,7 @@ void osmo_stream_srv_set_flush_and_destroy(struct osmo_stream_srv *conn)
 	conn->flags |= OSMO_STREAM_SRV_F_FLUSH_DESTROY;
 }
 
-/*! \brief Set application private data of the stream server
+/*! Set application private data of the stream server.
  *  \param[in] conn Stream Server to modify
  *  \param[in] data User-specific data (available in call-back functions) */
 void
@@ -918,8 +994,16 @@ osmo_stream_srv_set_data(struct osmo_stream_srv *conn,
 	conn->data = data;
 }
 
-/*! \brief Set the segmentation callback for target osmo_stream_srv structure.
- * The connection has to have been established prior to calling this function.
+/*! Set the segmentation callback for target osmo_stream_srv structure.
+ *
+ *  A segmentation call-back can optionally be used when a packet based protocol (like TCP) is used within a
+ *  STREAM style socket that does not preserve message boundaries within the stream.  If a segmentation
+ *  call-back is given, the osmo_stream_srv library code will makes sure that the read_cb called only for
+ *  complete single messages, and not arbitrary segments of the stream.
+ *
+ *  This function only works with osmo_stream_srv in osmo_io mode, created by osmo_stream_srv_create2()!
+  * The connection has to have been established prior to calling this function.
+  *
  *  \param[in,out] conn Target Stream Server to modify
  *  \param[in] segmentation_cb Segmentation callback to be set */
 void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn,
@@ -936,7 +1020,7 @@ void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn,
 	osmo_iofd_set_ioops(conn->iofd, &conn_ops);
 }
 
-/*! \brief Get application private data of the stream server
+/*! Retrieve application private data of the stream server
  *  \param[in] conn Stream Server
  *  \returns Application private data, as set by \ref osmo_stream_srv_set_data() */
 void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn)
@@ -944,7 +1028,8 @@ void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn)
 	return conn->data;
 }
 
-/*! \brief Get the stream server socket description.
+/*! Retrieve the stream server socket description.
+ *  The returned name is stored in a static buffer; it is hence not re-entrant or thread-safe!
  *  \param[in] cli Stream Server to examine
  *  \returns Socket description or NULL in case of error */
 const char *osmo_stream_srv_get_sockname(const struct osmo_stream_srv *conn)
@@ -957,7 +1042,7 @@ const char *osmo_stream_srv_get_sockname(const struct osmo_stream_srv *conn)
 	return buf;
 }
 
-/*! \brief Get Osmocom File Descriptor of the stream server
+/*! Retrieve Osmocom File Descriptor of a stream server in osmo_fd mode.
  *  \param[in] conn Stream Server
  *  \returns Pointer to \ref osmo_fd */
 struct osmo_fd *
@@ -967,7 +1052,7 @@ osmo_stream_srv_get_ofd(struct osmo_stream_srv *conn)
 	return &conn->ofd;
 }
 
-/*! \brief Get File Descriptor of the stream server
+/*! Retrieve File Descriptor of the stream server
  *  \param[in] conn Stream Server
  *  \returns file descriptor or negative on error */
 int
@@ -985,7 +1070,7 @@ osmo_stream_srv_get_fd(const struct osmo_stream_srv *conn)
 	return -EINVAL;
 }
 
-/*! \brief Get the master (Link) from a Stream Server
+/*! Retrieve the master (Link) from a Stream Server.
  *  \param[in] conn Stream Server of which we want to know the Link
  *  \returns Link through which the given Stream Server is established */
 struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *conn)
@@ -993,11 +1078,10 @@ struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *
 	return conn->srv;
 }
 
-/*! \brief Destroy given Stream Server
- *  This function closes the Stream Server socket, unregisters from
- *  select loop, invokes the connection's closed_cb() callback to allow API
- *  users to clean up any associated state they have for this connection,
- *  and then de-allocates associated memory.
+/*! Destroy given Stream Server.
+ *  This function closes the Stream Server socket, unregisters from the underlying I/O mechanism, invokes the
+ *  connection's closed_cb() callback to allow API users to clean up any associated state they have for this
+ *  connection, and then de-allocates associated memory.
  *  \param[in] conn Stream Server to be destroyed */
 void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 {
@@ -1020,7 +1104,7 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 	talloc_free(conn);
 }
 
-/*! \brief Enqueue data to be sent via an Osmocom stream server
+/*! Enqueue data to be sent via an Osmocom stream server.
  *  \param[in] conn Stream Server through which we want to send
  *  \param[in] msg Message buffer to enqueue in transmit queue */
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
@@ -1053,10 +1137,14 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 	}
 }
 
-/*! \brief Receive data via Osmocom stream server
+/*! Receive data via an Osmocom stream server in osmo_fd mode.
  *  \param[in] conn Stream Server from which to receive
  *  \param msg pre-allocate message buffer to which received data is appended
  *  \returns number of bytes read, negative on error.
+ *
+ *  Application programs using the legacy osmo_fd mode of osmo_stream_srv will use
+ *  this function to read/receive from a stream socket after they have been notified that
+ *  it is readable (via select/poll).
  *
  *  If conn is an SCTP connection, additional specific considerations shall be taken:
  *  - msg->cb is always filled with SCTP ppid, and SCTP stream values, see msgb_sctp_*() APIs.
