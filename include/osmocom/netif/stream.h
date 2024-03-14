@@ -6,8 +6,15 @@
 
 #include <osmocom/core/msgb.h>
 
-/*! \addtogroup stream
+/*! \defgroup stream Osmocom Stream Server/Client
  *  @{
+ *
+ *  This code is intended to abstract any use of stream-type sockets,
+ *  such as TCP and SCTP.  It offers both server and client side
+ *  implementations, fully integrated with the libosmocore select loop
+ *  abstraction.
+ *
+ *  \file stream.h
  */
 
 /*! \brief Access SCTP flags from the msgb control buffer */

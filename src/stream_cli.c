@@ -52,12 +52,8 @@
 #include <osmocom/netif/sctp.h>
 
 
-/*! \addtogroup stream Osmocom Stream Socket (client side)
+/*! \addtogroup stream
  *  @{
- *
- *  This code is intended to abstract any use of stream-type sockets,
- *  such as TCP and SCTP.  It offers client side implementation,
- * fully integrated with the libosmocore select loop abstraction.
  */
 
 /*! \file stream_cli.c
