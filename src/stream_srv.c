@@ -1073,6 +1073,7 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 	int ret;
 	OSMO_ASSERT(conn);
 	OSMO_ASSERT(msg);
+	OSMO_ASSERT(conn->mode == OSMO_STREAM_MODE_OSMO_FD);
 
 	switch (conn->srv->sk_domain) {
 	case AF_UNIX:

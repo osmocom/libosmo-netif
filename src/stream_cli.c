@@ -1054,6 +1054,7 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 	int ret;
 	OSMO_ASSERT(cli);
 	OSMO_ASSERT(msg);
+	OSMO_ASSERT(cli->mode == OSMO_STREAM_MODE_OSMO_FD);
 
 	switch (cli->sk_domain) {
 	case AF_UNIX:
