@@ -28,23 +28,6 @@
 
 #include <arpa/inet.h>
 
-/*! \addtogroup osmux Osmocom Multiplex Protocol
- *  @{
- *
- *  This code implements a variety of utility functions related to the
- *  OSMUX user-plane multiplexing protocol, an efficient alternative to
- *  plain UDP/RTP streams for voice transport in back-haul of cellular
- *  networks.
- *
- *  For information about the OSMUX protocol design, please see the
- *  OSMUX reference manual at
- *  http://ftp.osmocom.org/docs/latest/osmux-reference.pdf
- */
-
-/*! \file osmux_input.c
- *  \brief Osmocom multiplex protocol helpers (input)
- */
-
 /* This allows you to debug osmux message transformations (spamming) */
 #if 0
 #define DEBUG_MSG		0
@@ -68,6 +51,22 @@
 	LOGMUXLK_(link, lvl, "[CID=%" PRIu8 ",batched=%u/%u] " fmt, \
 		  (circuit)->ccid, (circuit)->nmsgs, (link)->h->batch_factor, ## args)
 
+/*! \addtogroup osmux Osmocom Multiplex Protocol
+ *  @{
+ *
+ *  This code implements a variety of utility functions related to the
+ *  OSMUX user-plane multiplexing protocol, an efficient alternative to
+ *  plain UDP/RTP streams for voice transport in back-haul of cellular
+ *  networks.
+ *
+ *  For information about the OSMUX protocol design, please see the
+ *  OSMUX reference manual at
+ *  http://ftp.osmocom.org/docs/latest/osmux-reference.pdf
+ */
+
+/*! \file osmux_input.c
+ *  \brief Osmocom multiplex protocol helpers (input)
+ */
 
 static void *osmux_ctx;
 
@@ -698,6 +697,7 @@ static int osmux_xfrm_input_talloc_destructor(struct osmux_in_handle *h)
 	return 0;
 }
 
+static unsigned int next_default_name_idx = 0;
 /*! \brief Allocate a new osmux in handle (osmux source, tx side)
  *  \param[in] ctx talloc context to use when allocating the returned struct
  *  \return Allocated osmux in handle
@@ -708,7 +708,6 @@ static int osmux_xfrm_input_talloc_destructor(struct osmux_in_handle *h)
  * stack outgoing network Osmux messages.
  * Returned pointer can be freed with regular talloc_free, all pending messages
  * in queue and all internal data will be freed. */
-static unsigned int next_default_name_idx = 0;
 struct osmux_in_handle *osmux_xfrm_input_alloc(void *ctx)
 {
 	struct osmux_in_handle *h;
@@ -735,7 +734,7 @@ struct osmux_in_handle *osmux_xfrm_input_alloc(void *ctx)
 	return h;
 }
 
-/* DEPRECATED: Use osmux_xfrm_input_alloc() instead */
+/*! \deprecated: Use osmux_xfrm_input_alloc() instead */
 void osmux_xfrm_input_init(struct osmux_in_handle *h)
 {
 	struct osmux_link *link;
@@ -849,7 +848,7 @@ void osmux_xfrm_input_close_circuit(struct osmux_in_handle *h, int ccid)
 	osmux_link_del_circuit(link, circuit);
 }
 
-/* DEPRECATED: Use talloc_free() instead (will call osmux_xfrm_input_talloc_destructor()) */
+/*! \deprecated: Use talloc_free() instead (will call osmux_xfrm_input_talloc_destructor()) */
 void osmux_xfrm_input_fini(struct osmux_in_handle *h)
 {
 	(void)osmux_xfrm_input_talloc_destructor(h);

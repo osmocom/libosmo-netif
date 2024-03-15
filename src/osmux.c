@@ -27,6 +27,14 @@
 
 #include <arpa/inet.h>
 
+#define SNPRINTF_BUFFER_SIZE(ret, remain, offset)	\
+	if (ret < 0)					\
+		ret = 0;				\
+	offset += ret;					\
+	if (ret > remain)				\
+		ret = remain;				\
+	remain -= ret;
+
 /*! \addtogroup osmux Osmocom Multiplex Protocol
  *  @{
  *
@@ -48,14 +56,6 @@ static uint32_t osmux_get_payload_len(struct osmux_hdr *osmuxh)
 {
 	return osmo_amr_bytes(osmuxh->amr_ft) * (osmuxh->ctr+1);
 }
-
-#define SNPRINTF_BUFFER_SIZE(ret, remain, offset)	\
-	if (ret < 0)					\
-		ret = 0;				\
-	offset += ret;					\
-	if (ret > remain)				\
-		ret = remain;				\
-	remain -= ret;
 
 static int osmux_snprintf_header(char *buf, size_t size, struct osmux_hdr *osmuxh)
 {

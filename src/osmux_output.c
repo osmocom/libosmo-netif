@@ -27,6 +27,12 @@
 
 #include <arpa/inet.h>
 
+/* delta time between two RTP messages (in microseconds) */
+#define DELTA_RTP_MSG		20000
+/* delta time between two RTP messages (in samples, 8kHz) */
+#define DELTA_RTP_TIMESTAMP	160
+
+
 /*! \addtogroup osmux Osmocom Multiplex Protocol
  *  @{
  *
@@ -43,12 +49,6 @@
 /*! \file osmux_output.c
  *  \brief Osmocom multiplex protocol helpers (output)
  */
-
-/* delta time between two RTP messages (in microseconds) */
-#define DELTA_RTP_MSG		20000
-/* delta time between two RTP messages (in samples, 8kHz) */
-#define DELTA_RTP_TIMESTAMP	160
-
 static uint32_t osmux_ft_dummy_size(uint8_t amr_ft, uint8_t batch_factor)
 {
 	return sizeof(struct osmux_hdr) + (osmo_amr_bytes(amr_ft) * batch_factor);
@@ -330,14 +330,14 @@ struct osmux_out_handle *osmux_xfrm_output_alloc(void *ctx)
 	return h;
 }
 
-/* DEPRECATED: Use osmux_xfrm_output_alloc() and osmux_xfrm_output_set_rtp_*() instead */
+/*! \deprecated: Use osmux_xfrm_output_alloc() and osmux_xfrm_output_set_rtp_*() instead */
 void osmux_xfrm_output_init2(struct osmux_out_handle *h, uint32_t rtp_ssrc, uint8_t rtp_payload_type)
 {
 	memset(h, 0, sizeof(*h));
 	_osmux_xfrm_output_init(h, rtp_ssrc, rtp_payload_type);
 }
 
-/* DEPRECATED: Use osmux_xfrm_output_alloc() and osmux_xfrm_output_set_rtp_*() instead */
+/*! \deprecated: Use osmux_xfrm_output_alloc() and osmux_xfrm_output_set_rtp_*() instead */
 void osmux_xfrm_output_init(struct osmux_out_handle *h, uint32_t rtp_ssrc)
 {
 	/* backward compatibility with old users, where 98 was harcoded in osmux_rebuild_rtp()  */

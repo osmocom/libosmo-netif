@@ -15,7 +15,8 @@
 
 #define OSMUX_DEFAULT_PORT 1984
 
-/* OSmux header:
+/*! \struct osmux_hdr
+ * OSmux header:
  *
  *	rtp_m (1 bit):		RTP M field (RFC3550, RFC4867)
  *	ft (2 bits):		0=signalling, 1=voice, 2=dummy
@@ -32,6 +33,7 @@
 #define OSMUX_FT_VOICE_AMR	1
 #define OSMUX_FT_DUMMY		2
 
+/*! Osmux protocol header */
 struct osmux_hdr {
 #if OSMO_IS_LITTLE_ENDIAN
 	uint8_t amr_q:1,
@@ -56,9 +58,9 @@ struct osmux_hdr {
 	uint8_t data[0];
 } __attribute__((packed));
 
-/* one to handle all existing RTP flows */
+/*! one to handle all existing RTP flows */
 struct osmux_in_handle {
-	/* Initial Osmux seqnum for each circuit, set during osmux_xfrm_input_open_circuit() */
+	/*! Initial Osmux seqnum for each circuit, set during osmux_xfrm_input_open_circuit() */
 	uint8_t osmux_seq;
 	uint8_t batch_factor;
 	uint16_t batch_size;
@@ -79,7 +81,7 @@ struct osmux_in_handle {
 
 typedef struct msgb *(*rtp_msgb_alloc_cb_t)(void *rtp_msgb_alloc_priv_data,
 					    unsigned int msg_len);
-/* one per OSmux circuit_id, ie. one per RTP flow. */
+/*! one per OSmux circuit_id, ie. one per RTP flow. */
 struct osmux_out_handle {
 	uint16_t rtp_seq;
 	uint32_t rtp_timestamp;
@@ -94,6 +96,7 @@ struct osmux_out_handle {
 	void *rtp_msgb_alloc_cb_data; /* Opaque data pointer set by user and passed in rtp_msgb_alloc_cb() */
 };
 
+/*! return pointer to osmux payload (behind osmux_hdr) */
 static inline uint8_t *osmux_get_payload(struct osmux_hdr *osmuxh)
 {
 	return (uint8_t *)osmuxh + sizeof(struct osmux_hdr);
