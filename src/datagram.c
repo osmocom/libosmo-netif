@@ -41,13 +41,12 @@
 
 #include <osmocom/netif/datagram.h>
 
-/*! \addtogroup datagram Osmocom Datagram Socket
+#define OSMO_DGRAM_CLI_F_RECONF	(1 << 0)
+
+#define OSMO_DGRAM_RX_F_RECONF	(1 << 0)
+
+/*! \addtogroup datagram
  *  @{
- *
- *  This code is intended to abstract any use of datagram type sockets,
- *  such as UDP.  It offers both transmitter and receiver side
- *  implementations, fully integrated with the libosmocore select loop
- *  abstraction.
  */
 
 /*! \file datagram.c
@@ -58,8 +57,6 @@
 /*
  * Client side.
  */
-
-#define OSMO_DGRAM_CLI_F_RECONF	(1 << 0)
 
 struct osmo_dgram_tx {
 	struct osmo_fd			ofd;
@@ -242,8 +239,6 @@ void osmo_dgram_tx_send(struct osmo_dgram_tx *conn,
 /*
  * Server side.
  */
-
-#define OSMO_DGRAM_RX_F_RECONF	(1 << 0)
 
 struct osmo_dgram_rx {
 	struct osmo_fd		ofd;

@@ -1,6 +1,19 @@
 #ifndef _OSMO_DGRAM_H_
 #define _OSMO_DGRAM_H_
 
+/*! \defgroup datagram Osmocom Datagram Socket
+ *  @{
+ *
+ *  This code is intended to abstract any use of datagram type sockets,
+ *  such as UDP.  It offers both transmitter and receiver side
+ *  implementations, fully integrated with the libosmocore select loop
+ *  abstraction.
+ */
+
+/*! \file datagram.h
+ *  \brief Osmocom datagram socket helpers
+ */
+
 struct osmo_dgram_tx;
 
 struct osmo_dgram_tx *osmo_dgram_tx_create(void *ctx);
