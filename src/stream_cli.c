@@ -449,9 +449,13 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 		stream_cli_handle_connecting(cli, res);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
-		if (res == 0)
+		if (res <= 0) {
+			LOGSCLI(cli, LOGL_NOTICE, "received result %d in response to read\n", res);
 			osmo_stream_cli_reconnect(cli);
-		else if (cli->iofd_read_cb)
+			msgb_free(msg);
+			break;
+		}
+		if (cli->iofd_read_cb)
 			cli->iofd_read_cb(cli, msg);
 		else
 			msgb_free(msg);
@@ -500,8 +504,12 @@ static void stream_cli_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 		stream_cli_handle_connecting(cli, res);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
-		if (res == 0)
+		if (res <= 0) {
+			LOGSCLI(cli, LOGL_NOTICE, "received result %d in response to recvmsg\n", res);
 			osmo_stream_cli_reconnect(cli);
+			msgb_free(msg);
+			break;
+		}
 		/* Forward message to read callback, also if the connection failed. */
 		if (cli->iofd_read_cb)
 			cli->iofd_read_cb(cli, msg);
