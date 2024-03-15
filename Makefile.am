@@ -30,7 +30,7 @@ html_DATA = $(top_builddir)/doc/html.tar
 $(html_DATA): $(top_builddir)/doc/html/index.html
 	cd $(top_builddir)/doc && tar cf html.tar html
 
-$(top_builddir)/doc/html/index.html: $(SOURCES) $(top_srcdir)/src/*.c $(top_srcdir)/include/osmocom/netif/*.h Doxyfile
+$(top_builddir)/doc/html/index.html: $(top_srcdir)/src/*.c $(top_srcdir)/include/osmocom/netif/*.h Doxyfile
 	@rm -rf doc
 	mkdir -p doc
 	$(DOXYGEN) Doxyfile
