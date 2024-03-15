@@ -6,16 +6,7 @@
 
 #include <osmocom/core/msgb.h>
 
-/*! \defgroup stream Osmocom Stream Server/Client
- *  @{
- *
- *  This code is intended to abstract any use of stream-type sockets,
- *  such as TCP and SCTP.  It offers both server and client side
- *  implementations, fully integrated with the libosmocore select loop
- *  abstraction.
- *
- *  \file stream.h
- */
+/*! \file stream.h */
 
 /*! \brief Access SCTP flags from the msgb control buffer */
 #define OSMO_STREAM_SCTP_MSG_FLAGS_NOTIFICATION 0x80 /* sctp_recvmsg() flags=MSG_NOTIFICATION, msgb_data() contains "union sctp_notification*" */
@@ -25,6 +16,48 @@
 #define msgb_sctp_ppid(msg)             (msg)->cb[3]
 /*! \brief Access the SCTP Stream ID from the msgb control buffer */
 #define msgb_sctp_stream(msg)           (msg)->cb[4]
+
+/*! \defgroup stream_srv Osmocom Stream Server
+ *  @{
+ *
+ *  This code is intended to abstract any server-side use of stream-type sockets, such as TCP and SCTP.
+ *
+ *  The Osmocom stream socket helper is an abstraction layer for connected SOCK_STREAM/SOCK_SEQPACKET sockets.
+ *  It encapsulates common functionality like binding, accepting client connections, etc.
+ *
+ *  osmo_stream_srv can operate in two different modes:
+ *  1. The legacy mode using osmo_fd (from libosmocore)
+ *  2. The modern (2023) mode using osmo_io (from libosmocore)
+ *
+ *  For any new applications, you definitely should use the modern mode, as it provides you with a higher
+ *  layer of abstraction and allows you to perform efficient I/O using the io_uring backend of osmo_io.
+ *
+ *  The two main objects are osmo_stream_srv_link (main server accept()ing incoming connections) and
+ *  osmo_stream_srv (a single given connection from a remote client).
+ *
+ *  A typical stream_srv usage would look like this:
+ *
+ *  * create new osmo_stream_srv_link using osmo_stream_srv_link_create()
+ *  * call osmo_stream_srv_link_set_addr() to set local bind address/port
+ *  * call osmo_stream_srv_link_set_accept_cb() to register the accept call-back
+ *  * optionally call further osmo_stream_srv_link_set_*() functions
+ *  * call osmo_stream_srv_link_open() to create socket and start listening
+ *
+ *  Whenever a client connects to your listening socket, the connection will now be automatically accept()ed
+ *  and the registered accept_cb call-back called.  From within that accept_cb, you then
+ *  * call osmo_stream_srv_create() to create a osmo_stream_srv for that specific connection
+ *  * call osmo_stream_srv_set_read_cb() to register the read call-back for incoming data
+ *  * call osmo_stream_srv_set_closed_cb() to register the closed call-back
+ *  * call osmo_stream_srv_set_data() to associate opaque application-layer state
+ *
+ *  Whenever data from a client arrives on a connection, your registered read_cb will be called together
+ *  with a message buffer containing the received data. Ownership of the message buffer is transferred
+ *  into the call-back, i.e. in your application.  It's your responsibility to eventually msgb_free()
+ *  it after usage.
+ *
+ *  Whenever your application wants to transmit something to a given connection, it uses the
+ *  osmo_stream_srv_send() function.
+ */
 
 /*! \brief Osmocom Stream Server Link: A server socket listening/accepting */
 struct osmo_stream_srv_link;
@@ -88,6 +121,40 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg);
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg);
 
 void osmo_stream_srv_clear_tx_queue(struct osmo_stream_srv *conn);
+
+/*! @} */
+
+/*! \defgroup stream_cli Osmocom Stream Client
+ *  @{
+ *
+ *  This code is intended to abstract any client use of stream-type sockets, such as TCP and SCTP
+ *
+ *  An osmo_stream_cli represents a client implementation of a SOCK_STREAM or SOCK_SEQPACKET socket. It
+ *  contains all the common logic like non-blocking outbound connect to a remote server, re-connecting after
+ *  disconnect or connect failure, etc.
+ *
+ *  osmo_stream_cli can operate in two different modes:
+ *  1. The legacy mode using osmo_fd (from libosmocore)
+ *  2. The modern (2023) mode using osmo_io_fd (from libosmocore)
+ *
+ *  For any new applications, you definitely should use the modern mode, as it provides you with a higher
+ *  layer of abstraction and allows you to perform efficient I/O using the io_uring backend of osmo_io.
+ *
+ *  A typical usage of osmo_stream_cli would look as follows:
+ *
+ *  * call osmo_stream_cli_create() to create a new osmo_stream_cli
+ *  * call osmo_stream_cli_set_addr() / osmo_stream_cli_set_port() to specify the remote address/port to connect to
+ *  * optionally call further functions of the osmo_stream_cli_set_*() family
+ *  * call osmo_stream_cli_set_connect_cb() to register the call-back called on completion of outbound connect()
+ *  * call osmo_stream_cli_set_read_cb2() to register the call-back called when incoming data has been read
+ *  * call osmo_stream_cli_open() to open the connection (start outbound connect process)
+ *
+ *  Once the connection is established, your connect_cb is called to notify you.
+ *
+ *  You may send data to the connection using osmo_tream_cli_send().
+ *
+ *  Any received inbound data on the connection is reported vie the read_cb.
+ */
 
 /*! \brief Osmocom Stream Client: Single client connection */
 struct osmo_stream_cli;

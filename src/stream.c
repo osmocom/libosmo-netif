@@ -51,14 +51,7 @@
 
 #include <osmocom/netif/sctp.h>
 
-
-/*! \addtogroup stream
- *  @{
- */
-
-/*! \file stream.c
- *  \brief Osmocom stream socket helpers
- */
+/*! \cond private */
 
 #ifdef HAVE_LIBSCTP
 
@@ -344,5 +337,4 @@ int stream_iofd_sctp_send_msgb(struct osmo_io_fd *iofd, struct msgb *msg, int se
 }
 #endif
 
-
-/*! @} */
+/*! \endccond */

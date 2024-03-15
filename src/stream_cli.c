@@ -51,41 +51,7 @@
 
 #include <osmocom/netif/sctp.h>
 
-
-/*! \addtogroup stream
- *  @{
- */
-
-/*! \file stream_cli.c
- *  Osmocom stream socket helpers (client side)
- *
- *  An osmo_stream_cli represents a client implementation of a SOCK_STREAM or SOCK_SEQPACKET socket. It
- *  contains all the common logic like non-blocking outbound connect to a remote server, re-connecting after
- *  disconnect or connect failure, etc.
- *
- *  osmo_stream_cli can operate in two different modes:
- *  1. The legacy mode using osmo_fd (from libosmocore)
- *  2. The modern (2023) mode using osmo_io_fd (from libosmocore)
- *
- *  For any new applications, you definitely should use the modern mode, as it provides you with a higher
- *  layer of abstraction and allows you to perform efficient I/O using the io_uring backend of osmo_io.
- *
- *  A typical usage of osmo_stream_cli would look as follows:
- *
- *  * call osmo_stream_cli_create() to create a new osmo_stream_cli
- *  * call osmo_stream_cli_set_addr() / osmo_stream_cli_set_port() to specify the remote address/port to connect to
- *  * optionally call further functions of the osmo_stream_cli_set_*() family
- *  * call osmo_stream_cli_set_connect_cb() to register the call-back called on completion of outbound connect()
- *  * call osmo_stream_cli_set_read_cb2() to register the call-back called when incoming data has been read
- *  * call osmo_stream_cli_open() to open the connection (start outbound connect process)
- *
- *  Once the connection is established, your connect_cb is called to notify you.
- *
- *  You may send data to the connection using osmo_tream_cli_send().
- *
- *  Any received inbound data on the connection is reported vie the read_cb.
- *
- */
+/*! \file stream_cli.c */
 
 #define LOGSCLI(cli, level, fmt, args...) \
 	LOGP(DLINP, level, "CLICONN(%s,%s){%s} " fmt, \
@@ -150,6 +116,10 @@ struct osmo_stream_cli {
 };
 
 void osmo_stream_cli_close(struct osmo_stream_cli *cli);
+
+/*! \addtogroup stream_cli
+ *  @{
+ */
 
 /*! Re-connect an Osmocom Stream Client.
  *  If re-connection is enabled for this client

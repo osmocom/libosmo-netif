@@ -21,9 +21,7 @@
 	#define OSMO_STREAM_MAX_ADDRS 1
 #endif
 
-/*! \addtogroup stream
- *  @{
- */
+/*! \cond private */
 
 enum osmo_stream_mode {
 	OSMO_STREAM_MODE_UNKNOWN,
@@ -41,4 +39,4 @@ int stream_sctp_recvmsg_wrapper(int fd, struct msgb *msg, const char *log_pfx);
 int stream_iofd_sctp_send_msgb(struct osmo_io_fd *iofd, struct msgb *msg, int sendmsg_flags);
 int stream_iofd_sctp_recvmsg_trailer(struct osmo_io_fd *iofd, struct msgb *msg, int ret, const struct msghdr *msgh);
 
-/*! @} */
+/*! \endcond */
