@@ -26,10 +26,6 @@
 
 #include <arpa/inet.h>
 
-/*! \addtogroup jibuf Osmocom Jitter Buffer
- *  @{
- */
-
 /*! \file jibuf.c
  *  \brief Osmocom Jitter Buffer helpers
  */
@@ -289,6 +285,11 @@ static void recalc_threshold_delay(struct osmo_jibuf *jb)
 	jb->last_dropped = 0;
 
 }
+
+/*! \addtogroup jibuf Osmocom Jitter Buffer
+ *  @{
+ */
+
 
 //----------------------------------
 
