@@ -1037,6 +1037,17 @@ osmo_stream_srv_get_fd(const struct osmo_stream_srv *conn)
 	return -EINVAL;
 }
 
+/*! Retrieve osmo_io descriptor of the stream server socket.
+ *  This function must not be called on a stream server in legacy osmo_fd mode!
+ *  \param[in] srv Stream Server of which we want to obtain the osmo_io descriptor
+ *  \returns osmo_io_fd of stream server. */
+struct osmo_io_fd *
+osmo_stream_srv_get_iofd(const struct osmo_stream_srv *srv)
+{
+	OSMO_ASSERT(srv->mode == OSMO_STREAM_MODE_OSMO_IO);
+	return srv->iofd;
+}
+
 /*! Retrieve the master (Link) from a Stream Server.
  *  \param[in] conn Stream Server of which we want to know the Link
  *  \returns Link through which the given Stream Server is established */

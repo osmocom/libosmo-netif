@@ -222,6 +222,18 @@ osmo_stream_cli_get_fd(const struct osmo_stream_cli *cli)
 	return -EINVAL;
 }
 
+/*! Retrieve osmo_io descriptor of the stream client socket.
+ *  This function must not be called on a stream client in legacy osmo_fd mode!
+ *  The iofd is only valid once/after osmo_stream_cli_open() has successfully returned.
+ *  \param[in] cli Stream Client of which we want to obtain the file descriptor
+ *  \returns osmo_io_fd of stream client, or NULL if stream not yet opened. */
+struct osmo_io_fd *
+osmo_stream_cli_get_iofd(const struct osmo_stream_cli *cli)
+{
+	OSMO_ASSERT(cli->mode == OSMO_STREAM_MODE_OSMO_IO);
+	return cli->iofd;
+}
+
 static void osmo_stream_cli_read(struct osmo_stream_cli *cli)
 {
 	LOGSCLI(cli, LOGL_DEBUG, "message received\n");
