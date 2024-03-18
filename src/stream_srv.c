@@ -90,9 +90,12 @@ struct osmo_stream_srv_link {
 
 static int _setsockopt_nosigpipe(struct osmo_stream_srv_link *link, int new_fd)
 {
+LOGP(DLINP, LOGL_ERROR, "hack hier 1 \n");
 #ifdef SO_NOSIGPIPE
 	int ret;
 	int val = 1;
+LOGP(DLINP, LOGL_ERROR, "hack hier 2 \n");
+return 0;
 	ret = setsockopt(new_fd, SOL_SOCKET, SO_NOSIGPIPE, (void *)&val, sizeof(val));
 	if (ret < 0)
 		LOGSLNK(link, LOGL_ERROR, "Failed setting SO_NOSIGPIPE: %s\n", strerror(errno));
@@ -128,6 +131,7 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 	case AF_INET:
 		LOGSLNK(link, LOGL_INFO, "accept()ed new link from %s\n",
 			osmo_sockaddr_to_str(&osa));
+		LOGP(DLINP, LOGL_ERROR, "fd=%d, proto = %d(%d)\n", sock_fd, link->proto, IPPROTO_SCTP);
 
 		if (link->proto == IPPROTO_SCTP) {
 			_setsockopt_nosigpipe(link, sock_fd);
@@ -143,7 +147,8 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 	}
 
 	if (link->flags & OSMO_STREAM_SRV_F_NODELAY) {
-		ret = stream_setsockopt_nodelay(sock_fd, link->proto, 1);
+LOGP(DLINP, LOGL_ERROR, "hack hier\n");
+//		ret = stream_setsockopt_nodelay(sock_fd, link->proto, 1);
 		if (ret < 0)
 			goto error_close_socket;
 	}
@@ -655,6 +660,7 @@ static const struct osmo_io_ops srv_ioops = {
 static void stream_srv_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg, const struct msghdr *msgh)
 {
 	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
+	LOGP(DLINP, LOGL_ERROR, "fd=%d\n", osmo_iofd_get_fd(iofd));
 	LOGSSRV(conn, LOGL_DEBUG, "message received (res=%d)\n", res);
 
 	res = stream_iofd_sctp_recvmsg_trailer(iofd, msg, res, msgh);
@@ -883,6 +889,7 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 		return NULL;
 	}
 	conn->data = data;
+
 
 	if (osmo_iofd_register(conn->iofd, fd) < 0) {
 		LOGSSRV(conn, LOGL_ERROR, "could not register FD %d\n", fd);
