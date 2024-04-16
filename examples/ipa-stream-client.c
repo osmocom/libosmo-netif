@@ -102,12 +102,18 @@ static int connect_cb(struct osmo_stream_cli *conn)
 	return 0;
 }
 
-static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
+static int read_cb(struct osmo_stream_cli *conn, int res, struct msgb *msg)
 {
 	int num;
 	struct msg_sent *cur, *tmp, *found = NULL;
 
 	LOGP(DIPATEST, LOGL_DEBUG, "received message from stream (payload len=%d)\n", msgb_length(msg));
+
+	if (res <= 0) {
+		LOGP(DIPATEST, LOGL_ERROR, "Event with no data! %d\n", res);
+		msgb_free(msg);
+		return 0;
+	}
 
 	if (osmo_ipa_process_msg(msg) < 0) {
 		LOGP(DIPATEST, LOGL_ERROR, "bad IPA message\n");

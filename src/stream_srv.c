@@ -611,26 +611,31 @@ struct osmo_stream_srv {
 static void stream_srv_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
 {
 	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
-	LOGSSRV(conn, LOGL_DEBUG, "message received (res=%d)\n", res);
 
-	if (OSMO_UNLIKELY(res <= 0)) {
-		/* This connection is dead, destroy it. */
-		msgb_free(msg);
-		osmo_stream_srv_destroy(conn);
-	} else {
-		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
-			LOGSSRV(conn, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
-			msgb_free(msg);
-			if (osmo_iofd_txqueue_len(iofd) == 0)
-				osmo_stream_srv_destroy(conn);
-			return;
-		}
-
-		if (conn->iofd_read_cb)
-			conn->iofd_read_cb(conn, msg);
-		else
-			msgb_free(msg);
+	switch (res) {
+	case -EPIPE:
+	case -ECONNRESET:
+		LOGSSRV(conn, LOGL_ERROR, "lost connection with client (%d)\n", res);
+		break;
+	case 0:
+		LOGSSRV(conn, LOGL_NOTICE, "connection closed with client\n");
+		break;
+	default:
+		LOGSSRV(conn, LOGL_DEBUG, "received %d bytes from client\n", res);
+		break;
 	}
+	if (OSMO_UNLIKELY(conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY)) {
+		LOGSSRV(conn, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
+		msgb_free(msg);
+		if (osmo_iofd_txqueue_len(iofd) == 0)
+			osmo_stream_srv_destroy(conn);
+		return;
+	}
+
+	if (conn->iofd_read_cb)
+		conn->iofd_read_cb(conn, res, msg);
+	else
+		msgb_free(msg);
 }
 
 static void stream_srv_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
@@ -658,27 +663,32 @@ static void stream_srv_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 	LOGSSRV(conn, LOGL_DEBUG, "message received (res=%d)\n", res);
 
 	res = stream_iofd_sctp_recvmsg_trailer(iofd, msg, res, msgh);
-	if (res == -EAGAIN)
-		return;
 
-	if (OSMO_UNLIKELY(res <= 0)) {
-		/* This connection is dead, destroy it. */
-		msgb_free(msg);
-		osmo_stream_srv_destroy(conn);
-	} else {
-		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY) {
-			LOGSSRV(conn, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
-			msgb_free(msg);
-			if (osmo_iofd_txqueue_len(iofd) == 0)
-				osmo_stream_srv_destroy(conn);
-			return;
-		}
-
-		if (conn->iofd_read_cb)
-			conn->iofd_read_cb(conn, msg);
-		else
-			msgb_free(msg);
+	switch (res) {
+	case -EPIPE:
+	case -ECONNRESET:
+		LOGSSRV(conn, LOGL_ERROR, "lost connection with client (%d)\n", res);
+		break;
+	case 0:
+		LOGSSRV(conn, LOGL_NOTICE, "connection closed with client\n");
+		break;
+	default:
+		if (OSMO_LIKELY(res > 0))
+			LOGSSRV(conn, LOGL_DEBUG, "received %u bytes from client\n", res);
+		break;
 	}
+	if (OSMO_UNLIKELY(conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY)) {
+		LOGSSRV(conn, LOGL_INFO, "Connection is being flushed and closed; ignoring received message\n");
+		msgb_free(msg);
+		if (osmo_iofd_txqueue_len(iofd) == 0)
+			osmo_stream_srv_destroy(conn);
+		return;
+	}
+
+	if (conn->iofd_read_cb)
+		conn->iofd_read_cb(conn, res, msg);
+	else
+		msgb_free(msg);
 }
 
 static const struct osmo_io_ops srv_ioops_sctp = {

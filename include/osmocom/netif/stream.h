@@ -102,7 +102,14 @@ struct osmo_stream_srv;
 
 typedef int (*osmo_stream_srv_read_cb_t)(struct osmo_stream_srv *conn);
 typedef int (*osmo_stream_srv_closed_cb_t)(struct osmo_stream_srv *conn);
-typedef int (*osmo_stream_srv_read_cb2_t)(struct osmo_stream_srv *conn, struct msgb *msg);
+
+/*! Completion call-back function when something was read from from the stream client socket.
+ * \param[in] conn Stream Server that got receive event.
+ * \param[in] res return value of the read()/recvmsg()/... call, or -errno in case of error.
+ * \param[in] msg message buffer containing the read data. Ownership is transferred to the
+ * call-back, and it must make sure to msgb_free() it eventually! */
+typedef int (*osmo_stream_srv_read_cb2_t)(struct osmo_stream_srv *conn, int res, struct msgb *msg);
+
 typedef int (*osmo_stream_srv_segmentation_cb_t)(struct msgb *msg);
 
 struct osmo_stream_srv *osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd,
@@ -172,7 +179,14 @@ struct osmo_stream_cli;
 typedef int (*osmo_stream_cli_connect_cb_t)(struct osmo_stream_cli *cli);
 typedef int (*osmo_stream_cli_disconnect_cb_t)(struct osmo_stream_cli *cli);
 typedef int (*osmo_stream_cli_read_cb_t)(struct osmo_stream_cli *cli);
-typedef int (*osmo_stream_cli_read_cb2_t)(struct osmo_stream_cli *cli, struct msgb *msg);
+
+/*! Completion call-back function when something was read from from the stream client socket.
+ * \param[in] cli Stream Client that got receive event.
+ * \param[in] res return value of the read()/recvmsg()/... call, or -errno in case of error.
+ * \param[in] msg message buffer containing the read data. Ownership is transferred to the
+ * call-back, and it must make sure to msgb_free() it eventually! */
+typedef int (*osmo_stream_cli_read_cb2_t)(struct osmo_stream_cli *cli, int res, struct msgb *msg);
+
 typedef int (*osmo_stream_cli_segmentation_cb_t)(struct msgb *msg);
 
 void osmo_stream_cli_set_name(struct osmo_stream_cli *cli, const char *name);

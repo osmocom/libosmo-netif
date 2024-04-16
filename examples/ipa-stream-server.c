@@ -47,8 +47,15 @@ void sighandler(int foo)
 	exit(EXIT_SUCCESS);
 }
 
-int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
+int read_cb(struct osmo_stream_srv *conn, int res, struct msgb *msg)
 {
+	if (res <= 0) {
+		LOGP(DSTREAMTEST, LOGL_ERROR, "cannot receive message (%d)\n", res);
+		msgb_free(msg);
+		osmo_stream_srv_destroy(conn);
+		return -EBADF;
+	}
+
 	LOGP(DSTREAMTEST, LOGL_DEBUG, "received message from stream (payload len=%d)\n", msgb_length(msg));
 
 	osmo_ipa_msg_push_headers(msg, osmo_ipa_msgb_cb_proto(msg), osmo_ipa_msgb_cb_proto_ext(msg));

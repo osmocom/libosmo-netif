@@ -54,9 +54,16 @@ static int disconnect_cb(struct osmo_stream_cli *conn)
 	return 0;
 }
 
-static int read_cb(struct osmo_stream_cli *conn, struct msgb *msg)
+static int read_cb(struct osmo_stream_cli *conn, int res, struct msgb *msg)
 {
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "receiving message from stream... ");
+
+	if (res < 0) {
+		LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot receive message (res = %d)\n", res);
+		msgb_free(msg);
+		return 0;
+	}
+
 
 	LOGPC(DSTREAMTEST, LOGL_NOTICE, "got %d bytes: %s\n", msg->len, msgb_hexdump(msg));
 

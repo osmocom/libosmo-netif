@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <osmocom/core/select.h>
 #include <osmocom/core/socket.h>
@@ -44,9 +45,19 @@ void sighandler(int foo)
 	signal(SIGINT, SIG_DFL);
 }
 
-int read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
+int read_cb(struct osmo_stream_srv *conn, int res, struct msgb *msg)
 {
 	LOGP(DSTREAMTEST, LOGL_NOTICE, "receiving message from stream... ");
+
+	if (res <= 0) {
+		if (res < 0)
+			LOGPC(DSTREAMTEST, LOGL_ERROR, "cannot receive message: %s\n", strerror(-res));
+		else
+			LOGPC(DSTREAMTEST, LOGL_ERROR, "client closed connection\n");
+		msgb_free(msg);
+		osmo_stream_srv_destroy(conn);
+		return -EBADF;
+	}
 
 	LOGPC(DSTREAMTEST, LOGL_NOTICE, "got %d bytes: %s\n", msg->len, msgb_hexdump(msg));
 

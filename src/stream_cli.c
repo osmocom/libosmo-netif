@@ -448,14 +448,23 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 		stream_cli_handle_connecting(cli, res);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
-		if (res <= 0) {
-			LOGSCLI(cli, LOGL_NOTICE, "received result %d in response to read\n", res);
+		switch (res) {
+		case -EPIPE:
+		case -ECONNRESET:
+			LOGSCLI(cli, LOGL_ERROR, "lost connection with srv (%d)\n", res);
 			osmo_stream_cli_reconnect(cli);
-			msgb_free(msg);
+			break;
+		case 0:
+			LOGSCLI(cli, LOGL_NOTICE, "connection closed with srv\n");
+			osmo_stream_cli_reconnect(cli);
+			break;
+		default:
+			LOGSCLI(cli, LOGL_DEBUG, "received %d bytes from srv\n", res);
 			break;
 		}
+		/* Notify user of new data or error: */
 		if (cli->iofd_read_cb)
-			cli->iofd_read_cb(cli, msg);
+			cli->iofd_read_cb(cli, res, msg);
 		else
 			msgb_free(msg);
 		break;
@@ -503,15 +512,22 @@ static void stream_cli_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 		stream_cli_handle_connecting(cli, res);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
-		if (res <= 0) {
-			LOGSCLI(cli, LOGL_NOTICE, "received result %d in response to recvmsg\n", res);
+		switch (res) {
+		case -EPIPE:
+		case -ECONNRESET:
+			LOGSCLI(cli, LOGL_ERROR, "lost connection with srv (%d)\n", res);
 			osmo_stream_cli_reconnect(cli);
-			msgb_free(msg);
+			break;
+		case 0:
+			LOGSCLI(cli, LOGL_NOTICE, "connection closed with srv\n");
+			osmo_stream_cli_reconnect(cli);
+			break;
+		default:
 			break;
 		}
-		/* Forward message to read callback, also if the connection failed. */
+		/* Notify user of new data or error: */
 		if (cli->iofd_read_cb)
-			cli->iofd_read_cb(cli, msg);
+			cli->iofd_read_cb(cli, res, msg);
 		else
 			msgb_free(msg);
 		break;

@@ -502,12 +502,19 @@ static void send_last_third(void *osmo_stream_cli_arg)
 
 static struct osmo_timer_list fragmented_send_tl_cli;
 
-static int test_segm_ipa_stream_srv_cli_read_cb(struct osmo_stream_cli *osc, struct msgb *msg)
+static int test_segm_ipa_stream_srv_cli_read_cb(struct osmo_stream_cli *osc, int res, struct msgb *msg)
 {
 	unsigned char *data;
 	struct ipa_head *h = (struct ipa_head *) msg->l1h;
 	uint8_t ipac_msg_type = *msg->data;
 	struct msgb *reply;
+
+	if (res < 0) {
+		fprintf(stderr, "cannot receive message (res = %d)\n", res);
+		msgb_free(msg);
+		return -ENOMSG;
+	}
+
 	LOGCLI(osc, "Received message from stream (payload len = %" PRIu16 ")\n", msgb_length(msg));
 	if (ipac_msg_type < 0 || 5 < ipac_msg_type) {
 		fprintf(stderr, "Received unexpected IPAC message type %"PRIu8"\n", ipac_msg_type);
@@ -566,13 +573,23 @@ struct osmo_stream_cli *test_segm_ipa_stream_srv_run_client(void *ctx)
 	return osc;
 }
 
-int test_segm_ipa_stream_srv_srv_read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
+int test_segm_ipa_stream_srv_srv_read_cb(struct osmo_stream_srv *conn, int res, struct msgb *msg)
 {
 	static unsigned msgnum_srv = 0;
 	struct ipa_head *ih = (struct ipa_head *)msg->l1h;
 	unsigned char *data;
 	struct msgb *m;
 	uint8_t msgt;
+
+	if (res <= 0) {
+		if (res < 0)
+			LOGSRV(conn, "cannot receive message: %s\n", strerror(-res));
+		else
+			LOGSRV(conn, "client closed connection\n");
+		msgb_free(msg);
+		osmo_stream_srv_destroy(conn);
+		return -EBADF;
+	}
 
 	LOGSRV(conn, "[%u-srv] Received IPA message from stream (payload len = %" PRIu16 ")\n",
 	       ++msgnum_srv, msgb_length(msg));
@@ -699,12 +716,26 @@ static void send_last_third_srv(void *osmo_stream_srv_arg)
 	osmo_timer_schedule(&fragmented_send_tl_srv_destroy, 0, 2);
 }
 
-int test_segm_ipa_stream_cli_srv_read_cb(struct osmo_stream_srv *conn, struct msgb *msg)
+int test_segm_ipa_stream_cli_srv_read_cb(struct osmo_stream_srv *conn, int res, struct msgb *msg)
 {
 	unsigned char *data;
 	struct ipa_head *h = (struct ipa_head *) msg->l1h;
-	uint8_t ipa_msg_type = ((uint8_t *)h)[sizeof(struct ipa_head)];
-	struct msgb *reply = msgb_alloc_headroom(128, 0, "IPA reply");
+	uint8_t ipa_msg_type;
+	struct msgb *reply;
+
+	if (res <= 0) {
+		if (res < 0)
+			LOGSRV(conn, "cannot receive message: %s\n", strerror(-res));
+		else
+			LOGSRV(conn, "client closed connection\n");
+		msgb_free(msg);
+		osmo_stream_srv_destroy(conn);
+		return -EBADF;
+	}
+
+	ipa_msg_type = ((uint8_t *)h)[sizeof(struct ipa_head)];
+
+	reply = msgb_alloc_headroom(128, 0, "IPA reply");
 	if (reply == NULL) {
 		fprintf(stderr, "Cannot allocate message\n");
 		return -ENOMEM;
@@ -778,7 +809,7 @@ static int test_segm_ipa_stream_cli_srv_accept_cb(struct osmo_stream_srv_link *s
 
 static bool test_segm_ipa_stream_cli_all_msgs_processed = false;
 
-static int test_segm_ipa_stream_cli_cli_read_cb(struct osmo_stream_cli *osc, struct msgb *msg)
+static int test_segm_ipa_stream_cli_cli_read_cb(struct osmo_stream_cli *osc, int res, struct msgb *msg)
 {
 	static unsigned msgnum_cli = 0;
 	unsigned char *data;
