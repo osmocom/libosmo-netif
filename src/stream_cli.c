@@ -103,11 +103,11 @@ struct osmo_stream_cli {
 	int				sk_domain;
 	int				sk_type;
 	uint16_t			proto;
-	int (*connect_cb)(struct osmo_stream_cli *cli);
-	int (*disconnect_cb)(struct osmo_stream_cli *cli);
-	int (*read_cb)(struct osmo_stream_cli *cli);
-	int (*iofd_read_cb)(struct osmo_stream_cli *cli, struct msgb *msg);
-	int (*segmentation_cb)(struct msgb *msg);
+	osmo_stream_cli_connect_cb_t	connect_cb;
+	osmo_stream_cli_disconnect_cb_t	disconnect_cb;
+	osmo_stream_cli_read_cb_t	read_cb;
+	osmo_stream_cli_read_cb2_t	iofd_read_cb;
+	osmo_stream_cli_segmentation_cb_t segmentation_cb;
 	void				*data;
 	int				flags;
 	int				reconnect_timeout;
@@ -661,7 +661,7 @@ osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
 
 /* Configure client side segmentation for the iofd */
 static void configure_cli_segmentation_cb(struct osmo_stream_cli *cli,
-					       int (*segmentation_cb)(struct msgb *msg))
+					  osmo_stream_cli_segmentation_cb_t segmentation_cb)
 {
 	/* Copy default settings */
 	struct osmo_io_ops client_ops;
@@ -676,7 +676,7 @@ static void configure_cli_segmentation_cb(struct osmo_stream_cli *cli,
  *  \param[in] segmentation_cb Target segmentation callback
  */
 void osmo_stream_cli_set_segmentation_cb(struct osmo_stream_cli *cli,
-					 int (*segmentation_cb)(struct msgb *msg))
+					 osmo_stream_cli_segmentation_cb_t segmentation_cb)
 {
 	cli->segmentation_cb = segmentation_cb;
 	if (cli->iofd) /* Otherwise, this will be done in osmo_stream_cli_open() */
@@ -784,7 +784,7 @@ osmo_stream_cli_get_ofd(struct osmo_stream_cli *cli)
  *  \param[in] connect_cb Call-back function to be called upon connect */
 void
 osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli,
-	int (*connect_cb)(struct osmo_stream_cli *cli))
+			       osmo_stream_cli_connect_cb_t connect_cb)
 {
 	cli->connect_cb = connect_cb;
 }
@@ -793,7 +793,7 @@ osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli,
  *  \param[in] cli Stream Client to modify
  *  \param[in] disconnect_cb Call-back function to be called upon disconnect */
 void osmo_stream_cli_set_disconnect_cb(struct osmo_stream_cli *cli,
-				       int (*disconnect_cb)(struct osmo_stream_cli *cli))
+				       osmo_stream_cli_disconnect_cb_t disconnect_cb)
 {
 	cli->disconnect_cb = disconnect_cb;
 }
@@ -804,7 +804,7 @@ void osmo_stream_cli_set_disconnect_cb(struct osmo_stream_cli *cli,
  *  \param[in] read_cb Call-back function to be called when we want to read */
 void
 osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
-			    int (*read_cb)(struct osmo_stream_cli *cli))
+			    osmo_stream_cli_read_cb_t read_cb)
 {
 	OSMO_ASSERT(cli->mode != OSMO_STREAM_MODE_OSMO_IO);
 	cli->mode = OSMO_STREAM_MODE_OSMO_FD;
@@ -817,7 +817,7 @@ osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli,
  *  \param[in] read_cb Call-back function to be called when data was read from the socket */
 void
 osmo_stream_cli_set_read_cb2(struct osmo_stream_cli *cli,
-			    int (*read_cb)(struct osmo_stream_cli *cli, struct msgb *msg))
+			     osmo_stream_cli_read_cb2_t read_cb)
 {
 	OSMO_ASSERT(cli->mode != OSMO_STREAM_MODE_OSMO_FD);
 	cli->mode = OSMO_STREAM_MODE_OSMO_IO;

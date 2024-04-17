@@ -82,7 +82,7 @@ struct osmo_stream_srv_link {
 	int			sk_domain;
 	int			sk_type;
 	uint16_t		proto;
-	int (*accept_cb)(struct osmo_stream_srv_link *srv, int fd);
+	osmo_stream_srv_link_accept_cb_t accept_cb;
 	void			*data;
 	int			flags;
 	struct osmo_sock_init2_multiaddr_pars ma_pars;
@@ -597,9 +597,9 @@ struct osmo_stream_srv {
 		struct osmo_io_fd		*iofd;
 	};
 	struct llist_head		tx_queue;
-	int (*closed_cb)(struct osmo_stream_srv *peer);
-	int (*read_cb)(struct osmo_stream_srv *peer);
-	int (*iofd_read_cb)(struct osmo_stream_srv *peer, struct msgb *msg);
+	osmo_stream_srv_closed_cb_t	closed_cb;
+	osmo_stream_srv_read_cb_t	read_cb;
+	osmo_stream_srv_read_cb2_t	iofd_read_cb;
 	void				*data;
 	int				flags;
 };
@@ -811,10 +811,10 @@ static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
  *  \param[in] data User data to save in the new Stream Server struct
  *  \returns Stream Server in case of success; NULL on error */
 struct osmo_stream_srv *
-osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link,
-	int fd,
-	int (*read_cb)(struct osmo_stream_srv *conn),
-	int (*closed_cb)(struct osmo_stream_srv *conn), void *data)
+osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd,
+		       osmo_stream_srv_read_cb_t read_cb,
+		       osmo_stream_srv_closed_cb_t closed_cb,
+		       void *data)
 {
 	struct osmo_stream_srv *conn;
 
@@ -923,7 +923,8 @@ const char *osmo_stream_srv_get_name(const struct osmo_stream_srv *conn)
  *
  *  \param[in] conn Stream Server to modify
  *  \param[in] read_cb Call-back function to be called when data was read */
-void osmo_stream_srv_set_read_cb(struct osmo_stream_srv *conn, int (*read_cb)(struct osmo_stream_srv *conn, struct msgb *msg))
+void osmo_stream_srv_set_read_cb(struct osmo_stream_srv *conn,
+				 osmo_stream_srv_read_cb2_t read_cb)
 {
 	OSMO_ASSERT(conn && conn->mode == OSMO_STREAM_MODE_OSMO_IO);
 	conn->iofd_read_cb = read_cb;
@@ -935,7 +936,8 @@ void osmo_stream_srv_set_read_cb(struct osmo_stream_srv *conn, int (*read_cb)(st
  *  internal state related to this specific client/connection.
  *  \param[in] conn Stream Server to modify
  *  \param[in] closed_cb Call-back function to be called when the connection was closed */
-void osmo_stream_srv_set_closed_cb(struct osmo_stream_srv *conn, int (*closed_cb)(struct osmo_stream_srv *conn))
+void osmo_stream_srv_set_closed_cb(struct osmo_stream_srv *conn,
+				   osmo_stream_srv_closed_cb_t closed_cb)
 {
 	OSMO_ASSERT(conn);
 	conn->closed_cb = closed_cb;
@@ -974,7 +976,7 @@ osmo_stream_srv_set_data(struct osmo_stream_srv *conn,
  *  \param[in,out] conn Target Stream Server to modify
  *  \param[in] segmentation_cb Segmentation callback to be set */
 void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn,
-					int (*segmentation_cb)(struct msgb *msg))
+					 osmo_stream_srv_segmentation_cb_t segmentation_cb)
 {
 	/* Note that the following implies that iofd != NULL, since
 	 * osmo_stream_srv_create2() creates the iofd member, too */
