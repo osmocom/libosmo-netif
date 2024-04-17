@@ -572,15 +572,21 @@ int test_segm_ipa_stream_srv_srv_read_cb(struct osmo_stream_srv *conn, struct ms
 	struct ipa_head *ih = (struct ipa_head *)msg->l1h;
 	unsigned char *data;
 	struct msgb *m;
-	uint8_t *msgt = msg->l2h; /* Octet right after IPA header */
+	uint8_t msgt;
+
 	LOGSRV(conn, "[%u-srv] Received IPA message from stream (payload len = %" PRIu16 ")\n",
 	       ++msgnum_srv, msgb_length(msg));
 	LOGSRV(conn, "\tmsg buff data (including stripped headers): %s\n",
 	       osmo_hexdump((unsigned char *)ih, osmo_ntohs(ih->len) + sizeof(*ih)));
 	LOGSRV(conn, "\tIPA payload: %s\n", osmo_hexdump(ih->data, osmo_ntohs(ih->len)));
-	LOGSRV(conn, "\tType: %s\n", IPAC_MSG_TYPES[*msgt]);
+
+	msgt = *msg->l2h; /* Octet right after IPA header */
+	LOGSRV(conn, "\tType: %s\n", IPAC_MSG_TYPES[msgt]);
 	LOGSRV(conn, "\t(msg dump: %s)\n", osmo_hexdump(msg->l1h, msg->len + sizeof(struct ipa_head)));
-	if (*msgt == IPAC_MSGT_ID_RESP) { /*  */
+
+	msgb_free(msg);
+
+	if (msgt == IPAC_MSGT_ID_RESP) { /*  */
 		LOGSRV(conn, "Send IPAC_MSGT_ID_GET to trigger client to send next third\n\n");
 		m = osmo_ipa_msg_alloc(128);
 		if (m == NULL) {
@@ -590,7 +596,7 @@ int test_segm_ipa_stream_srv_srv_read_cb(struct osmo_stream_srv *conn, struct ms
 		put_ipa_msg(data, m, ipac_msg_idreq_payload);
 		osmo_ipa_msg_push_headers(m, IPAC_PROTO_IPACCESS, -1);
 		osmo_stream_srv_send(conn, m);
-	} else if (msgnum_srv == 7 && *msgt == IPAC_MSGT_PONG) {
+	} else if (msgnum_srv == 7 && msgt == IPAC_MSGT_PONG) {
 		test_segm_ipa_stream_srv_all_msgs_processed = true;
 		osmo_stream_srv_destroy(conn);
 	}
