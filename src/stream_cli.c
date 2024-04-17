@@ -107,7 +107,6 @@ struct osmo_stream_cli {
 	int (*disconnect_cb)(struct osmo_stream_cli *cli);
 	int (*read_cb)(struct osmo_stream_cli *cli);
 	int (*iofd_read_cb)(struct osmo_stream_cli *cli, struct msgb *msg);
-	int (*write_cb)(struct osmo_stream_cli *cli);
 	int (*segmentation_cb)(struct msgb *msg);
 	void				*data;
 	int				flags;
