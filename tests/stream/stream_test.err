@@ -2,28 +2,50 @@ SRV(srv_link_test,127.0.0.11:1111) accept()ed new link from 127.0.0.1:8976
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTING} connection established
 
 {2.000001} autoreconnecting test step 11 [client NA, server OK], FD reg 1
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connected write
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} sending 29 bytes of data
 
 {2.000002} autoreconnecting test step 10 [client NA, server OK], FD reg 1
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connected read/write (what=0x1)
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) message received
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) received 29 bytes from client
 
 {2.000003} autoreconnecting test step 9 [client NA, server OK], FD reg 1
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connected read/write (what=0x2)
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) sending 11 bytes of data
 
 {2.000004} autoreconnecting test step 8 [client NA, server OK], FD reg 1
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connected read
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} message received
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} received 11 bytes from srv
 
 {2.000005} autoreconnecting test step 7 [client OK, server OK], FD reg 1
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connected write
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} sending 29 bytes of data
 
 {2.000006} autoreconnecting test step 6 [client OK, server OK], FD reg 1
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connected read/write (what=0x1)
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) message received
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) received 29 bytes from client
 
 {2.000007} autoreconnecting test step 5 [client OK, server OK], FD reg 1
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connected read
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} message received
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connection closed with srv
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CLOSED} connection closed
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){WAIT_RECONNECT} retrying reconnect in 9 seconds...
 
 {11.000008} autoreconnecting test step 4 [client OK, server OK], FD reg 0
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){WAIT_RECONNECT} reconnecting
 
 {11.000009} autoreconnecting test step 3 [client OK, server OK], FD reg 1
 SRV(srv_link_test,127.0.0.11:1111) accept()ed new link from 127.0.0.1:8976
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTING} connection established
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CLOSED} connection closed
 
 {11.000010} autoreconnecting test step 2 [client OK, server OK], FD reg 0
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connected read/write (what=0x1)
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) message received
 SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connection closed with client
 
 {11.000011} autoreconnecting test step 1 [client OK, server NA], FD reg 0
@@ -31,23 +53,63 @@ SRV(srv_link_test,127.0.0.11:1111) accept()ed new link from 127.0.0.1:8976
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTING} connection established
 
 {11.000012} non-reconnecting test step 7 [client NA, server OK], FD reg 1
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connected write
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} sending 29 bytes of data
 
 {11.000013} non-reconnecting test step 6 [client NA, server OK], FD reg 1
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connected read/write (what=0x1)
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) message received
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) received 29 bytes from client
 
 {11.000014} non-reconnecting test step 5 [client NA, server OK], FD reg 1
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connected read/write (what=0x2)
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) sending 11 bytes of data
 
 {11.000015} non-reconnecting test step 4 [client NA, server OK], FD reg 1
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connected read
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} message received
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} received 11 bytes from srv
 
 {11.000016} non-reconnecting test step 3 [client OK, server OK], FD reg 1
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connected write
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} sending 29 bytes of data
 
 {11.000017} non-reconnecting test step 2 [client OK, server OK], FD reg 1
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) connected read/write (what=0x1)
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) message received
+SRVCONN(srv_test,r=127.0.0.1:8976<->l=127.0.0.11:1111) received 29 bytes from client
 
 {11.000018} non-reconnecting test step 1 [client OK, server OK], FD reg 1
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connected read
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} message received
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CONNECTED} connection closed with srv
+CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CLOSED} connection closed
 CLICONN(cli_test,r=127.0.0.11:1111<->l=127.0.0.1:8976){CLOSED} not reconnecting, disabled
 
 {20.000019} non-reconnecting test step 0 [client OK, server OK], FD reg 0
 SRV(srv_link_test,127.0.0.11:1111) accept()ed new link from 127.0.0.1:8977
 CLICONN(,r=127.0.0.11:1111<->l=127.0.0.1:8977){CONNECTING} connection established
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1111) received 24 bytes from client
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1111) received 24 bytes from client
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1111) received 24 bytes from client
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1111) received 24 bytes from client
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1111) connected write
+CLICONN(,r=127.0.0.11:1111<->l=127.0.0.1:8977){CONNECTED} received 6 bytes from srv
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1111) received 10 bytes from client
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1111) received 10 bytes from client
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1111) received 10 bytes from client
+CLICONN(,r=127.0.0.11:1111<->l=127.0.0.1:8977){CLOSED} connection closed
 SRV(srv_link_test,127.0.0.11:1112) accept()ed new link from 127.0.0.1:8977
 CLICONN(,r=127.0.0.11:1112<->l=127.0.0.1:8977){CONNECTING} connection established
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1112) connected write
+CLICONN(,r=127.0.0.11:1112<->l=127.0.0.1:8977){CONNECTED} received 24 bytes from srv
+CLICONN(,r=127.0.0.11:1112<->l=127.0.0.1:8977){CONNECTED} received 24 bytes from srv
+CLICONN(,r=127.0.0.11:1112<->l=127.0.0.1:8977){CONNECTED} received 24 bytes from srv
+CLICONN(,r=127.0.0.11:1112<->l=127.0.0.1:8977){CONNECTED} received 24 bytes from srv
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1112) received 6 bytes from client
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1112) connected write
+SRVCONN(,r=127.0.0.1:8977<->l=127.0.0.11:1112) connected write
+CLICONN(,r=127.0.0.11:1112<->l=127.0.0.1:8977){CONNECTED} received 10 bytes from srv
+CLICONN(,r=127.0.0.11:1112<->l=127.0.0.1:8977){CONNECTED} received 10 bytes from srv
+CLICONN(,r=127.0.0.11:1112<->l=127.0.0.1:8977){CONNECTED} received 10 bytes from srv
+CLICONN(,r=127.0.0.11:1112<->l=127.0.0.1:8977){CLOSED} connection closed
