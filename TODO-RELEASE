@@ -1,17 +1,9 @@
 # When cleaning up this file: bump API version in corresponding Makefile.am and rename corresponding debian/lib*.install
-# according to https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html#Updating-version-info
-# In short:
+# according to https://osmocom.org/projects/cellular-infrastructure/wiki/Make_a_new_release
+# In short: https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html#Updating-version-info
 # LIBVERSION=c:r:a
 # If the library source code has changed at all since the last update, then increment revision: c:r + 1:a.
-# If any interfaces have been added, removed, or changed since the last update: c + 1:0:0.
+# If any interfaces have been added, removed, or changed since the last update: c + 1:0:a.
 # If any interfaces have been added since the last public release: c:r:a + 1.
 # If any interfaces have been removed or changed since the last public release: c:r:0.
-#library	what		description / commit summary line
-libosmocore >1.9.0  working osmo_sock_init2_multiaddr2() without setting flag OSMO_SOCK_F_BIND
-libosmocore >1.9.0  use osmo_sock_multiaddr_get_name_buf()
-libosmocore >1.9.0  use OSMO_IO_FD_MODE_RECVMSG_SENDMSG
-libosmocore >1.9.0  use osmo_iofd_get_ioops()
-libosmo-netif added  osmo_stream_srv_get_sockname()
-libosmo-netif	update-dependency	libosmocore > 1.9.0 required for I89eb519b22d21011d61a7855b2364bc3c295df82
-libosmo-netif   ADD     osmo_stream_srv_link_get_name(), osmo_stream_srv_get_name(), osmo_stream_cli_get_name()
-libosmo-netif   ADD     osmo_prim_srv_link_set_name(), osmo_prim_srv_set_name()
+#library	what			description / commit summary line

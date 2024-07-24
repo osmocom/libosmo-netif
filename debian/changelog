@@ -1,3 +1,78 @@
+libosmo-netif (1.5.0) unstable; urgency=medium
+
+  [ arehbein ]
+  * ipa: Don't break strict aliasing rule
+  * stream_srv: Set io_fd pointer to NULL after freeing
+  * stream_test: Disable nagling
+  * stream: Add client-side (segmentation) support for IPA
+  * stream (test): Fix Coverity CID 323456
+  * stream: Add and use helper function osmo_ipa_push_headers()
+  * stream_test: Improve mem mgmt, fix connection mgmt
+  * stream_test: Fix memleaks
+
+  [ Daniel Willmann ]
+  * stream_srv: Fix connection error handling
+  * stream_srv: Make osmo_stream_srv_clear_tx_queue() aware of osmo_io
+  * stream_test: Increase log level to debug
+
+  [ Harald Welte ]
+  * stream_srv: osmo_stream_srv_get_ofd() works only in OSMO_FD mode
+  * Introduce generic osmo_stream_{cli,srv}_get_fd() API
+  * examples/stream-*: Support SCTP when called with "-s" argument
+  * examples/stream-{server,client}: Generate talloc report on SIGUSR1
+  * stream_{cli,srv}: Add support for SCTP in OSMO_IO mode
+  * osmo_io: make use of osmo_iofd_get_ioops()
+  * osmo_stream_cli_send(): Drop data if client is not connected [yet]
+  * Makefile.am: Fix dependency: rebuild doxygen on src/include changes
+  * docs: Enable AUTOBRIEF feauture in doxygen
+  * docs: Use \defgroup and avoid repeated boilerplate text
+  * docs: Don't export documentation about static (internal) functions
+  * Ensure osmo_stream_{cli,srv}_recv() is used only in osmo_fd mode
+  * docs: More verbose stream_{cli,srv} API documentation/manual
+  * docs: Don't export internal structs declared in src files
+  * docs: Split Stream Server and Stream Client into separate groups
+  * docs: jibuf: Prevent internal #defines being documented
+  * Makefile.am: Remove $(SOURCES) which is not defined anywhere
+  * introduce osmo_stream_cli_get_iofd() API
+  * docs: various osmux API documentation updates
+  * docs: Improve/clean-up doxygen for datagram.[ch]
+
+  [ Pau Espin Pedrol ]
+  * stream_cli: Fix opening sctp client socket if no local address set
+  * stream: Add missing osmo_stream_srv_link_get_fd() API
+  * netif: sctp.h: Introduce value_string for enum sctp_spinfo_state
+  * netif: sctp.h: Introduce value_string for enum sctp_sstat_state
+  * stream_cli: osmo_stream_cli_get_sockname() now returns the full set of addresses
+  * stream_cli: Introduce API osmo_stream_srv_get_sockname()
+  * stream_srv_link: osmo_stream_srv_link_get_sockname() now returns the full set of addresses
+  * osmo_prim_srv_send: assert prim_srv is not NULL
+  * stream: Add osmo_stream_*_get_name() APIs
+  * prim: Introduce osmo_prim_srv{_link}_set_name APIs
+  * stream_srv: Fix retrieve of srv_link sockname for AF_UNIX sockets
+  * examples/ipa-stream-client: Fix memleaks in read_cb()
+  * stream_cli: Remove unused write_cb field
+  * stream: Define types for each API callback
+  * tests/stream: Fix missing msgb_free()
+  * stream_{cli,srv}: Add 'res' param to read_cb2
+
+  [ Vadim Yanitskiy ]
+  * build: include git-version-gen into the release tarball
+  * osmo_stream_cli_write(): fix double-free of msgb
+  * README.md: cosmetic: fix a typo
+
+  [ Andreas Eversberg ]
+  * examples/stream-*: Add options, to set local/remote peer
+  * stream_{cli,srv}: Fix memory leak, if sending a message fails
+  * stream_{cli,srv}: Free received messages when not forwarded
+  * stream_cli: Correctly setup and free osmo_io client instance
+  * stream_{client,server} example: Cleanup on exit
+  * stream_cli.c: Handle read / recvfrom error and close connection
+
+  [ Oliver Smith ]
+  * contrib: remove rpm spec file
+
+ -- Oliver Smith <osmith@sysmocom.de>  Wed, 24 Jul 2024 11:58:42 +0200
+
 libosmo-netif (1.4.0) unstable; urgency=medium
 
   [ Max ]
