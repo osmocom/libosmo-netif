@@ -375,7 +375,8 @@ osmo_ipa_parse_msg_id_resp(struct msgb *msg, struct ipaccess_unit *unit_data)
 #define MSG_CB_IPA_INFO_OFFSET 0
 
 /* Check and remove headers (in case of p == IPAC_PROTO_OSMO, also the IPA extension header).
- * Returns a negative number on error, otherwise the number of octets removed */
+ * Returns a negative number on error, otherwise the number of octets removed.
+ * Both msg->data and msg->l2h point to the user data after the (extended) IPA header if this function is successful. */
 static inline int ipa_check_pull_headers(struct msgb *msg)
 {
 	int ret;
@@ -397,6 +398,7 @@ static inline int ipa_check_pull_headers(struct msgb *msg)
 	osmo_ipa_msgb_cb_proto_ext(msg) = msg->data[0];
 	msgb_pull(msg, sizeof(struct ipa_head_ext));
 	octets_removed += sizeof(struct ipa_head_ext);
+	msg->l2h = msg->data;
 	return octets_removed;
 }
 
