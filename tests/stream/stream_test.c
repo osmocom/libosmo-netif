@@ -516,7 +516,7 @@ static int test_segm_ipa_stream_srv_cli_read_cb(struct osmo_stream_cli *osc, int
 	}
 
 	LOGCLI(osc, "Received message from stream (payload len = %" PRIu16 ")\n", msgb_length(msg));
-	if (ipac_msg_type < 0 || 5 < ipac_msg_type) {
+	if (5 < ipac_msg_type) {
 		fprintf(stderr, "Received unexpected IPAC message type %"PRIu8"\n", ipac_msg_type);
 		msgb_free(msg);
 		return -ENOMSG;
