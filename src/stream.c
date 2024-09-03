@@ -279,8 +279,14 @@ int stream_sctp_recvmsg_wrapper(int fd, struct msgb *msg, const char *log_pfx)
 	int flags = 0;
 	int ret;
 
+	/* Canary to detect if kernel returns sinfo; see https://github.com/sctp/lksctp-tools/issues/37 */
+	sinfo.sinfo_assoc_id = 0;
+
 	ret = sctp_recvmsg(fd, msg->tail, msgb_tailroom(msg), NULL, NULL, &sinfo, &flags);
-	return stream_sctp_recvmsg_trailer(log_pfx, msg, ret, &sinfo, flags);
+	if (sinfo.sinfo_assoc_id)
+		return stream_sctp_recvmsg_trailer(log_pfx, msg, ret, &sinfo, flags);
+	else
+		return stream_sctp_recvmsg_trailer(log_pfx, msg, ret, NULL, flags);
 }
 
 /*! wrapper for osmo_io asynchronous recvmsg response */
