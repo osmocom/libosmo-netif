@@ -115,14 +115,21 @@ void *osmo_rtp_get_payload(struct rtp_hdr *rtph, struct msgb *msg,
 	int x_len;
 	int csrc_len;
 
-	csrc_len = rtph->csrc_count << 2;
-	payload = msg->data + sizeof(struct rtp_hdr) + csrc_len;
-	payload_len = msg->len - sizeof(struct rtp_hdr) - csrc_len;
-	if (payload_len < 0) {
-		DEBUGPC(DLMUX, "received RTP frame too short (len = %d, "
-			"csrc count = %d)\n", msg->len, rtph->csrc_count);
+	if (msg->len < sizeof(struct rtp_hdr)) {
+		DEBUGPC(DLMUX, "received RTP frame too short for an RTP header (%d < %zu)\n",
+			msg->len, sizeof(*rtph));
 		return NULL;
 	}
+
+	csrc_len = sizeof(struct rtp_hdr) + (rtph->csrc_count << 2);
+	if (msg->len < csrc_len) {
+		DEBUGPC(DLMUX, "received RTP frame too short for its csrc (%u < %d, csrc_count = %d)\n",
+			msg->len, csrc_len, rtph->csrc_count);
+		return NULL;
+	}
+	payload = msg->data + csrc_len;
+	payload_len = msg->len - csrc_len;
+
 	if (rtph->extension) {
 		if (payload_len < sizeof(struct rtp_x_hdr)) {
 			DEBUGPC(DLMUX, "received RTP frame too short for "
@@ -131,26 +138,27 @@ void *osmo_rtp_get_payload(struct rtp_hdr *rtph, struct msgb *msg,
 		}
 		rtpxh = (struct rtp_x_hdr *)payload;
 		x_len = ntohs(rtpxh->length) * 4 + sizeof(struct rtp_x_hdr);
-		payload += x_len;
-		payload_len -= x_len;
-		if (payload_len < 0) {
+		if (x_len > payload_len) {
 			DEBUGPC(DLMUX, "received RTP frame too short, "
 				"extension header exceeds frame length\n");
 			return NULL;
 		}
+		payload += x_len;
+		payload_len -= x_len;
 	}
 	if (rtph->padding) {
+		uint8_t padding_len;
 		if (payload_len < 1) {
 			DEBUGPC(DLMUX, "received RTP frame too short for "
 				"padding length\n");
 			return NULL;
 		}
-		payload_len -= payload[payload_len - 1];
-		if (payload_len < 0) {
-			DEBUGPC(DLMUX, "received RTP frame with padding "
-				"greater than payload\n");
+		padding_len = payload[payload_len - 1];
+		if (payload_len < padding_len) {
+			DEBUGPC(DLMUX, "received RTP frame with padding greater than payload\n");
 			return NULL;
 		}
+		payload_len -= padding_len;
 	}
 
 	*plen = payload_len;
