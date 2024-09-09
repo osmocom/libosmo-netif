@@ -162,7 +162,7 @@ void *osmo_rtp_get_payload(struct rtp_hdr *rtph, struct msgb *msg,
 	}
 
 	*plen = payload_len;
-	return (uint8_t *)msg->data + msg->len - payload_len;
+	return payload;
 }
 
 struct msgb *
