@@ -140,7 +140,7 @@ void *osmo_rtp_get_payload(struct rtp_hdr *rtph, struct msgb *msg,
 		}
 	}
 	if (rtph->padding) {
-		if (payload_len < 0) {
+		if (payload_len < 1) {
 			DEBUGPC(DLMUX, "received RTP frame too short for "
 				"padding length\n");
 			return NULL;
