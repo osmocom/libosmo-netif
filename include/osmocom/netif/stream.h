@@ -32,6 +32,9 @@
  *  For any new applications, you definitely should use the modern mode, as it provides you with a higher
  *  layer of abstraction and allows you to perform efficient I/O using the io_uring backend of osmo_io.
  *
+ *  The modern mode is chosen by invoking osmo_stream_srv_create2().
+ *  The legacy mode is chosen by invoking the older osmo_stream_srv_create().
+ *
  *  The two main objects are osmo_stream_srv_link (main server accept()ing incoming connections) and
  *  osmo_stream_srv (a single given connection from a remote client).
  *
@@ -159,6 +162,9 @@ void osmo_stream_srv_clear_tx_queue(struct osmo_stream_srv *conn);
  *
  *  For any new applications, you definitely should use the modern mode, as it provides you with a higher
  *  layer of abstraction and allows you to perform efficient I/O using the io_uring backend of osmo_io.
+ *
+ *  The modern mode is chosen by invoking osmo_stream_cli_set_read_cb2().
+ *  The legacy mode is chosen by invoking the older osmo_stream_cli_set_read_cb().
  *
  *  A typical usage of osmo_stream_cli would look as follows:
  *
