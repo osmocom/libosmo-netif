@@ -102,7 +102,9 @@ struct osmo_stream_cli {
 	uint16_t			local_port;
 	int				sk_domain;
 	int				sk_type;
+	int				sk_prio; /* socket priority, SO_PRIORITY, default=0=unset */
 	uint16_t			proto;
+	uint8_t				ip_dscp; /* IP Differentiated services, 0..63, default=0=unset */
 	osmo_stream_cli_connect_cb_t	connect_cb;
 	osmo_stream_cli_disconnect_cb_t	disconnect_cb;
 	osmo_stream_cli_read_cb_t	read_cb;
@@ -888,7 +890,8 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 		ret = osmo_sock_init2_multiaddr2(AF_UNSPEC, SOCK_STREAM, cli->proto,
 						(const char **)cli->local_addr, cli->local_addrcnt, cli->local_port,
 						(const char **)cli->addr, cli->addrcnt, cli->port,
-						OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK,
+						OSMO_SOCK_F_CONNECT | OSMO_SOCK_F_BIND | OSMO_SOCK_F_NONBLOCK |
+						OSMO_SOCK_F_DSCP(cli->ip_dscp) | OSMO_SOCK_F_PRIO(cli->sk_prio),
 						&cli->ma_pars);
 		break;
 #endif
@@ -896,7 +899,8 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 		ret = osmo_sock_init2(AF_UNSPEC, SOCK_STREAM, cli->proto,
 				      cli->local_addr[0], cli->local_port,
 				      cli->addr[0], cli->port,
-				      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+				      OSMO_SOCK_F_CONNECT | OSMO_SOCK_F_BIND | OSMO_SOCK_F_NONBLOCK |
+				      OSMO_SOCK_F_DSCP(cli->ip_dscp) | OSMO_SOCK_F_PRIO(cli->sk_prio));
 	}
 
 	if (ret < 0) {
@@ -953,6 +957,69 @@ void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay)
 			nodelay, errno);
 }
 
+/*! Set the priority value of the stream socket.
+ *  Setting this  will automatically set the socket priority
+ *  option on any socket established via \ref osmo_stream_cli_open
+ *  or any re-connect. This can be set either before or after opening the
+ *  socket.
+ *  \param[in] cli Stream client whose sockets are to be configured
+ *  \param[in] sk_prio priority value. Values outside 0..6 require CAP_NET_ADMIN.
+ *  \return negative on error, 0 on success
+ */
+int osmo_stream_cli_set_priority(struct osmo_stream_cli *cli, int sk_prio)
+{
+	int rc;
+	int fd;
+
+	if (cli->sk_prio == sk_prio)
+		return 0; /* No change needed */
+
+	cli->sk_prio = sk_prio;
+
+	if (!stream_cli_is_opened(cli))
+		return 0; /* Config will be applied upon open() time */
+
+	if ((fd = osmo_stream_cli_get_fd(cli)) < 0) { /* Shouldn't happen... */
+		LOGSCLI(cli, LOGL_ERROR, "set_priority(%d): failed obtaining socket\n", cli->sk_prio);
+		return -EBADFD;
+	}
+	if ((rc = osmo_sock_set_priority(fd, cli->sk_prio)) < 0)
+		LOGSCLI(cli, LOGL_ERROR, "set_priority(%d): failed setsockopt err=%d\n",
+			cli->sk_prio, errno);
+	return rc;
+}
+
+/*! Set the DSCP (differentiated services code point) of the stream socket.
+ *  Setting this  will automatically set the IP DSCP option on any socket established
+ *  via \ref osmo_stream_cli_open or any re-connect. This can be set either before or
+ *  after opening the socket.
+ *  \param[in] cli Stream client whose sockets are to be configured
+ *  \param[in] ip_dscp DSCP value. Value range 0..63.
+ *  \return negative on error, 0 on success
+ */
+int osmo_stream_cli_set_ip_dscp(struct osmo_stream_cli *cli, uint8_t ip_dscp)
+{
+	int rc;
+	int fd;
+
+	if (cli->ip_dscp == ip_dscp)
+		return 0; /* No change needed */
+
+	cli->ip_dscp = ip_dscp;
+
+	if (!stream_cli_is_opened(cli))
+		return 0; /* Config will be applied upon open() time */
+
+	if ((fd = osmo_stream_cli_get_fd(cli)) < 0) { /* Shouldn't happen... */
+		LOGSCLI(cli, LOGL_ERROR, "set_ip_dscp(%u): failed obtaining socket\n", cli->ip_dscp);
+		return -EBADFD;
+	}
+	if ((rc = osmo_sock_set_dscp(fd, cli->ip_dscp)) < 0)
+		LOGSCLI(cli, LOGL_ERROR, "set_ip_dscp(%u): failed setsockopt err=%d\n",
+			cli->ip_dscp, errno);
+	return rc;
+}
+
 /*! Open connection of an Osmocom stream client.
  *  This will initiate an non-blocking outbound connect to the configured destination (server) address.
  *  By default the client will automatically attempt to reconnect after default timeout.
@@ -982,7 +1049,8 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 #ifdef HAVE_LIBSCTP
 		case IPPROTO_SCTP:
 			local_addrcnt = cli->local_addrcnt;
-			flags = OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_NONBLOCK;
+			flags = OSMO_SOCK_F_CONNECT | OSMO_SOCK_F_NONBLOCK |
+				OSMO_SOCK_F_DSCP(cli->ip_dscp) | OSMO_SOCK_F_PRIO(cli->sk_prio);
 			if (cli->local_addrcnt > 0 || cli->local_port > 0) { /* explicit bind required? */
 				flags |= OSMO_SOCK_F_BIND;
 				/* If no local addr configured, use local_addr[0]=NULL by default when creating the socket. */
@@ -999,7 +1067,8 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 			ret = osmo_sock_init2(cli->sk_domain, cli->sk_type, cli->proto,
 					      cli->local_addr[0], cli->local_port,
 					      cli->addr[0], cli->port,
-					      OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+					      OSMO_SOCK_F_CONNECT | OSMO_SOCK_F_BIND | OSMO_SOCK_F_NONBLOCK |
+					      OSMO_SOCK_F_DSCP(cli->ip_dscp) | OSMO_SOCK_F_PRIO(cli->sk_prio));
 		}
 		break;
 	default:
