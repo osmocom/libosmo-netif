@@ -192,6 +192,8 @@ typedef int (*osmo_stream_cli_segmentation_cb_t)(struct msgb *msg);
 void osmo_stream_cli_set_name(struct osmo_stream_cli *cli, const char *name);
 const char *osmo_stream_cli_get_name(const struct osmo_stream_cli *cli);
 void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay);
+int osmo_stream_cli_set_priority(struct osmo_stream_cli *cli, int sk_prio);
+int osmo_stream_cli_set_ip_dscp(struct osmo_stream_cli *cli, uint8_t ip_dscp);
 void osmo_stream_cli_set_addr(struct osmo_stream_cli *cli, const char *addr);
 int osmo_stream_cli_set_addrs(struct osmo_stream_cli *cli, const char **addr, size_t addrcnt);
 void osmo_stream_cli_set_port(struct osmo_stream_cli *cli, uint16_t port);
