@@ -148,6 +148,17 @@ bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli)
 	return cli->state == STREAM_CLI_STATE_CONNECTED;
 }
 
+/*! Check if Osmocom Stream Client is opened (has an FD available) according to
+ *  its current state.
+ *  \param[in] cli Osmocom Stream Client
+ *  \return true if fd is available (osmo_stream_cli_get_fd()), false otherwise
+ */
+static bool stream_cli_is_opened(const struct osmo_stream_cli *cli)
+{
+	return cli->state == STREAM_CLI_STATE_CONNECTING ||
+	       cli->state == STREAM_CLI_STATE_CONNECTED;
+}
+
 static void osmo_stream_cli_close_iofd(struct osmo_stream_cli *cli)
 {
 	if (!cli->iofd)
@@ -911,17 +922,29 @@ error_close_socket:
 /*! Set the NODELAY socket option to avoid Nagle-like behavior.
  *  Setting this to nodelay=true will automatically set the NODELAY
  *  socket option on any socket established via \ref osmo_stream_cli_open
- *  or any re-connect.  You have to set this _before_ opening the
+ *  or any re-connect. This can be set either before or after opening the
  *  socket.
  *  \param[in] cli Stream client whose sockets are to be configured
  *  \param[in] nodelay whether to set (true) NODELAY before connect()
  */
 void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay)
 {
+	int fd;
 	if (nodelay)
 		cli->flags |= OSMO_STREAM_CLI_F_NODELAY;
 	else
 		cli->flags &= ~OSMO_STREAM_CLI_F_NODELAY;
+
+	if (!stream_cli_is_opened(cli))
+		return; /* Config will be applied upon open() time */
+
+	if ((fd = osmo_stream_cli_get_fd(cli)) < 0) {
+		LOGSCLI(cli, LOGL_ERROR, "set_nodelay(%u): failed obtaining socket\n", nodelay);
+		return;
+	}
+	if (stream_setsockopt_nodelay(fd, cli->proto, nodelay ? 1 : 0) < 0)
+		LOGSCLI(cli, LOGL_ERROR, "set_nodelay(%u): failed setsockopt err=%d\n",
+			nodelay, errno);
 }
 
 /*! Open connection of an Osmocom stream client.
