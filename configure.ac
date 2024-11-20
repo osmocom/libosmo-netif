@@ -93,19 +93,6 @@ PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.10.0)
 PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.10.0)
 PKG_CHECK_MODULES(LIBOSMOCODEC, libosmocodec >= 1.10.0)
 
-AC_ARG_ENABLE([lapd_examples],
-	[AS_HELP_STRING(
-		[--enable-lapd-examples],
-		[Build some lapd examples]
-	)],
-	[lapd_examples=$enableval], [lapd_examples="no"])
-AS_IF([test "x$lapd_examples" = "xyes"], [
-	PKG_CHECK_MODULES(LIBOSMOABIS, libosmoabis >= 1.5.0)
-	AC_DEFINE([ENABLE_LAPD], [1], [Enable LAPD examples])
-])
-AM_CONDITIONAL(ENABLE_LAPD, test "x$lapd_examples" = "xyes")
-AC_SUBST(ENABLE_LAPD)
-
 AC_ARG_ENABLE([libsctp], [AS_HELP_STRING([--disable-libsctp], [Do not enable socket multiaddr APIs requiring libsctp])],
 	[ENABLE_LIBSCTP=$enableval], [ENABLE_LIBSCTP="yes"])
 AM_CONDITIONAL(ENABLE_LIBSCTP, test x"$ENABLE_LIBSCTP" = x"yes")
