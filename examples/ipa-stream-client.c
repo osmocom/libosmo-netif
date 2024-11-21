@@ -115,13 +115,7 @@ static int read_cb(struct osmo_stream_cli *conn, int res, struct msgb *msg)
 		return 0;
 	}
 
-	if (osmo_ipa_process_msg(msg) < 0) {
-		LOGP(DIPATEST, LOGL_ERROR, "bad IPA message\n");
-		msgb_free(msg);
-		return 0;
-	}
-
-	num = osmo_load32be(msg->data);
+	num = osmo_load32be(msgb_l2(msg));
 	LOGP(DLINP, LOGL_DEBUG, "received msg number %d\n", num);
 
 	llist_for_each_entry_safe(cur, tmp, &msg_sent_list, head) {
