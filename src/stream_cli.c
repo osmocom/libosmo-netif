@@ -207,7 +207,10 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 
 	cli->state = STREAM_CLI_STATE_CLOSED;
 
-	if (old_state == STREAM_CLI_STATE_CONNECTED) {
+	/* If conn was established, notify the disconnection to the user:
+	 * Also, if reconnect is disabled by user, notify the user that connect() failed: */
+	if (old_state == STREAM_CLI_STATE_CONNECTED ||
+	    (old_state == STREAM_CLI_STATE_CONNECTING && cli->reconnect_timeout < 0)) {
 		LOGSCLI(cli, LOGL_DEBUG, "connection closed\n");
 		if (cli->disconnect_cb)
 			cli->disconnect_cb(cli);
