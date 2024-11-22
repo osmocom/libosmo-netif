@@ -81,7 +81,9 @@ struct osmo_stream_srv_link {
 	uint16_t		port;
 	int			sk_domain;
 	int			sk_type;
+	int			sk_prio; /* socket priority, SO_PRIORITY, default=0=unset */
 	uint16_t		proto;
+	uint8_t			ip_dscp; /* IP Differentiated services, 0..63, default=0=unset */
 	osmo_stream_srv_link_accept_cb_t accept_cb;
 	void			*data;
 	int			flags;
@@ -146,6 +148,24 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 		ret = stream_setsockopt_nodelay(sock_fd, link->proto, 1);
 		if (ret < 0)
 			goto error_close_socket;
+	}
+
+	if (link->ip_dscp > 0) {
+		ret = osmo_sock_set_dscp(sock_fd, link->ip_dscp);
+		if (ret < 0) {
+			LOGSLNK(link, LOGL_ERROR, "set_ip_dscp(%u): failed setsockopt err=%d\n",
+				link->ip_dscp, errno);
+			goto error_close_socket;
+		}
+	}
+
+	if (link->sk_prio > 0) {
+		ret = osmo_sock_set_priority(sock_fd, link->sk_prio);
+		if (ret < 0) {
+			LOGSLNK(link, LOGL_ERROR, "set_priority(%d): failed setsockopt err=%d\n",
+				link->sk_prio, errno);
+			goto error_close_socket;
+		}
 	}
 
 	if (!link->accept_cb) {
@@ -222,6 +242,33 @@ void osmo_stream_srv_link_set_nodelay(struct osmo_stream_srv_link *link, bool no
 		link->flags |= OSMO_STREAM_SRV_F_NODELAY;
 	else
 		link->flags &= ~OSMO_STREAM_SRV_F_NODELAY;
+}
+
+/*! Set the priority value of the stream socket.
+ *  Setting this will automatically set the socket priority
+ *  option on any socket established via this server link, before
+ *  calling the accept_cb().
+ *  \param[in] link server link whose sockets are to be configured
+ *  \param[in] sk_prio priority value. Values outside 0..6 require CAP_NET_ADMIN.
+ *  \return negative on error, 0 on success
+ */
+int osmo_stream_srv_link_set_priority(struct osmo_stream_srv_link *link, int sk_prio)
+{
+	link->sk_prio = sk_prio;
+	return 0;
+}
+
+/*! Set the DSCP (differentiated services code point) of the stream socket.
+ *  Setting this  will automatically set the IP DSCP option on any socket on any
+ *  socket established via this server link, before calling the accept_cb().
+ *  \param[in] link server link whose sockets are to be configured
+ *  \param[in] ip_dscp DSCP value. Value range 0..63.
+ *  \return negative on error, 0 on success
+ */
+int osmo_stream_srv_link_set_ip_dscp(struct osmo_stream_srv_link *link, uint8_t ip_dscp)
+{
+	link->ip_dscp = ip_dscp;
+	return 0;
 }
 
 /*! Set the local address to which we bind.
