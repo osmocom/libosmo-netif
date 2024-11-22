@@ -1181,6 +1181,8 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 	}
 
 	if (ret < 0) {
+		if (ret == -EAGAIN) /* Received MSG_NOTIFICATION from stream_sctp_recvmsg_wrapper() */
+			return ret;
 		if (errno == EPIPE || errno == ECONNRESET)
 			LOGSSRV(conn, LOGL_ERROR, "lost connection with client\n");
 		return ret;
