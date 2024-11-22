@@ -353,11 +353,13 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 	OSMO_ASSERT(fd >= 0);
 
 	if (ret < 0) {
+		LOGSCLI(cli, LOGL_ERROR, "connect failed (%d)\n", res);
 		osmo_stream_cli_reconnect(cli);
 		return;
 	}
 	ret = getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len);
 	if (ret >= 0 && error > 0) {
+		LOGSCLI(cli, LOGL_ERROR, "connect so_error (%d)\n", error);
 		osmo_stream_cli_reconnect(cli);
 		return;
 	}
@@ -895,6 +897,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	}
 
 	if (ret < 0) {
+		LOGSCLI(cli, LOGL_ERROR, "connect: socket creation error (%d)\n", ret);
 		if (reconnect)
 			osmo_stream_cli_reconnect(cli);
 		return ret;
@@ -1001,6 +1004,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 	}
 
 	if (ret < 0) {
+		LOGSCLI(cli, LOGL_ERROR, "connect: socket creation error (%d)\n", ret);
 		osmo_stream_cli_reconnect(cli);
 		return ret;
 	}
