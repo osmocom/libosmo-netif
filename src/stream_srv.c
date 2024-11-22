@@ -1184,7 +1184,9 @@ int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg)
 		if (ret == -EAGAIN) /* Received MSG_NOTIFICATION from stream_sctp_recvmsg_wrapper() */
 			return ret;
 		if (errno == EPIPE || errno == ECONNRESET)
-			LOGSSRV(conn, LOGL_ERROR, "lost connection with client\n");
+			LOGSSRV(conn, LOGL_ERROR, "lost connection with client (%d)\n", errno);
+		else
+			LOGSSRV(conn, LOGL_ERROR, "recv failed (%d)\n", errno);
 		return ret;
 	} else if (ret == 0) {
 		LOGSSRV(conn, LOGL_ERROR, "connection closed with client\n");
