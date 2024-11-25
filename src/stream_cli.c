@@ -116,50 +116,9 @@ struct osmo_stream_cli {
 	struct osmo_sock_init2_multiaddr_pars ma_pars;
 };
 
-void osmo_stream_cli_close(struct osmo_stream_cli *cli);
-
 /*! \addtogroup stream_cli
  *  @{
  */
-
-/*! Re-connect an Osmocom Stream Client.
- *  If re-connection is enabled for this client
- *  (which is the case unless negative timeout was explicitly set via osmo_stream_cli_set_reconnect_timeout() call),
- *  we close any existing connection (if any) and schedule a re-connect timer */
-void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
-{
-	osmo_stream_cli_close(cli);
-
-	if (cli->reconnect_timeout < 0) {
-		LOGSCLI(cli, LOGL_INFO, "not reconnecting, disabled\n");
-		return;
-	}
-
-	cli->state = STREAM_CLI_STATE_WAIT_RECONNECT;
-	LOGSCLI(cli, LOGL_INFO, "retrying reconnect in %d seconds...\n",
-		cli->reconnect_timeout);
-	osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
-}
-
-/*! Check if Osmocom Stream Client is in connected state.
- *  \param[in] cli Osmocom Stream Client
- *  \return true if connected, false otherwise
- */
-bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli)
-{
-	return cli->state == STREAM_CLI_STATE_CONNECTED;
-}
-
-/*! Check if Osmocom Stream Client is opened (has an FD available) according to
- *  its current state.
- *  \param[in] cli Osmocom Stream Client
- *  \return true if fd is available (osmo_stream_cli_get_fd()), false otherwise
- */
-static bool stream_cli_is_opened(const struct osmo_stream_cli *cli)
-{
-	return cli->state == STREAM_CLI_STATE_CONNECTING ||
-	       cli->state == STREAM_CLI_STATE_CONNECTED;
-}
 
 static void stream_cli_close_iofd(struct osmo_stream_cli *cli)
 {
@@ -217,6 +176,45 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 		if (cli->disconnect_cb)
 			cli->disconnect_cb(cli);
 	}
+}
+
+/*! Re-connect an Osmocom Stream Client.
+ *  If re-connection is enabled for this client
+ *  (which is the case unless negative timeout was explicitly set via osmo_stream_cli_set_reconnect_timeout() call),
+ *  we close any existing connection (if any) and schedule a re-connect timer */
+void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
+{
+	osmo_stream_cli_close(cli);
+
+	if (cli->reconnect_timeout < 0) {
+		LOGSCLI(cli, LOGL_INFO, "not reconnecting, disabled\n");
+		return;
+	}
+
+	cli->state = STREAM_CLI_STATE_WAIT_RECONNECT;
+	LOGSCLI(cli, LOGL_INFO, "retrying reconnect in %d seconds...\n",
+		cli->reconnect_timeout);
+	osmo_timer_schedule(&cli->timer, cli->reconnect_timeout, 0);
+}
+
+/*! Check if Osmocom Stream Client is in connected state.
+ *  \param[in] cli Osmocom Stream Client
+ *  \return true if connected, false otherwise
+ */
+bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli)
+{
+	return cli->state == STREAM_CLI_STATE_CONNECTED;
+}
+
+/*! Check if Osmocom Stream Client is opened (has an FD available) according to
+ *  its current state.
+ *  \param[in] cli Osmocom Stream Client
+ *  \return true if fd is available (osmo_stream_cli_get_fd()), false otherwise
+ */
+static bool stream_cli_is_opened(const struct osmo_stream_cli *cli)
+{
+	return cli->state == STREAM_CLI_STATE_CONNECTING ||
+	       cli->state == STREAM_CLI_STATE_CONNECTED;
 }
 
 /*! Retrieve file descriptor of the stream client socket.
