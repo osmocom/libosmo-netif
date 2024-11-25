@@ -161,7 +161,7 @@ static bool stream_cli_is_opened(const struct osmo_stream_cli *cli)
 	       cli->state == STREAM_CLI_STATE_CONNECTED;
 }
 
-static void osmo_stream_cli_close_iofd(struct osmo_stream_cli *cli)
+static void stream_cli_close_iofd(struct osmo_stream_cli *cli)
 {
 	if (!cli->iofd)
 		return;
@@ -170,7 +170,7 @@ static void osmo_stream_cli_close_iofd(struct osmo_stream_cli *cli)
 	cli->iofd = NULL;
 }
 
-static void osmo_stream_cli_close_ofd(struct osmo_stream_cli *cli)
+static void stream_cli_close_ofd(struct osmo_stream_cli *cli)
 {
 	if (cli->ofd.fd == -1)
 		return;
@@ -198,10 +198,10 @@ void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 
 	switch (cli->mode) {
 	case OSMO_STREAM_MODE_OSMO_FD:
-		osmo_stream_cli_close_ofd(cli);
+		stream_cli_close_ofd(cli);
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
-		osmo_stream_cli_close_iofd(cli);
+		stream_cli_close_iofd(cli);
 		break;
 	default:
 		OSMO_ASSERT(false);
@@ -249,7 +249,7 @@ osmo_stream_cli_get_iofd(const struct osmo_stream_cli *cli)
 	return cli->iofd;
 }
 
-static void osmo_stream_cli_read(struct osmo_stream_cli *cli)
+static void stream_cli_read(struct osmo_stream_cli *cli)
 {
 	LOGSCLI(cli, LOGL_DEBUG, "message received\n");
 
@@ -257,7 +257,7 @@ static void osmo_stream_cli_read(struct osmo_stream_cli *cli)
 		cli->read_cb(cli);
 }
 
-static int osmo_stream_cli_write(struct osmo_stream_cli *cli)
+static int stream_cli_write(struct osmo_stream_cli *cli)
 {
 #ifdef HAVE_LIBSCTP
 	struct sctp_sndrcvinfo sinfo;
@@ -409,11 +409,11 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 	case STREAM_CLI_STATE_CONNECTED:
 		if (what & OSMO_FD_READ) {
 			LOGSCLI(cli, LOGL_DEBUG, "connected read\n");
-			osmo_stream_cli_read(cli);
+			stream_cli_read(cli);
 		}
 		if (what & OSMO_FD_WRITE) {
 			LOGSCLI(cli, LOGL_DEBUG, "connected write\n");
-			osmo_stream_cli_write(cli);
+			stream_cli_write(cli);
 		}
 		break;
 	default:
@@ -1097,7 +1097,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
 		/* Be sure that previous osmo_io instance is freed before creating a new one. */
-		osmo_stream_cli_close_iofd(cli);
+		stream_cli_close_iofd(cli);
 #ifdef HAVE_LIBSCTP
 		if (cli->proto == IPPROTO_SCTP) {
 			cli->iofd = osmo_iofd_setup(cli, fd, cli->name, OSMO_IO_FD_MODE_RECVMSG_SENDMSG,
