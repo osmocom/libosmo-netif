@@ -87,6 +87,7 @@ struct osmo_stream_srv_link {
 	osmo_stream_srv_link_accept_cb_t accept_cb;
 	void			*data;
 	int			flags;
+	unsigned int		tx_queue_max_length; /* Max amount of msgbs which can be enqueued */
 	struct osmo_sock_init2_multiaddr_pars ma_pars;
 };
 
@@ -203,6 +204,7 @@ struct osmo_stream_srv_link *osmo_stream_srv_link_create(void *ctx)
 	link->sk_domain = AF_UNSPEC;
 	link->sk_type = SOCK_STREAM;
 	link->proto = IPPROTO_TCP;
+	link->tx_queue_max_length = 1024; /* Default tx queue size, msgbs. */
 	osmo_fd_setup(&link->ofd, -1, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_srv_link_ofd_cb, link, 0);
 
 	link->ma_pars.sctp.version = 0;
@@ -392,6 +394,18 @@ osmo_stream_srv_link_set_data(struct osmo_stream_srv_link *link,
 void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link)
 {
 	return link->data;
+}
+
+/*! Set the maximum length queue of the stream servers accepted and allocated from this server link.
+ *  \param[in] link Stream Server Link to modify
+ *  \param[in] size maximum amount of msgbs which can be queued in the internal tx queue.
+ *  \returns 0 on success, negative on error.
+ *
+ *  The maximum length queue default value is 1024 msgbs. */
+int osmo_stream_srv_link_set_tx_queue_max_length(struct osmo_stream_srv_link *link, unsigned int size)
+{
+	link->tx_queue_max_length = size;
+	return 0;
 }
 
 /* Similar to osmo_sock_multiaddr_get_name_buf(), but aimed at listening sockets (only local part): */
@@ -643,7 +657,8 @@ struct osmo_stream_srv {
 		struct osmo_fd			ofd;
 		struct osmo_io_fd		*iofd;
 	};
-	struct llist_head		tx_queue;
+	struct llist_head		tx_queue; /* osmo_ofd mode (only): Queue of msgbs */
+	unsigned int			tx_queue_count; /* osmo_ofd mode (only): Current amount of msgbs queued */
 	osmo_stream_srv_closed_cb_t	closed_cb;
 	osmo_stream_srv_read_cb_t	read_cb;
 	osmo_stream_srv_read_cb2_t	iofd_read_cb;
@@ -769,12 +784,11 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 	struct msgb *msg;
 	int ret;
 
-	if (llist_empty(&conn->tx_queue)) {
+	msg = msgb_dequeue_count(&conn->tx_queue, &conn->tx_queue_count);
+	if (!msg) { /* done, tx_queue empty */
 		osmo_fd_write_disable(&conn->ofd);
 		return;
 	}
-	msg = llist_first_entry(&conn->tx_queue, struct msgb, list);
-	llist_del(&msg->list);
 
 	LOGSSRV(conn, LOGL_DEBUG, "sending %u bytes of data\n", msg->len);
 
@@ -811,6 +825,7 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 		/* Update msgb and re-add it at the start of the queue: */
 		msgb_pull(msg, ret);
 		llist_add(&msg->list, &conn->tx_queue);
+		conn->tx_queue_count++;
 		return;
 	}
 
@@ -820,6 +835,7 @@ static void osmo_stream_srv_write(struct osmo_stream_srv *conn)
 		if (err == EAGAIN) {
 			/* Re-add at the start of the queue to re-attempt: */
 			llist_add(&msg->list, &conn->tx_queue);
+			conn->tx_queue_count++;
 			return;
 		}
 		msgb_free(msg);
@@ -923,6 +939,7 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 
 	conn->mode = OSMO_STREAM_MODE_OSMO_IO;
 	conn->srv = link;
+	conn->data = data;
 
 	osmo_sock_get_name_buf(conn->sockname, sizeof(conn->sockname), fd);
 
@@ -939,7 +956,8 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 		talloc_free(conn);
 		return NULL;
 	}
-	conn->data = data;
+
+	osmo_iofd_set_txqueue_max_length(conn->iofd, conn->srv->tx_queue_max_length);
 
 	if (osmo_iofd_register(conn->iofd, fd) < 0) {
 		LOGSSRV(conn, LOGL_ERROR, "could not register FD %d\n", fd);
@@ -1127,6 +1145,7 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 		osmo_fd_unregister(&conn->ofd);
 		close(conn->ofd.fd);
 		msgb_queue_free(&conn->tx_queue);
+		conn->tx_queue_count = 0;
 		conn->ofd.fd = -1;
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
@@ -1158,7 +1177,12 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 
 	switch (conn->mode) {
 	case OSMO_STREAM_MODE_OSMO_FD:
-		msgb_enqueue(&conn->tx_queue, msg);
+		if (conn->tx_queue_count >= conn->srv->tx_queue_max_length) {
+			LOGSSRV(conn, LOGL_ERROR, "send: tx queue full, dropping msg!\n");
+			msgb_free(msg);
+			return;
+		}
+		msgb_enqueue_count(&conn->tx_queue, msg, &conn->tx_queue_count);
 		osmo_fd_write_enable(&conn->ofd);
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
@@ -1249,6 +1273,7 @@ void osmo_stream_srv_clear_tx_queue(struct osmo_stream_srv *conn)
 	switch (conn->mode) {
 	case OSMO_STREAM_MODE_OSMO_FD:
 		msgb_queue_free(&conn->tx_queue);
+		conn->tx_queue_count = 0;
 		osmo_fd_write_disable(&conn->ofd);
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:

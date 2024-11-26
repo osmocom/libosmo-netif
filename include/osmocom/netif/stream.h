@@ -81,6 +81,7 @@ int osmo_stream_srv_link_set_domain(struct osmo_stream_srv_link *link, int domai
 void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link, osmo_stream_srv_link_accept_cb_t accept_cb);
 void osmo_stream_srv_link_set_data(struct osmo_stream_srv_link *link, void *data);
 void *osmo_stream_srv_link_get_data(struct osmo_stream_srv_link *link);
+int osmo_stream_srv_link_set_tx_queue_max_length(struct osmo_stream_srv_link *link, unsigned int size);
 char *osmo_stream_srv_link_get_sockname(const struct osmo_stream_srv_link *link);
 struct osmo_fd *osmo_stream_srv_link_get_ofd(struct osmo_stream_srv_link *link);
 int osmo_stream_srv_link_get_fd(const struct osmo_stream_srv_link *link);

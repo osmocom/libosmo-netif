@@ -8,4 +8,4 @@
 # If any interfaces have been removed or changed since the last public release: c:r:0.
 #library	what			description / commit summary line
 libosmo-netif add API osmo_stream_cli_set_{ip_dscp,priority}(), osmo_stream_srv_link_set_{ip_dscp,priority}()
-libosmo-netif add API osmo-stream_cli_set_tx_queue_max_length()
+libosmo-netif add API osmo-stream_cli_set_tx_queue_max_length(), osmo_stream_srv_link_set_tx_queue_max_length()
