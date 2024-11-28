@@ -962,6 +962,9 @@ osmo_stream_cli_set_read_cb2(struct osmo_stream_cli *cli,
  *  \param[in] cli Stream Client to destroy */
 void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 {
+	if (!cli)
+		return;
+
 	LOGSCLI(cli, LOGL_DEBUG, "destroy()\n");
 	OSMO_ASSERT(!stream_cli_close(cli));
 	osmo_timer_del(&cli->timer);

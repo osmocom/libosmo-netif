@@ -510,6 +510,8 @@ void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link,
  *  \param[in] link Stream Server Link */
 void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link)
 {
+	if (!link)
+		return;
 	osmo_stream_srv_link_close(link);
 	talloc_free(link);
 }
@@ -1140,6 +1142,9 @@ struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *
  *  \param[in] conn Stream Server to be destroyed */
 void osmo_stream_srv_destroy(struct osmo_stream_srv *conn)
 {
+	if (!conn)
+		return;
+
 	switch (conn->mode) {
 	case OSMO_STREAM_MODE_OSMO_FD:
 		osmo_fd_unregister(&conn->ofd);
