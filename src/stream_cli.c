@@ -974,6 +974,11 @@ void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 	if (cli->in_cb_mask != 0) {
 		LOGSCLI(cli, LOGL_DEBUG, "delay free() in_cb_mask=0x%02x\n", cli->in_cb_mask);
 		cli->delay_free = true;
+		/* Move ptr to avoid double free if parent ctx of cli is freed
+		 * meanwhile (eg. during user callback after calling
+		 * osmo_stream_client_destroy() and before returning from user
+		 * callback. */
+		talloc_steal(OTC_GLOBAL, cli);
 	} else {
 		LOGSCLI(cli, LOGL_DEBUG, "free(destroy)\n");
 		talloc_free(cli);
