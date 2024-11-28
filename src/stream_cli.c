@@ -219,7 +219,7 @@ static bool stream_cli_close(struct osmo_stream_cli *cli)
  *  abstraction and close the socket */
 void osmo_stream_cli_close(struct osmo_stream_cli *cli)
 {
-	stream_cli_close(cli);
+	(void)stream_cli_close(cli);
 }
 
 /*! Re-connect an Osmocom Stream Client.
@@ -967,7 +967,7 @@ void osmo_stream_cli_destroy(struct osmo_stream_cli *cli)
 		return;
 
 	LOGSCLI(cli, LOGL_DEBUG, "destroy()\n");
-	OSMO_ASSERT(!stream_cli_close(cli));
+	OSMO_ASSERT(stream_cli_close(cli) == false);
 	osmo_timer_del(&cli->timer);
 	msgb_queue_free(&cli->tx_queue);
 	cli->tx_queue_count = 0;
