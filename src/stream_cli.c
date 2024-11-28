@@ -203,6 +203,7 @@ static bool stream_cli_close(struct osmo_stream_cli *cli)
 	 * Also, if reconnect is disabled by user, notify the user that connect() failed: */
 	if (old_state == STREAM_CLI_STATE_CONNECTED ||
 	    (old_state == STREAM_CLI_STATE_CONNECTING && cli->reconnect_timeout < 0)) {
+		OSMO_ASSERT(!(cli->in_cb_mask & IN_CB_MASK_DISCONNECT_CB));
 		cli->in_cb_mask |= IN_CB_MASK_DISCONNECT_CB;
 		if (cli->disconnect_cb)
 			cli->disconnect_cb(cli);
