@@ -251,7 +251,7 @@ static bool stream_cli_reconnect(struct osmo_stream_cli *cli)
  *  we close any existing connection (if any) and schedule a re-connect timer */
 void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli)
 {
-	stream_cli_reconnect(cli);
+	(void)stream_cli_reconnect(cli);
 }
 
 /*! Check if Osmocom Stream Client is in connected state.
@@ -383,7 +383,7 @@ static int stream_cli_write(struct osmo_stream_cli *cli)
 			return 0;
 		}
 		msgb_free(msg);
-		stream_cli_reconnect(cli);
+		(void)stream_cli_reconnect(cli);
 		return 0;
 	}
 
@@ -419,13 +419,13 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 
 	if (ret < 0) {
 		LOGSCLI(cli, LOGL_ERROR, "connect failed (%d)\n", res);
-		stream_cli_reconnect(cli);
+		(void)stream_cli_reconnect(cli);
 		return;
 	}
 	ret = getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len);
 	if (ret >= 0 && error > 0) {
 		LOGSCLI(cli, LOGL_ERROR, "connect so_error (%d)\n", error);
-		stream_cli_reconnect(cli);
+		(void)stream_cli_reconnect(cli);
 		return;
 	}
 
@@ -458,7 +458,7 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 	if (cli->connect_cb)
 		cli->connect_cb(cli);
 	cli->in_cb_mask &= ~IN_CB_MASK_CONNECT_CB;
-	free_delayed_if_needed(cli);
+	(void)free_delayed_if_needed(cli);
 }
 
 static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
@@ -467,7 +467,7 @@ static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
 
 	switch (cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
-		stream_cli_handle_connecting(cli, 0);
+		(void)stream_cli_handle_connecting(cli, 0);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
 		if (what & OSMO_FD_READ) {
@@ -558,7 +558,7 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 		cli->iofd_read_cb(cli, res, msg);
 		cli->in_cb_mask &= ~IN_CB_MASK_READ_CB;
 		OSMO_ASSERT(cli->in_cb_mask == 0);
-		free_delayed_if_needed(cli);
+		(void)free_delayed_if_needed(cli);
 		break;
 	default:
 		osmo_panic("%s() called with unexpected state %d\n", __func__, cli->state);
@@ -576,7 +576,7 @@ static void stream_cli_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct ms
 	case STREAM_CLI_STATE_CONNECTED:
 		if (msg && res <= 0) {
 			LOGSCLI(cli, LOGL_ERROR, "received error %d in response to send\n", res);
-			stream_cli_reconnect(cli);
+			(void)stream_cli_reconnect(cli);
 		}
 		break;
 	default:
@@ -630,7 +630,7 @@ static void stream_cli_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 		cli->iofd_read_cb(cli, res, msg);
 		cli->in_cb_mask &= ~IN_CB_MASK_READ_CB;
 		OSMO_ASSERT(cli->in_cb_mask == 0);
-		free_delayed_if_needed(cli);
+		(void)free_delayed_if_needed(cli);
 		break;
 	default:
 		osmo_panic("%s() called with unexpected state %d\n", __func__, cli->state);
@@ -1026,7 +1026,7 @@ int osmo_stream_cli_open2(struct osmo_stream_cli *cli, int reconnect)
 	if (ret < 0) {
 		LOGSCLI(cli, LOGL_ERROR, "connect: socket creation error (%d)\n", ret);
 		if (reconnect)
-			stream_cli_reconnect(cli);
+			(void)stream_cli_reconnect(cli);
 		return ret;
 	}
 	osmo_fd_setup(&cli->ofd, ret, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_cli_fd_cb, cli, 0);
@@ -1199,7 +1199,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 
 	if (ret < 0) {
 		LOGSCLI(cli, LOGL_ERROR, "connect: socket creation error (%d)\n", ret);
-		stream_cli_reconnect(cli);
+		(void)stream_cli_reconnect(cli);
 		return ret;
 	}
 
@@ -1368,11 +1368,11 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 			LOGSCLI(cli, LOGL_ERROR, "lost connection with srv (%d)\n", errno);
 		else
 			LOGSCLI(cli, LOGL_ERROR, "recv failed (%d)\n", errno);
-		stream_cli_reconnect(cli);
+		(void)stream_cli_reconnect(cli);
 		return ret;
 	} else if (ret == 0) {
 		LOGSCLI(cli, LOGL_ERROR, "connection closed with srv\n");
-		osmo_stream_cli_reconnect(cli);
+		(void)stream_cli_reconnect(cli);
 		return ret;
 	}
 	msgb_put(msg, ret);
