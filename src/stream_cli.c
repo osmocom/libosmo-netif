@@ -409,7 +409,8 @@ static int _setsockopt_nosigpipe(struct osmo_stream_cli *cli)
 #endif
 }
 
-static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
+/* returns true if cli is freed */
+static bool stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 {
 	int error, ret = res;
 	socklen_t len = sizeof(error);
@@ -419,14 +420,12 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 
 	if (ret < 0) {
 		LOGSCLI(cli, LOGL_ERROR, "connect failed (%d)\n", res);
-		(void)stream_cli_reconnect(cli);
-		return;
+		return stream_cli_reconnect(cli);
 	}
 	ret = getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &len);
 	if (ret >= 0 && error > 0) {
 		LOGSCLI(cli, LOGL_ERROR, "connect so_error (%d)\n", error);
-		(void)stream_cli_reconnect(cli);
-		return;
+		return stream_cli_reconnect(cli);
 	}
 
 	/* If messages got enqueued while 'connecting', keep WRITE flag
@@ -458,7 +457,7 @@ static void stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 	if (cli->connect_cb)
 		cli->connect_cb(cli);
 	cli->in_cb_mask &= ~IN_CB_MASK_CONNECT_CB;
-	(void)free_delayed_if_needed(cli);
+	return free_delayed_if_needed(cli);
 }
 
 static int osmo_stream_cli_fd_cb(struct osmo_fd *ofd, unsigned int what)
@@ -528,8 +527,14 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 
 	switch (cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
-		msgb_free(msg);
-		stream_cli_handle_connecting(cli, res);
+		freed = stream_cli_handle_connecting(cli, res);
+		if (freed)
+			return; /* msg was also freed as part of the talloc tree. */
+		if (cli->state != STREAM_CLI_STATE_CONNECTED) {
+			msgb_free(msg);
+			return;
+		}
+		/* Follow below common path submitting read_cb(msg) to user. */
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
 		switch (res) {
@@ -549,35 +554,41 @@ static void stream_cli_iofd_read_cb(struct osmo_io_fd *iofd, int res, struct msg
 		}
 		if (freed)
 			return; /* msg was also freed as part of the talloc tree. */
-		/* Notify user of new data or error: */
-		if (!cli->iofd_read_cb) {
-			msgb_free(msg);
-			return;
-		}
-		cli->in_cb_mask |= IN_CB_MASK_READ_CB;
-		cli->iofd_read_cb(cli, res, msg);
-		cli->in_cb_mask &= ~IN_CB_MASK_READ_CB;
-		OSMO_ASSERT(cli->in_cb_mask == 0);
-		(void)free_delayed_if_needed(cli);
+		/* Follow below common path submitting read_cb(msg) to user. */
 		break;
 	default:
 		osmo_panic("%s() called with unexpected state %d\n", __func__, cli->state);
 	}
+
+	/* Notify user of new data or error: */
+	if (!cli->iofd_read_cb) {
+		msgb_free(msg);
+		return;
+	}
+	cli->in_cb_mask |= IN_CB_MASK_READ_CB;
+	cli->iofd_read_cb(cli, res, msg);
+	cli->in_cb_mask &= ~IN_CB_MASK_READ_CB;
+	OSMO_ASSERT(cli->in_cb_mask == 0);
+	(void)free_delayed_if_needed(cli);
 }
 
 static void stream_cli_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct msgb *msg)
 {
 	struct osmo_stream_cli *cli = osmo_iofd_get_data(iofd);
+	/* msgb is not owned by us here, no need to free it. */
 
 	switch (cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
-		stream_cli_handle_connecting(cli, res);
+		(void)stream_cli_handle_connecting(cli, res);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
 		if (msg && res <= 0) {
 			LOGSCLI(cli, LOGL_ERROR, "received error %d in response to send\n", res);
 			(void)stream_cli_reconnect(cli);
 		}
+		/* res=0 && msgb=NULL: "connected notify", but we already received before a read_cb
+		 * which moved us to CONNECTED state. Do nothing.
+		 */
 		break;
 	default:
 		osmo_panic("%s() called with unexpected state %d\n", __func__, cli->state);
@@ -601,8 +612,14 @@ static void stream_cli_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 
 	switch (cli->state) {
 	case STREAM_CLI_STATE_CONNECTING:
-		msgb_free(msg);
-		stream_cli_handle_connecting(cli, res);
+		freed = stream_cli_handle_connecting(cli, res);
+		if (freed)
+			return; /* msg was also freed as part of the talloc tree. */
+		if (cli->state != STREAM_CLI_STATE_CONNECTED) {
+			msgb_free(msg);
+			return;
+		}
+		/* Follow below common path submitting read_cb(msg) to user. */
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
 		switch (res) {
@@ -621,20 +638,22 @@ static void stream_cli_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 		}
 		if (freed)
 			return; /* msg was also freed as part of the talloc tree. */
-		/* Notify user of new data or error: */
-		if (!cli->iofd_read_cb) {
-			msgb_free(msg);
-			return;
-		}
-		cli->in_cb_mask |= IN_CB_MASK_READ_CB;
-		cli->iofd_read_cb(cli, res, msg);
-		cli->in_cb_mask &= ~IN_CB_MASK_READ_CB;
-		OSMO_ASSERT(cli->in_cb_mask == 0);
-		(void)free_delayed_if_needed(cli);
+		/* Follow below common path submitting read_cb(msg) to user. */
 		break;
 	default:
 		osmo_panic("%s() called with unexpected state %d\n", __func__, cli->state);
 	}
+
+	/* Notify user of new data or error: */
+	if (!cli->iofd_read_cb) {
+		msgb_free(msg);
+		return;
+	}
+	cli->in_cb_mask |= IN_CB_MASK_READ_CB;
+	cli->iofd_read_cb(cli, res, msg);
+	cli->in_cb_mask &= ~IN_CB_MASK_READ_CB;
+	OSMO_ASSERT(cli->in_cb_mask == 0);
+	(void)free_delayed_if_needed(cli);
 }
 
 static const struct osmo_io_ops osmo_stream_cli_ioops_sctp = {
