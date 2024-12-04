@@ -67,4 +67,28 @@ int osmo_ipa_segmentation_cb(struct msgb *msg);
 
 void osmo_ipa_msg_push_headers(struct msgb *msg, enum ipaccess_proto p, enum ipaccess_proto_ext pe);
 
+/***********************************************************************
+ * IPA Keep-Alive FSM
+ ***********************************************************************/
+struct osmo_ipa_ka_fsm_inst;
+typedef int (*osmo_ipa_ka_fsm_timeout_cb_t)(struct osmo_ipa_ka_fsm_inst *ka_fi, void *data);
+
+typedef int (*osmo_ipa_ka_fsm_send_cb_t)(struct osmo_ipa_ka_fsm_inst *ka_fi, struct msgb *msg, void *data);
+
+struct osmo_ipa_ka_fsm_inst *osmo_ipa_ka_fsm_alloc(void *ctx, const char *id);
+void osmo_ipa_ka_fsm_free(struct osmo_ipa_ka_fsm_inst *ka_fi);
+
+int osmo_ipa_ka_fsm_set_id(struct osmo_ipa_ka_fsm_inst *ka_fi, const char *id);
+int osmo_ipa_ka_fsm_set_ping_interval(struct osmo_ipa_ka_fsm_inst *ka_fi, unsigned int interval);
+int osmo_ipa_ka_fsm_set_pong_timeout(struct osmo_ipa_ka_fsm_inst *ka_fi, unsigned int timeout);
+void osmo_ipa_ka_fsm_set_data(struct osmo_ipa_ka_fsm_inst *ka_fi, void *cb_data);
+void *osmo_ipa_ka_fsm_get_data(const struct osmo_ipa_ka_fsm_inst *ka_fi);
+
+void osmo_ipa_ka_fsm_set_send_cb(struct osmo_ipa_ka_fsm_inst *ka_fi, osmo_ipa_ka_fsm_send_cb_t send_cb);
+void osmo_ipa_ka_fsm_set_timeout_cb(struct osmo_ipa_ka_fsm_inst *ka_fi, osmo_ipa_ka_fsm_timeout_cb_t timeout_cb);
+
+void osmo_ipa_ka_fsm_start(struct osmo_ipa_ka_fsm_inst *ka_fi);
+void osmo_ipa_ka_fsm_pong_received(struct osmo_ipa_ka_fsm_inst *ka_fi);
+void osmo_ipa_ka_fsm_stop(struct osmo_ipa_ka_fsm_inst *ka_fi);
+
 #endif
