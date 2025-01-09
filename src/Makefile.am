@@ -23,9 +23,10 @@ libosmonetif_la_SOURCES = amr.c			\
 			  prim.c		\
 			  rs232.c		\
 			  rtp.c			\
+			  stream.c		\
 			  stream_cli.c		\
 			  stream_srv.c		\
-			  stream.c
+			  $(NULL)
 
 if ENABLE_LIBSCTP
 libosmonetif_la_SOURCES += sctp.c
