@@ -4,14 +4,15 @@ noinst_HEADERS = \
 
 osmonetif_HEADERS = amr.h		\
 		    datagram.h		\
-		    jibuf.h		\
-		    osmux.h		\
 		    ipa.h		\
 		    ipa_unit.h		\
+		    jibuf.h		\
+		    osmux.h		\
 		    prim.h		\
 		    rs232.h		\
 		    rtp.h		\
-		    stream.h
+		    stream.h		\
+		    $(NULL)
 
 if ENABLE_LIBSCTP
 osmonetif_HEADERS += sctp.h
