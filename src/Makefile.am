@@ -32,6 +32,15 @@ libosmonetif_la_SOURCES = amr.c			\
 			  twjit_in.c		\
 			  twjit_out.c		\
 			  twjit_vty.c		\
+			  twrtp_base.c		\
+			  twrtp_bind.c		\
+			  twrtp_misc.c		\
+			  twrtp_remote.c	\
+			  twrtp_rtcp_rx.c	\
+			  twrtp_rtcp_tx.c	\
+			  twrtp_rtp_rx.c	\
+			  twrtp_rtp_tx.c	\
+			  twrtp_twjit.c		\
 			  $(NULL)
 
 if ENABLE_LIBSCTP

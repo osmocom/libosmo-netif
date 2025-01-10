@@ -1,6 +1,8 @@
 noinst_HEADERS = \
+	rtcp_defs.h \
 	stream_private.h \
 	twjit_private.h \
+	twrtp_private.h \
 	$(NULL)
 
 osmonetif_HEADERS = amr.h		\
@@ -14,6 +16,7 @@ osmonetif_HEADERS = amr.h		\
 		    rtp.h		\
 		    stream.h		\
 		    twjit.h		\
+		    twrtp.h		\
 		    $(NULL)
 
 if ENABLE_LIBSCTP
