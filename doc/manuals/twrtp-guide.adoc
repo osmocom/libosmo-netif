@@ -1,0 +1,190 @@
+= Guide to ThemWi RTP endpoint library
+
+The RTP implementation library described in this document was developed by
+Mother Mychaela N. Falconia under Themyscira Wireless branding and then
+contributed to Osmocom in 2025.  It is currently under consideration for
+merging into `libosmo-netif`; once merged, it will be automatically available
+to any application that is built with the standard suite of Osmocom libraries.
+
+This document is written to describe the library as it will appear and
+function if the proposal to merge it into `libosmo-netif` is accepted.
+
+== Introduction
+
+ThemWi RTP endpoint library, consisting of `<osmocom/netif/twrtp.h>` and
+`<osmocom/netif/twjit.h>` blocks provided by `libosmo-netif`, is intended
+for interworking between an RTP stream and a fixed timing system such as
+GSM Um interface TCH or T1/E1 TDM.  Such interworking consists of two
+fundamental elements:
+
+* In every fixed time quantum, the interworking element receives a unit of
+  speech or CSData media from the fixed source and emits an RTP packet
+  carrying that quantum of speech or CSData.
+
+* In the opposite direction, the fixed timing system requires a quantum of
+  speech or CSData to be fed to it on every tick without fail, yet the
+  interworking element has no control over when RTP packets may arrive
+  from the IP network.  This direction of interworking requires a rather
+  complex element called a jitter buffer, an element whose design and
+  configuration always involves some trade-offs and compromises.
+
+=== Domain of application
+
+The present library is *not* intended to be an all-purpose implementation
+of IETF RFCs 3550 and 3551, supporting all possible RTP use cases as
+envisioned by IETF.  Instead it is intended to support RTP _as it is used_
+in these two specific telecom network environments:
+
+* 3GPP networks that use RTP according to TS 26.102 and TS 48.103;
+
+* The way RTP is used to transport G.711 PSTN traffic across the public
+  Internet in what may be colloquially referred to as IP-PSTN.
+
+The two 3GPP specs referenced above prescribe a fixed packetization time
+of 20 ms for all codecs on AoIP interface.  Furthermore, they stipulate
+that:
+
+* In the case of compressed speech transport, each RTP packet carries
+  exactly one frame of the speech codec in use;
+
+* In the case of uncompressed G.711 speech or CSData transport, each RTP
+  packet carries exactly 160 payload octets (20 ms worth) of what would
+  have been a 64 kbit/s timeslot in T1/E1 transport.
+
+This fixed-quantum property, namely the property that every RTP packet
+carries exactly one fixed quantum of speech or CSData, where the duration
+of this quantum is known at connection setup time and cannot suddenly
+change from one packet to the next, is required by the present ThemWi
+RTP endpoint library - this requirement constitutes a fundamental aspect
+of its architectural design.
+
+An RTP endpoint implementation library that imposes the just-described
+requirement is sufficient for the purpose of building IP-based GSM networks
+that follow 3GPP TS 48.103 (the requirements of that spec are in agreement
+with the library constraint), and it is also sufficient for interfacing
+to IP-PSTN by way of common commercial PSTN-via-SIP connectivity providers.
+
+In the case of IP-PSTN, the author of the present library has experience
+only with North American PSTN-via-SIP connectivity providers.  In all
+of our operational experience so far, these IP-PSTN connectivity providers
+behave in ways that are fully compatible with the expectations of the
+present RTP library, as long as the following conditions are met:
+
+* No attempt is made to use any codecs other than PCMU or PCMA:
+  don't include any other codecs in the SDP offer, and send only SDP answers
+  that select either PCMU or PCMA out of the received multi-codec offer.
+
+* No attempt is made to use any other `ptime` besides the most common
+  industry standard of 20 ms.
+
+In all operational experience so far, incoming INVITE SDPs indicate either
+`a=ptime:20` or `a=maxptime:20`, and when we indicate `a=ptime:20` in all
+SDPs we send out, the IP-PSTN peer always sends us 20 ms RTP packets,
+as opposed to some other packetization interval which would break
+the fixed-quantum model assumed by the present RTP library.
+
+However, it needs to be acknowledged that the present library is *not*
+suitable for general-purpose, IETF-style applications outside of
+``walled garden'' 3GPP networks or the semi-walled environment of
+IP-PSTN with ``well-behaved'' entities: there are many behaviors that
+are perfectly legal per the RFCs, but are not supported by the present
+library.  Having a peer send RTP with a packetization interval that is
+different from what we asked for via `ptime` attribute is one of those
+behaviors that is allowed by IETF, but not supported by this library.
+
+=== Configurable quantum duration and time scale
+
+For every RTP stream it handles, the library needs to know two key
+parameters:
+
+* The scale or ``clock rate'' used for RTP timestamps, i.e., how many
+  timestamp units equal one millisecond of physical time;
+
+* The ``quantum'' duration in milliseconds.
+
+*Quantum* is the term used in this RTP endpoint library for the unit
+of speech or CSData carried in one RTP packet.  In Kantian philosophy terms,
+a quantum of speech or CSData is the thing-in-itself (a single codec frame,
+or a contiguous chunk of 160 PCM samples grabbed from an ISDN B channel),
+whereas the RTP packet that carries said quantum is one particular transport
+representation of that thing-in-itself.
+
+In most applications of this library (all 3GPP codecs other than AMR-WB,
+and all IP-PSTN applications in our experience so far), the time scale
+is 8000 timestamp units per second (or 8 per millisecond, as it appears
+in the actual APIs) and the time duration of a single quantum is 20 ms,
+hence one quantum equals 160 timestamp units.
+Both parameters (RTP timestamp clock rate in kHz and the number of ms
+per quantum) are configurable at the time of endpoint creation, allowing
+RTP endpoints for AMR-WB, or perhaps G.711 or CSData applications with
+different packetization times - but they cannot be changed later in
+the lifetime of an allocated endpoint.
+
+For ease of exposition, the rest of this document will assume that
+one quantum equals 20 ms in time or 160 RTP timestamp units.  If these
+numbers are different in your application, substitute accordingly.
+
+== Jitter buffer model
+
+In the interworking direction from incoming RTP to the fixed timing system,
+the latter will poll the RTP endpoint (or more precisely, the jitter buffer
+portion thereof) for a quantum of media every 20 ms, whenever that quantum
+is required for transmission on GSM Um TCH or for TDM output etc.
+The job of the jitter buffer is to match previously received RTP packets
+to these fixed-timing output polls, while striving to meet these two
+conflicting goals:
+
+* Any time that elapses between an RTP packet being received and its
+  payload being passed as a quantum to the fixed timing system constitutes
+  added latency - which needs to be minimized.
+
+* IP-based transport always involves some jitter: the time delta between
+  the receipt of one RTP packet and the arrival of its successor is very
+  unlikely to be exactly equal to 20 ms every time.  This jitter may be
+  already present in the RTP stream from its source if that source is
+  an IP-native BTS that does not pass through E1 Abis and thus exposes
+  the inherent jitter of GSM TDMA multiframe structure, but even if
+  the source is perfectly timed, some jitter will still be seen on the
+  receiving end.  Depending on the actual amount of jitter seen in a
+  given deployment, it may be necessary to introduce some latency-adding
+  buffering in the receiving RTP endpoint - otherwise the function of
+  interworking to the fixed timing system at the destination will perform
+  poorly, as will be seen in the ensuing sections.
+
+This chapter covers the design and operation of `twjit`, the jitter buffer
+component of ThemWi RTP endpoint library.
+
+=== Flows and handovers
+
+In `twjit` terminology, a single RTP flow is a portion (or the whole)
+of an RTP stream that exhibits the following two key properties:
+
+* All packets have the same SSRC;
+
+* The RTP timestamp increment from each packet to the next always equals
+  the fixed quantum duration expressed in timestamp units, i.e., 160
+  in most practical applications.
+
+A handover in `twjit` terminology is a point in the incoming RTP stream
+at which either of the following events occurs:
+
+* An SSRC change is seen;
+
+* The RTP timestamp advances by an increment that is not an integral multiple
+  of the expected fixed quantum duration.  In contrast, if an RTP timestamp
+  increment is seen that _is_ an integral multiple of the quantum, but that
+  integral multiple is more than one, and there is enough buffering in the
+  system such that this event is seen before the jitter buffer underruns,
+  such events are *not* treated as handovers: instead it is assumed to be
+  an occurrence of either packet loss or reordering.
+
+A handover in `twjit` is thus a transition from one flow to the next.
+This term was adopted because such transitions are expected to occur
+when an RTP stream belonging to a single call switches from one BSS endpoint
+to another (in the same BSS or in a different one) upon radio handover events
+in GSM and other cellular networks, but handovers in `twjit` sense can also
+occur in other applications that aren't GSM.  For example, if an IP-PSTN peer
+we are conversing with suddenly decides, for its own reasons known only to
+itself, to change its SSRC or jump its RTP output timescale, our `twjit`
+instance will treat that event as a handover.
+
