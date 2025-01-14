@@ -203,6 +203,7 @@ typedef int (*osmo_stream_cli_segmentation_cb_t)(struct msgb *msg);
 typedef int (*osmo_stream_cli_segmentation_cb2_t)(struct osmo_stream_cli *cli, struct msgb *msg);
 
 void osmo_stream_cli_set_name(struct osmo_stream_cli *cli, const char *name);
+void osmo_stream_cli_set_name_f(struct osmo_stream_cli *cli, const char *fmt, ...);
 const char *osmo_stream_cli_get_name(const struct osmo_stream_cli *cli);
 void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay);
 int osmo_stream_cli_set_priority(struct osmo_stream_cli *cli, int sk_prio);
