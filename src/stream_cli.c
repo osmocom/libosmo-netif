@@ -667,9 +667,31 @@ static const struct osmo_io_ops osmo_stream_cli_ioops_sctp = {
  */
 void osmo_stream_cli_set_name(struct osmo_stream_cli *cli, const char *name)
 {
-	osmo_talloc_replace_string(cli, &cli->name, name);
+	osmo_stream_cli_set_name_f(cli, "%s", name);
+}
+
+/*! Set a name on the cli object using arguments like printf() (used during logging).
+ *  \param[in] cli stream_cli whose name is to be set
+ *  \param[in] name the name to be set on cli
+ */
+void osmo_stream_cli_set_name_f(struct osmo_stream_cli *cli, const char *fmt, ...)
+{
+	char *name = NULL;
+
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		name = talloc_vasprintf(cli, fmt, ap);
+		va_end(ap);
+	}
+
+	if (cli->name)
+		talloc_free((void *)cli->name);
+	cli->name = name;
+
 	if (cli->mode == OSMO_STREAM_MODE_OSMO_IO && cli->iofd)
-		osmo_iofd_set_name(cli->iofd, name);
+		osmo_iofd_set_name(cli->iofd, cli->name);
 }
 
 /*! Retrieve name previously set on the cli object (see osmo_stream_cli_set_name()).

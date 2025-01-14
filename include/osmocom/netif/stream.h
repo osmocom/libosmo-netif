@@ -126,6 +126,7 @@ struct osmo_stream_srv *osmo_stream_srv_create(void *ctx, struct osmo_stream_srv
 					       void *data);
 struct osmo_stream_srv *osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, void *data);
 void osmo_stream_srv_set_name(struct osmo_stream_srv *conn, const char *name);
+void osmo_stream_srv_set_name_f(struct osmo_stream_srv *conn, const char *fmt, ...);
 const char *osmo_stream_srv_get_name(const struct osmo_stream_srv *conn);
 void osmo_stream_srv_set_read_cb(struct osmo_stream_srv *conn, osmo_stream_srv_read_cb2_t read_cb);
 void osmo_stream_srv_set_closed_cb(struct osmo_stream_srv *conn, osmo_stream_srv_closed_cb_t close_cb);
@@ -203,6 +204,7 @@ typedef int (*osmo_stream_cli_segmentation_cb_t)(struct msgb *msg);
 typedef int (*osmo_stream_cli_segmentation_cb2_t)(struct osmo_stream_cli *cli, struct msgb *msg);
 
 void osmo_stream_cli_set_name(struct osmo_stream_cli *cli, const char *name);
+void osmo_stream_cli_set_name_f(struct osmo_stream_cli *cli, const char *fmt, ...);
 const char *osmo_stream_cli_get_name(const struct osmo_stream_cli *cli);
 void osmo_stream_cli_set_nodelay(struct osmo_stream_cli *cli, bool nodelay);
 int osmo_stream_cli_set_priority(struct osmo_stream_cli *cli, int sk_prio);

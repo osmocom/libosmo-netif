@@ -1011,9 +1011,31 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
  */
 void osmo_stream_srv_set_name(struct osmo_stream_srv *conn, const char *name)
 {
-	osmo_talloc_replace_string(conn, &conn->name, name);
+	osmo_stream_srv_set_name_f(conn, "%s", name);
+}
+
+/*! Set a name on the srv object using arguments like printf() (used during logging).
+ *  \param[in] srv stream_srv whose name is to be set
+ *  \param[in] name the name to be set on srv
+ */
+void osmo_stream_srv_set_name_f(struct osmo_stream_srv *conn, const char *fmt, ...)
+{
+	char *name = NULL;
+
+	if (fmt) {
+		va_list ap;
+
+		va_start(ap, fmt);
+		name = talloc_vasprintf(conn, fmt, ap);
+		va_end(ap);
+	}
+
+	if (conn->name)
+		talloc_free((void *)conn->name);
+	conn->name = name;
+
 	if (conn->mode == OSMO_STREAM_MODE_OSMO_IO && conn->iofd)
-		osmo_iofd_set_name(conn->iofd, name);
+		osmo_iofd_set_name(conn->iofd, conn->name);
 }
 
 /*! Retrieve name previously set on the srv object (see osmo_stream_srv_set_name()).
