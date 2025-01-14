@@ -10,3 +10,4 @@
 libosmo-netif add API osmo_stream_cli_set_{ip_dscp,priority}(), osmo_stream_srv_link_set_{ip_dscp,priority}()
 libosmo-netif add API osmo-stream_cli_set_tx_queue_max_length(), osmo_stream_srv_link_set_tx_queue_max_length()
 libosmo-netif add API struct osmo_ipa_ka_fsm_inst
+libosmo-netif add API osmo_stream_{cli,srv}_set_segmentation_cb2()

@@ -664,6 +664,8 @@ struct osmo_stream_srv {
 	osmo_stream_srv_closed_cb_t	closed_cb;
 	osmo_stream_srv_read_cb_t	read_cb;
 	osmo_stream_srv_read_cb2_t	iofd_read_cb;
+	osmo_stream_srv_segmentation_cb_t segmentation_cb;
+	osmo_stream_srv_segmentation_cb2_t segmentation_cb2;
 	void				*data;
 	int				flags;
 };
@@ -1040,7 +1042,37 @@ osmo_stream_srv_set_data(struct osmo_stream_srv *conn,
 	conn->data = data;
 }
 
+/* Callback from iofd, forward to stream_srv user: */
+static int stream_srv_iofd_segmentation_cb2(struct osmo_io_fd *iofd, struct msgb *msg)
+{
+	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
+	if (conn->segmentation_cb2)
+		return conn->segmentation_cb2(conn, msg);
+	if (conn->segmentation_cb)
+		return conn->segmentation_cb(msg);
+	OSMO_ASSERT(0);
+	return 0;
+}
+
+/* Configure server side segmentation for the iofd */
+static void configure_srv_segmentation_cb(struct osmo_stream_srv *conn)
+{
+	/* Copy default settings */
+	struct osmo_io_ops client_ops;
+	osmo_iofd_get_ioops(conn->iofd, &client_ops);
+	/* Set segmentation cb for this client */
+	if (conn->segmentation_cb || conn->segmentation_cb2)
+		client_ops.segmentation_cb2 = stream_srv_iofd_segmentation_cb2;
+	else
+		client_ops.segmentation_cb2 = NULL;
+	osmo_iofd_set_ioops(conn->iofd, &client_ops);
+}
+
 /*! Set the segmentation callback for target osmo_stream_srv structure.
+ *  \param[in,out] conn Target Stream Server to modify
+ *  \param[in] segmentation_cb Segmentation callback to be set
+ *
+ *  DEPRECATED: Use osmo_stream_srv_set_segmentation_cb2() instead.
  *
  *  A segmentation call-back can optionally be used when a packet based protocol (like TCP) is used within a
  *  STREAM style socket that does not preserve message boundaries within the stream.  If a segmentation
@@ -1048,22 +1080,41 @@ osmo_stream_srv_set_data(struct osmo_stream_srv *conn,
  *  complete single messages, and not arbitrary segments of the stream.
  *
  *  This function only works with osmo_stream_srv in osmo_io mode, created by osmo_stream_srv_create2()!
-  * The connection has to have been established prior to calling this function.
-  *
- *  \param[in,out] conn Target Stream Server to modify
- *  \param[in] segmentation_cb Segmentation callback to be set */
+ *  The connection has to have been established prior to calling this function.
+ *
+ */
 void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn,
 					 osmo_stream_srv_segmentation_cb_t segmentation_cb)
 {
 	/* Note that the following implies that iofd != NULL, since
 	 * osmo_stream_srv_create2() creates the iofd member, too */
 	OSMO_ASSERT(conn->mode == OSMO_STREAM_MODE_OSMO_IO);
-	/* Copy default settings */
-	struct osmo_io_ops conn_ops;
-	osmo_iofd_get_ioops(conn->iofd, &conn_ops);
-	/* Set segmentation cb for this connection */
-	conn_ops.segmentation_cb = segmentation_cb;
-	osmo_iofd_set_ioops(conn->iofd, &conn_ops);
+	conn->segmentation_cb = segmentation_cb;
+	conn->segmentation_cb2 = NULL;
+	configure_srv_segmentation_cb(conn);
+}
+
+/*! Set the segmentation callback for target osmo_stream_srv structure.
+ *  \param[in,out] conn Target Stream Server to modify
+ *  \param[in] segmentation_cb2 Segmentation callback to be set
+ *
+ *  A segmentation call-back can optionally be used when a packet based protocol (like TCP) is used within a
+ *  STREAM style socket that does not preserve message boundaries within the stream.  If a segmentation
+ *  call-back is given, the osmo_stream_srv library code will makes sure that the read_cb called only for
+ *  complete single messages, and not arbitrary segments of the stream.
+ *
+ *  This function only works with osmo_stream_srv in osmo_io mode, created by osmo_stream_srv_create2()!
+ *  The connection has to have been established prior to calling this function.
+ */
+void osmo_stream_srv_set_segmentation_cb2(struct osmo_stream_srv *conn,
+					 osmo_stream_srv_segmentation_cb2_t segmentation_cb2)
+{
+	/* Note that the following implies that iofd != NULL, since
+	 * osmo_stream_srv_create2() creates the iofd member, too */
+	OSMO_ASSERT(conn->mode == OSMO_STREAM_MODE_OSMO_IO);
+	conn->segmentation_cb = NULL;
+	conn->segmentation_cb2 = segmentation_cb2;
+	configure_srv_segmentation_cb(conn);
 }
 
 /*! Retrieve application private data of the stream server

@@ -117,6 +117,7 @@ struct osmo_stream_cli {
 	osmo_stream_cli_read_cb_t	read_cb;
 	osmo_stream_cli_read_cb2_t	iofd_read_cb;
 	osmo_stream_cli_segmentation_cb_t segmentation_cb;
+	osmo_stream_cli_segmentation_cb2_t segmentation_cb2;
 	void				*data;
 	int				flags;
 	int				reconnect_timeout;
@@ -511,7 +512,6 @@ struct osmo_stream_cli *osmo_stream_cli_create(void *ctx)
 	cli->state = STREAM_CLI_STATE_CLOSED;
 	osmo_timer_setup(&cli->timer, cli_timer_cb, cli);
 	cli->reconnect_timeout = 5;	/* default is 5 seconds. */
-	cli->segmentation_cb = NULL;
 	INIT_LLIST_HEAD(&cli->tx_queue);
 	cli->tx_queue_max_length = 1024; /* Default tx queue size, msgbs. */
 
@@ -598,8 +598,6 @@ static void stream_cli_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct ms
 static const struct osmo_io_ops osmo_stream_cli_ioops = {
 	.read_cb = stream_cli_iofd_read_cb,
 	.write_cb = stream_cli_iofd_write_cb,
-
-	.segmentation_cb = NULL,
 };
 
 #ifdef HAVE_LIBSCTP
@@ -659,8 +657,6 @@ static void stream_cli_iofd_recvmsg_cb(struct osmo_io_fd *iofd, int res, struct 
 static const struct osmo_io_ops osmo_stream_cli_ioops_sctp = {
 	.recvmsg_cb = stream_cli_iofd_recvmsg_cb,
 	.sendmsg_cb = stream_cli_iofd_write_cb,
-
-	.segmentation_cb = NULL,
 };
 #endif
 
@@ -795,28 +791,58 @@ osmo_stream_cli_set_proto(struct osmo_stream_cli *cli, uint16_t proto)
 	cli->flags |= OSMO_STREAM_CLI_F_RECONF;
 }
 
+/* Callback from iofd, forward to stream_cli user: */
+static int stream_cli_iofd_segmentation_cb2(struct osmo_io_fd *iofd, struct msgb *msg)
+{
+	struct osmo_stream_cli *cli = osmo_iofd_get_data(iofd);
+	if (cli->segmentation_cb2)
+		return cli->segmentation_cb2(cli, msg);
+	if (cli->segmentation_cb)
+		return cli->segmentation_cb(msg);
+	OSMO_ASSERT(0);
+	return 0;
+}
+
 /* Configure client side segmentation for the iofd */
-static void configure_cli_segmentation_cb(struct osmo_stream_cli *cli,
-					  osmo_stream_cli_segmentation_cb_t segmentation_cb)
+static void configure_cli_segmentation_cb(struct osmo_stream_cli *cli)
 {
 	/* Copy default settings */
 	struct osmo_io_ops client_ops;
 	osmo_iofd_get_ioops(cli->iofd, &client_ops);
 	/* Set segmentation cb for this client */
-	client_ops.segmentation_cb = segmentation_cb;
+	if (cli->segmentation_cb || cli->segmentation_cb2)
+		client_ops.segmentation_cb2 = stream_cli_iofd_segmentation_cb2;
+	else
+		client_ops.segmentation_cb2 = NULL;
 	osmo_iofd_set_ioops(cli->iofd, &client_ops);
 }
 
 /*! Set the segmentation callback for the client.
  *  \param[in,out] cli Stream Client to modify
  *  \param[in] segmentation_cb Target segmentation callback
+ *
+ * DEPRECATED: Use osmo_cli_set_segmentation_cb2() instead.
  */
 void osmo_stream_cli_set_segmentation_cb(struct osmo_stream_cli *cli,
 					 osmo_stream_cli_segmentation_cb_t segmentation_cb)
 {
 	cli->segmentation_cb = segmentation_cb;
+	cli->segmentation_cb2 = NULL;
 	if (cli->iofd) /* Otherwise, this will be done in osmo_stream_cli_open() */
-		configure_cli_segmentation_cb(cli, segmentation_cb);
+		configure_cli_segmentation_cb(cli);
+}
+
+/*! Set the segmentation callback for the client.
+ *  \param[in,out] cli Stream Client to modify
+ *  \param[in] segmentation_cb2 Target segmentation callback
+ */
+void osmo_stream_cli_set_segmentation_cb2(struct osmo_stream_cli *cli,
+					  osmo_stream_cli_segmentation_cb2_t segmentation_cb2)
+{
+	cli->segmentation_cb = NULL;
+	cli->segmentation_cb2 = segmentation_cb2;
+	if (cli->iofd) /* Otherwise, this will be done in osmo_stream_cli_open() */
+		configure_cli_segmentation_cb(cli);
 }
 
 /*! Set the socket type for the stream server link.
@@ -1257,7 +1283,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 
 		osmo_iofd_set_txqueue_max_length(cli->iofd, cli->tx_queue_max_length);
 		osmo_iofd_notify_connected(cli->iofd);
-		configure_cli_segmentation_cb(cli, cli->segmentation_cb);
+		configure_cli_segmentation_cb(cli);
 
 		if (osmo_iofd_register(cli->iofd, fd) < 0)
 			goto error_close_socket;
