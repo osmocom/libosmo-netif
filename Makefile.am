@@ -9,6 +9,7 @@ pkgconfig_DATA = libosmo-netif.pc
 EXTRA_DIST = \
 	     .version \
 	     README.md \
+	     contrib/libosmo-netif.spec.in \
 	     debian \
 	     git-version-gen \
 	     $(NULL)
