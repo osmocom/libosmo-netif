@@ -88,6 +88,7 @@ int osmo_stream_srv_link_set_tx_queue_max_length(struct osmo_stream_srv_link *li
 char *osmo_stream_srv_link_get_sockname(const struct osmo_stream_srv_link *link);
 struct osmo_fd *osmo_stream_srv_link_get_ofd(struct osmo_stream_srv_link *link);
 int osmo_stream_srv_link_get_fd(const struct osmo_stream_srv_link *link);
+int osmo_stream_srv_link_set_msgb_alloc_info(struct osmo_stream_srv_link *link, unsigned int size, unsigned int headroom);
 bool osmo_stream_srv_link_is_opened(const struct osmo_stream_srv_link *link);
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link);
 void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link);

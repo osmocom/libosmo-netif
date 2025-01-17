@@ -69,6 +69,15 @@
  * Server side.
  */
 
+struct msgb_alloc_info {
+		/*! Whether it was set by user or we use iofd defaults */
+		bool set_by_user;
+		/*! size of msgb to allocate (excluding headroom) */
+		unsigned int size;
+		/*! headroom to allocate when allocating msgb's */
+		unsigned int headroom;
+};
+
 #define OSMO_STREAM_SRV_F_RECONF	(1 << 0)
 #define OSMO_STREAM_SRV_F_NODELAY	(1 << 1)
 
@@ -88,6 +97,7 @@ struct osmo_stream_srv_link {
 	void			*data;
 	int			flags;
 	unsigned int		tx_queue_max_length; /* Max amount of msgbs which can be enqueued */
+	struct msgb_alloc_info	msgb_alloc;
 	struct osmo_sock_init2_multiaddr_pars ma_pars;
 };
 
@@ -504,6 +514,26 @@ void osmo_stream_srv_link_set_accept_cb(struct osmo_stream_srv_link *link,
 
 {
 	link->accept_cb = accept_cb;
+}
+
+/*! Set the msgb allocation parameters on child osmo_stream_srv objects
+ *  \param[in] link Stream Server Link
+ *  \param[in] size Size of msgb to allocate (excluding headroom)
+ *  \param[in] headroom Headroom to allocate when allocating msgb's
+ *
+ *  The parameters are applied to osmo_stream_srv objects upon creation.
+ *  Setting both to 0 leaves it as implementation default.
+ **/
+int osmo_stream_srv_link_set_msgb_alloc_info(struct osmo_stream_srv_link *link, unsigned int size, unsigned int headroom)
+{
+	if (size == 0 && headroom == 0) {
+		link->msgb_alloc.set_by_user = false;
+	} else {
+		link->msgb_alloc.set_by_user = true;
+		link->msgb_alloc.headroom = headroom;
+		link->msgb_alloc.size = size;
+	}
+	return 0;
 }
 
 /*! Destroy the stream server link. Closes + Releases Memory.
@@ -962,6 +992,8 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 	}
 
 	osmo_iofd_set_txqueue_max_length(conn->iofd, conn->srv->tx_queue_max_length);
+	if (conn->srv->msgb_alloc.set_by_user)
+		osmo_iofd_set_alloc_info(conn->iofd, conn->srv->msgb_alloc.size, conn->srv->msgb_alloc.headroom);
 
 	if (osmo_iofd_register(conn->iofd, fd) < 0) {
 		LOGSSRV(conn, LOGL_ERROR, "could not register FD %d\n", fd);
