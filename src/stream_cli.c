@@ -821,6 +821,11 @@ static void configure_cli_segmentation_cb(struct osmo_stream_cli *cli)
  *  \param[in,out] cli Stream Client to modify
  *  \param[in] segmentation_cb Target segmentation callback
  *
+ *  A segmentation call-back can optionally be used when a packet based protocol
+ *  (like TCP) is used within a STREAM style socket that does not preserve
+ *  message boundaries within the stream.  If a segmentation call-back is given,
+ *  the osmo_stream_srv library code will makes sure that the read_cb called
+ *  only for complete single messages, and not arbitrary segments of the stream.
  */
 void osmo_stream_cli_set_segmentation_cb(struct osmo_stream_cli *cli,
 					 osmo_stream_cli_segmentation_cb_t segmentation_cb)
@@ -834,6 +839,10 @@ void osmo_stream_cli_set_segmentation_cb(struct osmo_stream_cli *cli,
 /*! Set the segmentation callback for the client.
  *  \param[in,out] cli Stream Client to modify
  *  \param[in] segmentation_cb2 Target segmentation callback
+ *
+ * Same as osmo_stream_cli_set_segmentation_cb(), but a
+ * osmo_stream_cli_segmentation_cb2_t is called instead which allows access to
+ * the related cli object.
  */
 void osmo_stream_cli_set_segmentation_cb2(struct osmo_stream_cli *cli,
 					  osmo_stream_cli_segmentation_cb2_t segmentation_cb2)
