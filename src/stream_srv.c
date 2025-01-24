@@ -1104,8 +1104,6 @@ static void configure_srv_segmentation_cb(struct osmo_stream_srv *conn)
  *  \param[in,out] conn Target Stream Server to modify
  *  \param[in] segmentation_cb Segmentation callback to be set
  *
- *  DEPRECATED: Use osmo_stream_srv_set_segmentation_cb2() instead.
- *
  *  A segmentation call-back can optionally be used when a packet based protocol (like TCP) is used within a
  *  STREAM style socket that does not preserve message boundaries within the stream.  If a segmentation
  *  call-back is given, the osmo_stream_srv library code will makes sure that the read_cb called only for

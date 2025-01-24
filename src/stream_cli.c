@@ -821,7 +821,6 @@ static void configure_cli_segmentation_cb(struct osmo_stream_cli *cli)
  *  \param[in,out] cli Stream Client to modify
  *  \param[in] segmentation_cb Target segmentation callback
  *
- * DEPRECATED: Use osmo_cli_set_segmentation_cb2() instead.
  */
 void osmo_stream_cli_set_segmentation_cb(struct osmo_stream_cli *cli,
 					 osmo_stream_cli_segmentation_cb_t segmentation_cb)

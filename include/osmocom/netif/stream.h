@@ -140,7 +140,7 @@ void osmo_stream_srv_destroy(struct osmo_stream_srv *conn);
 void osmo_stream_srv_set_flush_and_destroy(struct osmo_stream_srv *conn);
 void osmo_stream_srv_set_data(struct osmo_stream_srv *conn, void *data);
 
-void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn, osmo_stream_srv_segmentation_cb_t segmentation_cb) OSMO_DEPRECATED("Use osmo_stream_srv_set_segmentation_cb2() instead");
+void osmo_stream_srv_set_segmentation_cb(struct osmo_stream_srv *conn, osmo_stream_srv_segmentation_cb_t segmentation_cb);
 void osmo_stream_srv_set_segmentation_cb2(struct osmo_stream_srv *conn, osmo_stream_srv_segmentation_cb2_t segmentation_cb2);
 
 void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg);
@@ -228,7 +228,7 @@ void osmo_stream_cli_set_connect_cb(struct osmo_stream_cli *cli, osmo_stream_cli
 void osmo_stream_cli_set_disconnect_cb(struct osmo_stream_cli *cli, osmo_stream_cli_disconnect_cb_t disconnect_cb);
 void osmo_stream_cli_set_read_cb(struct osmo_stream_cli *cli, osmo_stream_cli_read_cb_t read_cb);
 void osmo_stream_cli_set_read_cb2(struct osmo_stream_cli *cli, osmo_stream_cli_read_cb2_t read_cb);
-void osmo_stream_cli_set_segmentation_cb(struct osmo_stream_cli *cli, osmo_stream_cli_segmentation_cb_t segmentation_cb) OSMO_DEPRECATED("Use osmo_stream_cli_set_segmentation_cb2() instead");
+void osmo_stream_cli_set_segmentation_cb(struct osmo_stream_cli *cli, osmo_stream_cli_segmentation_cb_t segmentation_cb);
 void osmo_stream_cli_set_segmentation_cb2(struct osmo_stream_cli *cli, osmo_stream_cli_segmentation_cb2_t segmentation_cb2);
 void osmo_stream_cli_reconnect(struct osmo_stream_cli *cli);
 bool osmo_stream_cli_is_connected(struct osmo_stream_cli *cli);
