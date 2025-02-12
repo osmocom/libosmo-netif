@@ -89,9 +89,9 @@ AC_SUBST(SYMBOL_VISIBILITY)
 dnl Generate the output
 AM_CONFIG_HEADER(config.h)
 
-PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.10.0)
-PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.10.0)
-PKG_CHECK_MODULES(LIBOSMOCODEC, libosmocodec >= 1.10.0)
+PKG_CHECK_MODULES(LIBOSMOCORE, libosmocore >= 1.11.0)
+PKG_CHECK_MODULES(LIBOSMOGSM, libosmogsm >= 1.11.0)
+PKG_CHECK_MODULES(LIBOSMOCODEC, libosmocodec >= 1.11.0)
 
 AC_ARG_ENABLE([libsctp], [AS_HELP_STRING([--disable-libsctp], [Do not enable socket multiaddr APIs requiring libsctp])],
 	[ENABLE_LIBSCTP=$enableval], [ENABLE_LIBSCTP="yes"])

@@ -1,3 +1,51 @@
+libosmo-netif (1.6.0) unstable; urgency=medium
+
+  [ Harald Welte ]
+  * stream_test: don't check if uint8_t is negative
+  * src/stream.c: Use sctp_assoc_id 'canary' to detect misisng sinfo
+
+  [ Neels Hofmeyr ]
+  * osmo_rtp_get_payload(): fix bounds check for padding
+  * coverity CID#216829
+  * api doc: stream.h: hint at how to select modern vs legacy mode
+
+  [ Pau Espin Pedrol ]
+  * rtp: osmo_rtp_get_payload(): Fix return ptr if RTP pkt contains padding
+  * Drop libosmo-abis cond dep together with examples/lapd-over-datagram
+  * stream_cli: Allow setting nodelay sockopt after opening sock
+  * examples/ipa-stream-client: Fix wrong call to osmo_ipa_process_msg()
+  * stream: Explicitly document MSG_NOTIFICATION case in recv() API
+  * stream: Improve logging around recv() failure
+  * stream_cli: Log all code paths ending up in close/reconnect
+  * stream_cli: Announce failed connect() if reconnect is disabled
+  * stream_cli: Add osmo_stream_cli_set_{ip_dscp,priority}() APIs
+  * stream_srv: Add osmo_stream_srv_link_set_{ip_dscp,priority}() APIs
+  * stream_cli: Rename private functions
+  * stream_cli: Move osmo_stream_cli_close() before osmo_stream_cli_reconnect()
+  * stream_cli: Support destroy object within user callback
+  * stream_cli: Add API osmo_stream_cli_set_tx_queue_max_length()
+  * stream_srv: Add API osmo_stream_srv_link_set_tx_queue_max_length()
+  * stream: Allow null ptr in destroy() functions
+  * stream_cli: steal talloc ctx upon delaying free to avoid use after free
+  * stream_cli: Assert reentrant disconnect_cb() never happens
+  * stream_cli: Explicitly ignore return code of stream_cli_close
+  * stream_cli: Explicitly ignore return code of internal functions
+  * stream_cli: Fix discard 1st msg received quick after connect
+  * ipa: Add osmo_ipa_ka_fsm_inst APIs
+  * stream: Introduce osmo_stream_{cli,srv}_set_segmentation_cb2
+  * stream: Add osmo_stream_srv_link_set_msgb_alloc_info()
+  * stream: Undeprecate osmo_stream_srv_set_segmentation_cb()
+  * stream: osmo_stream_{cli,srv}_set_segmentation_cb(2): documentation improvements
+
+  [ Mychaela N. Falconia ]
+  * include/osmocom/netif/Makefile.am cosmetic: make it easier to extend
+  * src/Makefile.am cosmetic: make it easier to extend
+
+  [ Oliver Smith ]
+  * Revert "contrib: remove rpm spec file"
+
+ -- Oliver Smith <osmith@sysmocom.de>  Wed, 12 Feb 2025 11:01:12 +0100
+
 libosmo-netif (1.5.1) unstable; urgency=medium
 
   [ Daniel Willmann ]
