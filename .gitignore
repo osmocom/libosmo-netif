@@ -49,6 +49,8 @@ examples/rtp-udp-test-server
 examples/stream-client
 examples/stream-server
 
+utils/osmo-amr-inspect
+
 Doxyfile
 /examples/udp-test-client
 /examples/udp-test-server
