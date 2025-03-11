@@ -366,10 +366,10 @@ int osmo_stream_srv_link_set_type(struct osmo_stream_srv_link *link, int type)
 	return 0;
 }
 
-/*! Set the socket type for the stream server link.
+/*! Set the socket domain for the stream server link.
  *  Any changes to this setting will only become active upon next (re)connect.
  *  \param[in] link Stream Server Link to modify
- *  \param[in] type Socket Domain (like AF_UNSPEC (default for IP), AF_UNIX, AF_INET, ...)
+ *  \param[in] domain Socket Domain (like AF_UNSPEC (default for IP), AF_UNIX, AF_INET, ...)
  *  \returns zero on success, negative on error.
  */
 int osmo_stream_srv_link_set_domain(struct osmo_stream_srv_link *link, int domain)
