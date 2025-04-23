@@ -266,8 +266,11 @@ static int stream_sctp_recvmsg_trailer(const char *log_pfx, struct msgb *msg, in
 		return ret;
 	}
 
-	if (OSMO_UNLIKELY(ret > 0 && !sinfo))
-		LOGP(DLINP, LOGL_ERROR, "%s sctp_recvmsg without SNDRCV cmsg?!?\n", log_pfx);
+	if (OSMO_UNLIKELY(ret > 0 && !sinfo)) {
+		char buf[512];
+		LOGP(DLINP, LOGL_ERROR, "%s sctp_recvmsg without SNDRCV cmsg?!? ret=%d, flags=0x%x, %s\n",
+		     log_pfx, ret, flags, msgb_hexdump_buf(buf, sizeof(buf), msg));
+	}
 
 	return ret;
 }
