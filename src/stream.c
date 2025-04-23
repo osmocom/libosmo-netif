@@ -296,7 +296,7 @@ int stream_iofd_sctp_recvmsg_trailer(struct osmo_io_fd *iofd, struct msgb *msg, 
 	struct cmsghdr *cmsg = NULL;
 
 	for (cmsg = CMSG_FIRSTHDR((struct msghdr *) msgh); cmsg != NULL;
-		cmsg = CMSG_NXTHDR((struct msghdr *) msgh, cmsg)) {
+	     cmsg = CMSG_NXTHDR((struct msghdr *) msgh, cmsg)) {
 		if (cmsg->cmsg_level == IPPROTO_SCTP && cmsg->cmsg_type == SCTP_SNDRCV) {
 			sinfo = (const struct sctp_sndrcvinfo *)CMSG_DATA(cmsg);
 			break;
