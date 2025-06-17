@@ -122,6 +122,7 @@ struct osmo_stream_cli {
 	int				flags;
 	int				reconnect_timeout;
 	struct osmo_sock_init2_multiaddr_pars ma_pars;
+	struct stream_tcp_pars		tcp_pars;
 	uint8_t				in_cb_mask; /* IN_CB_MASK_* */
 	bool				delay_free;
 };
@@ -1286,6 +1287,12 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 			goto error_close_socket;
 	}
 
+	if (cli->proto == IPPROTO_TCP) {
+		ret = stream_tcp_keepalive_pars_apply(fd, &cli->tcp_pars.ka);
+		if (ret < 0)
+			goto error_close_socket;
+	}
+
 	switch (cli->mode) {
 	case OSMO_STREAM_MODE_OSMO_FD:
 		osmo_fd_setup(&cli->ofd, fd, OSMO_FD_READ | OSMO_FD_WRITE, osmo_stream_cli_fd_cb, cli, 0);
@@ -1531,6 +1538,38 @@ int osmo_stream_cli_set_param(struct osmo_stream_cli *cli, enum osmo_stream_cli_
 		cli->ma_pars.sctp.sockopt_initmsg.set = true;
 		cli->ma_pars.sctp.sockopt_initmsg.max_init_timeo_present = true;
 		cli->ma_pars.sctp.sockopt_initmsg.max_init_timeo_value = *(uint16_t *)val;
+		break;
+	/* TCP keepalive params: */
+	case OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPALIVE:
+		if (!val || val_len != sizeof(uint8_t))
+			return -EINVAL;
+		cli->tcp_pars.ka.enable = !!*(uint8_t *)val;
+		if (stream_cli_is_opened(cli))
+			return stream_setsockopt_tcp_keepalive(osmo_stream_cli_get_fd(cli), cli->tcp_pars.ka.enable);
+		break;
+	case OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPIDLE:
+		if (!val || val_len != sizeof(int))
+			return -EINVAL;
+		cli->tcp_pars.ka.time_present = true;
+		cli->tcp_pars.ka.time_value = *(int *)val;
+		if (stream_cli_is_opened(cli))
+			return stream_setsockopt_tcp_keepidle(osmo_stream_cli_get_fd(cli), cli->tcp_pars.ka.time_value);
+		break;
+	case OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPINTVL:
+		if (!val || val_len != sizeof(int))
+			return -EINVAL;
+		cli->tcp_pars.ka.intvl_present = true;
+		cli->tcp_pars.ka.intvl_value = *(int *)val;
+		if (stream_cli_is_opened(cli))
+			return stream_setsockopt_tcp_keepintvl(osmo_stream_cli_get_fd(cli), cli->tcp_pars.ka.intvl_value);
+		break;
+	case OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPCNT:
+		if (!val || val_len != sizeof(int))
+			return -EINVAL;
+		cli->tcp_pars.ka.probes_present = true;
+		cli->tcp_pars.ka.probes_value = *(int *)val;
+		if (stream_cli_is_opened(cli))
+			return stream_setsockopt_tcp_keepcnt(osmo_stream_cli_get_fd(cli), cli->tcp_pars.ka.probes_value);
 		break;
 	default:
 		return -ENOENT;

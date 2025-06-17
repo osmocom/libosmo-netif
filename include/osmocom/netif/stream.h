@@ -98,6 +98,11 @@ enum osmo_stream_srv_link_param {
 	OSMO_STREAM_SRV_LINK_PAR_SCTP_SOCKOPT_ASCONF_SUPPORTED, /* uint8_t: 0 disable, 1 enable, 2 force disable, 3 force enable */
 	OSMO_STREAM_SRV_LINK_PAR_SCTP_INIT_NUM_OSTREAMS, /* uint16_t: amount of streams */
 	OSMO_STREAM_SRV_LINK_PAR_SCTP_INIT_MAX_INSTREAMS, /* uint16_t: amount of streams */
+
+	OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPALIVE = 256, /* uint8_t: 0 disable, 1 enable */
+	OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPIDLE, /* int: seconds */
+	OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPINTVL, /* int: seconds */
+	OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPCNT, /* int: Number of probes */
 };
 
 int osmo_stream_srv_link_set_param(struct osmo_stream_srv_link *link, enum osmo_stream_srv_link_param par,
@@ -148,6 +153,15 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg);
 int osmo_stream_srv_recv(struct osmo_stream_srv *conn, struct msgb *msg);
 
 void osmo_stream_srv_clear_tx_queue(struct osmo_stream_srv *conn);
+
+enum osmo_stream_srv_param {
+	OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPALIVE = 256, /* uint8_t: 0 disable, 1 enable */
+	OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPIDLE, /* int: seconds */
+	OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPINTVL, /* int: seconds */
+	OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPCNT, /* int: Number of probes */
+};
+int osmo_stream_srv_set_param(struct osmo_stream_srv *conn, enum osmo_stream_srv_param par,
+			       void *val, size_t val_len);
 
 /*! @} */
 
@@ -255,6 +269,11 @@ enum osmo_stream_cli_param {
 	OSMO_STREAM_CLI_PAR_SCTP_INIT_MAX_INSTREAMS, /* uint16_t: amount of streams */
 	OSMO_STREAM_CLI_PAR_SCTP_INIT_MAX_ATTEMPTS, /* uint16_t: amount of attempts */
 	OSMO_STREAM_CLI_PAR_SCTP_INIT_TIMEOUT, /* uint16_t: milliseconds */
+
+	OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPALIVE = 256, /* uint8_t: 0 disable, 1 enable */
+	OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPIDLE, /* int: seconds */
+	OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPINTVL, /* int: seconds */
+	OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPCNT, /* int: Number of probes */
 };
 
 int osmo_stream_cli_set_param(struct osmo_stream_cli *cli, enum osmo_stream_cli_param par,
