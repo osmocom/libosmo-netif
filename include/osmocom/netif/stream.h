@@ -103,6 +103,7 @@ enum osmo_stream_srv_link_param {
 	OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPIDLE, /* int: seconds */
 	OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPINTVL, /* int: seconds */
 	OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPCNT, /* int: Number of probes */
+	OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_USER_TIMEOUT, /* unsigned int: 0 "system default", >0 see sockopt TCP_USER_TIMEOUT */
 };
 
 int osmo_stream_srv_link_set_param(struct osmo_stream_srv_link *link, enum osmo_stream_srv_link_param par,
@@ -159,6 +160,7 @@ enum osmo_stream_srv_param {
 	OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPIDLE, /* int: seconds */
 	OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPINTVL, /* int: seconds */
 	OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPCNT, /* int: Number of probes */
+	OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_USER_TIMEOUT, /* unsigned int: 0 "system default", >0 see sockopt TCP_USER_TIMEOUT */
 };
 int osmo_stream_srv_set_param(struct osmo_stream_srv *conn, enum osmo_stream_srv_param par,
 			       void *val, size_t val_len);
@@ -274,6 +276,7 @@ enum osmo_stream_cli_param {
 	OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPIDLE, /* int: seconds */
 	OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPINTVL, /* int: seconds */
 	OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_KEEPCNT, /* int: Number of probes */
+	OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_USER_TIMEOUT, /* unsigned int: 0 "system default", >0 see sockopt TCP_USER_TIMEOUT */
 };
 
 int osmo_stream_cli_set_param(struct osmo_stream_cli *cli, enum osmo_stream_cli_param par,

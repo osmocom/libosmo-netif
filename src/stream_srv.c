@@ -150,6 +150,9 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 				LOGSLNK(link, LOGL_ERROR, "failed applying TCP keep-alive pars on fd %d\n", sock_fd);
 				goto error_close_socket;
 			}
+			/* tcp_pars.user_timeout (sockopt TCP_USER_TIMEOUT) is
+			 * inherited by accept() connected sockets automatically,
+			 * no need to re-apply it here. */
 			break;
 		case IPPROTO_SCTP:
 			_setsockopt_nosigpipe(link, sock_fd);
@@ -710,6 +713,15 @@ int osmo_stream_srv_link_set_param(struct osmo_stream_srv_link *link, enum osmo_
 		link->tcp_pars.ka.probes_value = *(int *)val;
 		/* Will be applied on accepted sockets */
 		break;
+	case OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_USER_TIMEOUT:
+		if (!val || val_len != sizeof(unsigned int))
+			return -EINVAL;
+		link->tcp_pars.user_timeout_present = true;
+		link->tcp_pars.user_timeout_value = *(int *)val;
+		/* This value is inherited by accept() connected sockets (hence by child stream_srv): */
+		if (osmo_stream_srv_link_is_opened(link))
+			return stream_setsockopt_tcp_user_timeout(osmo_stream_srv_link_get_fd(link),
+								  link->tcp_pars.user_timeout_value);
 	default:
 		return -ENOENT;
 	};
@@ -1451,6 +1463,7 @@ int osmo_stream_srv_set_param(struct osmo_stream_srv *conn, enum osmo_stream_srv
 {
 	uint8_t on;
 	int i;
+	unsigned int u;
 	OSMO_ASSERT(conn);
 
 	switch (par) {
@@ -1475,6 +1488,12 @@ int osmo_stream_srv_set_param(struct osmo_stream_srv *conn, enum osmo_stream_srv
 			return -EINVAL;
 		i = *(int *)val;
 		return stream_setsockopt_tcp_keepcnt(osmo_stream_srv_get_fd(conn), i);
+	case OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_USER_TIMEOUT:
+		if (!val || val_len != sizeof(unsigned int))
+			return -EINVAL;
+		u = *(unsigned int *)val;
+		return stream_setsockopt_tcp_user_timeout(osmo_stream_srv_get_fd(conn), u);
+		break;
 	default:
 		return -ENOENT;
 	};
