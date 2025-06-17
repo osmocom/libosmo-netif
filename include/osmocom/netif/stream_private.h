@@ -46,8 +46,10 @@ int stream_tcp_keepalive_pars_apply(int fd, const struct stream_tcp_keepalive_pa
 
 struct stream_tcp_pars {
 	struct stream_tcp_keepalive_pars ka;
-	/* Others like TCP_USER_TIMEOUT will be added here in the future. */
+	bool user_timeout_present;
+	unsigned int user_timeout_value;
 };
+int stream_setsockopt_tcp_user_timeout(int fd, unsigned int user_timeout);
 
 struct osmo_io_fd;
 struct msghdr;

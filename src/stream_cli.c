@@ -1291,6 +1291,11 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		ret = stream_tcp_keepalive_pars_apply(fd, &cli->tcp_pars.ka);
 		if (ret < 0)
 			goto error_close_socket;
+		if (cli->tcp_pars.user_timeout_present) {
+			ret = stream_setsockopt_tcp_user_timeout(fd, cli->tcp_pars.user_timeout_value);
+			if (ret < 0)
+				goto error_close_socket;
+		}
 	}
 
 	switch (cli->mode) {
@@ -1570,6 +1575,14 @@ int osmo_stream_cli_set_param(struct osmo_stream_cli *cli, enum osmo_stream_cli_
 		cli->tcp_pars.ka.probes_value = *(int *)val;
 		if (stream_cli_is_opened(cli))
 			return stream_setsockopt_tcp_keepcnt(osmo_stream_cli_get_fd(cli), cli->tcp_pars.ka.probes_value);
+		break;
+	case OSMO_STREAM_CLI_PAR_TCP_SOCKOPT_USER_TIMEOUT:
+		if (!val || val_len != sizeof(unsigned int))
+			return -EINVAL;
+		cli->tcp_pars.user_timeout_present = true;
+		cli->tcp_pars.user_timeout_value = *(int *)val;
+		if (stream_cli_is_opened(cli))
+			return stream_setsockopt_tcp_user_timeout(osmo_stream_cli_get_fd(cli), cli->tcp_pars.user_timeout_value);
 		break;
 	default:
 		return -ENOENT;

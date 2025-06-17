@@ -240,6 +240,17 @@ int stream_setsockopt_tcp_keepcnt(int fd, int keepalive_probes)
 	return 0;
 }
 
+int stream_setsockopt_tcp_user_timeout(int fd, unsigned int user_timeout)
+{
+	int ret = setsockopt(fd, IPPROTO_TCP, TCP_USER_TIMEOUT, &user_timeout, sizeof(user_timeout));
+	if (ret < 0) {
+		ret = errno;
+		LOGP(DLINP, LOGL_ERROR, "Failed to set TCP_USER_TIMEOUT on fd %d: %s\n", fd, strerror(ret));
+		return -ret;
+	}
+	return 0;
+}
+
 int stream_tcp_keepalive_pars_apply(int fd, const struct stream_tcp_keepalive_pars *tkp)
 {
 	int ret;
