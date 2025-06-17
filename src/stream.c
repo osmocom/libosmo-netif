@@ -196,6 +196,78 @@ int stream_setsockopt_nodelay(int fd, int proto, int on)
 	return rc;
 }
 
+int stream_setsockopt_tcp_keepalive(int fd, int on)
+{
+	int ret = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on));
+	if (ret < 0) {
+		ret = errno;
+		LOGP(DLINP, LOGL_ERROR, "Failed to enable TCP keepalive on fd %d: %s\n", fd, strerror(ret));
+		return -ret;
+	}
+	return 0;
+}
+
+int stream_setsockopt_tcp_keepidle(int fd, int keepalive_time)
+{
+	int ret = setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &keepalive_time, sizeof(keepalive_time));
+	if (ret < 0) {
+		ret = errno;
+		LOGP(DLINP, LOGL_ERROR, "Failed to set TCP_KEEPIDLE on fd %d: %s\n", fd, strerror(ret));
+		return -ret;
+	}
+	return 0;
+}
+
+int stream_setsockopt_tcp_keepintvl(int fd, int keepalive_intvl)
+{
+	int ret = setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &keepalive_intvl, sizeof(keepalive_intvl));
+	if (ret < 0) {
+		ret = errno;
+		LOGP(DLINP, LOGL_ERROR, "Failed to set TCP_KEEPINTVL on fd %d: %s\n", fd, strerror(ret));
+		return -ret;
+	}
+	return 0;
+}
+
+int stream_setsockopt_tcp_keepcnt(int fd, int keepalive_probes)
+{
+	int ret = setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &keepalive_probes, sizeof(keepalive_probes));
+	if (ret < 0) {
+		ret = errno;
+		LOGP(DLINP, LOGL_ERROR, "Failed to set TCP_KEEPCNT on fd %d: %s\n", fd, strerror(ret));
+		return -ret;
+	}
+	return 0;
+}
+
+int stream_tcp_keepalive_pars_apply(int fd, const struct stream_tcp_keepalive_pars *tkp)
+{
+	int ret;
+
+	if (!tkp->enable)
+		return 0;
+
+	if ((ret = stream_setsockopt_tcp_keepalive(fd, tkp->enable)) < 0)
+		return ret;
+
+	if (tkp->time_present) {
+		if ((ret = stream_setsockopt_tcp_keepidle(fd, tkp->time_value)) < 0)
+			return ret;
+	}
+
+	if (tkp->intvl_present) {
+		if ((ret = stream_setsockopt_tcp_keepintvl(fd, tkp->intvl_value)) < 0)
+			return ret;
+	}
+
+	if (tkp->probes_present) {
+		if ((ret = stream_setsockopt_tcp_keepcnt(fd, tkp->probes_value)) < 0)
+			return ret;
+	}
+
+	return 0;
+}
+
 #ifdef HAVE_LIBSCTP
 static int stream_sctp_recvmsg_trailer(const char *log_pfx, struct msgb *msg, int ret, const struct sctp_sndrcvinfo *sinfo, int flags)
 {

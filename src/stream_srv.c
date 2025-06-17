@@ -99,6 +99,7 @@ struct osmo_stream_srv_link {
 	unsigned int		tx_queue_max_length; /* Max amount of msgbs which can be enqueued */
 	struct msgb_alloc_info	msgb_alloc;
 	struct osmo_sock_init2_multiaddr_pars ma_pars;
+	struct stream_tcp_pars tcp_pars;
 };
 
 static int _setsockopt_nosigpipe(struct osmo_stream_srv_link *link, int new_fd)
@@ -142,11 +143,22 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 		LOGSLNK(link, LOGL_INFO, "accept()ed new link from %s\n",
 			osmo_sockaddr_to_str(&osa));
 
-		if (link->proto == IPPROTO_SCTP) {
+		switch (link->proto) {
+		case IPPROTO_TCP:
+			ret = stream_tcp_keepalive_pars_apply(sock_fd, &link->tcp_pars.ka);
+			if (ret < 0) {
+				LOGSLNK(link, LOGL_ERROR, "failed applying TCP keep-alive pars on fd %d\n", sock_fd);
+				goto error_close_socket;
+			}
+			break;
+		case IPPROTO_SCTP:
 			_setsockopt_nosigpipe(link, sock_fd);
 			ret = stream_sctp_sock_activate_events(sock_fd);
 			if (ret < 0)
 				goto error_close_socket;
+			break;
+		default:
+			break;
 		}
 		break;
 	default:
@@ -669,6 +681,34 @@ int osmo_stream_srv_link_set_param(struct osmo_stream_srv_link *link, enum osmo_
 		link->ma_pars.sctp.sockopt_initmsg.set = true;
 		link->ma_pars.sctp.sockopt_initmsg.max_instreams_present = true;
 		link->ma_pars.sctp.sockopt_initmsg.max_instreams_value = *(uint16_t *)val;
+		break;
+	/* TCP keepalive params: */
+	case OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPALIVE:
+		if (!val || val_len != sizeof(uint8_t))
+			return -EINVAL;
+		link->tcp_pars.ka.enable = !!*(uint8_t *)val;
+		/* Will be applied on accepted sockets */
+		break;
+	case OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPIDLE:
+		if (!val || val_len != sizeof(int))
+			return -EINVAL;
+		link->tcp_pars.ka.time_present = true;
+		link->tcp_pars.ka.time_value = *(int *)val;
+		/* Will be applied on accepted sockets */
+		break;
+	case OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPINTVL:
+		if (!val || val_len != sizeof(int))
+			return -EINVAL;
+		link->tcp_pars.ka.intvl_present = true;
+		link->tcp_pars.ka.intvl_value = *(int *)val;
+		/* Will be applied on accepted sockets */
+		break;
+	case OSMO_STREAM_SRV_LINK_PAR_TCP_SOCKOPT_KEEPCNT:
+		if (!val || val_len != sizeof(int))
+			return -EINVAL;
+		link->tcp_pars.ka.probes_present = true;
+		link->tcp_pars.ka.probes_value = *(int *)val;
+		/* Will be applied on accepted sockets */
 		break;
 	default:
 		return -ENOENT;
@@ -1398,6 +1438,46 @@ void osmo_stream_srv_clear_tx_queue(struct osmo_stream_srv *conn)
 
 	if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY)
 		osmo_stream_srv_destroy(conn);
+}
+
+/*! Set given parameter of stream_srv to given value.
+ *  \param[in] conn stream server conn on which to set parameter.
+ *  \param[in] par identifier of the parameter to be set.
+ *  \param[in] val value of the parameter to be set.
+ *  \param[in] val_len length of the parameter value.
+ *  \returns 0 in success; negative -errno on error. */
+int osmo_stream_srv_set_param(struct osmo_stream_srv *conn, enum osmo_stream_srv_param par,
+			      void *val, size_t val_len)
+{
+	uint8_t on;
+	int i;
+	OSMO_ASSERT(conn);
+
+	switch (par) {
+	/* TCP keepalive params: */
+	case OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPALIVE:
+		if (!val || val_len != sizeof(uint8_t))
+			return -EINVAL;
+		on = !!*(uint8_t *)val;
+		return stream_setsockopt_tcp_keepalive(osmo_stream_srv_get_fd(conn), on);
+	case OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPIDLE:
+		if (!val || val_len != sizeof(int))
+			return -EINVAL;
+		i = *(int *)val;
+		return stream_setsockopt_tcp_keepidle(osmo_stream_srv_get_fd(conn), i);
+	case OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPINTVL:
+		if (!val || val_len != sizeof(int))
+			return -EINVAL;
+		i = *(int *)val;
+		return stream_setsockopt_tcp_keepintvl(osmo_stream_srv_get_fd(conn), i);
+	case OSMO_STREAM_SRV_PAR_TCP_SOCKOPT_KEEPCNT:
+		if (!val || val_len != sizeof(int))
+			return -EINVAL;
+		i = *(int *)val;
+		return stream_setsockopt_tcp_keepcnt(osmo_stream_srv_get_fd(conn), i);
+	default:
+		return -ENOENT;
+	};
 }
 
 /*! @} */
