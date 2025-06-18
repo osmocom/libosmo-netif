@@ -628,7 +628,7 @@ void osmo_stream_srv_link_close(struct osmo_stream_srv_link *link)
 }
 
 /*! Set given parameter of stream_srv_link to given value.
- *  \param[in] cli stream client on which to set parameter.
+ *  \param[in] link stream server link on which to set parameter.
  *  \param[in] par identifier of the parameter to be set.
  *  \param[in] val value of the parameter to be set.
  *  \param[in] val_len length of the parameter value.
@@ -916,7 +916,10 @@ static int osmo_stream_srv_cb(struct osmo_fd *ofd, unsigned int what)
  *  \param[in] read_cb Call-back to call when the socket is readable
  *  \param[in] closed_cb Call-back to call when the connection is closed
  *  \param[in] data User data to save in the new Stream Server struct
- *  \returns Stream Server in case of success; NULL on error */
+ *  \returns Stream Server in case of success; NULL on error
+ *
+ *  Note: In case of error, the caller is responsible for closing the fd.
+ */
 struct osmo_stream_srv *
 osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd,
 		       osmo_stream_srv_read_cb_t read_cb,
@@ -959,7 +962,10 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd,
  *  \param[in] link Stream Server Link to which we belong
  *  \param[in] fd system file descriptor of the new connection
  *  \param[in] data User data to save in the new Stream Server struct
- *  \returns Stream Server in case of success; NULL on error */
+ *  \returns Stream Server in case of success; NULL on error
+ *
+ *  Note: In case of error, the caller is responsible for closing the fd.
+ */
 struct osmo_stream_srv *
 osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, void *data)
 {
