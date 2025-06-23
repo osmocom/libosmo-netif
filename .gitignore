@@ -63,3 +63,4 @@ stream_test
 amr_test
 
 contrib/libosmo-netif.spec
+include/osmocom/netif/version.h
