@@ -144,8 +144,8 @@ static void osmux_circuit_dequeue(struct osmux_circuit *circuit, struct msgb *ms
 
 static void osmux_circuit_del_msgs(struct osmux_link *link, struct osmux_circuit *circuit)
 {
-	struct msgb *cur, *tmp;
-	llist_for_each_entry_safe(cur, tmp, &circuit->msg_list, list) {
+	struct msgb *cur;
+	while ((cur = llist_first_entry_or_null(&circuit->msg_list, struct msgb, list))) {
 		osmux_circuit_dequeue(circuit, cur);
 		msgb_free(cur);
 		link->nmsgs--;
@@ -687,9 +687,9 @@ err_free:
 static int osmux_xfrm_input_talloc_destructor(struct osmux_in_handle *h)
 {
 	struct osmux_link *link = (struct osmux_link *)h->internal_data;
-	struct osmux_circuit *circuit, *next;
+	struct osmux_circuit *circuit;
 
-	llist_for_each_entry_safe(circuit, next, &link->circuit_list, head)
+	while ((circuit = llist_first_entry_or_null(&link->circuit_list, struct osmux_circuit, head)))
 		osmux_link_del_circuit(link, circuit);
 
 	osmo_timer_del(&link->timer);
