@@ -181,7 +181,7 @@ retry:
 		timersub(&elapsed_pcap, &elapsed_sys, &res);
 	}
 	printf("next packet comes in %lu.%.6lu seconds\n",
-		res.tv_sec, res.tv_usec);
+	       (unsigned int long) res.tv_sec, (unsigned int long) res.tv_usec);
 	osmo_timer_schedule(&p->timer, res.tv_sec, res.tv_usec);
 
 	return 0;

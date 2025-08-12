@@ -65,7 +65,8 @@ static struct msgb *make_msgb(const char *m)
 #define LOGCLI(cli, fmt, args...) do { \
 		struct timeval tv; \
 		osmo_gettimeofday(&tv, NULL); \
-		printf("{%lu.%06lu} [%s] Client's %s(): " fmt, tv.tv_sec, tv.tv_usec, \
+		printf("{%lu.%06lu} [%s] Client's %s(): " fmt, \
+		       (unsigned int long) tv.tv_sec, (unsigned int long) tv.tv_usec, \
 		       osmo_stream_cli_get_data(cli) ? "OK" : "NA", __func__, ##args); \
 	} while (0)
 
@@ -243,7 +244,8 @@ static struct osmo_stream_cli *make_client(void *ctx, const char *host, unsigned
 #define LOGSRV(srv, fmt, args...) do { \
 		struct timeval tv; \
 		osmo_gettimeofday(&tv, NULL); \
-		printf("{%lu.%06lu} [%s|%s] Server's %s(): " fmt,  tv.tv_sec, tv.tv_usec, \
+		printf("{%lu.%06lu} [%s|%s] Server's %s(): " fmt, \
+		       (unsigned int long) tv.tv_sec, (unsigned int long) tv.tv_usec, \
 		       osmo_stream_srv_get_data(srv) ? "OK" : "NA", \
 		       osmo_stream_srv_link_get_data(osmo_stream_srv_get_master(srv)) ? "OK" : "NA", \
 		       __func__, ##args); \
@@ -364,21 +366,24 @@ static void test_recon(void *ctx, const char *host, unsigned port, unsigned step
 		osmo_select_main(0);
 		osmo_gettimeofday(&tv, NULL);
 		fprintf(stderr, "\n{%lu.%06lu} %s test step %u [client %s, server %s], FD reg %u\n",
-			tv.tv_sec, tv.tv_usec, ASTR(autoreconnect), steps,
+			(unsigned int long) tv.tv_sec, (unsigned int long) tv.tv_usec,
+			ASTR(autoreconnect), steps,
 			osmo_stream_cli_get_data(cli) ? "OK" : "NA",
 			osmo_stream_srv_link_get_data(lnk) ? "OK" : "NA",
 			osmo_fd_is_registered(osmo_stream_cli_get_ofd(cli)));
 
 		if (test_stop_requested(lnk)) {
 			printf("{%lu.%06lu} Server requested test termination\n",
-			       tv.tv_sec, tv.tv_usec);
+			       (unsigned int long) tv.tv_sec, (unsigned int long) tv.tv_usec);
 			steps = 0;
 		}
 	}
 
 	osmo_stream_cli_destroy(cli);
 	osmo_stream_srv_link_close(lnk);
-	printf("{%lu.%06lu} %s test complete.\n\n", tv.tv_sec, tv.tv_usec, ASTR(autoreconnect));
+	printf("{%lu.%06lu} %s test complete.\n\n",
+	       (unsigned int long) tv.tv_sec, (unsigned int long) tv.tv_usec,
+	       ASTR(autoreconnect));
 }
 
 /* Segmentation test code (using IPA) */

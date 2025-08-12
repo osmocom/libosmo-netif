@@ -131,8 +131,8 @@ static int read_cb(struct osmo_stream_cli *conn, int res, struct msgb *msg)
 		gettimeofday(&tv, NULL);
 		timersub(&tv, &found->tv, &diff);
 
-		LOGP(DLINP, LOGL_NOTICE, "message %d replied "
-			"in %lu.%.6lu\n", num, diff.tv_sec, diff.tv_usec);
+		LOGP(DLINP, LOGL_NOTICE, "message %d replied in %lu.%.6lu\n", num,
+		     (unsigned int long) diff.tv_sec, (unsigned int long) diff.tv_usec);
 		talloc_free(found);
 	} else {
 		LOGP(DLINP, LOGL_ERROR,
