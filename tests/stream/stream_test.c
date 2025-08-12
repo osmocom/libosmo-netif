@@ -745,7 +745,7 @@ int test_segm_ipa_stream_cli_srv_read_cb(struct osmo_stream_srv *conn, int res, 
 		fprintf(stderr, "Cannot allocate message\n");
 		return -ENOMEM;
 	}
-	LOGSRV(conn, "Received message from stream (total len including stripped headers = %lu)\n",
+	LOGSRV(conn, "Received message from stream (total len including stripped headers = %zu)\n",
 	       osmo_ntohs(h->len) + sizeof(*h));
 	if (5 < ipa_msg_type) {
 		fprintf(stderr, "Received unexpected IPAC message type %"PRIu8"\n", ipa_msg_type);

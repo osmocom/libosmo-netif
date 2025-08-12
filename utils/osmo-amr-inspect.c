@@ -73,7 +73,7 @@ static void inspect_amr_oa(const uint8_t *buf, size_t buf_len)
 	printf("  F: %u\n", hdr->f);
 	printf("  FT: %u (%s)\n", hdr->ft, osmo_amr_type_name(hdr->ft));
 	printf("  Q: %u\n", hdr->q);
-	printf("  Payload (%lu bytes): %s\n",
+	printf("  Payload (%zu bytes): %s\n",
 	       buf_len - sizeof(*hdr), osmo_hexdump_nospc(payload, payload_len));
 
 	if (hdr->f)
@@ -88,11 +88,11 @@ static void inspect_amr_oa(const uint8_t *buf, size_t buf_len)
 		println_orange("  WARN: PAD2=0x%x not zero!", hdr->pad2);
 	ft_bytes = osmo_amr_bytes(hdr->ft);
 	if (payload_len != ft_bytes) {
-		println_red("  ERROR: Wrong payload byte-length %lu != exp %lu!", payload_len, ft_bytes);
+		println_red("  ERROR: Wrong payload byte-length %zu != exp %zu!", payload_len, ft_bytes);
 	} else {
 		ft_bits = osmo_amr_bits(hdr->ft);
 		if (ft_bits/8 == ft_bytes) {
-			printf("  Payload has no padding (%lu bits)\n", ft_bits);
+			printf("  Payload has no padding (%zu bits)\n", ft_bits);
 		} else {
 			uint8_t last_byte = payload[payload_len - 1];
 			uint8_t padding = last_byte & (0xff >> (ft_bits & 3));
@@ -117,7 +117,7 @@ static void inspect_amr_bwe(const uint8_t *buf, size_t buf_len)
 	printf("  FT: %u (%s)\n", ft, osmo_amr_type_name(ft));
 	printf("  Q: %u\n", hdr->q);
 	printf("  Payload first 6 bits: 0x%02x\n", hdr->data_start);
-	printf("  Payload continuation (%lu bytes): %s\n", buf_len - sizeof(*hdr),
+	printf("  Payload continuation (%zu bytes): %s\n", buf_len - sizeof(*hdr),
 	       osmo_hexdump_nospc(buf + sizeof(*hdr), buf_len - sizeof(*hdr)));
 
 	if (hdr->f)
@@ -130,12 +130,12 @@ static void inspect_amr_bwe(const uint8_t *buf, size_t buf_len)
 	}
 	ft_bits = osmo_amr_bits(ft);
 	if (ft_bits != payload_len_bits) {
-		println_red("  ERROR: Wrong payload bits-length %lu != exp %lu! (FT=%u)\n", payload_len_bits, ft_bits, ft);
+		println_red("  ERROR: Wrong payload bits-length %zu != exp %zu! (FT=%u)\n", payload_len_bits, ft_bits, ft);
 		return;
 	}
 
 	if (!((AMR_HDR_BWE_LEN_BITS + ft_bits) & 0x03)) {
-		printf("  Payload has no padding (%lu bits with offset 10)\n", ft_bits);
+		printf("  Payload has no padding (%zu bits with offset 10)\n", ft_bits);
 	} else {
 		uint8_t last_byte = buf[buf_len - 1];
 		uint8_t padding = last_byte & (0xff >> ((AMR_HDR_BWE_LEN_BITS + ft_bits) & 0x03));
@@ -156,7 +156,7 @@ static void inspect_amr_bwe(const uint8_t *buf, size_t buf_len)
 static void inspect_amr(unsigned int i, const uint8_t *buf, size_t buf_len)
 {
 	bool is_oa;
-	printf("[%u] Buffer (%lu bytes): %s\n", i, buf_len, osmo_hexdump_nospc(buf, buf_len));
+	printf("[%u] Buffer (%zu bytes): %s\n", i, buf_len, osmo_hexdump_nospc(buf, buf_len));
 	is_oa = osmo_amr_is_oa(buf, buf_len);
 	switch (force_fmt) {
 	case FORCE_AMR_INPUT_FMT_AUTO:
@@ -253,7 +253,7 @@ static int read_stdin(void)
 	hex_buf[hex_buflen] = '\0';
 
 	if (hex_buflen == sizeof(hex_buf) - 1) {
-		fprintf(stderr, "Failed parsing (input too long > %lu): %s\n", hex_buflen, hex_buf);
+		fprintf(stderr, "Failed parsing (input too long > %zu): %s\n", hex_buflen, hex_buf);
 		return -ENOMEM;
 	}
 
@@ -263,7 +263,7 @@ static int read_stdin(void)
 		return -1;
 	}
 	if (rc < 2) {
-		fprintf(stderr, "Too short to be an AMR buffer (%ld bytes): %s\n", rc, hex_buf);
+		fprintf(stderr, "Too short to be an AMR buffer (%zu bytes): %s\n", rc, hex_buf);
 		return -1;
 	}
 
