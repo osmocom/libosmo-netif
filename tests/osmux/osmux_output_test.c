@@ -101,7 +101,8 @@ static void clock_debug(char* str)
 	osmo_clock_gettime(CLOCK_MONOTONIC, &ts);
 	osmo_gettimeofday(&tv, NULL);
 	printf("sys={%lu.%06lu}, mono={%lu.%06lu}: %s\n",
-		tv.tv_sec, tv.tv_usec, ts.tv_sec, ts.tv_nsec/1000, str);
+	       (unsigned int long) tv.tv_sec, (unsigned int long) tv.tv_usec,
+	       (unsigned int long) ts.tv_sec, ts.tv_nsec/1000, str);
 }
 
 static void clock_override_enable(bool enable)

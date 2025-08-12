@@ -168,7 +168,7 @@ void trace_pkt(struct msgb *msg, char* info) {
 	LOGP(DLJIBUF, LOGL_DEBUG, "%s: seq=%"PRIu16" ts=%"PRIu32" (%ld.%06ld) tx_delay=%"PRIu32 \
 		" end_delay=%"PRIu32" pre_trans=%d pre_jitter=%f post_trans=%d post_jitter=%f skew=%"PRId32"\n",
 		info, ntohs(rtph->sequence), ntohl(rtph->timestamp),
-		pinfo->tx_time.tv_sec, pinfo->tx_time.tv_usec,
+		(unsigned int long) pinfo->tx_time.tv_sec, (unsigned int long) pinfo->tx_time.tv_usec,
 		pinfo->tx_delay, total_delay_ms,
 		pinfo->prequeue.transit, pinfo->prequeue.jitter,
 		pinfo->postqueue.transit, pinfo->postqueue.jitter, pinfo->skew_us);
@@ -179,7 +179,7 @@ void trace_pkt(struct msgb *msg, char* info) {
 		" pre_trans=%d pre_jitter=%f post_trans=%d post_jitter=%f dropped=%"PRIu32 \
 		" buffer=%"PRIu32"\n",
 		ntohs(rtph->sequence), ntohl(rtph->timestamp),
-		pinfo->tx_time.tv_sec, pinfo->tx_time.tv_usec,
+		(unsigned int long) pinfo->tx_time.tv_sec, (unsigned int long) pinfo->tx_time.tv_usec,
 		pinfo->tx_delay, total_delay_ms,
 		pinfo->prequeue.transit, pinfo->prequeue.jitter,
 		pinfo->postqueue.transit, pinfo->postqueue.jitter,

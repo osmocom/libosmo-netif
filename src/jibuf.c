@@ -388,8 +388,9 @@ int osmo_jibuf_enqueue(struct osmo_jibuf *jb, struct msgb *msg)
 	LOGP(DLJIBUF, LOGL_DEBUG, "enqueuing packet seq=%"PRIu16" rel=%d delay=%d" \
 		" skew=%d thres=%d {%lu.%06lu -> %lu.%06lu} %s\n",
 		msg_get_sequence(msg), rel_delay, delay, jb->skew_us, jb->threshold_delay,
-		jb->last_enqueue_time.tv_sec, jb->last_enqueue_time.tv_usec,
-		sched_ts.tv_sec, sched_ts.tv_usec, msg_get_marker(msg)? "M" : "");
+		(unsigned int long) jb->last_enqueue_time.tv_sec, (unsigned int long) jb->last_enqueue_time.tv_usec,
+		(unsigned int long) sched_ts.tv_sec, (unsigned int long) sched_ts.tv_usec,
+		msg_get_marker(msg) ? "M" : "");
 
 	/* Add scheduled dequeue time in msg->cb so we can check it later */
 	unsigned long *old_cb = talloc_memdup(jb->talloc_ctx, msg->cb, sizeof(msg->cb));

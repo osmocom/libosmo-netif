@@ -116,7 +116,8 @@ static void sigalarm_handler(int foo)
 		osmo_clock_gettime(CLOCK_MONOTONIC, &ts); \
 		osmo_gettimeofday(&tv, NULL); \
 		fprintf(stdout, "sys={%lu.%06lu}, mono={%lu.%06lu}: " fmt "\n", \
-			tv.tv_sec, tv.tv_usec, ts.tv_sec, ts.tv_nsec/1000, ##args); \
+			(unsigned int long) tv.tv_sec, (unsigned int long) tv.tv_usec, \
+			(unsigned int long) ts.tv_sec, ts.tv_nsec/1000, ##args); \
 	} while (0)
 
 static void clock_override_enable(bool enable)
