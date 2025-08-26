@@ -1,3 +1,10 @@
+libosmo-netif (1.6.1) unstable; urgency=medium
+
+  * Fix time_t prints for debian 13 armv7l
+  * Use %zu for size_t
+
+ -- Oliver Smith <osmith@sysmocom.de>  Tue, 26 Aug 2025 15:44:56 +0200
+
 libosmo-netif (1.6.0) unstable; urgency=medium
 
   [ Harald Welte ]
