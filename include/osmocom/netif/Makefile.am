@@ -1,4 +1,5 @@
 noinst_HEADERS = \
+	rtcp_defs.h \
 	stream_private.h \
 	twjit_private.h \
 	$(NULL)
@@ -28,6 +29,7 @@ osmonetif_HEADERS = \
 	rtp.h \
 	stream.h \
 	twjit.h \
+	twrtp.h \
 	version.h \
 	$(NULL)
 

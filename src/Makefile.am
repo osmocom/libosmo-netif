@@ -30,6 +30,7 @@ libosmonetif_la_SOURCES = amr.c			\
 			  stream_srv.c		\
 			  twjit.c		\
 			  twjit_conf.c		\
+			  twrtp.c		\
 			  $(NULL)
 
 if ENABLE_LIBSCTP
