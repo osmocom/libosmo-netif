@@ -1,5 +1,6 @@
 noinst_HEADERS = \
 	stream_private.h \
+	twjit_private.h \
 	$(NULL)
 
 version.h: version.h.tpl
@@ -26,6 +27,7 @@ osmonetif_HEADERS = \
 	rs232.h \
 	rtp.h \
 	stream.h \
+	twjit.h \
 	version.h \
 	$(NULL)
 

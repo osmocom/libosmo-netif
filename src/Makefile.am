@@ -3,12 +3,14 @@
 LIBVERSION=14:0:3
 
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)
-AM_CFLAGS= -fPIC -Wall $(LIBOSMOCORE_CFLAGS) $(LIBOSMOGSM_CFLAGS) $(COVERAGE_CFLAGS) $(LIBSCTP_CFLAGS)
+AM_CFLAGS= -fPIC -Wall $(LIBOSMOCORE_CFLAGS) $(LIBOSMOGSM_CFLAGS) \
+	$(LIBOSMOVTY_CFLAGS) $(COVERAGE_CFLAGS) $(LIBSCTP_CFLAGS)
 AM_LDFLAGS = $(COVERAGE_LDFLAGS)
 
 lib_LTLIBRARIES = libosmonetif.la
 
-libosmonetif_la_LIBADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) $(LIBSCTP_LIBS)
+libosmonetif_la_LIBADD = $(LIBOSMOCORE_LIBS) $(LIBOSMOGSM_LIBS) \
+	$(LIBOSMOVTY_LIBS) $(LIBSCTP_LIBS)
 libosmonetif_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(LIBVERSION) -no-undefined
 
 libosmonetif_la_SOURCES = amr.c			\
@@ -26,6 +28,8 @@ libosmonetif_la_SOURCES = amr.c			\
 			  stream.c		\
 			  stream_cli.c		\
 			  stream_srv.c		\
+			  twjit.c		\
+			  twjit_conf.c		\
 			  $(NULL)
 
 if ENABLE_LIBSCTP
