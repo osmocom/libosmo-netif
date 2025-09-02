@@ -36,6 +36,8 @@ tests/testsuite
 tests/osmux/osmux_test
 tests/testsuite.log
 
+doc/twrtp/twrtp-guide.pdf
+
 examples/ipa-stream-client
 examples/ipa-stream-server
 examples/lapd-over-datagram-network

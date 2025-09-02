@@ -108,18 +108,12 @@
  * existence of the built-in RTCP receiver.  Any received RTCP packets will
  * still be parsed, but you can ignore the data that result from this parsing.
  *
- * There also exists a detailed document titled _Guide to ThemWi RTP
- * endpoint library_, located here:
- * https://www.freecalypso.org/TW-doc/twrtp-guide-latest.pdf
- * (See TW-doc directory listing for other formats and previous versions.)
- * This document is required reading for anyone seeking to properly
- * understand twrtp, its domain of application and all of its capabilities,
- * beyond the brief summary given above.  Specific section references to
- * this document will be made in subsequent comments.
- *
- * FIXME: create an Osmocom-controlled version of this document
- * that describes the version of twrtp+twjit modified for inclusion
- * in Osmocom.
+ * For a more detailed description, please consult the full twrtp guide
+ * document that can be found in doc/twrtp directory.  This document is
+ * required reading for anyone seeking to properly understand twrtp, its
+ * domain of application and all of its capabilities, beyond the brief
+ * summary given above.  Specific section references to this document
+ * will be made in subsequent comments.
  */
 
 /*! Each instance of twrtp in the present version exists as struct osmo_twrtp.

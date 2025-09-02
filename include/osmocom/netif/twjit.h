@@ -22,18 +22,12 @@
  *  RTP stream to an output application that has fixed timing requirements,
  *  e.g., the Tx side of GSM Um TCH or a T1/E1 TDM interface.
  *
- *  There also exists a detailed document titled _Guide to ThemWi RTP
- *  endpoint library_, located here:
- *  https://www.freecalypso.org/TW-doc/twrtp-guide-latest.pdf
- *  (See TW-doc directory listing for other formats and previous versions.)
- *  This document is required reading for anyone seeking to properly
- *  understand the present jitter buffer facility, its domain of application
- *  and how to use it.  Specific section references to this document
- *  will be made in subsequent comments.
- *
- *  FIXME: create an Osmocom-controlled version of this document
- *  that describes the version of twrtp+twjit modified for inclusion
- *  in Osmocom.
+ *  For a more detailed description, please consult the full twrtp guide
+ *  document that can be found in doc/twrtp directory.  This document is
+ *  required reading for anyone seeking to properly understand the present
+ *  jitter buffer facility, its domain of application and how to use it.
+ *  Specific section references to this document will be made in subsequent
+ *  comments.
  */
 
 /*! Each instance of twjit in the present version exists as struct osmo_twjit.

@@ -1,0 +1,22 @@
+Themyscira Wireless RTP endpoint library is a software component that was
+originally developed externally to Osmocom prior to being integrated into
+libosmo-netif, hence its documentation has been done in a different manner
+than is usual in Osmocom.
+
+There is a detailed document titled _Guide to ThemWi RTP endpoint library_;
+its original/official ThemWi version resides here:
+
+https://www.freecalypso.org/TW-doc/twrtp-guide-latest.pdf
+(See TW-doc directory listing for other formats and previous versions.)
+
+There also exists a version of this document whose content has been updated
+to reflect changes to twrtp & twjit made as part of Osmocom integration,
+and which can be edited further in sync with code changes - however, the
+formatting language in which this document is written is still troff.
+twrtp-guide.t is the troff source for the Osmocom-adapted version of twrtp
+guide document; to compile it into readable PDF, run this command:
+
+groff -p -t -ms -Tpdf twrtp-guide.t > twrtp-guide.pdf
+
+groff is classic, old school GNU software that should be easily available
+in any GNU+Linux distribution.
