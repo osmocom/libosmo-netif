@@ -1235,7 +1235,7 @@ void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn)
 
 /*! Retrieve the stream server socket description.
  *  The returned name is stored in a static buffer; it is hence not re-entrant or thread-safe!
- *  \param[in] cli Stream Server to examine
+ *  \param[in] conn Stream Server to examine
  *  \returns Socket description or NULL in case of error */
 const char *osmo_stream_srv_get_sockname(const struct osmo_stream_srv *conn)
 {
