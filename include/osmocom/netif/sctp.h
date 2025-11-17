@@ -1,6 +1,7 @@
 #pragma once
 
 #include <osmocom/core/utils.h>
+#include <netinet/sctp.h>
 
 /* Relevant SCTP RFCs:
  * rfc9260 (obsoletes rfc4960): SCTP protocol
@@ -8,22 +9,18 @@
  * rfc6458: SCTP Sockets API Extensions
  */
 
-enum sctp_sac_state;
 extern const struct value_string osmo_sctp_assoc_chg_strs[];
 static inline const char *osmo_sctp_assoc_chg_str(enum sctp_sac_state val)
 { return get_value_string(osmo_sctp_assoc_chg_strs, val); }
 
-enum sctp_spc_state;
 extern const struct value_string osmo_sctp_paddr_chg_strs[];
 static inline const char *osmo_sctp_paddr_chg_str(enum sctp_spc_state val)
 { return get_value_string(osmo_sctp_paddr_chg_strs, val); }
 
-enum sctp_sn_type;
 extern const struct value_string osmo_sctp_sn_type_strs[];
 static inline const char *osmo_sctp_sn_type_str(enum sctp_sn_type val)
 { return get_value_string(osmo_sctp_sn_type_strs, val); }
 
-enum sctp_sn_error;
 extern const struct value_string osmo_sctp_sn_error_strs[];
 static inline const char *osmo_sctp_sn_error_str(enum sctp_sn_error val)
 { return get_value_string(osmo_sctp_sn_error_strs, val); }
@@ -43,18 +40,14 @@ enum osmo_sctp_op_error {
 	OSMO_SCTP_OP_ERR_UNER_INITED_ABORT = 12,
 	OSMO_SCTP_OP_ERR_PROTO_VERSION = 13,
 };
-
-
 extern const struct value_string osmo_sctp_op_error_strs[];
 static inline const char *osmo_sctp_op_error_str(enum osmo_sctp_op_error val)
 { return get_value_string(osmo_sctp_op_error_strs, val); }
 
-enum sctp_spinfo_state;
 extern const struct value_string osmo_sctp_spinfo_state_strs[];
 static inline const char *osmo_sctp_spinfo_state_str(enum sctp_spinfo_state val)
 { return get_value_string(osmo_sctp_spinfo_state_strs, val); }
 
-enum sctp_sstat_state;
 extern const struct value_string osmo_sctp_sstat_state_strs[];
 static inline const char *osmo_sctp_sstat_state_str(enum sctp_sstat_state val)
 { return get_value_string(osmo_sctp_sstat_state_strs, val); }
