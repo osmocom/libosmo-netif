@@ -743,6 +743,7 @@ struct osmo_stream_srv {
 	};
 	struct llist_head		tx_queue; /* osmo_ofd mode (only): Queue of msgbs */
 	unsigned int			tx_queue_count; /* osmo_ofd mode (only): Current amount of msgbs queued */
+	unsigned int			tx_queue_max_length; /* Max amount of msgbs which can be enqueued */
 	osmo_stream_srv_closed_cb_t	closed_cb;
 	osmo_stream_srv_read_cb_t	read_cb;
 	osmo_stream_srv_read_cb2_t	iofd_read_cb;
@@ -996,6 +997,8 @@ osmo_stream_srv_create(void *ctx, struct osmo_stream_srv_link *link, int fd,
 
 	osmo_sock_get_name_buf(conn->sockname, sizeof(conn->sockname), fd);
 
+	conn->tx_queue_max_length = conn->srv->tx_queue_max_length;
+
 	if (osmo_fd_register(&conn->ofd) < 0) {
 		LOGSSRV(conn, LOGL_ERROR, "could not register FD\n");
 		talloc_free(conn);
@@ -1049,7 +1052,8 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 		return NULL;
 	}
 
-	osmo_iofd_set_txqueue_max_length(conn->iofd, conn->srv->tx_queue_max_length);
+	conn->tx_queue_max_length = conn->srv->tx_queue_max_length;
+	osmo_iofd_set_txqueue_max_length(conn->iofd, conn->tx_queue_max_length);
 	if (conn->srv->msgb_alloc.set_by_user)
 		osmo_iofd_set_alloc_info(conn->iofd, conn->srv->msgb_alloc.size, conn->srv->msgb_alloc.headroom);
 
@@ -1233,6 +1237,21 @@ void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn)
 	return conn->data;
 }
 
+/*! Set the maximum length queue of the stream server connection.
+ *  \param[in] conn Stream Server to modify
+ *  \param[in] size maximum amount of msgbs which can be queued in the internal tx queue.
+ *  \returns 0 on success, negative on error.
+ *
+ *  The default queue size of a osmo_stream_srv is inherited during creation time from
+ *  osmo_stream_srv_link. */
+int osmo_stream_srv_set_tx_queue_max_length(struct osmo_stream_srv *conn, unsigned int size)
+{
+	conn->tx_queue_max_length = size;
+	if (conn->mode == OSMO_STREAM_MODE_OSMO_IO && conn->iofd)
+		osmo_iofd_set_txqueue_max_length(conn->iofd, conn->tx_queue_max_length);
+	return 0;
+}
+
 /*! Retrieve the stream server socket description.
  *  The returned name is stored in a static buffer; it is hence not re-entrant or thread-safe!
  *  \param[in] conn Stream Server to examine
@@ -1341,7 +1360,7 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 
 	switch (conn->mode) {
 	case OSMO_STREAM_MODE_OSMO_FD:
-		if (conn->tx_queue_count >= conn->srv->tx_queue_max_length) {
+		if (conn->tx_queue_count >= conn->tx_queue_max_length) {
 			LOGSSRV(conn, LOGL_ERROR, "send: tx queue full, dropping msg!\n");
 			msgb_free(msg);
 			return;

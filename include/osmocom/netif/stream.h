@@ -137,6 +137,7 @@ const char *osmo_stream_srv_get_name(const struct osmo_stream_srv *conn);
 void osmo_stream_srv_set_read_cb(struct osmo_stream_srv *conn, osmo_stream_srv_read_cb2_t read_cb);
 void osmo_stream_srv_set_closed_cb(struct osmo_stream_srv *conn, osmo_stream_srv_closed_cb_t close_cb);
 void *osmo_stream_srv_get_data(struct osmo_stream_srv *conn);
+int osmo_stream_srv_set_tx_queue_max_length(struct osmo_stream_srv *conn, unsigned int size);
 struct osmo_stream_srv_link *osmo_stream_srv_get_master(struct osmo_stream_srv *conn);
 const char *osmo_stream_srv_get_sockname(const struct osmo_stream_srv *conn);
 struct osmo_fd *osmo_stream_srv_get_ofd(struct osmo_stream_srv *srv);

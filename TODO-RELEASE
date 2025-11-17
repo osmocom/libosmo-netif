@@ -9,3 +9,4 @@
 #library	what			description / commit summary line
 stream    add       OSMO_STREAM_{CLI,SRV,SRV_LINK}_TCP_SOCKOPT_KEEP*, osmo_stream_srv_set_param()
 stream    add       OSMO_STREAM_{CLI,SRV,SRV_LINK}_TCP_SOCKOPT_USER_TIMEOUT
+stream    add       osmo_stream_srv_set_tx_queue_max_length()
