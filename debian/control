@@ -11,7 +11,7 @@ Build-Depends: debhelper (>= 10),
                libdpkg-perl,
                git,
                doxygen,
-               libosmocore-dev (>= 1.11.0),
+               libosmocore-dev (>= 1.12.0),
                pkg-config,
                libpcap0.8-dev,
                libsctp-dev

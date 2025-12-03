@@ -1,3 +1,36 @@
+libosmo-netif (1.7.0) unstable; urgency=medium
+
+  [ Mychaela N. Falconia ]
+  * .gitignore: add utils/osmo-amr-inspect
+  * bring twjit into libosmo-netif
+  * bring twrtp into libosmo-netif
+  * doc: add twrtp guide document
+
+  [ Vadim Yanitskiy ]
+  * stream_{cli,srv}: fix copy-paste in API docs
+
+  [ Pau Espin Pedrol ]
+  * cosmetic: stream: Fix line indentation
+  * stream: Improve error logging sctp_recvmsg without sctp_sndrcvinfo
+  * stream_srv: Improve API documentation
+  * stream: Support configuring TCP keep-alive pars
+  * stream: Support configuring TCP_USER_TIMEOUT parameter
+  * osmux: Use while loop to tear down entire llist
+  * cosmetic: Fix typo in doc of osmo_stream_srv_get_sockname()
+  * stream: Support overwriting tx_queue_max_length per srv conn
+  * netif/sctp.h: Add missing dep netinet/sctp.h
+
+  [ Neels Hofmeyr ]
+  * add osmo_stream_*_set_name_f()
+
+  [ Oliver Smith ]
+  * include/osmocom/netif/Makefile: format osmonetif_HEADERS
+  * Generate a version.h file
+  * Fix time_t prints for debian 13 armv7l
+  * Use %zu for size_t
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Wed, 03 Dec 2025 17:37:54 +0100
+
 libosmo-netif (1.6.0) unstable; urgency=medium
 
   [ Harald Welte ]

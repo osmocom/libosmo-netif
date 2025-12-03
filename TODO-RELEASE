@@ -7,6 +7,3 @@
 # If any interfaces have been added since the last public release: c:r:a + 1.
 # If any interfaces have been removed or changed since the last public release: c:r:0.
 #library	what			description / commit summary line
-stream    add       OSMO_STREAM_{CLI,SRV,SRV_LINK}_TCP_SOCKOPT_KEEP*, osmo_stream_srv_set_param()
-stream    add       OSMO_STREAM_{CLI,SRV,SRV_LINK}_TCP_SOCKOPT_USER_TIMEOUT
-stream    add       osmo_stream_srv_set_tx_queue_max_length()
