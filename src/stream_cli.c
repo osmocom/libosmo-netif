@@ -876,7 +876,7 @@ void osmo_stream_cli_set_segmentation_cb2(struct osmo_stream_cli *cli,
 		configure_cli_segmentation_cb(cli);
 }
 
-/*! Set the socket type for the stream server link.
+/*! Set the socket type for the stream client.
  *  Any changes to this setting will only become active upon next (re)connect.
  *  \param[in] cli Stream Client to modify
  *  \param[in] type Socket Type (like SOCK_STREAM (default), SOCK_SEQPACKET, ...)
@@ -896,7 +896,7 @@ int osmo_stream_cli_set_type(struct osmo_stream_cli *cli, int type)
 	return 0;
 }
 
-/*! Set the socket domain for the stream client link.
+/*! Set the socket domain for the stream client.
  *  Any changes to this setting will only become active upon next (re)connect.
  *  \param[in] cli Stream Client to modify
  *  \param[in] domain Socket Domain (like AF_UNSPEC (default for IP), AF_UNIX, AF_INET, ...)
