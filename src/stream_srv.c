@@ -172,8 +172,11 @@ static int osmo_stream_srv_link_ofd_cb(struct osmo_fd *ofd, unsigned int what)
 
 	if (link->flags & OSMO_STREAM_SRV_F_NODELAY) {
 		ret = stream_setsockopt_nodelay(sock_fd, link->proto, 1);
-		if (ret < 0)
+		if (ret < 0) {
+			LOGSLNK(link, LOGL_ERROR, "stream_setsockopt_nodelay: failed setsockopt err=%d\n",
+				errno);
 			goto error_close_socket;
+		}
 	}
 
 	if (link->ip_dscp > 0) {

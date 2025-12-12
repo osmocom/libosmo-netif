@@ -182,10 +182,22 @@ int stream_setsockopt_nodelay(int fd, int proto, int on)
 #ifdef HAVE_LIBSCTP
 	case IPPROTO_SCTP:
 		rc = setsockopt(fd, IPPROTO_SCTP, SCTP_NODELAY, &on, sizeof(on));
+		if (rc < 0) {
+			char errbuf[256];
+			strerror_r(errno, errbuf, sizeof(errbuf));
+			LOGP(DLINP, LOGL_ERROR, "setsockopt(IPPROTO_SCTP, SCTP_NODELAY, %u) failed: %d (%s)\n",
+			     on, errno, errbuf);
+		}
 		break;
 #endif
 	case IPPROTO_TCP:
 		rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+		if (rc < 0) {
+			char errbuf[256];
+			strerror_r(errno, errbuf, sizeof(errbuf));
+			LOGP(DLINP, LOGL_ERROR, "setsockopt(IPPROTO_TCP, TCP_NODELAY, %u) failed: %d (%s)\n",
+			     on, errno, errbuf);
+		}
 		break;
 	default:
 		rc = -1;
