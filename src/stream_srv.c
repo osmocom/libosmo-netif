@@ -571,6 +571,10 @@ void osmo_stream_srv_link_destroy(struct osmo_stream_srv_link *link)
 int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 {
 	int ret;
+	/* No need to set OSMO_SOCK_F_NONBLOCK since non-blocking behavior is only
+	 * required later on, during accept() call, and and osmo_fd_register()
+	 * below already takes care of setting the socket as non-blocking. */
+	const int sk_flags = OSMO_SOCK_F_BIND;
 
 	if (link->ofd.fd >= 0) {
 		/* No reconfigure needed for existing socket, we are fine */
@@ -584,7 +588,7 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 
 	switch (link->sk_domain) {
 	case AF_UNIX:
-		ret = osmo_sock_unix_init(link->sk_type, 0, link->addr[0], OSMO_SOCK_F_BIND);
+		ret = osmo_sock_unix_init(link->sk_type, 0, link->addr[0], sk_flags);
 		break;
 	case AF_UNSPEC:
 	case AF_INET:
@@ -594,12 +598,12 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 		case IPPROTO_SCTP:
 			ret = osmo_sock_init2_multiaddr2(link->sk_domain, link->sk_type, link->proto,
 							 (const char **)link->addr, link->addrcnt, link->port,
-							 NULL, 0, 0, OSMO_SOCK_F_BIND, &link->ma_pars);
+							 NULL, 0, 0, sk_flags, &link->ma_pars);
 			break;
 #endif
 		default:
 			ret = osmo_sock_init(link->sk_domain, link->sk_type, link->proto,
-					     link->addr[0], link->port, OSMO_SOCK_F_BIND);
+					     link->addr[0], link->port, sk_flags);
 		}
 		break;
 	default:
