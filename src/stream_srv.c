@@ -1103,8 +1103,11 @@ void osmo_stream_srv_set_name_f(struct osmo_stream_srv *conn, const char *fmt, .
 		talloc_free((void *)conn->name);
 	conn->name = name;
 
-	if (conn->mode == OSMO_STREAM_MODE_OSMO_IO && conn->iofd)
-		osmo_iofd_set_name(conn->iofd, conn->name);
+	if (conn->mode == OSMO_STREAM_MODE_OSMO_IO && conn->iofd) {
+		char *tmp = talloc_asprintf(conn, "%s,%s", conn->name, conn->sockname);
+		osmo_iofd_set_name(conn->iofd, tmp);
+		talloc_free(tmp);
+	}
 }
 
 /*! Retrieve name previously set on the srv object (see osmo_stream_srv_set_name()).
