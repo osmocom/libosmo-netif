@@ -411,6 +411,26 @@ static int _setsockopt_nosigpipe(struct osmo_stream_cli *cli)
 #endif
 }
 
+/* Update cli->sockname based on socket info: */
+static void stream_cli_update_iofd_name(struct osmo_stream_cli *cli)
+{
+	if (!(cli->mode == OSMO_STREAM_MODE_OSMO_IO && cli->iofd))
+		return;
+
+	char *tmp = talloc_asprintf(cli, "%s,%s", cli->name, cli->sockname);
+	osmo_iofd_set_name(cli->iofd, tmp);
+	talloc_free(tmp);
+}
+
+/* Update cli->sockname based on socket info: */
+static void stream_cli_update_sockname(struct osmo_stream_cli *cli)
+{
+	osmo_sock_get_name_buf(cli->sockname, sizeof(cli->sockname), osmo_stream_cli_get_fd(cli));
+	/* Update stream iofd with the new cli->sockname too: */
+	stream_cli_update_iofd_name(cli);
+
+}
+
 /* returns true if cli is freed */
 static bool stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 {
@@ -435,8 +455,7 @@ static bool stream_cli_handle_connecting(struct osmo_stream_cli *cli, int res)
 	if (cli->mode == OSMO_STREAM_MODE_OSMO_FD && llist_empty(&cli->tx_queue))
 		osmo_fd_write_disable(&cli->ofd);
 
-	/* Update sockname based on socket info: */
-	osmo_sock_get_name_buf(cli->sockname, sizeof(cli->sockname), osmo_stream_cli_get_fd(cli));
+	stream_cli_update_sockname(cli);
 
 	LOGSCLI(cli, LOGL_INFO, "connection established\n");
 	cli->state = STREAM_CLI_STATE_CONNECTED;
@@ -691,8 +710,8 @@ void osmo_stream_cli_set_name_f(struct osmo_stream_cli *cli, const char *fmt, ..
 		talloc_free((void *)cli->name);
 	cli->name = name;
 
-	if (cli->mode == OSMO_STREAM_MODE_OSMO_IO && cli->iofd)
-		osmo_iofd_set_name(cli->iofd, cli->name);
+	/* Update stream iofd with the new cli->name too: */
+	stream_cli_update_iofd_name(cli);
 }
 
 /*! Retrieve name previously set on the cli object (see osmo_stream_cli_set_name()).
