@@ -1433,7 +1433,9 @@ int osmo_stream_cli_recv(struct osmo_stream_cli *cli, struct msgb *msg)
 		case IPPROTO_SCTP:
 		{
 			char log_pfx[128];
-			snprintf(log_pfx, sizeof(log_pfx), "CLICONN(%s,%s)", cli->name ? : "", cli->sockname);
+			snprintf(log_pfx, sizeof(log_pfx), "CLICONN(%s,%s){%s}",
+				 cli->name ? : "", cli->sockname,
+				 get_value_string(stream_cli_state_names, cli->state));
 			ret = stream_sctp_recvmsg_wrapper(cli->ofd.fd, msg, log_pfx);
 			break;
 		}
