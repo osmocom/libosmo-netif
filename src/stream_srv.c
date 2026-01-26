@@ -50,7 +50,9 @@
 
 #include "config.h"
 
+#ifdef HAVE_LIBSCTP
 #include <osmocom/netif/sctp.h>
+#endif
 
 /*! \file stream_srv.c */
 
@@ -1045,12 +1047,15 @@ osmo_stream_srv_create2(void *ctx, struct osmo_stream_srv_link *link, int fd, vo
 
 	osmo_sock_get_name_buf(conn->sockname, sizeof(conn->sockname), fd);
 
+#ifdef HAVE_LIBSCTP
 	if (link->proto == IPPROTO_SCTP) {
 		conn->iofd = osmo_iofd_setup(conn, fd, conn->sockname, OSMO_IO_FD_MODE_RECVMSG_SENDMSG,
 					     &srv_ioops_sctp, conn);
 		if (conn->iofd)
 			osmo_iofd_set_cmsg_size(conn->iofd, CMSG_SPACE(sizeof(struct sctp_sndrcvinfo)));
-	} else {
+	} else
+#endif
+	{
 		conn->iofd = osmo_iofd_setup(conn, fd, conn->sockname, OSMO_IO_FD_MODE_READ_WRITE,
 					     &srv_ioops, conn);
 	}
@@ -1379,9 +1384,11 @@ void osmo_stream_srv_send(struct osmo_stream_srv *conn, struct msgb *msg)
 		osmo_fd_write_enable(&conn->ofd);
 		break;
 	case OSMO_STREAM_MODE_OSMO_IO:
+#ifdef HAVE_LIBSCTP
 		if (conn->srv->proto == IPPROTO_SCTP)
 			rc = stream_iofd_sctp_send_msgb(conn->iofd, msg, MSG_NOSIGNAL);
 		else
+#endif
 			rc = osmo_iofd_write_msgb(conn->iofd, msg);
 		if (rc < 0)
 			msgb_free(msg);

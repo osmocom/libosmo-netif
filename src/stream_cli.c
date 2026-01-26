@@ -49,7 +49,9 @@
 
 #include "config.h"
 
+#ifdef HAVE_LIBSCTP
 #include <osmocom/netif/sctp.h>
+#endif
 
 /*! \file stream_cli.c */
 
@@ -1243,9 +1245,8 @@ int osmo_stream_cli_set_ip_dscp(struct osmo_stream_cli *cli, uint8_t ip_dscp)
  *  \return negative on error, 0 on success */
 int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 {
-	int ret, flags;
+	int ret;
 	int fd = -1;
-	unsigned int local_addrcnt;
 
 	/* we are reconfiguring this socket, close existing first. */
 	if ((cli->flags & OSMO_STREAM_CLI_F_RECONF) && osmo_stream_cli_get_fd(cli) >= 0) {
@@ -1265,8 +1266,9 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 		switch (cli->proto) {
 #ifdef HAVE_LIBSCTP
 		case IPPROTO_SCTP:
-			local_addrcnt = cli->local_addrcnt;
-			flags = OSMO_SOCK_F_CONNECT | OSMO_SOCK_F_NONBLOCK |
+		{
+			unsigned int local_addrcnt = cli->local_addrcnt;
+			int flags = OSMO_SOCK_F_CONNECT | OSMO_SOCK_F_NONBLOCK |
 				OSMO_SOCK_F_DSCP(cli->ip_dscp) | OSMO_SOCK_F_PRIO(cli->sk_prio);
 			if (cli->local_addrcnt > 0 || cli->local_port > 0) { /* explicit bind required? */
 				flags |= OSMO_SOCK_F_BIND;
@@ -1279,6 +1281,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 							(const char **)cli->addr, cli->addrcnt, cli->port,
 							flags, &cli->ma_pars);
 			break;
+		}
 #endif
 		default:
 			ret = osmo_sock_init2(cli->sk_domain, cli->sk_type, cli->proto,
@@ -1402,9 +1405,11 @@ void osmo_stream_cli_send(struct osmo_stream_cli *cli, struct msgb *msg)
 	case OSMO_STREAM_MODE_OSMO_IO:
 		/* whenever osmo_stream_cli_is_connected() [see above check], we should have an iofd */
 		OSMO_ASSERT(cli->iofd);
+#ifdef HAVE_LIBSCTP
 		if (cli->proto == IPPROTO_SCTP)
 			rc = stream_iofd_sctp_send_msgb(cli->iofd, msg, MSG_NOSIGNAL);
 		else
+#endif
 			rc = osmo_iofd_write_msgb(cli->iofd, msg);
 		if (rc < 0)
 			msgb_free(msg);

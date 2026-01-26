@@ -49,11 +49,11 @@
 
 #include "config.h"
 
-#include <osmocom/netif/sctp.h>
-
 /*! \cond private */
 
 #ifdef HAVE_LIBSCTP
+
+#include <osmocom/netif/sctp.h>
 
 /* is any of the bytes from offset .. u8_size in 'u8' non-zero? return offset or -1 if all zero */
 static int byte_nonzero(const uint8_t *u8, unsigned int offset, unsigned int u8_size)
