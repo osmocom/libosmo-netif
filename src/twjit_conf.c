@@ -136,6 +136,10 @@ int osmo_twjit_config_write(struct vty *vty,
 			conf->start_max_delta, VTY_NEWLINE);
 	}
 
+	if (conf->underrun_ext) {
+		vty_out(vty, "%s underrun-extension %u%s", prefix,
+			conf->underrun_ext, VTY_NEWLINE);
+	}
 	vty_out(vty, "%s marker-handling %s%s", prefix,
 		conf->handover_on_marker ? "handover" : "ignore", VTY_NEWLINE);
 
@@ -222,6 +226,25 @@ DEFUN(cfg_no_start_max_delta, cfg_no_start_max_delta_cmd,
 	return CMD_SUCCESS;
 }
 
+DEFUN(cfg_underrun_ext, cfg_underrun_ext_cmd,
+      "underrun-extension <1-65535>",
+      "Underrun extension for intentional gaps (DTX)\n"
+      "Maximum number of consecutive omitted packets\n")
+{
+	struct osmo_twjit_config *conf = vty->index;
+	conf->underrun_ext = atoi(argv[0]);
+	return CMD_SUCCESS;
+}
+
+DEFUN(cfg_no_underrun_ext, cfg_no_underrun_ext_cmd,
+      "no underrun-extension",
+      NO_STR "Underrun extension for intentional gaps\n")
+{
+	struct osmo_twjit_config *conf = vty->index;
+	conf->underrun_ext = 0;
+	return CMD_SUCCESS;
+}
+
 DEFUN(cfg_marker_handling, cfg_marker_handling_cmd,
       "marker-handling (handover|ignore)",
       "How to handle RTP packets with marker bit set\n"
@@ -246,6 +269,8 @@ void osmo_twjit_vty_init(int twjit_node)
 	install_lib_element(twjit_node, &cfg_no_start_min_delta_cmd);
 	install_lib_element(twjit_node, &cfg_start_max_delta_cmd);
 	install_lib_element(twjit_node, &cfg_no_start_max_delta_cmd);
+	install_lib_element(twjit_node, &cfg_underrun_ext_cmd);
+	install_lib_element(twjit_node, &cfg_no_underrun_ext_cmd);
 	install_lib_element(twjit_node, &cfg_marker_handling_cmd);
 }
 
@@ -326,6 +351,20 @@ int osmo_twjit_config_set_start_max_delta(struct osmo_twjit_config *conf,
 					  uint16_t delta_ms)
 {
 	conf->start_max_delta = delta_ms;
+	return 0;
+}
+
+/*! Non-vty function for underrun-extension setting
+ *
+ * \param[in] conf twjit config instance to operate on.
+ * \param[in] underrun_ext Maximum permissible intentional gap, in packets,
+ * or 0 to disable this mechanism.
+ * \returns 0 if successful, negative on errors.
+ */
+int osmo_twjit_config_set_underrun_ext(struct osmo_twjit_config *conf,
+					uint16_t underrun_ext)
+{
+	conf->underrun_ext = underrun_ext;
 	return 0;
 }
 

@@ -83,6 +83,9 @@ struct osmo_twjit_stats {
 	uint32_t intentional_gaps;
 	uint32_t ts_resets;
 	uint32_t jitter_max;
+	/* new counters added after first osmo_twjit ABI freeze */
+	uint32_t soft_underruns;
+
 	/* New fields may be added here at the end; once added, they become
 	 * permanent like the initially defined ones. */
 };
@@ -134,6 +137,8 @@ int osmo_twjit_config_set_start_min_delta(struct osmo_twjit_config *conf,
 					  uint16_t delta_ms);
 int osmo_twjit_config_set_start_max_delta(struct osmo_twjit_config *conf,
 					  uint16_t delta_ms);
+int osmo_twjit_config_set_underrun_ext(struct osmo_twjit_config *conf,
+					uint16_t underrun_ext);
 int osmo_twjit_config_set_handover_on_marker(struct osmo_twjit_config *conf,
 					     bool hom);
 

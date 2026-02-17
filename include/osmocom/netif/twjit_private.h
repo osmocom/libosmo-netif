@@ -49,6 +49,12 @@ struct osmo_twjit_config {
 	/*! max time delta in starting state, 1 ms units, 0 means not set;
 	 *  document section: 2.3.3.2. */
 	uint16_t start_max_delta;
+	/*! Optional extended underrun tolerance: maximum gap in RTP stream
+	 *  that does not result in full reset and reacquisition, minimum of 1.
+	 *  If this field is set to 0, the feature is disabled and the original
+	 *  twjit algorithm (no intentional gaps allowed) applies.
+	 *  Document section: 2.3.5.1. */
+	uint16_t underrun_ext;
 	/*! Osmocom addition, not in ThemWi original: should RTP packets
 	 *  with M bit set cause a handover or HUNT state reset just like
 	 *  an SSRC change?  With this option enabled, M bit is treated

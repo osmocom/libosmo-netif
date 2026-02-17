@@ -168,7 +168,9 @@ without any intentional gaps.
 .PP
 If an application uses \fBtwrtp\fP with \fBtwjit\fP to receive an RTP stream
 that incurs intentional gaps, the resulting performance may be acceptable
-or unacceptable depending on additional factors:
+or unacceptable depending on additional factors.
+The following behaviors will occur in standard \fBtwjit\fP operation,
+without underrun extension feature:
 .IP \(bu
 If RTP gaps are incurred only during frame erasure events (radio
 errors or FACCH stealing) without DTX, the resulting \fBtwjit\fP performance
@@ -188,8 +190,27 @@ is set to 2 or greater (the default and usually necessary configuration),
 all of these ``isolated island'' comfort noise update packets will be dropped
 \(em a behavior counter to the way DTX is expected to work.
 .LP
-The take-away is that if an operator wishes to use DTX with \fBtwrtp\fP,
-they need to enable \%\fCrtp\ continuous\-streaming\fP.
+The present Osmocom-integrated version of \fBtwjit\fP includes an additional
+feature designed to improve operation in the presence of intentional gaps:
+it is the underrun extension feature described in \(sc2.3.5.1.
+When this feature is enabled and configured correctly (matching the maximum
+allowed length of an intentional gap per codec DTX rules), the resulting
+system behavior becomes almost as good as it would be in the case of
+continuous streaming: all transmitted RTP packets will be delivered
+to the receiving application in the correct stream position, in the case of
+intentional gaps that occur in \%\fBFLOWING\fP state.
+However, if the transmitted RTP stream is in the state of DTX with
+intentional gaps (only occasional ``isolated island'' comfort noise update
+packets are emitted) when \fBtwjit\fP has to perform flow acquisition,
+those comfort noise update packets will still be dropped.
+.PP
+The take-away is that \%\fCrtp\ continuous\-streaming\fP is still the best
+mode of operation for networks that use \fBtwjit\fP on the receiving end
+of RTP streams, especially if DTX is enabled.
+Continuous streaming can also be seen as improved layer separation:
+with \%\fCrtp\ continuous\-streaming\fP, RTP stream conditions that matter
+to a receiving jitter buffer become completely independent and decoupled
+from whatever conditions occur in radio and speech codec layers.
 .NH 2
 Configurable quantum duration and time scale
 .LP
@@ -840,6 +861,35 @@ let us first consider operation without handovers
 to the next always equals the samples-per-quantum constant) \(em in such
 sans-handover operation, only \fBEMPTY\fP, \fBHUNT\fP and \fBFLOWING\fP states
 are encountered \(em and then examine handover handling.
+.PP
+The previous description and state machine diagram apply to standard
+\fBtwjit\fP as originally designed, either \&\fCtwrtp\-native\fP version
+or the present Osmocom-integrated version \fIwithout\fP underrun extension
+feature.
+However, when \&\fCunderrun\-extension\fP feature is configured,
+a fifth state named \%\fBUNDERRUN\fP appears, and the state transition
+diagram changes to:
+.PS
+circlerad = 0.5
+EMPTY: circle "\fBEMPTY\fP"
+move right 0.65i
+HUNT: circle "\fBHUNT\fP"
+move same
+FLOWING: circle "\fBFLOWING\fP"
+move same
+HANDOVER: circle "\fBHANDOVER\fP"
+move to FLOWING.s; move down 0.65i
+UNDERRUN: circle "\fBUNDERRUN\fP"
+arrow from EMPTY.e to HUNT.w
+arrow from HUNT.e to FLOWING.w
+arc cw -> from FLOWING.e to HANDOVER.w rad 0.5i
+arc cw -> from HANDOVER.w to FLOWING.e rad 0.5i
+arc cw -> from FLOWING.s to UNDERRUN.n rad 0.5i
+arc cw -> from UNDERRUN.n to FLOWING.s rad 0.5i
+arc -> from HANDOVER.n to HUNT.n rad 2i
+arrow from UNDERRUN to EMPTY chop
+arrow from UNDERRUN to HUNT chop
+.PE
 .NH 3
 Structure and operation of one subbuf
 .PP
@@ -1262,6 +1312,12 @@ This implementation detail results in not counting the final underrun
 that often occurs upon call teardown, instead counting only those underrun
 events that are true indications of problematic network conditions
 or insufficient jitter buffering.
+.PP
+The previous description applies to standard \fBtwjit\fP algorithm:
+either \&\fCtwrtp\-native\fP or the present \fBosmo_twjit\fP version
+without \&\fCunderrun\-extension\fP.
+If underrun extension feature is enabled, the behavior changes to that
+described in \(sc2.3.5.1.
 .NH 4
 Standing queue thinning mechanism
 .PP
@@ -1487,6 +1543,14 @@ The operational (as opposed to analytics) part of \fBtwjit\fP looks only
 at SSRC and timestamp fields in the RTP header; it does not consider
 the sequence number at all.
 .PP
+For the sake of completeness, it should be noted that some other
+implementations of RTP stream Rx may invoke more sophisticated handling of
+DTX intentional gaps in real time by examining RTP packet payload and
+checking for SID frames that are supposed to precede speech pauses in DTX.
+However, this approach is not used in \fBtwjit\fP because it would
+constitute a layering violation: by design, \fBtwrtp\fP and its \fBtwjit\fP
+component are completely agnostic to payload formats.
+.PP
 The actual effect of a gap in the received RTP stream,
 whether intentional or caused by packet loss,
 depends on the size of the gap
@@ -1521,7 +1585,8 @@ is greater than 1,
 and when another RTP packet arrives after the second gap, the first
 between-gaps packet will be too stale.
 This failure scenario is the reason why the combination of \fBtwjit\fP,
-DTX and intentional gaps will not work.
+DTX and intentional gaps will not work, unless one enables the underrun
+extension feature described in the following section.
 .LP
 If \fBtwjit\fP is deployed in an IP network environment where packet loss
 occurs frequently enough to be a concern,
@@ -1530,6 +1595,103 @@ the flow-starting fill level) so that packet loss events do not turn
 into underruns.
 However, intentional gaps are always bad in principle and should be avoided
 \(em enable continuous streaming instead.
+.NH 4
+Optional underrun extension mechanism
+.PP
+As already covered in \(sc1.2.1, the original design of classic \fBtwjit\fP
+thoroughly assumes continuous streaming, rather than intentional gaps.
+However, there is now a desire among Osmocom developers to replace the use
+of Belledonne \fBortp\fP library in OsmoBTS with \fBtwrtp\fP and \fBtwjit\fP,
+which raises a new complication: intentional gaps are called for by 3GPP
+specs, are the default behavior for uplink RTP output from OsmoBTS,
+and are supported by \fBortp\fP by virtue of being a core feature of RTP
+as envisioned by IETF.
+.PP
+A total redesign of \fBtwjit\fP for the paradigm of intentional gaps
+would be beyond the ability of its author; furthermore, the classic \fBtwjit\fP
+algorithm optimized for continuous streaming is still desirable for those
+network deployments (Osmocom+ThemWi hybrid) whose operators do not hold
+themselves strictly to IETF ideals or 3GPP stipulations, but instead prefer
+to emulate the paradigm of TDM as closely as possible over IP.
+Ideally there would be two alternative jitter buffer implementations,
+\fBtwjit\fP for continuous streaming and an alternative implementation
+for intentional gaps, selectable under the same \fBtwrtp\fP top layer.
+However, until someone develops that alternative jitter buffer implementation,
+\fBosmo_twjit\fP includes a compromise mechanism called underrun extension.
+This mechanism improves \fBtwjit\fP performance in the presence of DTX
+effected via intentional gaps, making it acceptable in many cases,
+but still not perfectly reliable under all conditions.
+.PP
+Underrun extension mechanism is enabled via \&\fCunderrun\-extension\fP
+optional setting in vty config.
+This vty setting includes a numeric argument that sets the maximum number
+of RTP packets that can be omitted before a soft underrun turns into
+a hard underrun.
+When this mode is enabled, underrun handling previously described in
+\(sc2.3.4.1 is modified as follows: when an output poll occurs on a \fBtwjit\fP
+instance in \%\fBFLOWING\fP state and the flowing-out subbuf is empty,
+instead of transitioning into \fBEMPTY\fP state, the instance transitions
+into newly added \%\fBUNDERRUN\fP state that exists only when this mechanism
+is enabled.
+If \&\fCunderrun\-extension\fP is set to 1, \%\fBUNDERRUN\fP state persists
+for 1 tick; if \&\fCunderun\-extension\fP is set to 2, \%\fBUNDERRUN\fP state
+persists for 2 ticks, and so forth.
+While \%\fBUNDERRUN\fP state persists, \&\fChead_ts\fP in the now-empty
+flowing-out subbuf continues to increment by 160 on every tick just like
+it did in \%\fBFLOWING\fP state, making \%\fBUNDERRUN\fP state a special
+extension of \%\fBFLOWING\fP.
+Exit conditions from \%\fBUNDERRUN\fP state are as follows:
+.IP 1)
+If a new RTP packet arrives whose timestamp equals or is ahead of
+still-advancing \&\fChead_ts\fP, the overall state goes back to
+\%\fBFLOWING\fP.
+This case is the desired outcome: the intentional gap as emitted by the
+RTP stream source is passed accurately to the fixed timing system on the
+output of \fBtwjit\fP (exact number of gapped quantum units preserved)
+with no loss of synchronization.
+If the RTP stream source emits ``isolated island'' comfort noise update
+packets surrounded by gaps, as long as these gaps do not exceed
+the configured \%\&\fCunderrun\-extension\fP limit, all of these
+CN update packets will be passed to the application on the output side
+of \fBtwjit\fP.
+.IP 2)
+If a packet arrives that would constitute a handover in \%\fBFLOWING\fP
+state, or a packet would be considered too old in that state,
+the state machine transitions to \fBHUNT\fP and begins acquisition
+of the new flow per \(sc2.3.3.
+The resulting behavior is exactly the same as if there was no underrun
+extension mechanism and the state machine was in \fBEMPTY\fP state
+since the initial underrun.
+.IP 3)
+If the underrun condition persists past the configured
+\%\&\fCunderrun\-extension\fP limit with no new RTP packets arriving,
+the soft underrun turns into a hard underrun and the state machine
+transitions into \fBEMPTY\fP.
+.LP
+Compared to a hypothetical ideal solution for RTP streams with DTX
+represented via intentional gaps, the present solution has this
+shortcoming: intentional gaps are handled gracefully only when they are
+encountered in \%\fBFLOWING\fP state, but not during initial flow
+acquisition, reacquisition after a hard underrun (e.g., extensive packet
+loss beyond the maximum allowed intentional gap) or handover handling.
+In all of these other listed cases, if the RTP stream source is in a DTX
+pause and emits only ``isolated island'' comfort noise update packets,
+those CN packets will be dropped, thus failing to deliver correct
+CN updates under all possible conditions per DTX ``contract''.
+This limitation is the reason why \&\fCrtp\ continuous\-streaming\fP
+is still a better choice for all networks where this against-IETF,
+against-3GPP setting can be enabled.
+.PP
+When underrun extension feature needs to be enabled, the numeric parameter
+on \%\&\fCunderrun\-extension\fP vty configuration line should be set
+according to the maximum intentional gap that can be emitted per DTX rules
+associated with the codec(s) in use.
+If there is no need to accommodate for packet loss on top of these intentional
+gaps, the maximum allowed DTX gap is 23 with FR and EFR codecs, 11 with
+HRv1 codec and 7 with AMR codec.
+If there is a desire to allow up to one comfort noise update packet to be
+lost without incurring a hard underrun, the maximum allowed gap should be
+set to 47 with FR and EFR codecs, 23 with HRv1 codec and 15 with AMR codec.
 .NH 3
 Handling of packet reordering
 .PP
@@ -1574,14 +1736,14 @@ packet that breaks the previous flow in one of the just-listed ways must
 arrive while the previous flow (the one it breaks from) is still active,
 while the state of the \fBtwjit\fP instance is \fBFLOWING\fP.
 If a handover happens after the previous flow underruns, such that the
-\fBtwjit\fP instance is in \fBEMPTY\fP state when the first packet of the
-new flow arrives,
+\fBtwjit\fP instance is in \fBEMPTY\fP or \%\fBUNDERRUN\fP state when
+the first packet of the new flow arrives,
 acquisition of the new flow proceeds via \fBHUNT\fP state in the same way
 whether this new flow is continuous or discontinuous with the previous one.
 Similarly, if a flow discontinuity (the kind that would be treated as a
 handover if it occurred in \fB\%FLOWING\fP state) occurs in \fBHUNT\fP state,
 it is handled by reinitializing the \fBHUNT\fP state, without entering
-the special \fBHANDOVER\fP state, as detailed in \(sc2.3.3.1.
+the special \%\fBHANDOVER\fP state, as detailed in \(sc2.3.3.1.
 .PP
 True handover handling happens when a flow-breaking RTP packet arrives
 in \fBFLOWING\fP state.
@@ -1600,8 +1762,8 @@ read subbuf;
 .IP \(bu
 In \fBHUNT\fP state, there is a valid write subbuf, but no valid read subbuf;
 .IP \(bu
-In \fBFLOWING\fP state, the sole active subbuf is both the write subbuf
-and the read subbuf;
+In \fBFLOWING\fP and \fBUNDERRUN\fP states, the sole active subbuf is both
+the write subbuf and the read subbuf;
 .IP \(bu
 In \fBHANDOVER\fP state, the read subbuf and the write subbuf are different,
 and each is valid.
@@ -1723,6 +1885,8 @@ allow the managing operator to set additional timing constraints
 that need to be met in order to start a new flow: see \(sc2.3.3.2
 for full details.
 .IP \(bu
+\&\fCunderrun\-extension\fP setting is described in \(sc2.3.5.1.
+.IP \(bu
 \&\fCmarker\-handling\fP setting is described in \(sc2.3.8.
 .NH 1
 Stats and analytics
@@ -1793,6 +1957,10 @@ of a new flow \(em see \(sc2.3.4.1.
 This counter increments when an underrun occurs in \fBHANDOVER\fP state,
 i.e., when the previous flow underruns before the new one is ready to
 start flowing out.
+.St soft_underruns
+This counter increments when the underrun extension mechanism of \(sc2.3.5.1
+is enabled and a soft underrun occurs, a transition from \%\fBFLOWING\fP state
+into \%\fBUNDERRUN\fP state.
 .St output_gaps
 This counter increments for every gap in the output stream from \fBtwjit\fP
 that occurs in \fBFLOWING\fP or \fBHANDOVER\fP state \fIwithout\fP an underrun,

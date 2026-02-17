@@ -51,7 +51,7 @@ struct twjit_subbuf {
 	uint16_t drop_int_count;
 };
 
-/*! Each twjit instance is in one of 4 fundamental states at any moment,
+/*! Each twjit instance is in one of 5 fundamental states at any moment,
  *  as enumerated here.  See document section 2.3.1 for state transition
  *  diagram.
  */
@@ -62,6 +62,8 @@ enum twjit_state {
 	TWJIT_STATE_HUNT,
 	/*! one subbuf is both flowing out and accepting new packets */
 	TWJIT_STATE_FLOWING,
+	/*! limited continuation of FLOWING state past underrun */
+	TWJIT_STATE_UNDERRUN,
 	/*! one subbuf is flowing out while another receives new packets */
 	TWJIT_STATE_HANDOVER,
 };
@@ -89,6 +91,8 @@ struct osmo_twjit {
 	uint8_t read_sb;
 	/*! current subbuf being written, 0 or 1 */
 	uint8_t write_sb;
+	/*! UNDERRUN state: remaining number of ticks before we give up */
+	uint16_t underrun_countdown;
 	/*! RTP timestamp of the most recently received packet */
 	uint32_t last_ts;
 	/*! RTP sequence number of the most recently received packet */
@@ -533,6 +537,34 @@ void osmo_twjit_input(struct osmo_twjit *twjit, struct msgb *msg)
 		}
 		insert_pkt_write_sb(twjit, msg, rx_ts);
 		return;
+	case TWJIT_STATE_UNDERRUN:
+		id = check_input_for_subbuf(twjit, false, rx_ssrc, rx_ts,
+					    rtph->marker);
+		if (id == INPUT_CONTINUE) {
+			/* Underrun extension mechanism did its intended
+			 * job: continue flow without reset. */
+			twjit->state = TWJIT_STATE_FLOWING;
+			insert_pkt_write_sb(twjit, msg, rx_ts);
+			return;
+		}
+		/* For either INPUT_TOO_OLD or INPUT_RESET, we take the same
+		 * path that existed prior to addition of UNDERRUN state:
+		 * the original underrun was a "hard" one, and we initiate
+		 * HUNT with this newly received packet.
+		 *
+		 * Please note that we don't increment too_old stats counter
+		 * in the case of INPUT_TOO_OLD: that counter counts packets
+		 * that were discarded for being too old in FLOWING state.
+		 * In the present case, however, the packet is not discarded:
+		 * instead it is fed into HUNT state to begin acquisition of
+		 * a new flow.  This behavior is necessary in order to
+		 * reacquire flow if the original underrun was caused by a
+		 * sudden increase in IP path latency.
+		 */
+		twjit->stats.underruns++;
+		twjit->state = TWJIT_STATE_HUNT;
+		init_subbuf_first_packet(twjit, msg, rx_ssrc, rx_ts);
+		return;
 	default:
 		OSMO_ASSERT(0);
 	}
@@ -598,6 +630,30 @@ static void read_sb_thinning(struct osmo_twjit *twjit)
 	sb->drop_int_count = twjit->config.thinning_int - 2;
 }
 
+static void underrun_advance_ts(struct osmo_twjit *twjit)
+{
+	struct twjit_subbuf *sb = &twjit->sb[twjit->read_sb];
+
+	sb->head_ts += twjit->ts_quantum;
+}
+
+/* This static function is called only from osmo_twjit_output() in the
+ * case of underrun in FLOWING state.  It has been factored out in order
+ * to reduce the level of indentation and thus make it easier to keep
+ * line length below the 80 character limit which the author regards as
+ * an unviolable Universal constant. */
+static void handle_flowing_underrun(struct osmo_twjit *twjit)
+{
+	if (twjit->config.underrun_ext) {
+		twjit->state = TWJIT_STATE_UNDERRUN;
+		twjit->underrun_countdown = twjit->config.underrun_ext - 1;
+		underrun_advance_ts(twjit);
+		twjit->stats.soft_underruns++;
+	} else {
+		twjit->state = TWJIT_STATE_EMPTY;
+	}
+}
+
 static void toss_read_queue(struct osmo_twjit *twjit)
 {
 	struct twjit_subbuf *sb = &twjit->sb[twjit->read_sb];
@@ -628,11 +684,19 @@ struct msgb *osmo_twjit_output(struct osmo_twjit *twjit)
 		return pull_from_read_sb(twjit);
 	case TWJIT_STATE_FLOWING:
 		if (read_sb_is_empty(twjit)) {
-			twjit->state = TWJIT_STATE_EMPTY;
+			handle_flowing_underrun(twjit);
 			return NULL;
 		}
 		read_sb_thinning(twjit);
 		return pull_from_read_sb(twjit);
+	case TWJIT_STATE_UNDERRUN:
+		if (twjit->underrun_countdown) {
+			twjit->underrun_countdown--;
+			underrun_advance_ts(twjit);
+		} else {
+			twjit->state = TWJIT_STATE_EMPTY;
+		}
+		return NULL;
 	case TWJIT_STATE_HANDOVER:
 		if (starting_sb_is_ready(twjit)) {
 			toss_read_queue(twjit);
