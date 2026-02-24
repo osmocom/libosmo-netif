@@ -604,8 +604,10 @@ static void stream_cli_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct ms
 		(void)stream_cli_handle_connecting(cli, res);
 		break;
 	case STREAM_CLI_STATE_CONNECTED:
-		if (msg && res <= 0) {
-			LOGSCLI(cli, LOGL_ERROR, "received error %d in response to send\n", res);
+		if (msg && res < 0) {
+			char errbuf[64];
+			strerror_r(-res, errbuf, sizeof(errbuf));
+			LOGSCLI(cli, LOGL_ERROR, "error to send: %d (%s)\n", res, errbuf);
 			(void)stream_cli_reconnect(cli);
 		}
 		/* res=0 && msgb=NULL: "connected notify", but we already received before a read_cb

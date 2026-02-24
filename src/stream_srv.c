@@ -801,8 +801,11 @@ static void stream_srv_iofd_write_cb(struct osmo_io_fd *iofd, int res, struct ms
 	struct osmo_stream_srv *conn = osmo_iofd_get_data(iofd);
 	LOGSSRV(conn, LOGL_DEBUG, "connected write\n");
 
-	if (res < 0)
-		LOGSSRV(conn, LOGL_ERROR, "error to send: %s\n", strerror(errno));
+	if (res < 0) {
+		char errbuf[64];
+		strerror_r(-res, errbuf, sizeof(errbuf));
+		LOGSSRV(conn, LOGL_ERROR, "error to send: %d (%s)\n", res, errbuf);
+	}
 
 	if (osmo_iofd_txqueue_len(iofd) == 0)
 		if (conn->flags & OSMO_STREAM_SRV_F_FLUSH_DESTROY)
