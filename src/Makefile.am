@@ -15,6 +15,7 @@ libosmonetif_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(LIBVERSION) -no-undefine
 
 libosmonetif_la_SOURCES = amr.c			\
 			  datagram.c		\
+			  ip_checksum.c		\
 			  ipa.c			\
 			  ipa_keepalive.c	\
 			  ipa_unit.c		\
