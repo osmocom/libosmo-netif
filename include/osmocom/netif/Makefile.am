@@ -20,6 +20,7 @@ EXTRA_DIST = \
 osmonetif_HEADERS = \
 	amr.h \
 	datagram.h \
+	icmpv6.h \
 	ip_checksum.h \
 	ipa.h \
 	ipa_unit.h \
