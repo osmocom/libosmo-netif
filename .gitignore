@@ -34,8 +34,15 @@ libtool
 tests/atconfig
 tests/package.m4
 tests/testsuite
-tests/osmux/osmux_test
 tests/testsuite.log
+
+tests/amr/amr_test
+tests/jibuf/jibuf_test
+tests/jibuf/jibuf_tool
+tests/osmux/osmux_input_test
+tests/osmux/osmux_output_test
+tests/osmux/osmux_test
+tests/stream/stream_test
 
 doc/twrtp/twrtp-guide.pdf
 
@@ -59,11 +66,6 @@ Doxyfile
 /examples/udp-test-server
 
 .*.sw?
-jibuf_test
-jibuf_tool
-osmux_test2
-stream_test
-amr_test
 
 contrib/libosmo-netif.spec
 include/osmocom/netif/version.h
