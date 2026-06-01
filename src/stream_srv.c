@@ -614,6 +614,18 @@ int osmo_stream_srv_link_open(struct osmo_stream_srv_link *link)
 	if (ret < 0)
 		return ret;
 
+	if (link->ip_dscp > 0) {
+		int rc;
+		rc = osmo_sock_set_dscp(ret, link->ip_dscp);
+		if (rc < 0) {
+			LOGSLNK(link, LOGL_ERROR, "set_ip_dscp(%u): failed setsockopt err=%d\n",
+				link->ip_dscp, errno);
+			close(ret);
+			link->ofd.fd = -1;
+			return -EIO;
+		}
+	}
+
 	link->ofd.fd = ret;
 	if (osmo_fd_register(&link->ofd) < 0) {
 		close(ret);
