@@ -299,7 +299,19 @@ int osmo_stream_srv_link_set_priority(struct osmo_stream_srv_link *link, int sk_
  */
 int osmo_stream_srv_link_set_ip_dscp(struct osmo_stream_srv_link *link, uint8_t ip_dscp)
 {
+	int rc;
+
 	link->ip_dscp = ip_dscp;
+
+	if (!osmo_stream_srv_link_is_opened(link))
+		return 0;
+
+	rc = osmo_sock_set_dscp(link->ofd.fd, link->ip_dscp);
+	if (rc < 0) {
+		LOGSLNK(link, LOGL_ERROR, "set_ip_dscp(%u): failed setsockopt err=%d\n",
+			link->ip_dscp, errno);
+		return -EIO;
+	}
 	return 0;
 }
 
