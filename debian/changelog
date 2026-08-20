@@ -1,3 +1,36 @@
+libosmo-netif (1.8.0) unstable; urgency=medium
+
+  [ Pau Espin Pedrol ]
+  * cosmetic: stream_cli: Fix typos in API documentation
+  * stream: Log failure to apply NODELAY sockopt
+  * cosmetic: stream_srv: srv_link: Document no need for OSMO_SOCK_F_NONBLOCK
+  * stream_cli: Log state in stream_sctp_recvmsg_wrapper()
+  * stream_srv: keep sockname in iofd name if a stream name is explicitly set
+  * stream_cli: Add stream sockname to iofd name
+  * stream: Improve error handling and logging in write_cb
+  * Introduce ip_checksum API
+  * Introduce API osmo_icmpv6
+  * stream: srv_link: Fix DSCP not set on already created listen socket
+
+  [ Timur Davydov ]
+  * stream: Fix build with --disable-libsctp
+  * gitignore: ignore generated .wasm files
+
+  [ Mychaela N. Falconia ]
+  * twjit: add underrun extension feature
+
+  [ Harald Welte ]
+  * icmpv6: Re-license code under GPL-v2-or-later
+  * ip_checksum: Add SPDX license identifier
+
+  [ Vadim Yanitskiy ]
+  * .gitignore: add missing osmux_{input,output}_test
+
+  [ Andreas Eversberg ]
+  * Also apply DSCP settings on listening socket
+
+ -- Pau Espin Pedrol <pespin@sysmocom.de>  Thu, 20 Aug 2026 10:53:30 +0200
+
 libosmo-netif (1.7.0) unstable; urgency=medium
 
   [ Mychaela N. Falconia ]
