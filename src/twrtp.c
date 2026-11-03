@@ -851,7 +851,7 @@ static void fill_rr_block(struct osmo_twrtp *endp, struct rtcp_rr_block *rr)
 		lost_fract = 0;
 	else
 		lost_fract = (newly_lost << 8) / delta_expect;
-	lost_word = (lost_fract << 8) | (cumulative_lost & 0xFFFFFF);
+	lost_word = (lost_fract << 24) | (cumulative_lost & 0xFFFFFF);
 
 	rr->ssrc = htonl(rri->ssrc);
 	rr->lost_word = htonl(lost_word);
