@@ -1260,7 +1260,7 @@ int osmo_stream_cli_open(struct osmo_stream_cli *cli)
 
 	switch (cli->sk_domain) {
 	case AF_UNIX:
-		ret = osmo_sock_unix_init(cli->sk_type, 0, cli->addr[0], OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_BIND|OSMO_SOCK_F_NONBLOCK);
+		ret = osmo_sock_unix_init(cli->sk_type, 0, cli->addr[0], OSMO_SOCK_F_CONNECT|OSMO_SOCK_F_NONBLOCK);
 		break;
 	case AF_INET:
 	case AF_INET6:
